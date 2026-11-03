@@ -113,7 +113,7 @@ const RUN: Record<ToolName, Run> = {
 class NoKeyError extends Error {}
 
 async function callClaude(messages: Msg[]): Promise<{ content: Block[]; stop_reason: string }> {
-  const r = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages, context: context() }) });
+  const r = await fetch((import.meta.env.VITE_API_URL || '') + '/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages, context: context() }) });
   if (r.status === 503) throw new NoKeyError();
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();

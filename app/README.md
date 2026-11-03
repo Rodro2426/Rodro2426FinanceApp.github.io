@@ -18,7 +18,17 @@ npm run build
 ANTHROPIC_API_KEY=sk-ant-... npm start  # serves dist/ and /api on http://localhost:8787 (PORT to change)
 ```
 
-Open it on your phone and use "Add to Home Screen" to install it.
+## Install on iPhone
+
+Every push to `main` builds the app and publishes it with GitHub Pages
+(`.github/workflows/pages.yml`) at https://rodro2426.github.io/Rodro2426FinanceApp.github.io/.
+Open that link in **Safari**, tap **Share**, then **Add to Home Screen**.
+
+GitHub Pages only hosts files, so the Assistant needs the server running somewhere else
+(for example Render or Railway): deploy `app/` there with `npm run build && npm start`, set
+`ANTHROPIC_API_KEY` and `ALLOWED_ORIGIN=https://rodro2426.github.io`, then add a repository
+variable `API_URL` (Settings → Secrets and variables → Actions → Variables) with the
+server's URL and re-run the workflow.
 
 ## How it's put together
 

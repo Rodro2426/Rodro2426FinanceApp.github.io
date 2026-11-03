@@ -78,7 +78,17 @@ function serveStatic(req: http.IncomingMessage, res: http.ServerResponse) {
   fs.createReadStream(file).pipe(res);
 }
 
+// Set ALLOWED_ORIGIN (e.g. https://you.github.io) when the app is hosted elsewhere, like GitHub Pages.
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN;
+
 http.createServer((req, res) => {
+  if (ALLOWED_ORIGIN && req.headers.origin === ALLOWED_ORIGIN) {
+    res.setHeader('access-control-allow-origin', ALLOWED_ORIGIN);
+    res.setHeader('access-control-allow-headers', 'content-type');
+    res.setHeader('access-control-allow-methods', 'POST, OPTIONS');
+    res.setHeader('vary', 'origin');
+  }
+  if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
   if (req.method === 'POST' && req.url === '/api/chat') { chat(req, res); return; }
   if (req.url?.startsWith('/api/')) return send(res, 404, { error: 'not found' });
   serveStatic(req, res);
