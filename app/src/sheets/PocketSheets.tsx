@@ -1,0 +1,354 @@
+import { useState } from 'react';
+import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
+import { EMOJIS, HUES, LINE, POCKET_CAT, RED, TEXT, ink, tint } from '../lib/constants';
+import { allStats, chargeAccount, ctxOf, fmt, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses } from '../lib/derive';
+import { pickPhoto } from '../lib/photo';
+import type { Data } from '../lib/types';
+import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PrimaryBtn, SmallAmount, expView, textInput } from '../ui/bits';
+import { SheetFrame } from './Sheet';
+import * as I from '../ui/icons';
+
+const pill = (k: string) => ({ fontSize: 12, fontWeight: 600, color: k, background: 'rgba(255,255,255,.7)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }) as const;
+
+function defaultCat(d: Data, pocketId: string): [string, string] {
+  if (POCKET_CAT[pocketId]) return POCKET_CAT[pocketId];
+  const last = sortedExpenses(d).find(e => e.p === pocketId && e.cat);
+  return last ? [last.cat, last.sub] : ['Other', 'Other'];
+}
+
+/* ---------------- Search ---------------- */
+export function SearchSheet({ tag }: { tag?: string | null }) {
+  const { data: d } = useApp();
+  const c = ctxOf(d);
+  const [q, setQ] = useState('');
+  const [filterTag, setFilterTag] = useState<string | null>(tag ?? null);
+  const stats = new Map(allStats(d, c).map(x => [x.id, x]));
+  const qs = q.trim().toLowerCase().replace(/^#/, '');
+  const matches = sortedExpenses(d).filter(e => {
+    const tg = e.tags || [];
+    if (filterTag && !tg.includes(filterTag)) return false;
+    if (!qs) return true;
+    const pn = (stats.get(e.p)?.name || '').toLowerCase(), an = (d.accounts.find(a => a.id === e.a)?.name || '').toLowerCase();
+    return e.note.toLowerCase().includes(qs) || pn.includes(qs) || an.includes(qs) || tg.some(t => t.includes(qs)) || (e.cat || '').toLowerCase().includes(qs);
+  });
+  const shown = matches.slice(0, 200).map(e => expView(d, e, c, stats));
+  const tagHue = (t: string) => HUES[Math.max(0, d.tags.indexOf(t)) % HUES.length];
+  const tagCount = (t: string) => d.expenses.filter(e => (e.tags || []).includes(t)).length;
+  const chips = [{ key: '', label: 'All', on: !filterTag, hue: null as number | null, pick: () => setFilterTag(null) },
+    ...d.tags.filter(tagCount).map(t => ({ key: t, label: `#${t} · ${tagCount(t)}`, on: filterTag === t, hue: tagHue(t), pick: () => setFilterTag(f => (f === t ? null : t)) }))];
+
+  return (
+    <SheetFrame title="Transactions">
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: 560 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, background: '#fff', borderRadius: 999, padding: '0 16px', height: 50 }}>
+          <I.Search size={18} color="var(--color-neutral-500)" />
+          <input placeholder="Search by name, pocket or #tag" value={q} onChange={e => setQ(e.target.value)} autoFocus style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 16, color: TEXT, padding: 0, outline: 'none' }} />
+          {q && <button onClick={() => setQ('')} aria-label="Clear" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.X size={12} sw={3} /></button>}
+        </div>
+        <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '12px -20px 0', padding: '0 20px' }}>
+          {chips.map(g => (
+            <button key={g.key} onClick={g.pick} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: g.on ? (g.hue != null ? ink(g.hue) : TEXT) : '#fff', color: g.on ? '#fff' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>{g.label}</button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', margin: '16px 4px 8px', fontSize: 13 }}>
+          <span style={{ color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{matches.length === 1 ? '1 transaction' : `${matches.length} transactions`}</span>
+          <span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>−{fmt(matches.reduce((a, e) => a + e.amt, 0))}</span>
+        </div>
+        <div style={{ background: '#fff', borderRadius: 22, padding: '4px 16px' }}>
+          {shown.map((v, i) => <ExpRow key={v.key} v={v} size={38} last={i === shown.length - 1} />)}
+          {matches.length === 0 && <div style={{ padding: '18px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No transactions match.</div>}
+          {matches.length > shown.length && <div style={{ padding: '14px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Showing the latest {shown.length}. Refine your search to see more.</div>}
+        </div>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Add expense ---------------- */
+export function AddSheet({ pocket }: { pocket?: string }) {
+  const { data: d, ui } = useApp();
+  const c = ctxOf(d);
+  const first = [pocket, ui.lastAdd.pocket].find(id => id && d.pockets.some(p => p.id === id)) || d.pockets[0]?.id || '';
+  const [amt, setAmt] = useState('');
+  const [p, setP] = useState(first);
+  const [a, setA] = useState(d.accounts.some(x => x.id === ui.lastAdd.acct) ? ui.lastAdd.acct : d.accounts[0]?.id || '');
+  const [note, setNote] = useState('');
+  const [tagSel, setTagSel] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
+  const [[cat, sub], setCat] = useState<[string, string]>(() => (first ? defaultCat(d, first) : ['Other', 'Other']));
+  const [catTouched, setCatTouched] = useState(false);
+  const [newCat, setNewCat] = useState('');
+  const [newSub, setNewSub] = useState('');
+
+  const all = allStats(d, c), addS = all.find(x => x.id === p), payA = d.accounts.find(x => x.id === a);
+  const v = num(amt), after = addS ? addS.left - v : 0;
+  let preview = 'Enter an amount and pick a pocket.', previewColor = 'var(--color-neutral-700)';
+  if (addS && v > 0) {
+    preview = after >= 0 ? `${fmt(after)} will be left in ${addS.name} this week.` : `This puts ${addS.name} ${fmt(-after)} over for the week.`;
+    if (after < 0) previewColor = RED;
+  }
+  if (!d.accounts.length) preview = 'Add an account or card first, in the Accounts tab.';
+  const cant = !(v > 0 && addS && payA);
+  const tagHue = (t: string) => HUES[Math.max(0, d.tags.indexOf(t)) % HUES.length];
+  const curCat = d.cats.find(x => x.name === cat);
+
+  const addTag = () => {
+    const t = newTag.trim().toLowerCase().replace(/^#+/, '');
+    if (!t) return;
+    if (!d.tags.includes(t)) setData(x => ({ tags: [...x.tags, t] }));
+    setTagSel(s => (s.includes(t) ? s : [...s, t])); setNewTag('');
+  };
+  const addCat = () => {
+    const n = newCat.trim(); if (!n) return;
+    const ex = d.cats.find(x => x.name.toLowerCase() === n.toLowerCase());
+    if (!ex) setData(x => ({ cats: [...x.cats, { name: n, subs: ['General'] }] }));
+    setCat(ex ? [ex.name, ex.subs[0] || ''] : [n, 'General']); setNewCat(''); setCatTouched(true);
+  };
+  const addSub = () => {
+    const n = newSub.trim(); if (!n) return;
+    setData(x => ({ cats: x.cats.map(k => (k.name === cat && !k.subs.includes(n) ? { ...k, subs: [...k.subs, n] } : k)) }));
+    setCat([cat, n]); setNewSub(''); setCatTouched(true);
+  };
+  const blurOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } };
+
+  const save = () => {
+    if (cant) return;
+    const val = roundAmt(v);
+    setData(x => ({
+      expenses: [{ id: uid('e'), ts: Date.now(), p, a, amt: val, note: note.trim() || addS!.name, date: c.today, tags: tagSel, cat, sub }, ...x.expenses],
+      accounts: chargeAccount(x.accounts, a, val)
+    }));
+    setUI({ sheet: { name: 'saved', id: p }, lastAdd: { pocket: p, acct: a } });
+  };
+
+  return (
+    <SheetFrame title="New expense">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <BigAmount value={amt} onChange={setAmt} autoFocus mt={10} />
+        <FieldLabel m="18px 4px 8px">Pocket</FieldLabel>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {all.map(x => <PickChip key={x.id} st={x} on={x.id === p} hue={x.hue} onClick={() => { setP(x.id); if (!catTouched) setCat(defaultCat(d, x.id)); }} />)}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '16px 4px 8px', gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Category</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat + (sub ? ' › ' + sub : '')}</span>
+        </div>
+        <div style={{ background: '#fff', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
+            {d.cats.map(k => {
+              const on = k.name === cat;
+              return <button key={k.name} onClick={() => { setCat([k.name, k.subs[0] || '']); setCatTouched(true); }} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)', transition: 'all .15s' }}>{k.name}</button>;
+            })}
+            <div style={{ flex: 'none', display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
+              <input placeholder="New category" value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={blurOnEnter} onBlur={addCat} style={{ width: 96, border: 0, background: 'transparent', fontSize: 13, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
+              <button onClick={addCat} aria-label="Add category" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={12} sw={3} /></button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 10, borderTop: '1px solid var(--color-neutral-200)' }}>
+            {(curCat?.subs || []).map(sname => {
+              const on = sname === sub;
+              return <button key={sname} onClick={() => { setCat([cat, sname]); setCatTouched(true); }} style={{ height: 30, padding: '0 11px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--color-accent-300)' : 'var(--color-neutral-300)'}`, background: on ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{sname}</button>;
+            })}
+            <div style={{ display: 'flex', alignItems: 'center', height: 30, borderRadius: 999, border: '1.5px dashed var(--color-neutral-300)', padding: '0 3px 0 10px' }}>
+              <input placeholder="Subcategory" value={newSub} onChange={e => setNewSub(e.target.value)} onKeyDown={blurOnEnter} onBlur={addSub} style={{ width: 80, border: 0, background: 'transparent', fontSize: 12, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
+              <button onClick={addSub} aria-label="Add subcategory" style={{ width: 22, height: 22, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={11} sw={3} /></button>
+            </div>
+          </div>
+        </div>
+        <FieldLabel>Paid with</FieldLabel>
+        <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
+          {d.accounts.map(x => (
+            <button key={x.id} onClick={() => setA(x.id)} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${x.id === a ? ink(x.hue) : '#fff'}`, background: x.id === a ? tint(x.hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+              <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{x.name}</span>
+              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{x.type === 'card' ? `${fmt((x.limit || 0) - x.bal)} available` : fmt(x.bal)}</span>
+            </button>
+          ))}
+        </div>
+        <input placeholder="What was it for?" value={note} onChange={e => setNote(e.target.value)} style={{ ...textInput, marginTop: 16 }} />
+        <FieldLabel>Tags</FieldLabel>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+          {d.tags.map(t => {
+            const on = tagSel.includes(t);
+            return <button key={t} onClick={() => setTagSel(s => (s.includes(t) ? s.filter(y => y !== t) : [...s, t]))} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? ink(tagHue(t)) : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>#{t}</button>;
+          })}
+          <div style={{ display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, background: '#fff', border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
+            <input placeholder="New tag" value={newTag} onChange={e => setNewTag(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }} style={{ width: 84, border: 0, background: 'transparent', fontSize: 13, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
+            <button onClick={addTag} aria-label="Add tag" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-accent-100)', color: 'var(--color-accent-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={13} sw={3} /></button>
+          </div>
+        </div>
+        <div style={{ margin: '14px 4px 0', fontSize: 13, color: previewColor }}>{preview}</div>
+        <PrimaryBtn onClick={save} disabled={cant} fs={17}>Save expense</PrimaryBtn>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Pocket detail ---------------- */
+export function PocketSheet({ id }: { id: string }) {
+  const { data: d } = useApp();
+  const c = ctxOf(d);
+  const s = pocketStats(d, id, c);
+  if (!s) return <SheetFrame title="Pocket"><div style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>This pocket was deleted.</div></SheetFrame>;
+  const k = ink(s.hue);
+  const items = weekExpenses(d, c).filter(e => e.p === id).sort((x, y) => (y.date > x.date ? 1 : y.date < x.date ? -1 : y.ts - x.ts)).map(e => expView(d, e, c));
+  const cantMove = s.left <= 0.004;
+  return (
+    <SheetFrame title={s.name}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ marginTop: 10, background: tint(s.hue), borderRadius: 28, padding: 22, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: k }}>{s.left < 0 ? 'Over budget this week' : 'Left this week'}</span>
+          <span style={{ fontSize: 42, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: s.left < 0 ? RED : k }}>{fmt(Math.abs(s.left))}</span>
+          <div style={{ marginTop: 12 }}><Bar pct={pctOf(s.spent, s.budget)} track="rgba(255,255,255,.8)" fill={k} /></div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+            <span style={pill(k)}>Planned {fmt(s.weekly)}</span>
+            <span style={pill(k)}>Spent {fmt(s.spent)}</span>
+            <span style={pill(k)}>Moved {fmt(s.mIn - s.mOut, true)}</span>
+          </div>
+        </div>
+        <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '4px 16px' }}>
+          {items.map((e, i) => (
+            <div key={e.key} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === items.length - 1 ? 'transparent' : LINE}`, fontSize: 14 }}>
+              <span style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontWeight: 600 }}>{e.note}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{e.meta}</span>
+                {e.tagLine && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-accent-700)' }}>{e.tagLine}</span>}
+              </span>
+              <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{e.amtFmt}</span>
+            </div>
+          ))}
+          {items.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing spent here yet this week.</div>}
+        </div>
+        <button onClick={() => openSheet({ name: 'editPocket', id })} className="hv-n200" style={{ marginTop: 12, height: 44, borderRadius: 999, border: 0, background: 'transparent', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <I.Pencil size={15} />Edit pocket
+        </button>
+        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+          <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <I.Swap size={17} />Move leftover
+          </button>
+          <button onClick={() => openSheet({ name: 'add', pocket: id })} className="hv-acc600" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Add expense</button>
+        </div>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Saved confirmation ---------------- */
+export function SavedSheet({ id }: { id: string }) {
+  const { data: d } = useApp();
+  const s = pocketStats(d, id);
+  if (!s) return null;
+  const k = ink(s.hue), cantMove = s.left <= 0.004;
+  return (
+    <SheetFrame title="Saved">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ marginTop: 10, background: tint(s.hue), borderRadius: 28, padding: 22, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: k }}>{s.name} · {s.left < 0 ? 'Over budget this week' : 'Left this week'}</span>
+          <span style={{ fontSize: 42, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: s.left < 0 ? RED : k }}>{fmt(Math.abs(s.left))}</span>
+          <div style={{ marginTop: 12 }}><Bar pct={pctOf(s.spent, s.budget)} track="rgba(255,255,255,.8)" fill={k} /></div>
+          <span style={{ marginTop: 8, fontSize: 13, color: k }}>{fmt(s.spent)} spent of {fmt(s.budget)}</span>
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+          <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1 }}>Move leftover</button>
+          <button onClick={closeSheet} style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: TEXT, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Done</button>
+        </div>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Move leftover ---------------- */
+export function MoveSheet({ id, to }: { id: string; to?: string }) {
+  const { data: d } = useApp();
+  const c = ctxOf(d);
+  const all = allStats(d, c), s = all.find(x => x.id === id);
+  const [amt, setAmt] = useState(() => (s ? String(d.settings.currency === 'COP' ? Math.floor(Math.max(0, s.left)) : Math.floor(Math.max(0, s.left) * 100) / 100) : ''));
+  const [dest, setDest] = useState<string | undefined>(to || all.find(x => x.id !== id)?.id || d.goals[0]?.id);
+  if (!s) return null;
+  const v = num(amt), tgtP = all.find(x => x.id === dest && x.id !== id), tgtG = d.goals.find(g => g.id === dest);
+  const tgtName = tgtP?.name || tgtG?.name || null;
+  const tooMuch = v > s.left + 0.004, cant = v <= 0 || tooMuch || !tgtName;
+  const hint = tooMuch ? `You can move up to ${fmt(Math.max(0, s.left))}.`
+    : tgtP && v > 0 ? `${tgtP.name} will have ${fmt(tgtP.left + v)} left this week.`
+    : tgtG && v > 0 ? `${tgtG.name} goes to ${fmt(tgtG.saved + v)} of ${fmt(tgtG.target)}.` : 'Choose where the money should go.';
+  const confirm = () => {
+    if (cant) return;
+    const val = roundAmt(v);
+    setData(x => ({ moves: [...x.moves, { id: uid('m'), week: c.weekStart, from: id, to: dest!, amt: val }], goals: tgtG ? x.goals.map(g => (g.id === tgtG.id ? { ...g, saved: g.saved + val } : g)) : x.goals }));
+    closeSheet(); flash(`Moved ${fmt(val)} to ${tgtName}`);
+  };
+  return (
+    <SheetFrame title="Move money">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <span style={{ margin: '0 4px', fontSize: 13, color: 'var(--color-neutral-700)' }}>{fmt(s.left)} left in {s.name} this week</span>
+        <BigAmount value={amt} onChange={setAmt} />
+        <FieldLabel m="18px 4px 8px">To a pocket</FieldLabel>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {all.filter(x => x.id !== id).map(x => <PickChip key={x.id} st={x} on={x.id === dest} hue={x.hue} onClick={() => setDest(x.id)} />)}
+        </div>
+        {d.goals.length > 0 && <>
+          <FieldLabel>Or save it</FieldLabel>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {d.goals.map(g => <PickChip key={g.id} st={g} on={g.id === dest} hue={g.hue} onClick={() => setDest(g.id)} icon={<I.Target size={13} />} />)}
+          </div>
+        </>}
+        <div style={{ margin: '16px 4px 0', fontSize: 13, color: tooMuch ? RED : 'var(--color-neutral-700)' }}>{hint}</div>
+        <PrimaryBtn onClick={confirm} disabled={cant}>{tgtName ? `Move ${fmt(v)} to ${tgtName}` : 'Move'}</PrimaryBtn>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Edit / new pocket ---------------- */
+export function EditPocketSheet({ id }: { id: string | null }) {
+  const { data: d } = useApp();
+  const base = id ? d.pockets.find(p => p.id === id) : undefined;
+  const isNew = !base;
+  const [name, setName] = useState(base?.name ?? '');
+  const [weekly, setWeekly] = useState(base?.weeklyStr ?? '');
+  const [emoji, setEmoji] = useState(base ? base.emoji || '' : '💪');
+  const [photo, setPhoto] = useState<string | null>(base?.photo ?? null);
+  const [confirmDel, setConfirmDel] = useState(false);
+  const hue = base ? base.hue : HUES[d.pockets.length % HUES.length];
+  const w = num(weekly), cant = !name.trim();
+  const icon = photo ? '' : emoji || name.trim().charAt(0).toUpperCase() || '·';
+
+  const save = () => {
+    if (cant) return;
+    const patch = { name: name.trim(), weeklyStr: String(w), emoji, photo };
+    if (isNew) { setData(x => ({ pockets: [...x.pockets, { id: uid('p'), hue: HUES[x.pockets.length % HUES.length], ...patch }] })); closeSheet(); }
+    else { setData(x => ({ pockets: x.pockets.map(p => (p.id === id ? { ...p, ...patch } : p)) })); openSheet({ name: 'pocket', id: id! }); }
+    flash(isNew ? `${patch.name} created` : 'Pocket updated');
+  };
+  const remove = () => {
+    if (!confirmDel) { setConfirmDel(true); return; }
+    setData(x => ({ pockets: x.pockets.filter(p => p.id !== id), moves: x.moves.filter(m => m.from !== id && m.to !== id) }));
+    closeSheet(); flash(`${name || 'Pocket'} deleted`);
+  };
+
+  return (
+    <SheetFrame title={isNew ? 'New pocket' : 'Edit pocket'}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#fff', borderRadius: 22, padding: 14 }}>
+          <div style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: tint(hue), backgroundImage: photo ? `url(${photo})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 32, flex: 'none' }}>{icon}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+            <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <I.Image size={14} />{photo ? 'Change image' : 'Upload image'}
+            </button>
+            {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Use emoji instead</button>}
+          </div>
+        </div>
+        <FieldLabel m="14px 4px 6px">Emoji</FieldLabel>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,minmax(0,1fr))', gap: 4, background: '#fff', borderRadius: 22, padding: 8 }}>
+          {EMOJIS.map(m => <button key={m} onClick={() => { setEmoji(m); setPhoto(null); }} style={{ aspectRatio: '1', borderRadius: 12, border: 0, background: !photo && emoji === m ? tint(hue) : 'transparent', fontSize: 20, cursor: 'pointer', padding: 0, transition: 'background .15s' }}>{m}</button>)}
+        </div>
+        <FieldLabel m="14px 4px 6px">Name</FieldLabel>
+        <input value={name} placeholder="Gym" onChange={e => setName(e.target.value)} style={textInput} />
+        <FieldLabel m="14px 4px 6px">Weekly budget</FieldLabel>
+        <SmallAmount value={weekly} onChange={setWeekly} />
+        <span style={{ margin: '8px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>{fmt(w * d.settings.weeks)} a month over {d.settings.weeks} weeks</span>
+        <PrimaryBtn onClick={save} disabled={cant} mt={18}>{isNew ? 'Create pocket' : 'Save changes'}</PrimaryBtn>
+        {!isNew && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : 'Delete pocket'}</GhostDanger>}
+      </div>
+    </SheetFrame>
+  );
+}
