@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/modernist-efac6b76-fa77-46a5-b6f6-fe3006b2a3e5/styles.css">
+<script src="_ds/modernist-efac6b76-fa77-46a5-b6f6-fe3006b2a3e5/_ds_bundle.js"></script>
+<style>
+:root{--font-heading:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Helvetica Neue",system-ui,sans-serif;--font-body:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Helvetica Neue",system-ui,sans-serif;--font-heading-weight:700}
+body{margin:0;background:#ebe8e6;-webkit-font-smoothing:antialiased}
+a{color:var(--color-accent-700)}a:hover{color:var(--color-accent-800)}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+input::placeholder{color:var(--color-neutral-500)}
+::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+<div style="min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:40px 20px;box-sizing:border-box;font-family:var(--font-body);color:var(--color-text)">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="402px,874px">
+<div style="position:relative;height:874px;display:flex;flex-direction:column;background:#f7f5f3;font-family:var(--font-body);color:var(--color-text)">
+
+<div ref="{{ scrollRef }}" style="flex:1;overflow-y:auto;padding:62px 18px {{ padBottom }};scrollbar-width:none;scroll-behavior:smooth">
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 4px 0">
+    <div style="display:flex;flex-direction:column">
+      <span style="font-size:13px;color:var(--color-neutral-700)">{{ dateLabel }}</span>
+      <span style="font-size:26px;font-weight:700;letter-spacing:-0.02em">Hi, Sofía</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onClick="{{ openSearch }}" aria-label="Search transactions" style="width:44px;height:44px;border-radius:999px;background:#fff;border:0;color:var(--color-text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" style-hover="background:var(--color-neutral-200)">
+        <svg width="19" height="19" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      </button>
+      <button onClick="{{ pickProfilePhoto }}" aria-label="Change profile photo" style="width:44px;height:44px;border-radius:999px;background:var(--color-accent-200);color:var(--color-accent-800);display:flex;align-items:center;justify-content:center;font:inherit;font-weight:700;font-size:16px;border:0;padding:0;cursor:pointer;overflow:hidden">
+        <sc-if value="{{ profilePhoto }}" hint-placeholder-val="{{ false }}"><div style="width:100%;height:100%;background-image:{{ profileBg }};background-size:cover;background-position:center"></div></sc-if>
+        <sc-if value="{{ noProfilePhoto }}" hint-placeholder-val="{{ true }}"><span>S</span></sc-if>
+      </button>
+    </div>
+  </div>
+
+  <div style="background:var(--color-accent-100);border-radius:28px;padding:22px 22px 20px;display:flex;flex-direction:column;gap:6px">
+    <span style="font-size:14px;color:var(--color-accent-800);font-weight:600">Safe to spend this week</span>
+    <span style="font-size:44px;font-weight:700;letter-spacing:-0.035em;line-height:1.05;color:var(--color-accent-900)">{{ weekLeftFmt }}</span>
+    <span style="font-size:13px;color:var(--color-accent-800)">of {{ weekBudgetFmt }} · {{ daysLeft }} days left</span>
+    <div style="margin-top:10px;height:10px;border-radius:999px;background:#fff;overflow:hidden">
+      <div style="height:10px;border-radius:999px;width:{{ weekSpentPct }};background:var(--color-accent);transition:width .5s ease"></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+    <div onClick="{{ goAccounts }}" style="background:#fff;border-radius:24px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:2px" style-hover="background:var(--color-neutral-100)">
+      <span style="font-size:13px;color:var(--color-neutral-700)">Net worth</span>
+      <span style="font-size:19px;font-weight:700;letter-spacing:-0.02em">{{ netWorthFmt }}</span>
+      <span style="font-size:12px;color:var(--color-neutral-600)">{{ accountCount }} accounts</span>
+    </div>
+    <div onClick="{{ goInsights }}" style="background:#fff;border-radius:24px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:2px" style-hover="background:var(--color-neutral-100)">
+      <span style="font-size:13px;color:var(--color-neutral-700)">Spent in November</span>
+      <span style="font-size:19px;font-weight:700;letter-spacing:-0.02em">{{ spentFmt }}</span>
+      <span style="font-size:12px;color:var(--color-neutral-600)">{{ spentOfIncome }} of income</span>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 4px 0">
+    <span style="font-size:19px;font-weight:700;letter-spacing:-0.02em">Pockets</span>
+    <span style="font-size:13px;color:var(--color-neutral-700)">{{ weekLabel }}</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+    <sc-for list="{{ pocketRows }}" as="p" hint-placeholder-count="4">
+      <div onClick="{{ p.open }}" style="background:{{ p.tint }};border-radius:24px;padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:10px;transition:transform .15s ease" style-active="transform:scale(.97)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+          <span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="width:32px;height:32px;border-radius:999px;background-color:rgba(255,255,255,.85);background-image:{{ p.photoBg }};background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:{{ p.ink }};flex:none">{{ p.initial }}</span><span style="font-size:14px;font-weight:600;color:{{ p.ink }};line-height:1.25">{{ p.name }}</span></span>
+          <svg width="34" height="34" viewBox="0 0 40 40" style="flex:none;transform:rotate(-90deg)"><circle cx="20" cy="20" r="16" style="fill:none;stroke:rgba(255,255,255,.85);stroke-width:6"></circle><circle cx="20" cy="20" r="16" style="fill:none;stroke:{{ p.ink }};stroke-width:6;stroke-linecap:round;stroke-dasharray:{{ p.dash }};transition:stroke-dasharray .5s ease"></circle></svg>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:20px;font-weight:700;letter-spacing:-0.025em;color:{{ p.leftColor }}">{{ p.leftFmt }}</span>
+          <span style="font-size:12px;color:{{ p.ink }};opacity:.8">left of {{ p.budgetFmt }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 4px 0">
+    <span style="font-size:19px;font-weight:700;letter-spacing:-0.02em">Coming up</span>
+    <span onClick="{{ goInsights }}" style="font-size:13px;color:var(--color-accent-700);font-weight:600;cursor:pointer">All bills</span>
+  </div>
+  <div style="background:#fff;border-radius:24px;padding:6px 16px">
+    <sc-for list="{{ upcoming }}" as="b" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid {{ b.line }}">
+        <div style="width:40px;height:40px;border-radius:14px;background:{{ b.tint }};color:{{ b.ink }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:none">{{ b.initial }}</div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <span style="font-size:15px;font-weight:600">{{ b.name }}</span>
+          <span style="font-size:12px;color:{{ b.dueColor }}">{{ b.dueLabel }}</span>
+        </div>
+        <span style="font-size:15px;font-weight:600;white-space:nowrap">{{ b.amtFmt }}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 4px 0">
+    <span style="font-size:19px;font-weight:700;letter-spacing:-0.02em">Recent</span>
+    <span onClick="{{ openSearch }}" style="font-size:13px;color:var(--color-accent-700);font-weight:600;cursor:pointer">Search</span>
+  </div>
+  <div style="background:#fff;border-radius:24px;padding:6px 16px">
+    <sc-for list="{{ recent }}" as="e" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid {{ e.line }}">
+        <div style="width:40px;height:40px;border-radius:999px;background-color:{{ e.tint }};background-image:{{ e.photoBg }};background-size:cover;background-position:center;color:{{ e.ink }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:none">{{ e.initial }}</div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <span style="font-size:15px;font-weight:600">{{ e.note }}</span>
+          <span style="font-size:12px;color:var(--color-neutral-700)">{{ e.meta }}</span><sc-if value="{{ e.hasTags }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;color:var(--color-accent-700)">{{ e.tagLine }}</span></sc-if>
+        </div>
+        <span style="font-size:15px;font-weight:600;white-space:nowrap">{{ e.amtFmt }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAccounts }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="padding:4px 4px 0;display:flex;justify-content:space-between;align-items:center;gap:10px">
+    <span style="font-size:30px;font-weight:700;letter-spacing:-0.03em">Accounts</span>
+    <button onClick="{{ exportAll }}" style="height:38px;padding:0 14px;border-radius:999px;border:0;background:#fff;color:var(--color-text);font:inherit;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap" style-hover="background:var(--color-neutral-200)">
+      <svg width="15" height="15" viewBox="0 0 24 24" style="fill:none;stroke:oklch(0.5 0.12 150);stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>
+      Excel
+    </button>
+  </div>
+  <div style="background:#fff;border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:6px">
+    <span style="font-size:14px;color:var(--color-neutral-700)">Net worth</span>
+    <span style="font-size:38px;font-weight:700;letter-spacing:-0.035em;line-height:1.05">{{ netWorthFmt }}</span>
+    <div style="margin-top:12px;height:10px;border-radius:999px;background:oklch(0.9 0.05 25);overflow:hidden">
+      <div style="height:10px;border-radius:999px;width:{{ assetPct }};background:oklch(0.62 0.12 160)"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px">
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:999px;background:oklch(0.62 0.12 160)"></span>You have {{ assetsFmt }}</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:999px;background:oklch(0.9 0.05 25)"></span>You owe {{ debtFmt }}</span>
+    </div>
+  </div>
+
+  <div style="padding:10px 4px 0;font-size:19px;font-weight:700;letter-spacing:-0.02em">Debit and Cash</div>
+  <div style="background:#fff;border-radius:24px;padding:6px 16px">
+    <sc-for list="{{ cashAccts }}" as="a" hint-placeholder-count="3">
+      <div onClick="{{ a.open }}" style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid {{ a.line }};cursor:pointer">
+        <div style="width:42px;height:42px;border-radius:14px;background:{{ a.tint }};color:{{ a.ink }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex:none;overflow:hidden">
+          <sc-if value="{{ a.photo }}" hint-placeholder-val="{{ false }}"><div style="width:100%;height:100%;background-image:{{ a.photoBg }};background-size:cover;background-position:center"></div></sc-if>
+          <sc-if value="{{ a.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ a.initial }}</span></sc-if>
+        </div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <span style="font-size:15px;font-weight:600">{{ a.name }}</span>
+          <span style="font-size:12px;color:var(--color-neutral-700);white-space:nowrap">{{ a.kind }} · {{ a.txnLabel }}</span>
+        </div>
+        <span style="font-size:16px;font-weight:700;white-space:nowrap">{{ a.balFmt }}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" style="flex:none;fill:none;stroke:var(--color-neutral-400);stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="m9 18 6-6-6-6"></path></svg>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="padding:10px 4px 0;font-size:19px;font-weight:700;letter-spacing:-0.02em">Credit cards</div>
+  <sc-for list="{{ cards }}" as="c" hint-placeholder-count="2">
+    <div onClick="{{ c.open }}" style="background:{{ c.tint }};border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:transform .15s" style-active="transform:scale(.98)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <span style="display:flex;align-items:center;gap:10px;min-width:0;font-size:15px;font-weight:700;color:{{ c.ink }}">
+          <span style="width:34px;height:34px;border-radius:12px;background:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;font-size:14px;flex:none;overflow:hidden">
+            <sc-if value="{{ c.photo }}" hint-placeholder-val="{{ false }}"><div style="width:100%;height:100%;background-image:{{ c.photoBg }};background-size:cover;background-position:center"></div></sc-if>
+            <sc-if value="{{ c.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ c.initial }}</span></sc-if>
+          </span>
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+        </span>
+        <span style="font-size:12px;font-weight:600;color:{{ c.ink }};background:rgba(255,255,255,.7);padding:5px 10px;border-radius:999px;white-space:nowrap">Due {{ c.due }}</span>
+      </div>
+      <span style="margin-top:10px;font-size:13px;color:{{ c.ink }}">Balance owed</span>
+      <span style="font-size:30px;font-weight:700;letter-spacing:-0.03em;color:{{ c.ink }}">{{ c.balFmt }}</span>
+      <div style="margin-top:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.8);overflow:hidden">
+        <div style="height:10px;border-radius:999px;width:{{ c.usePct }};background:{{ c.ink }};transition:width .5s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px">
+        <span style="font-size:12px;color:{{ c.ink }}">{{ c.useLabel }}</span>
+        <button onClick="{{ c.pay }}" style="height:36px;padding:0 16px;border-radius:999px;border:0;background:#fff;color:{{ c.ink }};font:inherit;font-size:14px;font-weight:700;cursor:pointer" style-hover="background:rgba(255,255,255,.75)">Pay</button>
+      </div>
+    </div>
+  </sc-for>
+
+  <button onClick="{{ openAddAcct }}" style="height:54px;border-radius:999px;border:2px dashed var(--color-neutral-400);background:transparent;color:var(--color-text);font:inherit;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#fff">
+    <svg width="18" height="18" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+    Add account or card
+  </button>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBudget }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="padding:4px 4px 0;display:flex;flex-direction:column">
+    <span style="font-size:13px;color:var(--color-neutral-700)">November 2026</span>
+    <span style="font-size:30px;font-weight:700;letter-spacing:-0.03em">Budget</span>
+  </div>
+  <div style="background:#fff;border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:6px">
+    <span style="font-size:14px;color:var(--color-neutral-700)">Monthly income</span>
+    <div style="display:flex;align-items:baseline;gap:4px">
+      <span style="font-size:34px;font-weight:700;color:var(--color-neutral-500)">{{ cur }}</span>
+      <input type="number" inputMode="decimal" value="{{ incomeStr }}" onChange="{{ onIncome }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:34px;font-weight:700;letter-spacing:-0.03em;color:var(--color-text);padding:0;outline:none">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+      <span style="font-size:13px;font-weight:600;background:var(--color-neutral-200);padding:7px 12px;border-radius:999px;white-space:nowrap">{{ weeks }} weeks</span>
+      <span style="font-size:13px;font-weight:600;background:var(--color-neutral-200);padding:7px 12px;border-radius:999px;white-space:nowrap">{{ perWeekFmt }} per week</span>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 4px 0">
+    <span style="font-size:19px;font-weight:700;letter-spacing:-0.02em">Weekly pockets</span>
+    <span style="font-size:13px;color:var(--color-neutral-700)">per week</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ pocketRows }}" as="p" hint-placeholder-count="5">
+      <div style="background:#fff;border-radius:22px;padding:10px 10px 10px 12px;display:flex;align-items:center;gap:10px">
+        <button onClick="{{ p.edit }}" aria-label="Edit pocket" style="width:40px;height:40px;border-radius:999px;border:0;padding:0;cursor:pointer;background-color:{{ p.tint }};background-image:{{ p.photoBg }};background-size:cover;background-position:center;color:{{ p.ink }};display:flex;align-items:center;justify-content:center;font:inherit;font-weight:700;font-size:18px;flex:none">{{ p.initial }}</button>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <input value="{{ p.name }}" onChange="{{ p.onName }}" style="border:0;background:transparent;font:inherit;font-size:15px;font-weight:600;color:var(--color-text);padding:1px 0;outline:none;min-width:0">
+          <span style="font-size:12px;color:var(--color-neutral-700)">{{ p.monthlyFmt }} / month</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:2px;background:{{ p.tint }};border-radius:14px;padding:9px 12px;width:116px;flex:none">
+          <span style="font-size:14px;color:{{ p.ink }}">{{ cur }}</span>
+          <input type="number" inputMode="decimal" value="{{ p.weeklyStr }}" onChange="{{ p.onWeekly }}" style="width:100%;min-width:0;border:0;background:transparent;font:inherit;font-size:15px;font-weight:700;color:{{ p.ink }};padding:0;outline:none;text-align:right">
+        </div>
+        <button onClick="{{ p.remove }}" aria-label="Remove pocket" style="width:30px;height:30px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:0;background:transparent;color:var(--color-neutral-500);cursor:pointer;padding:0;flex:none" style-hover="background:var(--color-accent-100);color:var(--color-accent-700)">
+          <svg width="15" height="15" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+        </button>
+      </div>
+    </sc-for>
+    <button onClick="{{ addPocket }}" style="height:50px;border-radius:999px;border:2px dashed var(--color-neutral-400);background:transparent;color:var(--color-text);font:inherit;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:#fff">
+      <svg width="18" height="18" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+      Add pocket
+    </button>
+  </div>
+
+  <div style="background:#fff;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px">
+    <div style="height:10px;border-radius:999px;background:var(--color-neutral-200);overflow:hidden">
+      <div style="height:10px;border-radius:999px;width:{{ allocPct }};background:{{ allocColor }};transition:width .3s ease"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:14px">
+      <span style="color:var(--color-neutral-700)">Planned for {{ weeks }} weeks</span><span style="font-weight:700">{{ allocFmt }}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:14px">
+      <span style="color:var(--color-neutral-700)">{{ unallocLabel }}</span><span style="font-weight:700;color:{{ unallocColor }}">{{ unallocAbsFmt }}</span>
+    </div>
+  </div>
+
+  <div style="padding:10px 4px 0;font-size:19px;font-weight:700;letter-spacing:-0.02em">Savings goals</div>
+  <sc-for list="{{ goalRows }}" as="g" hint-placeholder-count="2">
+    <div style="background:{{ g.tint }};border-radius:26px;padding:18px;display:flex;flex-direction:column;gap:4px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <span style="font-size:16px;font-weight:700;color:{{ g.ink }}">{{ g.name }}</span>
+        <span style="font-size:13px;font-weight:700;color:{{ g.ink }}">{{ g.pctLabel }}</span>
+      </div>
+      <span style="font-size:13px;color:{{ g.ink }}">{{ g.savedFmt }} of {{ g.targetFmt }}</span>
+      <div style="margin-top:8px;height:10px;border-radius:999px;background:rgba(255,255,255,.8);overflow:hidden">
+        <div style="height:10px;border-radius:999px;width:{{ g.pct }};background:{{ g.ink }};transition:width .5s ease"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px">
+        <span style="font-size:12px;color:{{ g.ink }}">{{ g.plan }}</span>
+        <button onClick="{{ g.add }}" style="height:36px;padding:0 16px;border-radius:999px;border:0;background:#fff;color:{{ g.ink }};font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap" style-hover="background:rgba(255,255,255,.75)">Add money</button>
+      </div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ isInsights }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="padding:4px 4px 0;font-size:30px;font-weight:700;letter-spacing:-0.03em">Insights</div>
+
+  <sc-if value="{{ tip }}" hint-placeholder-val="{{ false }}">
+    <div style="background:oklch(0.95 0.04 160);border-radius:26px;padding:18px;display:flex;gap:12px;align-items:flex-start">
+      <div style="width:38px;height:38px;border-radius:999px;background:#fff;color:oklch(0.42 0.09 160);display:flex;align-items:center;justify-content:center;flex:none">
+        <svg width="18" height="18" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6"></path><path d="M10 22h4"></path></svg>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:14px;line-height:1.4;color:oklch(0.32 0.07 160);text-wrap:pretty">{{ tip.text }}</span>
+        <button onClick="{{ tip.act }}" style="align-self:flex-start;height:36px;padding:0 16px;border-radius:999px;border:0;background:oklch(0.42 0.09 160);color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer">{{ tip.cta }}</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="background:#fff;border-radius:26px;padding:20px;display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;flex-direction:column">
+      <span style="font-size:14px;color:var(--color-neutral-700)">Spent in November so far</span>
+      <span style="font-size:30px;font-weight:700;letter-spacing:-0.03em">{{ spentFmt }}</span>
+    </div>
+    <div style="display:flex;height:14px;border-radius:999px;overflow:hidden;gap:3px">
+      <sc-for list="{{ split }}" as="s" hint-placeholder-count="4">
+        <div style="height:14px;width:{{ s.pct }};background:{{ s.mid }};border-radius:999px"></div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ split }}" as="s" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;font-size:14px">
+          <span style="width:10px;height:10px;border-radius:999px;background:{{ s.mid }};flex:none"></span>
+          <span style="flex:1">{{ s.name }}</span>
+          <span style="color:var(--color-neutral-700)">{{ s.pctLabel }}</span>
+          <span style="font-weight:700;width:96px;text-align:right">{{ s.amtFmt }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="background:#fff;border-radius:26px;padding:20px;display:flex;flex-direction:column;gap:12px">
+    <span style="font-size:14px;color:var(--color-neutral-700)">This week vs last week</span>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-weight:600">This week</span><span style="font-weight:700">{{ weekSpentFmt }}</span></div>
+      <div style="height:12px;border-radius:999px;background:var(--color-neutral-200);overflow:hidden"><div style="height:12px;border-radius:999px;width:{{ thisWeekBar }};background:var(--color-accent);transition:width .5s ease"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span style="font-weight:600">Last week</span><span style="font-weight:700">{{ lastWeekFmt }}</span></div>
+      <div style="height:12px;border-radius:999px;background:var(--color-neutral-200);overflow:hidden"><div style="height:12px;border-radius:999px;width:{{ lastWeekBar }};background:var(--color-neutral-500)"></div></div>
+    </div>
+    <span style="font-size:13px;color:var(--color-neutral-700)">{{ weekCompare }}</span>
+  </div>
+
+  <div style="background:#fff;border-radius:26px;padding:20px;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline">
+      <span style="font-size:14px;color:var(--color-neutral-700)">Spending by tag</span>
+      <span onClick="{{ openSearch }}" style="font-size:13px;color:var(--color-accent-700);font-weight:600;cursor:pointer">Search</span>
+    </div>
+    <sc-for list="{{ tagStats }}" as="g" hint-placeholder-count="4">
+      <div onClick="{{ g.open }}" style="display:flex;flex-direction:column;gap:6px;padding:8px 0;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:10px;font-size:14px">
+          <span style="font-weight:700;color:{{ g.ink }};background:{{ g.tint }};padding:4px 10px;border-radius:999px;white-space:nowrap">#{{ g.name }}</span>
+          <span style="flex:1;color:var(--color-neutral-700);white-space:nowrap">{{ g.countLabel }}</span>
+          <span style="font-weight:700;white-space:nowrap">{{ g.amtFmt }}</span>
+        </div>
+        <div style="height:8px;border-radius:999px;background:var(--color-neutral-200);overflow:hidden">
+          <div style="height:8px;border-radius:999px;width:{{ g.pct }};background:{{ g.mid }};transition:width .5s ease"></div>
+        </div>
+      </div>
+    </sc-for>
+    <sc-if value="{{ noTagStats }}" hint-placeholder-val="{{ false }}">
+      <span style="font-size:14px;color:var(--color-neutral-700);padding:6px 0">Add tags to your expenses to see them here.</span>
+    </sc-if>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 4px 0">
+    <span style="font-size:19px;font-weight:700;letter-spacing:-0.02em">Bills and subscriptions</span>
+    <span style="font-size:13px;color:var(--color-neutral-700)">{{ billsTotalFmt }} / mo</span>
+  </div>
+  <div style="background:#fff;border-radius:24px;padding:6px 16px">
+    <sc-for list="{{ billRows }}" as="b" hint-placeholder-count="5">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid {{ b.line }}">
+        <div style="width:40px;height:40px;border-radius:14px;background:{{ b.tint }};color:{{ b.ink }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:none">{{ b.initial }}</div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <span style="font-size:15px;font-weight:600;text-decoration:{{ b.strike }}">{{ b.name }}</span>
+          <span style="font-size:12px;color:{{ b.dueColor }}">{{ b.kind }} · {{ b.dueLabel }}</span>
+        </div>
+        <span style="font-size:15px;font-weight:600;white-space:nowrap;color:{{ b.amtColor }}">{{ b.amtFmt }}</span>
+        <button onClick="{{ b.toggle }}" aria-label="Mark paid" style="width:30px;height:30px;border-radius:999px;border:2px solid {{ b.chkBorder }};background:{{ b.chkBg }};color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none">
+          <svg width="14" height="14" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><path d="M20 6 9 17l-5-5"></path></svg>
+        </button>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAssistant }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:12px">
+  <div style="padding:4px 4px 0;display:flex;flex-direction:column">
+    <span style="font-size:30px;font-weight:700;letter-spacing:-0.03em">Assistant</span>
+    <span style="font-size:13px;color:var(--color-neutral-700)">Ask questions, plan budgets, or log expenses by voice</span>
+  </div>
+
+  <sc-if value="{{ chatEmpty }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:var(--color-accent-100);border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:8px">
+        <div style="width:44px;height:44px;border-radius:999px;background:#fff;color:var(--color-accent);display:flex;align-items:center;justify-content:center">
+          <svg width="22" height="22" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>
+        </div>
+        <span style="font-size:18px;font-weight:700;color:var(--color-accent-900);letter-spacing:-0.01em">Hi Sofía, how can I help?</span>
+        <span style="font-size:14px;line-height:1.4;color:var(--color-accent-800);text-wrap:pretty">I can see your pockets, accounts and goals. Tap the mic and say something like "gasté 45 mil en el mercado" and I'll log it for you.</span>
+      </div>
+      <span style="margin:6px 4px 0;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Try asking</span>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="4">
+          <button onClick="{{ s.ask }}" style="text-align:left;padding:13px 16px;border-radius:20px;border:0;background:#fff;font:inherit;font-size:14px;font-weight:600;color:var(--color-text);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px" style-hover="background:var(--color-neutral-200)">
+            <span>{{ s.label }}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" style="flex:none;fill:none;stroke:var(--color-neutral-500);stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ chat }}" as="m" hint-placeholder-count="0">
+      <div style="display:flex;flex-direction:column;align-items:{{ m.align }};gap:6px">
+        <sc-if value="{{ m.voice }}" hint-placeholder-val="{{ false }}">
+          <span style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--color-neutral-600);padding:0 6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></svg>
+            Voice message
+          </span>
+        </sc-if>
+        <sc-if value="{{ m.hasText }}" hint-placeholder-val="{{ true }}">
+          <div style="max-width:84%;padding:11px 15px;border-radius:{{ m.radius }};background:{{ m.bg }};color:{{ m.fg }};font-size:15px;line-height:1.4;white-space:pre-wrap;text-wrap:pretty">{{ m.text }}</div>
+        </sc-if>
+        <sc-for list="{{ m.cards }}" as="c" hint-placeholder-count="0">
+          <div style="width:84%;background:#fff;border-radius:20px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 0 0 1.5px {{ c.ring }}">
+            <div style="width:38px;height:38px;border-radius:999px;background:{{ c.tint }};color:{{ c.ink }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:none">{{ c.initial }}</div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+              <span style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:{{ c.ink }}">{{ c.kicker }}</span>
+              <span style="font-size:15px;font-weight:700">{{ c.title }}</span>
+              <span style="font-size:12px;color:var(--color-neutral-700)">{{ c.sub }}</span>
+            </div>
+            <span style="font-size:15px;font-weight:700;white-space:nowrap">{{ c.amt }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+    <sc-if value="{{ thinking }}" hint-placeholder-val="{{ false }}">
+      <div style="align-self:flex-start;padding:12px 16px;border-radius:22px 22px 22px 6px;background:#fff;font-size:14px;color:var(--color-neutral-600);display:flex;align-items:center;gap:8px">
+        <span style="display:flex;gap:4px">
+          <span style="width:7px;height:7px;border-radius:999px;background:var(--color-neutral-400)"></span>
+          <span style="width:7px;height:7px;border-radius:999px;background:var(--color-neutral-500)"></span>
+          <span style="width:7px;height:7px;border-radius:999px;background:var(--color-neutral-600)"></span>
+        </span>
+        Thinking
+      </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+</div>
+
+<sc-if value="{{ isAssistant }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;left:14px;right:14px;bottom:102px;z-index:25;display:flex;flex-direction:column;gap:8px">
+    <sc-if value="{{ listening }}" hint-placeholder-val="{{ false }}">
+      <div style="align-self:center;max-width:100%;background:var(--color-text);color:#fff;border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow-md)">
+        <span style="width:8px;height:8px;border-radius:999px;background:var(--color-accent);flex:none;box-shadow:0 0 0 4px color-mix(in srgb,var(--color-accent) 35%,transparent)"></span>
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ listenLabel }}</span>
+      </div>
+    </sc-if>
+    <div style="display:flex;align-items:center;gap:6px;background:#fff;border-radius:999px;padding:6px 6px 6px 18px;box-shadow:0 8px 24px rgba(45,43,43,.12),0 0 0 1px rgba(45,43,43,.04)">
+      <input placeholder="Ask or tell me an expense…" value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:15px;color:var(--color-text);padding:0;outline:none">
+      <button onClick="{{ toggleMic }}" aria-label="Voice message" style="width:42px;height:42px;border-radius:999px;border:0;background:{{ micBg }};color:{{ micFg }};display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none;box-shadow:{{ micRing }};transition:all .2s">
+        <svg width="19" height="19" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></svg>
+      </button>
+      <button onClick="{{ sendDraft }}" disabled="{{ cantSend }}" aria-label="Send" style="width:42px;height:42px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none;opacity:{{ sendOpacity }};transition:opacity .2s">
+        <svg width="19" height="19" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="m5 12 7-7 7 7"></path><path d="M12 19V5"></path></svg>
+      </button>
+    </div>
+  </div>
+</sc-if>
+
+<input type="file" accept="image/*" ref="{{ fileRef }}" onChange="{{ onFile }}" style="display:none">
+
+<sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;left:18px;right:18px;bottom:112px;z-index:30;background:var(--color-text);color:#fff;padding:14px 18px;border-radius:999px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-lg)">
+    <svg width="16" height="16" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex:none"><path d="M20 6 9 17l-5-5"></path></svg>
+    <span>{{ toast }}</span>
+  </div>
+</sc-if>
+
+<div style="position:absolute;left:14px;right:14px;bottom:30px;z-index:20;display:flex;gap:10px;align-items:center">
+  <div style="flex:1;display:flex;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:999px;padding:5px;box-shadow:0 8px 24px rgba(45,43,43,.12),0 0 0 1px rgba(45,43,43,.04)">
+    <button onClick="{{ goHome }}" aria-label="Home" style="flex:{{ t.homeFlex }};min-width:0;height:52px;border-radius:999px;border:0;background:{{ t.homeBg }};color:{{ t.homeFg }};display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;padding:0 8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:flex .25s ease,background .2s;overflow:hidden">
+      <svg width="21" height="21" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+      <sc-if value="{{ t.homeOn }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap">Home</span></sc-if>
+    </button>
+    <button onClick="{{ goAccounts }}" aria-label="Accounts" style="flex:{{ t.accFlex }};min-width:0;height:52px;border-radius:999px;border:0;background:{{ t.accBg }};color:{{ t.accFg }};display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;padding:0 8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:flex .25s ease,background .2s;overflow:hidden">
+      <svg width="21" height="21" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><path d="M2 10h20"></path></svg>
+      <sc-if value="{{ t.accOn }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap">Accounts</span></sc-if>
+    </button>
+    <button onClick="{{ goBudget }}" aria-label="Budget" style="flex:{{ t.budFlex }};min-width:0;height:52px;border-radius:999px;border:0;background:{{ t.budBg }};color:{{ t.budFg }};display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;padding:0 8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:flex .25s ease,background .2s;overflow:hidden">
+      <svg width="21" height="21" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg>
+      <sc-if value="{{ t.budOn }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap">Budget</span></sc-if>
+    </button>
+    <button onClick="{{ goInsights }}" aria-label="Insights" style="flex:{{ t.insFlex }};min-width:0;height:52px;border-radius:999px;border:0;background:{{ t.insBg }};color:{{ t.insFg }};display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;padding:0 8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:flex .25s ease,background .2s;overflow:hidden">
+      <svg width="21" height="21" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+      <sc-if value="{{ t.insOn }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap">Insights</span></sc-if>
+    </button>
+    <button onClick="{{ goAssistant }}" aria-label="Assistant" style="flex:{{ t.aiFlex }};min-width:0;height:52px;border-radius:999px;border:0;background:{{ t.aiBg }};color:{{ t.aiFg }};display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;padding:0 8px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:flex .25s ease,background .2s;overflow:hidden">
+      <svg width="21" height="21" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>
+      <sc-if value="{{ t.aiOn }}" hint-placeholder-val="{{ false }}"><span style="white-space:nowrap">Assistant</span></sc-if>
+    </button>
+  </div>
+  <button onClick="{{ openAdd }}" aria-label="Add expense" style="width:62px;height:62px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;box-shadow:0 8px 20px color-mix(in srgb,var(--color-accent) 35%,transparent);transition:transform .15s" style-hover="background:var(--color-accent-600)" style-active="transform:scale(.92)">
+    <svg width="26" height="26" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+  </button>
+</div>
+
+<sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;justify-content:flex-end">
+  <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(32,30,29,.3)"></div>
+  <div style="position:relative;background:#f7f5f3;border-radius:32px 32px 0 0;padding:10px 20px 40px;max-height:88%;overflow-y:auto;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);scrollbar-width:none">
+    <div style="align-self:center;width:40px;height:5px;border-radius:999px;background:var(--color-neutral-300);margin-bottom:10px"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:24px;font-weight:700;letter-spacing:-0.025em">{{ sheetTitle }}</span>
+      <button onClick="{{ closeSheet }}" aria-label="Close" style="width:34px;height:34px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:0;background:var(--color-neutral-200);color:var(--color-text);cursor:pointer;padding:0">
+        <svg width="16" height="16" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    </div>
+
+    <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;min-height:560px">
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px;background:#fff;border-radius:999px;padding:0 16px;height:50px">
+        <svg width="18" height="18" viewBox="0 0 24 24" style="flex:none;fill:none;stroke:var(--color-neutral-500);stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input placeholder="Search by name, pocket or #tag" value="{{ search }}" onChange="{{ onSearch }}" autoFocus="{{ true }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:16px;color:var(--color-text);padding:0;outline:none">
+        <sc-if value="{{ search }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ clearSearch }}" aria-label="Clear" style="width:24px;height:24px;border-radius:999px;border:0;background:var(--color-neutral-200);color:var(--color-text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+            <svg width="12" height="12" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          </button>
+        </sc-if>
+      </div>
+      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:12px -20px 0;padding:0 20px">
+        <sc-for list="{{ filterChips }}" as="g" hint-placeholder-count="5">
+          <button onClick="{{ g.pick }}" style="flex:none;height:34px;padding:0 12px;border-radius:999px;border:0;background:{{ g.bg }};color:{{ g.fg }};font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s">{{ g.label }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin:16px 4px 8px;font-size:13px">
+        <span style="color:var(--color-neutral-700);white-space:nowrap">{{ resultCount }}</span>
+        <span style="font-weight:700;white-space:nowrap">{{ resultTotal }}</span>
+      </div>
+      <div style="background:#fff;border-radius:22px;padding:4px 16px">
+        <sc-for list="{{ results }}" as="e" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid {{ e.line }}">
+            <div style="width:38px;height:38px;border-radius:999px;background-color:{{ e.tint }};background-image:{{ e.photoBg }};background-size:cover;background-position:center;color:{{ e.ink }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none">{{ e.initial }}</div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+              <span style="font-size:15px;font-weight:600">{{ e.note }}</span>
+              <span style="font-size:12px;color:var(--color-neutral-700)">{{ e.meta }}</span>
+              <sc-if value="{{ e.hasTags }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;color:var(--color-accent-700)">{{ e.tagLine }}</span></sc-if>
+            </div>
+            <span style="font-size:15px;font-weight:600;white-space:nowrap">{{ e.amtFmt }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:18px 0;font-size:14px;color:var(--color-neutral-700)">No transactions match.</div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isAdd }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;align-items:baseline;gap:4px;margin-top:10px;background:#fff;border-radius:24px;padding:16px 20px">
+        <span style="font-size:40px;font-weight:700;color:var(--color-neutral-400)">{{ cur }}</span>
+        <input type="number" inputMode="decimal" placeholder="0" value="{{ amt }}" onChange="{{ onAmt }}" autoFocus="{{ true }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:40px;font-weight:700;letter-spacing:-0.03em;color:var(--color-text);padding:0;outline:none">
+      </div>
+      <span style="margin:18px 4px 8px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Pocket</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{ pickRows }}" as="p" hint-placeholder-count="4">
+          <button onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:8px;padding:8px 14px 8px 8px;border-radius:999px;border:2px solid {{ p.border }};background:{{ p.bg }};color:{{ p.fg }};font:inherit;cursor:pointer;transition:all .15s">
+            <span style="width:24px;height:24px;border-radius:999px;background-color:{{ p.dot }};background-image:{{ p.photoBg }};background-size:cover;background-position:center;color:{{ p.dotFg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">{{ p.initial }}</span>
+            <span style="font-size:14px;font-weight:600">{{ p.name }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin:16px 4px 8px;gap:8px">
+        <span style="font-size:13px;font-weight:600;color:var(--color-neutral-700)">Category</span>
+        <span style="font-size:12px;font-weight:600;color:var(--color-neutral-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ catPath }}</span>
+      </div>
+      <div style="background:#fff;border-radius:22px;padding:10px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none">
+          <sc-for list="{{ catChips }}" as="c" hint-placeholder-count="5">
+            <button onClick="{{ c.pick }}" style="flex:none;height:34px;padding:0 13px;border-radius:999px;border:0;background:{{ c.bg }};color:{{ c.fg }};font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:inset 0 0 0 1px var(--color-neutral-200);transition:all .15s">{{ c.name }}</button>
+          </sc-for>
+          <div style="flex:none;display:flex;align-items:center;height:34px;border-radius:999px;border:2px dashed var(--color-neutral-300);padding:0 4px 0 12px">
+            <input placeholder="New category" value="{{ newCat }}" onChange="{{ onNewCat }}" onKeyDown="{{ onCatKey }}" onBlur="{{ addCatFn }}" style="width:96px;border:0;background:transparent;font:inherit;font-size:13px;font-weight:600;color:var(--color-text);padding:0;outline:none">
+            <button onClick="{{ addCatFn }}" aria-label="Add category" style="width:24px;height:24px;border-radius:999px;border:0;background:var(--color-neutral-200);color:var(--color-text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+              <svg width="12" height="12" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+            </button>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--color-neutral-200)">
+          <sc-for list="{{ subChips }}" as="s" hint-placeholder-count="3">
+            <button onClick="{{ s.pick }}" style="height:30px;padding:0 11px;border-radius:999px;border:1.5px solid {{ s.border }};background:{{ s.bg }};color:{{ s.fg }};font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">{{ s.name }}</button>
+          </sc-for>
+          <div style="display:flex;align-items:center;height:30px;border-radius:999px;border:1.5px dashed var(--color-neutral-300);padding:0 3px 0 10px">
+            <input placeholder="Subcategory" value="{{ newSub }}" onChange="{{ onNewSub }}" onKeyDown="{{ onCatKey }}" onBlur="{{ addSubFn }}" style="width:80px;border:0;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--color-text);padding:0;outline:none">
+            <button onClick="{{ addSubFn }}" aria-label="Add subcategory" style="width:22px;height:22px;border-radius:999px;border:0;background:var(--color-neutral-200);color:var(--color-text);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+              <svg width="11" height="11" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <span style="margin:16px 4px 8px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Paid with</span>
+      <div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px">
+        <sc-for list="{{ payRows }}" as="a" hint-placeholder-count="3">
+          <button onClick="{{ a.pick }}" style="flex:none;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:10px 14px;border-radius:18px;border:2px solid {{ a.border }};background:{{ a.bg }};font:inherit;cursor:pointer;text-align:left;color:var(--color-text)">
+            <span style="font-size:14px;font-weight:600;white-space:nowrap">{{ a.name }}</span>
+            <span style="font-size:12px;color:var(--color-neutral-700);white-space:nowrap">{{ a.sub }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <input placeholder="What was it for?" value="{{ note }}" onChange="{{ onNote }}" style="margin-top:16px;border:0;border-radius:18px;background:#fff;font:inherit;font-size:16px;color:var(--color-text);padding:15px 18px;outline:none">
+      <span style="margin:16px 4px 8px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Tags</span>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+        <sc-for list="{{ tagChips }}" as="g" hint-placeholder-count="4">
+          <button onClick="{{ g.toggle }}" style="height:34px;padding:0 12px;border-radius:999px;border:0;background:{{ g.bg }};color:{{ g.fg }};font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s">#{{ g.name }}</button>
+        </sc-for>
+        <div style="display:flex;align-items:center;height:34px;border-radius:999px;background:#fff;border:2px dashed var(--color-neutral-300);padding:0 4px 0 12px">
+          <input placeholder="New tag" value="{{ newTag }}" onChange="{{ onNewTag }}" onKeyDown="{{ onTagKey }}" style="width:84px;border:0;background:transparent;font:inherit;font-size:13px;font-weight:600;color:var(--color-text);padding:0;outline:none">
+          <button onClick="{{ addTag }}" aria-label="Add tag" style="width:24px;height:24px;border-radius:999px;border:0;background:var(--color-accent-100);color:var(--color-accent-700);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+            <svg width="13" height="13" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          </button>
+        </div>
+      </div>
+      <div style="margin:14px 4px 0;font-size:13px;color:{{ previewColor }}">{{ preview }}</div>
+      <button onClick="{{ saveExpense }}" disabled="{{ cantSave }}" style="margin-top:14px;height:56px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;font:inherit;font-size:17px;font-weight:700;cursor:pointer;opacity:{{ saveOpacity }}" style-hover="background:var(--color-accent-600)">Save expense</button>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isPocket }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <div style="margin-top:10px;background:{{ sel.tint }};border-radius:28px;padding:22px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:14px;font-weight:600;color:{{ sel.ink }}">{{ sel.leftLabel }}</span>
+        <span style="font-size:42px;font-weight:700;letter-spacing:-0.035em;line-height:1.05;color:{{ sel.leftColor }}">{{ sel.leftAbsFmt }}</span>
+        <div style="margin-top:12px;height:10px;border-radius:999px;background:rgba(255,255,255,.8);overflow:hidden">
+          <div style="height:10px;border-radius:999px;width:{{ sel.pct }};background:{{ sel.ink }};transition:width .5s ease"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+          <span style="font-size:12px;font-weight:600;color:{{ sel.ink }};background:rgba(255,255,255,.7);padding:5px 10px;border-radius:999px;white-space:nowrap">Planned {{ sel.weeklyFmt }}</span>
+          <span style="font-size:12px;font-weight:600;color:{{ sel.ink }};background:rgba(255,255,255,.7);padding:5px 10px;border-radius:999px;white-space:nowrap">Spent {{ sel.spentFmt }}</span>
+          <span style="font-size:12px;font-weight:600;color:{{ sel.ink }};background:rgba(255,255,255,.7);padding:5px 10px;border-radius:999px;white-space:nowrap">Moved {{ sel.netMoveFmt }}</span>
+        </div>
+      </div>
+      <div style="margin-top:12px;background:#fff;border-radius:22px;padding:4px 16px">
+        <sc-for list="{{ sel.items }}" as="e" hint-placeholder-count="2">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid {{ e.line }};font-size:14px">
+            <span style="display:flex;flex-direction:column"><span style="font-weight:600">{{ e.note }}</span><span style="font-size:12px;color:var(--color-neutral-700)">{{ e.meta }}</span><sc-if value="{{ e.hasTags }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;color:var(--color-accent-700)">{{ e.tagLine }}</span></sc-if></span><span style="font-weight:600">{{ e.amtFmt }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ sel.empty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:14px 0;font-size:14px;color:var(--color-neutral-700)">Nothing spent here yet this week.</div>
+        </sc-if>
+      </div>
+      <button onClick="{{ sel.edit }}" style="margin-top:12px;height:44px;border-radius:999px;border:0;background:transparent;color:var(--color-text);font:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:var(--color-neutral-200)">
+        <svg width="15" height="15" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg>
+        Edit pocket
+      </button>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button onClick="{{ openMove }}" disabled="{{ sel.cantMove }}" style="flex:1;height:54px;border-radius:999px;border:0;background:#fff;color:var(--color-text);font:inherit;font-size:15px;font-weight:700;cursor:pointer;opacity:{{ sel.moveOpacity }};display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:var(--color-neutral-200)">
+          <svg width="17" height="17" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></svg>
+          Move leftover
+        </button>
+        <button onClick="{{ addHere }}" style="flex:1;height:54px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:var(--color-accent-600)">Add expense</button>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isSaved }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <div style="margin-top:10px;background:{{ sel.tint }};border-radius:28px;padding:22px;display:flex;flex-direction:column;gap:4px">
+        <span style="font-size:14px;font-weight:600;color:{{ sel.ink }}">{{ sel.name }} · {{ sel.leftLabel }}</span>
+        <span style="font-size:42px;font-weight:700;letter-spacing:-0.035em;line-height:1.05;color:{{ sel.leftColor }}">{{ sel.leftAbsFmt }}</span>
+        <div style="margin-top:12px;height:10px;border-radius:999px;background:rgba(255,255,255,.8);overflow:hidden">
+          <div style="height:10px;border-radius:999px;width:{{ sel.pct }};background:{{ sel.ink }};transition:width .5s ease"></div>
+        </div>
+        <span style="margin-top:8px;font-size:13px;color:{{ sel.ink }}">{{ sel.spentFmt }} spent of {{ sel.budgetFmt }}</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button onClick="{{ openMove }}" disabled="{{ sel.cantMove }}" style="flex:1;height:54px;border-radius:999px;border:0;background:#fff;color:var(--color-text);font:inherit;font-size:15px;font-weight:700;cursor:pointer;opacity:{{ sel.moveOpacity }}" style-hover="background:var(--color-neutral-200)">Move leftover</button>
+        <button onClick="{{ closeSheet }}" style="flex:1;height:54px;border-radius:999px;border:0;background:var(--color-text);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer">Done</button>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isMove }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <span style="margin:0 4px;font-size:13px;color:var(--color-neutral-700)">{{ sel.leftFmt }} left in {{ sel.name }} this week</span>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-top:12px;background:#fff;border-radius:24px;padding:16px 20px">
+        <span style="font-size:40px;font-weight:700;color:var(--color-neutral-400)">{{ cur }}</span>
+        <input type="number" inputMode="decimal" value="{{ moveAmt }}" onChange="{{ onMoveAmt }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:40px;font-weight:700;letter-spacing:-0.03em;color:var(--color-text);padding:0;outline:none">
+      </div>
+      <span style="margin:18px 4px 8px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">To a pocket</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{ movePockets }}" as="p" hint-placeholder-count="4">
+          <button onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:8px;padding:8px 14px 8px 8px;border-radius:999px;border:2px solid {{ p.border }};background:{{ p.bg }};color:{{ p.fg }};font:inherit;cursor:pointer">
+            <span style="width:24px;height:24px;border-radius:999px;background-color:{{ p.dot }};background-image:{{ p.photoBg }};background-size:cover;background-position:center;color:{{ p.dotFg }};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700">{{ p.initial }}</span>
+            <span style="font-size:14px;font-weight:600">{{ p.name }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <span style="margin:16px 4px 8px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Or save it</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{ moveGoals }}" as="p" hint-placeholder-count="2">
+          <button onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:8px;padding:8px 14px 8px 8px;border-radius:999px;border:2px solid {{ p.border }};background:{{ p.bg }};color:{{ p.fg }};font:inherit;cursor:pointer">
+            <span style="width:24px;height:24px;border-radius:999px;background-color:{{ p.dot }};background-image:{{ p.photoBg }};background-size:cover;background-position:center;color:{{ p.dotFg }};display:flex;align-items:center;justify-content:center">
+              <svg width="13" height="13" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="5"></circle></svg>
+            </span>
+            <span style="font-size:14px;font-weight:600">{{ p.name }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="margin:16px 4px 0;font-size:13px;color:{{ moveHintColor }}">{{ moveHint }}</div>
+      <button onClick="{{ confirmMove }}" disabled="{{ cantMove }}" style="margin-top:14px;height:56px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;opacity:{{ moveOpacity }}" style-hover="background:var(--color-accent-600)">{{ moveCta }}</button>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isEditPocket }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:14px;background:#fff;border-radius:22px;padding:14px">
+        <div style="width:68px;height:68px;border-radius:999px;background-color:{{ ep.tint }};background-image:{{ ep.photoBg }};background-size:cover;background-position:center;color:{{ ep.ink }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:32px;flex:none">{{ ep.icon }}</div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+          <button onClick="{{ ep.pickPhoto }}" style="height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--color-neutral-200);color:var(--color-text);font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><rect width="18" height="18" x="3" y="3" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+            {{ ep.photoCta }}
+          </button>
+          <sc-if value="{{ ep.photo }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ ep.removePhoto }}" style="padding:0 4px;border:0;background:transparent;color:var(--color-accent-700);font:inherit;font-size:13px;font-weight:600;cursor:pointer">Use emoji instead</button>
+          </sc-if>
+        </div>
+      </div>
+      <span style="margin:14px 4px 6px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Emoji</span>
+      <div style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;background:#fff;border-radius:22px;padding:8px">
+        <sc-for list="{{ ep.emojis }}" as="m" hint-placeholder-count="24">
+          <button onClick="{{ m.pick }}" style="aspect-ratio:1;border-radius:12px;border:0;background:{{ m.bg }};font-size:20px;cursor:pointer;padding:0;transition:background .15s">{{ m.e }}</button>
+        </sc-for>
+      </div>
+      <span style="margin:14px 4px 6px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Name</span>
+      <input value="{{ ep.name }}" placeholder="Gym" onChange="{{ ep.onName }}" style="border:0;border-radius:18px;background:#fff;font:inherit;font-size:16px;color:var(--color-text);padding:15px 18px;outline:none">
+      <span style="margin:14px 4px 6px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Weekly budget</span>
+      <div style="display:flex;align-items:baseline;gap:4px;background:#fff;border-radius:18px;padding:13px 18px">
+        <span style="font-size:18px;font-weight:700;color:var(--color-neutral-400)">{{ cur }}</span>
+        <input type="number" inputMode="decimal" placeholder="0" value="{{ ep.weekly }}" onChange="{{ ep.onWeekly }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:18px;font-weight:700;color:var(--color-text);padding:0;outline:none">
+      </div>
+      <span style="margin:8px 4px 0;font-size:13px;color:var(--color-neutral-700)">{{ ep.hint }}</span>
+      <button onClick="{{ ep.save }}" disabled="{{ ep.cant }}" style="margin-top:18px;height:56px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;opacity:{{ ep.opacity }}" style-hover="background:var(--color-accent-600)">{{ ep.cta }}</button>
+      <sc-if value="{{ ep.canDelete }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ ep.remove }}" style="margin-top:8px;height:48px;border-radius:999px;border:0;background:transparent;color:var(--color-accent-700);font:inherit;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:var(--color-accent-100)">{{ ep.removeLabel }}</button>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isExport }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <span style="margin:6px 4px 8px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Month</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <sc-for list="{{ expMonths }}" as="m" hint-placeholder-count="3">
+          <button onClick="{{ m.pick }}" style="height:38px;padding:0 15px;border-radius:999px;border:0;background:{{ m.bg }};color:{{ m.fg }};font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s">{{ m.label }}</button>
+        </sc-for>
+      </div>
+      <span style="margin:16px 4px 8px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Accounts</span>
+      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:0 20px">
+        <sc-for list="{{ expAccts }}" as="a" hint-placeholder-count="4">
+          <button onClick="{{ a.pick }}" style="flex:none;height:36px;padding:0 14px;border-radius:999px;border:0;background:{{ a.bg }};color:{{ a.fg }};font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s">{{ a.label }}</button>
+        </sc-for>
+      </div>
+      <div style="margin-top:16px;background:#fff;border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+          <span style="font-size:14px;color:var(--color-neutral-700);white-space:nowrap">{{ expPreview.count }}</span>
+          <span style="font-size:22px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap">{{ expPreview.total }}</span>
+        </div>
+        <sc-for list="{{ expPreview.cats }}" as="c" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;gap:8px"><span style="white-space:nowrap">{{ c.name }}</span><span style="font-weight:700;white-space:nowrap">{{ c.amt }}</span></div>
+            <div style="height:6px;border-radius:999px;background:var(--color-neutral-200);overflow:hidden"><div style="height:6px;border-radius:999px;width:{{ c.pct }};background:oklch(0.68 0.12 150)"></div></div>
+          </div>
+        </sc-for>
+        <div style="display:flex;flex-direction:column;gap:2px;padding-top:10px;border-top:1px solid var(--color-neutral-200);font-size:12px;color:var(--color-neutral-700)">
+          <span>{{ expPreview.payments }} on a separate sheet</span>
+          <span>Sheets: {{ expPreview.sheets }}</span>
+        </div>
+      </div>
+      <button onClick="{{ doExport }}" style="margin-top:16px;height:56px;border-radius:999px;border:0;background:oklch(0.5 0.12 150);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;opacity:{{ exportOpacity }}" style-hover="background:oklch(0.45 0.12 150)">
+        <svg width="18" height="18" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>
+        {{ exportCta }}
+      </button>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isAcct }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <div style="background:{{ ad.tint }};border-radius:28px;padding:20px;display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button onClick="{{ ad.pickPhoto }}" aria-label="Change photo" style="position:relative;width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,.8);color:{{ ad.ink }};display:flex;align-items:center;justify-content:center;font:inherit;font-weight:700;font-size:20px;border:0;padding:0;cursor:pointer;overflow:hidden;flex:none">
+            <sc-if value="{{ ad.photo }}" hint-placeholder-val="{{ false }}"><div style="width:100%;height:100%;background-image:{{ ad.photoBg }};background-size:cover;background-position:center"></div></sc-if>
+            <sc-if value="{{ ad.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ ad.initial }}</span></sc-if>
+          </button>
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+            <span style="font-size:13px;font-weight:600;color:{{ ad.ink }}">{{ ad.kind }}</span>
+            <span style="font-size:13px;color:{{ ad.ink }};white-space:nowrap">{{ ad.balLabel }}</span>
+          </div>
+        </div>
+        <span style="margin-top:10px;font-size:38px;font-weight:700;letter-spacing:-0.035em;line-height:1.05;color:{{ ad.ink }}">{{ ad.balFmt }}</span>
+        <sc-if value="{{ ad.isCard }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+            <div style="height:10px;border-radius:999px;background:rgba(255,255,255,.8);overflow:hidden"><div style="height:10px;border-radius:999px;width:{{ ad.usePct }};background:{{ ad.ink }}"></div></div>
+            <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:{{ ad.ink }}"><span style="white-space:nowrap">Limit {{ ad.limitFmt }}</span><span style="white-space:nowrap">{{ ad.availFmt }} available · due {{ ad.due }}</span></div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px">
+        <button onClick="{{ ad.edit }}" style="height:50px;border-radius:999px;border:0;background:#fff;color:var(--color-text);font:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:var(--color-neutral-200)">
+          <svg width="16" height="16" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path></svg>
+          Edit
+        </button>
+        <button onClick="{{ ad.export }}" style="height:50px;border-radius:999px;border:0;background:oklch(0.94 0.05 150);color:oklch(0.38 0.1 150);font:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="background:oklch(0.9 0.07 150)">
+          <svg width="16" height="16" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round"><path d="M12 15V3"></path><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path></svg>
+          Excel
+        </button>
+      </div>
+      <sc-if value="{{ ad.isCard }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ ad.pay }}" style="margin-top:8px;height:50px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:var(--color-accent-600)">Pay card</button>
+      </sc-if>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 8px">
+        <span style="font-size:17px;font-weight:700">History</span>
+        <span style="font-size:13px;color:var(--color-neutral-700);white-space:nowrap">{{ ad.countLabel }}</span>
+      </div>
+      <div style="background:#fff;border-radius:22px;padding:4px 16px">
+        <sc-for list="{{ ad.txns }}" as="e" hint-placeholder-count="3">
+          <div>
+          <sc-if value="{{ e.showHeader }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;padding:14px 0 6px;border-bottom:1px solid var(--color-neutral-200)">
+              <span style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-700);white-space:nowrap">{{ e.monthLabel }}</span>
+              <span style="font-size:12px;font-weight:600;color:var(--color-neutral-600);white-space:nowrap">{{ e.monthTotal }}</span>
+            </div>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid {{ e.line }}">
+            <div style="width:36px;height:36px;border-radius:999px;background-color:{{ e.tint }};background-image:{{ e.photoBg }};background-size:cover;background-position:center;color:{{ e.ink }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:none">{{ e.initial }}</div>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+              <span style="font-size:15px;font-weight:600">{{ e.note }}</span>
+              <span style="font-size:12px;color:var(--color-neutral-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ e.meta }}</span>
+              <sc-if value="{{ e.hasTags }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:600;color:var(--color-accent-700)">{{ e.tagLine }}</span></sc-if>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end">
+              <span style="font-size:15px;font-weight:700;white-space:nowrap;color:{{ e.amtColor }}">{{ e.amtFmt }}</span>
+              <span style="font-size:11px;color:var(--color-neutral-600);white-space:nowrap">{{ e.afterFmt }}</span>
+            </div>
+          </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ ad.empty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:16px 0;font-size:14px;color:var(--color-neutral-700)">No transactions on this account yet.</div>
+        </sc-if>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isEditAcct }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:14px;background:#fff;border-radius:22px;padding:14px">
+        <div style="width:64px;height:64px;border-radius:20px;background:{{ ea.tint }};color:{{ ea.ink }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;overflow:hidden;flex:none">
+          <sc-if value="{{ ea.photo }}" hint-placeholder-val="{{ false }}"><div style="width:100%;height:100%;background-image:{{ ea.photoBg }};background-size:cover;background-position:center"></div></sc-if>
+          <sc-if value="{{ ea.noPhoto }}" hint-placeholder-val="{{ true }}"><span>{{ ea.initial }}</span></sc-if>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">
+          <button onClick="{{ ea.pickPhoto }}" style="height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--color-neutral-200);color:var(--color-text);font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">{{ ea.photoCta }}</button>
+          <sc-if value="{{ ea.photo }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ ea.removePhoto }}" style="padding:0 4px;border:0;background:transparent;color:var(--color-accent-700);font:inherit;font-size:13px;font-weight:600;cursor:pointer">Remove photo</button>
+          </sc-if>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;margin-top:14px;background:var(--color-neutral-200);border-radius:999px;padding:4px">
+        <sc-for list="{{ ea.types }}" as="k" hint-placeholder-count="4">
+          <button onClick="{{ k.pick }}" style="flex:1;height:38px;border-radius:999px;border:0;background:{{ k.bg }};color:var(--color-text);font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-shadow:{{ k.shadow }}">{{ k.label }}</button>
+        </sc-for>
+      </div>
+      <span style="margin:14px 4px 6px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Name</span>
+      <input value="{{ ea.name }}" onChange="{{ ea.onName }}" style="border:0;border-radius:18px;background:#fff;font:inherit;font-size:16px;color:var(--color-text);padding:15px 18px;outline:none">
+      <span style="margin:14px 4px 6px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">{{ ea.balLabel }}</span>
+      <div style="display:flex;align-items:baseline;gap:4px;background:#fff;border-radius:18px;padding:13px 18px">
+        <span style="font-size:18px;font-weight:700;color:var(--color-neutral-400)">{{ cur }}</span>
+        <input type="number" inputMode="decimal" value="{{ ea.bal }}" onChange="{{ ea.onBal }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:18px;font-weight:700;color:var(--color-text);padding:0;outline:none">
+      </div>
+      <sc-if value="{{ ea.isCard }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:14px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="margin:0 4px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Credit limit</span>
+            <input type="number" inputMode="decimal" value="{{ ea.limit }}" onChange="{{ ea.onLimit }}" style="border:0;border-radius:18px;background:#fff;font:inherit;font-size:16px;font-weight:600;color:var(--color-text);padding:15px 18px;outline:none;min-width:0">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="margin:0 4px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Payment due</span>
+            <input value="{{ ea.due }}" onChange="{{ ea.onDue }}" style="border:0;border-radius:18px;background:#fff;font:inherit;font-size:16px;font-weight:600;color:var(--color-text);padding:15px 18px;outline:none;min-width:0">
+          </div>
+        </div>
+      </sc-if>
+      <button onClick="{{ ea.save }}" disabled="{{ ea.cant }}" style="margin-top:20px;height:56px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;opacity:{{ ea.opacity }}" style-hover="background:var(--color-accent-600)">Save changes</button>
+      <button onClick="{{ ea.remove }}" style="margin-top:8px;height:48px;border-radius:999px;border:0;background:transparent;color:var(--color-accent-700);font:inherit;font-size:15px;font-weight:700;cursor:pointer" style-hover="background:var(--color-accent-100)">{{ ea.removeLabel }}</button>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isAddAcct }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;gap:4px;margin-top:10px;background:var(--color-neutral-200);border-radius:999px;padding:4px">
+        <sc-for list="{{ acctTypes }}" as="k" hint-placeholder-count="4">
+          <button onClick="{{ k.pick }}" style="flex:1;height:40px;border-radius:999px;border:0;background:{{ k.bg }};color:var(--color-text);font:inherit;font-size:13px;font-weight:700;cursor:pointer;box-shadow:{{ k.shadow }};transition:all .15s">{{ k.label }}</button>
+        </sc-for>
+      </div>
+      <span style="margin:16px 4px 6px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Name</span>
+      <input placeholder="{{ newAcct.namePh }}" value="{{ newAcct.name }}" onChange="{{ onNA_name }}" style="border:0;border-radius:18px;background:#fff;font:inherit;font-size:16px;color:var(--color-text);padding:15px 18px;outline:none">
+      <span style="margin:14px 4px 6px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">{{ newAcct.balLabel }}</span>
+      <div style="display:flex;align-items:baseline;gap:4px;background:#fff;border-radius:18px;padding:13px 18px">
+        <span style="font-size:18px;font-weight:700;color:var(--color-neutral-400)">{{ cur }}</span>
+        <input type="number" inputMode="decimal" placeholder="0" value="{{ newAcct.bal }}" onChange="{{ onNA_bal }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:18px;font-weight:700;color:var(--color-text);padding:0;outline:none">
+      </div>
+      <sc-if value="{{ newAcct.isCard }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:14px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="margin:0 4px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Credit limit</span>
+            <input type="number" inputMode="decimal" placeholder="0" value="{{ newAcct.limit }}" onChange="{{ onNA_limit }}" style="border:0;border-radius:18px;background:#fff;font:inherit;font-size:16px;font-weight:600;color:var(--color-text);padding:15px 18px;outline:none;min-width:0">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <span style="margin:0 4px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Payment due</span>
+            <input placeholder="Nov 25" value="{{ newAcct.due }}" onChange="{{ onNA_due }}" style="border:0;border-radius:18px;background:#fff;font:inherit;font-size:16px;font-weight:600;color:var(--color-text);padding:15px 18px;outline:none;min-width:0">
+          </div>
+        </div>
+      </sc-if>
+      <button onClick="{{ saveAcct }}" disabled="{{ cantSaveAcct }}" style="margin-top:20px;height:56px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;opacity:{{ saveAcctOpacity }}" style-hover="background:var(--color-accent-600)">Add {{ newAcct.typeLabel }}</button>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isPay }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <span style="margin:0 4px;font-size:13px;color:var(--color-neutral-700)">{{ payCard.balFmt }} owed · due {{ payCard.due }}</span>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-top:12px;background:#fff;border-radius:24px;padding:16px 20px">
+        <span style="font-size:40px;font-weight:700;color:var(--color-neutral-400)">{{ cur }}</span>
+        <input type="number" inputMode="decimal" value="{{ payAmt }}" onChange="{{ onPayAmt }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:40px;font-weight:700;letter-spacing:-0.03em;color:var(--color-text);padding:0;outline:none">
+      </div>
+      <span style="margin:18px 4px 8px;font-size:13px;font-weight:600;color:var(--color-neutral-700)">Pay from</span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ payFromRows }}" as="a" hint-placeholder-count="3">
+          <button onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px;border-radius:20px;border:2px solid {{ a.border }};background:#fff;font:inherit;cursor:pointer;text-align:left;color:var(--color-text)">
+            <span style="width:36px;height:36px;border-radius:12px;background:{{ a.tint }};color:{{ a.ink }};display:flex;align-items:center;justify-content:center;font-weight:700">{{ a.initial }}</span>
+            <span style="flex:1;font-size:15px;font-weight:600">{{ a.name }}</span>
+            <span style="font-size:14px;color:var(--color-neutral-700)">{{ a.balFmt }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="margin:14px 4px 0;font-size:13px;color:{{ payHintColor }}">{{ payHint }}</div>
+      <button onClick="{{ confirmPay }}" disabled="{{ cantPay }}" style="margin-top:14px;height:56px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;opacity:{{ payOpacity }}" style-hover="background:var(--color-accent-600)">Pay {{ payAmtFmt }}</button>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isGoal }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column">
+      <span style="margin:0 4px;font-size:13px;color:var(--color-neutral-700)">{{ goalSel.savedFmt }} saved of {{ goalSel.targetFmt }}</span>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-top:12px;background:#fff;border-radius:24px;padding:16px 20px">
+        <span style="font-size:40px;font-weight:700;color:var(--color-neutral-400)">{{ cur }}</span>
+        <input type="number" inputMode="decimal" placeholder="0" value="{{ goalAmt }}" onChange="{{ onGoalAmt }}" style="flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:40px;font-weight:700;letter-spacing:-0.03em;color:var(--color-text);padding:0;outline:none">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <sc-for list="{{ goalQuick }}" as="q" hint-placeholder-count="3">
+          <button onClick="{{ q.pick }}" style="height:38px;padding:0 16px;border-radius:999px;border:0;background:var(--color-neutral-200);color:var(--color-text);font:inherit;font-size:14px;font-weight:700;cursor:pointer" style-hover="background:var(--color-neutral-300)">{{ q.label }}</button>
+        </sc-for>
+      </div>
+      <div style="margin:14px 4px 0;font-size:13px;color:var(--color-neutral-700)">{{ goalHint }}</div>
+      <button onClick="{{ confirmGoal }}" disabled="{{ cantGoal }}" style="margin-top:14px;height:56px;border-radius:999px;border:0;background:var(--color-accent);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;opacity:{{ goalOpacity }}" style-hover="background:var(--color-accent-600)">Add to goal</button>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;currency&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;COP&quot;,&quot;$&quot;,&quot;€&quot;,&quot;£&quot;],&quot;default&quot;:&quot;COP&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;weeks&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;4&quot;,&quot;5&quot;],&quot;default&quot;:&quot;4&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Home&quot;,&quot;Accounts&quot;,&quot;Budget&quot;,&quot;Insights&quot;,&quot;Assistant&quot;],&quot;default&quot;:&quot;Home&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;voiceLang&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;es-CO&quot;,&quot;en-US&quot;],&quot;default&quot;:&quot;es-CO&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const HUES = [25, 150, 250, 300, 80, 195];
+const CATS = [
+  { name: 'Groceries', subs: ['Supermarket', 'Bakery', 'Liquor store'] },
+  { name: 'Food & dining', subs: ['Restaurants', 'Coffee', 'Delivery', 'Snacks'] },
+  { name: 'Transport', subs: ['Ride apps', 'Gas', 'Parking', 'Public transport'] },
+  { name: 'Entertainment', subs: ['Movies', 'Events', 'Games', 'Bars'] },
+  { name: 'Personal care', subs: ['Pharmacy', 'Beauty', 'Hair'] },
+  { name: 'Health', subs: ['Medical', 'Gym', 'Insurance'] },
+  { name: 'Home', subs: ['Rent', 'Utilities', 'Internet', 'Supplies'] },
+  { name: 'Shopping', subs: ['Clothes', 'Tech', 'Gifts'] },
+  { name: 'Education', subs: ['Courses', 'Books', 'Stationery'] },
+  { name: 'Financial', subs: ['Interest', 'Fees'] },
+  { name: 'Other', subs: ['Other'] }
+];
+const POCKET_CAT = { groc: ['Groceries', 'Supermarket'], trans: ['Transport', 'Ride apps'], dine: ['Food & dining', 'Restaurants'], fun: ['Entertainment', 'Movies'], care: ['Personal care', 'Pharmacy'] };
+const MERCHANT_CAT = {
+  'Éxito': ['Groceries', 'Supermarket'], 'D1': ['Groceries', 'Supermarket'], 'Carulla': ['Groceries', 'Supermarket'], 'Ara': ['Groceries', 'Supermarket'], 'Olímpica': ['Groceries', 'Supermarket'],
+  'Uber': ['Transport', 'Ride apps'], 'DiDi': ['Transport', 'Ride apps'], 'Cabify': ['Transport', 'Ride apps'], 'Terpel gas': ['Transport', 'Gas'], 'TuLlave recarga': ['Transport', 'Public transport'],
+  'Rappi': ['Food & dining', 'Delivery'], 'Juan Valdez': ['Food & dining', 'Coffee'], 'Starbucks': ['Food & dining', 'Coffee'], 'Crepes & Waffles': ['Food & dining', 'Restaurants'], 'El Corral': ['Food & dining', 'Restaurants'], 'Frisby': ['Food & dining', 'Restaurants'],
+  'Cine Colombia': ['Entertainment', 'Movies'], 'Andrés DC': ['Entertainment', 'Bars'], 'Steam': ['Entertainment', 'Games'], 'TuBoleta': ['Entertainment', 'Events'], 'Bolera': ['Entertainment', 'Games'],
+  'Farmatodo': ['Personal care', 'Pharmacy'], 'Cruz Verde': ['Personal care', 'Pharmacy'], 'Peluquería': ['Personal care', 'Hair'], 'Sephora': ['Personal care', 'Beauty']
+};
+const catOf = e => e.cat ? [e.cat, e.sub || ''] : (POCKET_CAT[e.p] || ['Other', 'Other']);
+function makeHistory() {
+  let seed = 20261031;
+  const r = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+  const pick = a => a[Math.floor(r() * a.length)];
+  const M = {
+    groc: [['Éxito', 60000, 220000], ['D1', 25000, 90000], ['Carulla', 80000, 260000], ['Ara', 20000, 70000], ['Olímpica', 40000, 150000]],
+    trans: [['Uber', 12000, 38000], ['DiDi', 9000, 30000], ['Terpel gas', 80000, 160000], ['Cabify', 15000, 40000], ['TuLlave recarga', 20000, 50000]],
+    dine: [['Rappi', 28000, 75000], ['Crepes & Waffles', 45000, 120000], ['Juan Valdez', 9000, 22000], ['El Corral', 30000, 65000], ['Frisby', 25000, 55000], ['Starbucks', 14000, 28000]],
+    fun: [['Cine Colombia', 18000, 52000], ['Andrés DC', 120000, 260000], ['Steam', 30000, 90000], ['TuBoleta', 80000, 220000], ['Bolera', 40000, 90000]],
+    care: [['Farmatodo', 15000, 85000], ['Cruz Verde', 12000, 60000], ['Peluquería', 35000, 70000], ['Sephora', 60000, 180000]]
+  };
+  const TAGS = { groc: ['home'], trans: ['work', 'night out'], dine: ['friends', 'date', 'work'], fun: ['friends', 'date', 'night out'], care: [] };
+  const W = { groc: 3, trans: 3, dine: 4, fun: 2, care: 1 };
+  const pockets = Object.keys(W).flatMap(k => Array(W[k]).fill(k));
+  const accts = ['c1', 'c1', 'c1', 'c1', 'c2', 'c2', 'c2', 'a1', 'a1', 'a3'];
+  const out = [];
+  let id = 1000;
+  for (let d = 31; d >= 1; d--) {
+    const n = 1 + Math.floor(r() * 3);
+    for (let i = 0; i < n; i++) {
+      const p = pick(pockets), [m, lo, hi] = pick(M[p]);
+      const amt = Math.round((lo + r() * (hi - lo)) / 100) * 100;
+      const tags = TAGS[p].length && r() < 0.45 ? [pick(TAGS[p])] : [];
+      const [cat, sub] = MERCHANT_CAT[m] || POCKET_CAT[p];
+      out.push({ id: id--, p, a: pick(accts), amt, note: m, day: 'Oct ' + d, date: '2026-10-' + String(d).padStart(2, '0'), tags, cat, sub });
+    }
+  }
+  return out;
+}
+const tint = h => `oklch(0.94 0.04 ${h})`;
+const mid = h => `oklch(0.78 0.1 ${h})`;
+const ink = h => `oklch(0.42 0.1 ${h})`;
+const LAST_WEEK = { groc: 310000, trans: 96000, dine: 240000, fun: 120000, care: 45000 };
+
+class Component extends DCLogic {
+  state = {
+    tab: ({ Accounts: 'accounts', Budget: 'budget', Insights: 'insights', Assistant: 'assistant' })[this.props.startTab] || 'home',
+    chat: [], draft: '', thinking: false, listening: false, interim: '',
+    incomeStr: '4800000',
+    pockets: [
+      { id: 'groc', name: 'Groceries', emoji: '🛒', weeklyStr: '350000', hue: 150 },
+      { id: 'trans', name: 'Transport', emoji: '🚌', weeklyStr: '120000', hue: 250 },
+      { id: 'dine', name: 'Eating out', emoji: '🍽️', weeklyStr: '200000', hue: 25 },
+      { id: 'fun', name: 'Fun', emoji: '🎟️', weeklyStr: '150000', hue: 300 },
+      { id: 'care', name: 'Personal care', emoji: '🧴', weeklyStr: '80000', hue: 80 }
+    ],
+    accounts: [
+      { id: 'a1', name: 'Bancolombia', kind: 'Checking', type: 'bank', bal: 3250000, hue: 80 },
+      { id: 'a2', name: 'Nu Cajita', kind: 'Savings', type: 'savings', bal: 6800000, hue: 300 },
+      { id: 'a3', name: 'Cash', kind: 'Wallet', type: 'cash', bal: 180000, hue: 150 },
+      { id: 'c1', name: 'Visa Gold', kind: 'Credit card', type: 'card', bal: 1240000, limit: 5000000, due: 'Nov 15', hue: 250 },
+      { id: 'c2', name: 'Mastercard Black', kind: 'Credit card', type: 'card', bal: 420000, limit: 3000000, due: 'Nov 22', hue: 25 }
+    ],
+    expenses: [
+      { id: 4, p: 'dine', a: 'c1', amt: 72000, note: 'Lunch with Ana', day: 'Today', tags: ['friends'], cat: 'Food & dining', sub: 'Restaurants' },
+      { id: 3, p: 'groc', a: 'a1', amt: 165000, note: 'Market run', day: 'Mon', tags: ['home'], cat: 'Groceries', sub: 'Supermarket' },
+      { id: 2, p: 'trans', a: 'a3', amt: 48000, note: 'Taxi home', day: 'Mon', tags: ['night out'], cat: 'Transport', sub: 'Ride apps' },
+      { id: 1, p: 'fun', a: 'c2', amt: 38000, note: 'Cinema', day: 'Sun', tags: ['friends', 'date'], cat: 'Entertainment', sub: 'Movies' }
+    ],
+    bills: [
+      { id: 'b1', name: 'Netflix', kind: 'Subscription', amt: 44900, inDays: 5, date: 'Nov 8', hue: 25, paid: false },
+      { id: 'b2', name: 'Spotify', kind: 'Subscription', amt: 16900, inDays: 9, date: 'Nov 12', hue: 150, paid: false },
+      { id: 'b3', name: 'Internet', kind: 'Bill', amt: 95000, inDays: 15, date: 'Nov 18', hue: 250, paid: false },
+      { id: 'b4', name: 'Phone plan', kind: 'Bill', amt: 55000, inDays: 17, date: 'Nov 20', hue: 80, paid: false },
+      { id: 'b5', name: 'Rent', kind: 'Bill', amt: 1400000, inDays: 27, date: 'Nov 30', hue: 300, paid: false }
+    ],
+    goals: [
+      { id: 'g1', name: 'Trip to Cartagena', saved: 1200000, target: 3000000, months: 4, hue: 195 },
+      { id: 'g2', name: 'Emergency fund', saved: 4500000, target: 10000000, months: 14, hue: 150 }
+    ],
+    history: makeHistory(),
+    moves: [], payments: [
+      { id: 's2', ts: 2, from: 'a1', to: 'c1', amt: 1800000, date: '2026-10-15' },
+      { id: 's3', ts: 3, from: 'a1', to: 'c2', amt: 900000, date: '2026-10-22' }
+    ], cats: CATS.map(c => ({ ...c, subs: [...c.subs] })), addCat: 'Groceries', addSub: 'Supermarket', catTouched: false, newCat: '', newSub: '', expMonth: '2026-11', expAcct: 'all', exporting: false, acctId: null, ea: null, profilePhoto: null, tags: ['friends', 'home', 'date', 'night out', 'work'], tagSel: [], newTag: '', search: '', filterTag: null,
+    sheet: null, sel: null, addP: 'groc', addA: 'a1', amt: '', note: '', moveAmt: '', moveTo: null, toast: null,
+    na: { type: 'bank', name: '', bal: '', limit: '', due: '' }, payId: null, payFrom: 'a1', payAmt: '', goalId: null, goalAmt: ''
+  };
+
+  num(s) { const n = parseFloat(String(s).replace(',', '.')); return isFinite(n) ? n : 0; }
+  isCOP() { return (this.props.currency ?? 'COP') === 'COP'; }
+  fmt(n, sign) {
+    const cop = this.isCOP(), c = cop ? '$' : this.props.currency;
+    const s = c + Math.abs(n).toLocaleString(cop ? 'es-CO' : 'en-US', { minimumFractionDigits: cop ? 0 : 2, maximumFractionDigits: cop ? 0 : 2 });
+    return n < 0 ? '−' + s : (sign && n > 0 ? '+' + s : s);
+  }
+  round(n) { return this.isCOP() ? Math.round(n) : Math.round(n * 100) / 100; }
+  stats(id, st0) {
+    const st = st0 || this.state, p = st.pockets.find(x => x.id === id);
+    if (!p) return null;
+    const weekly = this.num(p.weeklyStr);
+    const mIn = st.moves.filter(m => m.to === id).reduce((a, m) => a + m.amt, 0);
+    const mOut = st.moves.filter(m => m.from === id).reduce((a, m) => a + m.amt, 0);
+    const spent = st.expenses.filter(e => e.p === id).reduce((a, e) => a + e.amt, 0);
+    const budget = weekly + mIn - mOut, left = budget - spent;
+    return { id, name: p.name, hue: p.hue, weekly, mIn, mOut, spent, budget, left, initial: p.photo ? '' : (p.emoji || p.name.trim().charAt(0).toUpperCase() || '·'), photoBg: p.photo ? 'url(' + p.photo + ')' : 'none', emoji: p.emoji || '', photo: p.photo || null };
+  }
+  flash(t) { clearTimeout(this._t); this.setState({ toast: t }); this._t = setTimeout(() => this.setState({ toast: null }), 2600); }
+  fileRef = React.createRef();
+  pickPhoto(target) { this._photoTarget = target; const el = this.fileRef.current; if (el) { el.value = ''; el.click(); } }
+  onFile(e) {
+    const f = e.target.files && e.target.files[0], target = this._photoTarget;
+    if (!f || !target) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const S = 200, c = document.createElement('canvas'); c.width = S; c.height = S;
+        const k = Math.max(S / img.width, S / img.height), w = img.width * k, hgt = img.height * k;
+        c.getContext('2d').drawImage(img, (S - w) / 2, (S - hgt) / 2, w, hgt);
+        const url = c.toDataURL('image/jpeg', 0.85);
+        if (target.kind === 'profile') this.setState({ profilePhoto: url });
+        else if (target.kind === 'pedit') this.setState(x => ({ ep: x.ep ? { ...x.ep, photo: url } : x.ep }));
+        else if (target.kind === 'edit') this.setState(x => ({ ea: x.ea ? { ...x.ea, photo: url } : x.ea }));
+        else this.setState(x => ({ accounts: x.accounts.map(a => a.id === target.id ? { ...a, photo: url } : a) }));
+      };
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  }
+  dayDate(d) { return ({ Today: '2026-11-03', Mon: '2026-11-02', Sun: '2026-11-01' })[d] || '2026-11-03'; }
+  acctTxns(id, st0) {
+    const st = st0 || this.state, a = st.accounts.find(x => x.id === id);
+    if (!a) return { list: [], opening: 0 };
+    const card = a.type === 'card';
+    const items = [
+      ...[...st.expenses, ...(st.history || [])].filter(e => e.a === id).map((e, i) => {
+        const p = st.pockets.find(x => x.id === e.p);
+        return { kind: 'expense', icon: p ? (p.photo ? '' : (p.emoji || p.name.charAt(0).toUpperCase())) : null, photoBg: p && p.photo ? 'url(' + p.photo + ')' : 'none', ts: typeof e.id === 'number' ? e.id : i, date: e.date || this.dayDate(e.day), note: e.note, pocket: p ? p.name : '', hue: p ? p.hue : a.hue, tags: e.tags || [], category: catOf(e)[0], show: -e.amt, effect: card ? e.amt : -e.amt };
+      }),
+      ...st.payments.filter(p => p.from === id || p.to === id).map(p => {
+        const other = st.accounts.find(x => x.id === (p.from === id ? p.to : p.from));
+        const out = p.from === id;
+        return { kind: 'payment', ts: p.ts, date: p.date, note: out ? `Payment to ${other ? other.name : 'card'}` : `Payment from ${other ? other.name : 'account'}`, pocket: 'Card payment', hue: 150, tags: [], show: out ? -p.amt : p.amt, effect: -p.amt };
+      })
+    ].sort((x, y) => (y.date > x.date ? 1 : y.date < x.date ? -1 : y.ts - x.ts));
+    let bal = a.bal;
+    items.forEach(t => { t.after = bal; bal -= t.effect; });
+    return { list: items, opening: bal, card };
+  }
+  openEditPocket(id) {
+    const p = id && this.state.pockets.find(x => x.id === id);
+    this.setState({ sheet: 'editPocket', ep: p
+      ? { id: p.id, name: p.name, weekly: p.weeklyStr, emoji: p.emoji || '', photo: p.photo || null, isNew: false, confirmDel: false }
+      : { id: null, name: '', weekly: '', emoji: '💪', photo: null, isNew: true, confirmDel: false } });
+  }
+  allMonths() {
+    const st = this.state, set = new Set();
+    [...st.expenses, ...(st.history || [])].forEach(e => set.add((e.date || this.dayDate(e.day)).slice(0, 7)));
+    st.payments.forEach(p => set.add(p.date.slice(0, 7)));
+    return [...set].sort();
+  }
+  monthLabel(m) { return m === 'all' ? 'All months' : new Date(m + '-15T12:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }); }
+  exportData(month, acctId) {
+    const st = this.state, weeks = parseInt(this.props.weeks ?? '4', 10) || 4;
+    const months = month === 'all' ? this.allMonths() : [month];
+    const acc = id => st.accounts.find(a => a.id === id);
+    const raw = [...st.expenses, ...(st.history || [])].map(e => {
+      const date = e.date || this.dayDate(e.day), [cat, sub] = catOf(e);
+      return { e, date, month: date.slice(0, 7), cat, sub };
+    }).filter(x => months.includes(x.month) && (acctId === 'all' || x.e.a === acctId));
+    const catTot = {};
+    raw.forEach(x => { const k = x.month + '|' + x.cat; catTot[k] = (catTot[k] || 0) + x.e.amt; });
+    raw.sort((x, y) => x.month !== y.month ? (x.month < y.month ? -1 : 1) : (catTot[y.month + '|' + y.cat] - catTot[x.month + '|' + x.cat]) || x.cat.localeCompare(y.cat) || y.e.amt - x.e.amt);
+    const details = raw.map((x, i) => ({
+      month: x.month, date: x.date, category: x.cat, sub: x.sub, merchant: x.e.note, amount: x.e.amt,
+      pocket: (st.pockets.find(p => p.id === x.e.p) || {}).name || '', account: (acc(x.e.a) || {}).name || '',
+      tags: (x.e.tags || []).map(t => '#' + t).join(' '), id: 'G' + String(i + 1).padStart(3, '0')
+    }));
+    const payments = st.payments.filter(p => months.includes(p.date.slice(0, 7)) && (acctId === 'all' || p.from === acctId || p.to === acctId))
+      .sort((x, y) => (x.date < y.date ? -1 : 1))
+      .map((p, i) => ({ month: p.date.slice(0, 7), date: p.date, desc: 'Payment to ' + ((acc(p.to) || {}).name || 'card'), amount: -p.amt, from: (acc(p.from) || {}).name || '', to: (acc(p.to) || {}).name || '', id: 'P' + (i + 1) }));
+    const pockets = months.length === 1 && acctId === 'all' ? st.pockets.map(p => ({ name: p.name, planned: this.num(p.weeklyStr) * weeks, spent: details.filter(d => d.pocket === p.name).reduce((a, d) => a + d.amount, 0) })) : null;
+    let statement = null;
+    if (acctId !== 'all' && acc(acctId)) {
+      const a = acc(acctId), full = this.acctTxns(acctId, st);
+      const list = full.list.filter(t => months.includes(t.date.slice(0, 7)));
+      const opening = list.length ? list[list.length - 1].after - list[list.length - 1].effect : a.bal;
+      const closing = list.length ? list[0].after : a.bal;
+      statement = { account: a.name, card: full.card, opening, closing, rows: [...list].reverse().map(t => ({ date: t.date, desc: t.note, category: t.kind === 'payment' ? 'Card payment' : t.category, amount: t.show, after: t.after })) };
+    }
+    const label = this.monthLabel(month), accLabel = acctId === 'all' ? 'All accounts' : (acc(acctId) || {}).name;
+    const notes = [
+      'Card payments are listed on the "Card payments" sheet and are not counted as spending.',
+      months.includes('2026-11') ? 'November 2026 is still in progress (closes Nov 30), so its totals are partial.' : null,
+      'Categories and subcategories come from what was picked when each expense was added.',
+      'Totals on this sheet are live formulas over the Details sheet.'
+    ].filter(Boolean);
+    return {
+      months, details, payments, pockets, statement, notes,
+      title: 'Expense summary · ' + label,
+      subtitle: 'Colombian pesos (COP) · ' + accLabel + ' · Calendar month of each transaction · Generated Nov 3, 2026',
+      filename: ('Pockets ' + label + (acctId === 'all' ? '' : ' - ' + accLabel)).replace(/[\\/:*?"<>|]+/g, '').trim()
+    };
+  }
+  async exportMonth(month, acctId) {
+    if (this.state.exporting) return;
+    const d = this.exportData(month, acctId);
+    this.setState({ exporting: true });
+    try {
+      const mod = await import(new URL('./pockets-export.js', document.baseURI).href);
+      await mod.downloadWorkbook(d);
+      this.setState({ exporting: false, sheet: null });
+      this.flash('Excel downloaded · ' + this.monthLabel(month));
+    } catch (err) {
+      const esc = v => { const s = String(v ?? ''); return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+      const lines = ['Month,Date,Category,Subcategory,Merchant,Amount,Pocket,Account,Tags,ID', ...d.details.map(x => [x.month, x.date, x.category, x.sub, x.merchant, x.amount, x.pocket, x.account, x.tags, x.id].map(esc).join(','))];
+      const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob), el = document.createElement('a');
+      el.href = url; el.download = d.filename + '.csv'; document.body.appendChild(el); el.click(); el.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      this.setState({ exporting: false, sheet: null });
+      this.flash('Downloaded as CSV (opens in Excel)');
+    }
+  }
+  componentWillUnmount() { clearTimeout(this._t); try { this._rec && this._rec.abort(); } catch (e) {} }
+  scrollRef = React.createRef();
+  componentDidUpdate() {
+    this._live = null;
+    const s = this.state, ps = this._prevSnap || {};
+    this._prevSnap = { chat: s.chat, thinking: s.thinking, tab: s.tab };
+    if (ps.chat !== s.chat || ps.thinking !== s.thinking || ps.tab !== s.tab) {
+      const el = this.scrollRef.current;
+      if (el && this.state.tab === 'assistant') requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+    }
+  }
+  cur() { return this._live || this.state; }
+  mut(fn) { const base = this.cur(); const patch = fn(base); this._live = { ...base, ...patch }; this.setState(patch); return this._live; }
+  norm(s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim(); }
+  findIn(list, name) {
+    const n = this.norm(name); if (!n) return null;
+    return list.find(x => this.norm(x.name) === n) || list.find(x => this.norm(x.name).includes(n) || n.includes(this.norm(x.name))) || null;
+  }
+  overview() {
+    const s = this.cur(), weeks = parseInt(this.props.weeks ?? '4', 10) || 4;
+    return JSON.stringify({
+      today: 'Tuesday, November 3, 2026', week: `Week 1 of ${weeks} (Nov 2–8), 5 days left`,
+      currency: this.isCOP() ? 'COP (Colombian pesos)' : this.props.currency,
+      monthly_income: this.num(s.incomeStr),
+      pockets: s.pockets.map(p => { const x = this.stats(p.id, s); return { name: x.name, weekly_budget: x.weekly, spent_this_week: x.spent, left_this_week: x.left }; }),
+      accounts: s.accounts.map(a => a.type === 'card' ? { name: a.name, type: 'credit card', owed: a.bal, limit: a.limit, due: a.due } : { name: a.name, type: a.kind, balance: a.bal }),
+      goals: s.goals.map(g => ({ name: g.name, saved: g.saved, target: g.target, months_left: g.months })),
+      bills: s.bills.map(b => ({ name: b.name, amount: b.amt, due: b.date, paid: b.paid })),
+      tags: s.tags,
+      recent_expenses: s.expenses.slice(0, 12).map(e => ({ note: e.note, amount: e.amt, pocket: (s.pockets.find(p => p.id === e.p) || {}).name, account: (s.accounts.find(a => a.id === e.a) || {}).name, day: e.day, tags: e.tags || [] }))
+    });
+  }
+  tools(cards) {
+    const card = (kicker, title, sub, amt, hue, initial) => cards.push({ kicker, title, sub, amt, tint: tint(hue), ink: ink(hue), ring: 'transparent', initial: initial || title.charAt(0).toUpperCase() });
+    const pocketNames = () => this.cur().pockets.map(p => p.name).join(', ');
+    return [
+      { name: 'get_overview', description: "Read the user's current finances: income, weekly pockets with spent/left, accounts and credit cards, goals, bills, tags and recent expenses. Call this before answering questions about their money.",
+        input_schema: { type: 'object', properties: {} }, run: async () => this.overview() },
+      { name: 'add_expense', description: 'Log an expense the user made. Use an existing pocket name exactly. Amount is a plain number in the account currency (e.g. "45 mil" = 45000, "una luca" = 1000).',
+        input_schema: { type: 'object', properties: { amount: { type: 'number' }, pocket: { type: 'string' }, note: { type: 'string', description: 'Short description, e.g. merchant' }, account: { type: 'string', description: 'Account or card name; omit to use the main checking account' }, tags: { type: 'array', items: { type: 'string' } }, category: { type: 'string', description: 'One of: ' + CATS.map(c => c.name).join(', ') }, subcategory: { type: 'string' } }, required: ['amount', 'pocket', 'note'] },
+        run: async ({ amount, pocket, note, account, tags, category, subcategory }) => {
+          const s = this.cur(), p = this.findIn(s.pockets, pocket);
+          if (!p) throw new Error(`No pocket named "${pocket}". Pockets: ${pocketNames()}`);
+          const a = (account && this.findIn(s.accounts, account)) || s.accounts.find(x => x.type === 'bank') || s.accounts[0];
+          const v = this.round(Math.abs(Number(amount) || 0)); if (!v) throw new Error('Amount must be greater than zero');
+          const tg = (tags || []).map(t => this.norm(t).replace(/^#+/, '')).filter(Boolean);
+          const next = this.mut(x => ({
+            expenses: [{ id: Date.now() + Math.random(), p: p.id, a: a.id, amt: v, note: (note || p.name).trim(), day: 'Today', tags: tg, cat: (this.findIn(x.cats, category) || {}).name || (POCKET_CAT[p.id] || ['Other'])[0], sub: subcategory || (this.findIn(x.cats, category) ? '' : (POCKET_CAT[p.id] || ['', 'Other'])[1]) }, ...x.expenses],
+            accounts: x.accounts.map(y => y.id === a.id ? { ...y, bal: y.type === 'card' ? y.bal + v : y.bal - v } : y),
+            tags: [...x.tags, ...tg.filter(t => !x.tags.includes(t))]
+          }));
+          const st = this.stats(p.id, next);
+          card('Expense added', note || p.name, `${p.name} · ${a.name} · ${this.fmt(st.left)} left`, '−' + this.fmt(v), p.hue);
+          return JSON.stringify({ ok: true, pocket: p.name, account: a.name, left_this_week: st.left, over_budget: st.left < 0 });
+        } },
+      { name: 'create_pocket', description: 'Create a new weekly pocket (budget category), or update it if one with that name exists.',
+        input_schema: { type: 'object', properties: { name: { type: 'string' }, weekly_amount: { type: 'number' } }, required: ['name', 'weekly_amount'] },
+        run: async ({ name, weekly_amount }) => {
+          const s = this.cur(), ex = this.findIn(s.pockets, name), w = Math.max(0, Number(weekly_amount) || 0);
+          if (ex) { this.mut(x => ({ pockets: x.pockets.map(p => p.id === ex.id ? { ...p, weeklyStr: String(w) } : p) })); card('Pocket updated', ex.name, 'Weekly budget', this.fmt(w), ex.hue); return JSON.stringify({ ok: true, updated: ex.name }); }
+          const hue = HUES[s.pockets.length % HUES.length];
+          this.mut(x => ({ pockets: [...x.pockets, { id: 'p' + Date.now() + Math.floor(Math.random() * 1000), name: String(name).trim(), weeklyStr: String(w), hue }] }));
+          card('Pocket created', String(name).trim(), 'Weekly budget', this.fmt(w), hue);
+          return JSON.stringify({ ok: true, created: name });
+        } },
+      { name: 'set_pocket_budget', description: "Change an existing pocket's weekly budget.",
+        input_schema: { type: 'object', properties: { pocket: { type: 'string' }, weekly_amount: { type: 'number' } }, required: ['pocket', 'weekly_amount'] },
+        run: async ({ pocket, weekly_amount }) => {
+          const p = this.findIn(this.cur().pockets, pocket); if (!p) throw new Error(`No pocket named "${pocket}". Pockets: ${pocketNames()}`);
+          const w = Math.max(0, Number(weekly_amount) || 0);
+          this.mut(x => ({ pockets: x.pockets.map(y => y.id === p.id ? { ...y, weeklyStr: String(w) } : y) }));
+          card('Budget updated', p.name, 'Weekly budget', this.fmt(w), p.hue);
+          return JSON.stringify({ ok: true });
+        } },
+      { name: 'set_income', description: "Set the user's monthly income.",
+        input_schema: { type: 'object', properties: { monthly_amount: { type: 'number' } }, required: ['monthly_amount'] },
+        run: async ({ monthly_amount }) => { const v = Math.max(0, Number(monthly_amount) || 0); this.mut(() => ({ incomeStr: String(v) })); card('Income updated', 'Monthly income', 'November 2026', this.fmt(v), 150, '$'); return JSON.stringify({ ok: true }); } },
+      { name: 'move_money', description: "Move leftover money this week from one pocket to another pocket or to a savings goal. Can't move more than the source has left.",
+        input_schema: { type: 'object', properties: { from_pocket: { type: 'string' }, to: { type: 'string', description: 'Pocket or goal name' }, amount: { type: 'number' } }, required: ['from_pocket', 'to', 'amount'] },
+        run: async ({ from_pocket, to, amount }) => {
+          const s = this.cur(), src = this.findIn(s.pockets, from_pocket); if (!src) throw new Error(`No pocket named "${from_pocket}"`);
+          const left = this.stats(src.id, s).left, v = this.round(Number(amount) || 0);
+          if (v <= 0 || v > left + 0.004) throw new Error(`${src.name} only has ${left} left this week`);
+          const tp = this.findIn(s.pockets.filter(p => p.id !== src.id), to), tg = !tp && this.findIn(s.goals, to);
+          if (!tp && !tg) throw new Error(`No pocket or goal named "${to}"`);
+          const dest = tp || tg;
+          this.mut(x => ({ moves: [...x.moves, { from: src.id, to: dest.id, amt: v }], goals: tg ? x.goals.map(g => g.id === tg.id ? { ...g, saved: g.saved + v } : g) : x.goals }));
+          card('Money moved', `${src.name} → ${dest.name}`, tg ? 'Added to savings goal' : 'This week', this.fmt(v), dest.hue);
+          return JSON.stringify({ ok: true });
+        } },
+      { name: 'create_goal', description: 'Create a savings goal.',
+        input_schema: { type: 'object', properties: { name: { type: 'string' }, target: { type: 'number' }, months: { type: 'number' }, already_saved: { type: 'number' } }, required: ['name', 'target', 'months'] },
+        run: async ({ name, target, months, already_saved }) => {
+          const hue = HUES[(this.cur().goals.length + 3) % HUES.length], m = Math.max(1, Math.round(Number(months) || 1)), t = Math.max(1, Number(target) || 1);
+          this.mut(x => ({ goals: [...x.goals, { id: 'g' + Date.now(), name: String(name).trim(), saved: Math.max(0, Number(already_saved) || 0), target: t, months: m, hue }] }));
+          card('Goal created', String(name).trim(), `${this.fmt(t / m)}/mo for ${m} months`, this.fmt(t), hue);
+          return JSON.stringify({ ok: true });
+        } }
+    ];
+  }
+  async send(text, voice) {
+    const q = String(text || '').trim(); if (!q || this.state.thinking) return;
+    const history = this.state.chat.filter(m => m.text).slice(-12).map(m => ({ role: m.role, content: m.text }));
+    this.setState(x => ({ chat: [...x.chat, { role: 'user', text: q, voice: !!voice }], draft: '', interim: '', thinking: true, tab: 'assistant' }));
+    const cards = [];
+    let reply;
+    try {
+      const sys = `You are the friendly money assistant inside "Pockets", a personal budgeting app. The user (Sofía) lives in Colombia; amounts are in ${this.isCOP() ? 'Colombian pesos (COP), no decimals, written like $45.000' : this.props.currency}. Today is Tuesday, November 3, 2026, week 1 of the month. The user sets a monthly income and splits it into weekly pockets; leftover pocket money can move to other pockets or savings goals.
+Rules: Reply in the same language the user writes or speaks. Be brief and warm: 1–3 short sentences, plain text, no markdown, no bullet lists unless listing pockets. Always call get_overview before answering about their money or before logging something whose pocket is unclear. When the user says they spent or paid for something, call add_expense right away with the best-matching existing pocket (don't ask unless truly ambiguous) and mention what's left in that pocket. Colombian slang: "mil" = thousand, "luca(s)" = 1.000 each, "palo" = 1.000.000. When asked to build a budget, propose specific weekly amounts that fit their income and create them with create_pocket / set_pocket_budget, then summarize. Never invent data.`;
+      reply = await window.claude.complete({ model: 'claude-sonnet-4-5', max_tokens: 700, system: sys, messages: [...history, { role: 'user', content: q }], tools: this.tools(cards) });
+    } catch (e) {
+      reply = "Sorry, I couldn't reach the assistant just now. Please try again.";
+    }
+    this.setState(x => ({ chat: [...x.chat, { role: 'assistant', text: String(reply || '').trim() || 'Done.', cards }], thinking: false }));
+  }
+  toggleMic() {
+    if (this.state.listening) { try { this._rec && this._rec.stop(); } catch (e) {} return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { this.flash("Voice isn't supported in this browser. Type instead."); return; }
+    const r = new SR(); this._rec = r;
+    r.lang = this.props.voiceLang ?? 'es-CO'; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
+    let finalText = '';
+    r.onresult = ev => {
+      let interim = ''; finalText = '';
+      for (let i = 0; i < ev.results.length; i++) { const t = ev.results[i][0].transcript; if (ev.results[i].isFinal) finalText += t; else interim += t; }
+      this.setState({ interim: (finalText + ' ' + interim).trim() });
+    };
+    r.onerror = ev => { this.setState({ listening: false }); this.flash(ev.error === 'not-allowed' || ev.error === 'service-not-allowed' ? 'Microphone access is blocked' : "I didn't catch that. Try again."); };
+    r.onend = () => { const t = (finalText || this.state.interim || '').trim(); this.setState({ listening: false, interim: '' }); if (t) this.send(t, true); };
+    try { r.start(); this.setState({ listening: true, interim: '' }); } catch (e) { this.flash('Could not start the microphone'); }
+  }
+
+  renderVals() {
+    const st = this.state, weeks = parseInt(this.props.weeks ?? '4', 10) || 4;
+    const cur = this.isCOP() ? '$' : this.props.currency;
+    const red = 'var(--color-accent-700)', text = 'var(--color-text)', line = 'var(--color-neutral-200)';
+    const income = this.num(st.incomeStr);
+    const all = st.pockets.map(p => this.stats(p.id));
+    const byId = id => all.find(x => x.id === id);
+    const acct = id => st.accounts.find(a => a.id === id);
+    const spentTotal = st.expenses.reduce((a, e) => a + e.amt, 0);
+    const weeklyTotal = all.reduce((a, s) => a + s.weekly, 0);
+    const weekBudget = all.reduce((a, s) => a + s.budget, 0);
+    const weekLeft = all.reduce((a, s) => a + s.left, 0);
+    const alloc = weeklyTotal * weeks, unalloc = income - alloc;
+    const assets = st.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0);
+    const debt = st.accounts.filter(a => a.type === 'card').reduce((x, a) => x + a.bal, 0);
+    const C = 100.53;
+    const pctOf = (a, b) => (b > 0 ? Math.max(0, Math.min(100, a / b * 100)) : 0).toFixed(1) + '%';
+    const lastRow = (arr) => arr.map((x, i) => ({ ...x, line: i === arr.length - 1 ? 'transparent' : line }));
+    const expRow = e => {
+      const p = byId(e.p), a = acct(e.a);
+      return { ...e, initial: p ? p.initial : '·', photoBg: p ? p.photoBg : 'none', tint: tint(p ? p.hue : 0), ink: ink(p ? p.hue : 0), meta: [p && p.name, a && a.name, e.day].filter(Boolean).join(' · '), amtFmt: '−' + this.fmt(e.amt), hasTags: !!(e.tags && e.tags.length), tagLine: (e.tags || []).map(t => '#' + t).join('  ') };
+    };
+
+    const pocketRows = all.map(s => ({
+      ...s,
+      tint: tint(s.hue), ink: ink(s.hue),
+      leftFmt: this.fmt(s.left), leftColor: s.left < 0 ? red : ink(s.hue),
+      budgetFmt: this.fmt(s.budget),
+      dash: `${(s.budget > 0 ? Math.max(0, s.left) / s.budget : 0) * C} ${C}`,
+      monthlyFmt: this.fmt(s.weekly * weeks),
+      weeklyStr: st.pockets.find(p => p.id === s.id).weeklyStr,
+      open: () => this.setState({ sheet: 'pocket', sel: s.id }),
+      edit: () => this.openEditPocket(s.id),
+      onName: e => { const v = e.target.value; this.setState(x => ({ pockets: x.pockets.map(p => p.id === s.id ? { ...p, name: v } : p) })); },
+      onWeekly: e => { const v = e.target.value; this.setState(x => ({ pockets: x.pockets.map(p => p.id === s.id ? { ...p, weeklyStr: v } : p) })); },
+      remove: () => this.setState(x => ({ pockets: x.pockets.filter(p => p.id !== s.id), expenses: x.expenses.filter(e => e.p !== s.id), moves: x.moves.filter(m => m.from !== s.id && m.to !== s.id) }))
+    }));
+
+    const billRow = b => ({
+      ...b, initial: b.name.charAt(0), tint: tint(b.hue), ink: ink(b.hue), amtFmt: this.fmt(b.amt),
+      dueLabel: b.paid ? 'Paid' : b.inDays <= 7 ? `Due in ${b.inDays} days · ${b.date}` : `Due ${b.date}`,
+      dueColor: !b.paid && b.inDays <= 7 ? red : 'var(--color-neutral-700)',
+      strike: b.paid ? 'line-through' : 'none', amtColor: b.paid ? 'var(--color-neutral-500)' : text,
+      chkBg: b.paid ? 'oklch(0.62 0.12 160)' : 'transparent', chkBorder: b.paid ? 'oklch(0.62 0.12 160)' : 'var(--color-neutral-300)',
+      toggle: () => this.setState(x => ({ bills: x.bills.map(y => y.id === b.id ? { ...y, paid: !y.paid } : y) }))
+    });
+    const upcoming = lastRow(st.bills.filter(b => !b.paid).sort((a, b) => a.inDays - b.inDays).slice(0, 3).map(billRow));
+
+    const acctRow = a => {
+      const n = this.acctTxns(a.id, st).list.length;
+      return { ...a, initial: a.name.trim().charAt(0).toUpperCase() || '·', tint: tint(a.hue), ink: ink(a.hue), balFmt: this.fmt(a.bal),
+        photo: a.photo || null, photoBg: a.photo ? 'url(' + a.photo + ')' : 'none', noPhoto: !a.photo, txnLabel: n === 1 ? '1 transaction' : `${n} transactions`,
+        open: () => this.setState({ sheet: 'acct', acctId: a.id }) };
+    };
+    const cashAccts = lastRow(st.accounts.filter(a => a.type !== 'card').map(acctRow));
+    const cards = st.accounts.filter(a => a.type === 'card').map(a => ({
+      ...acctRow(a), usePct: pctOf(a.bal, a.limit),
+      useLabel: `${Math.round(a.limit ? a.bal / a.limit * 100 : 0)}% of ${this.fmt(a.limit)} used`,
+      pay: e => { if (e && e.stopPropagation) e.stopPropagation(); this.setState(x => ({ sheet: 'pay', payId: a.id, payAmt: String(a.bal), payFrom: (x.accounts.find(y => y.type !== 'card') || {}).id })); }
+    }));
+
+    const goalRows = st.goals.map(g => {
+      const rem = Math.max(0, g.target - g.saved);
+      return {
+        ...g, tint: tint(g.hue), ink: ink(g.hue), pct: pctOf(g.saved, g.target), pctLabel: Math.round(g.saved / g.target * 100) + '%',
+        savedFmt: this.fmt(g.saved), targetFmt: this.fmt(g.target),
+        plan: rem <= 0 ? 'Goal reached' : `${this.fmt(rem / g.months)}/mo to finish in ${g.months} months`,
+        add: () => this.setState({ sheet: 'goal', goalId: g.id, goalAmt: '' })
+      };
+    });
+
+    const chip = (s, on, pick, h) => ({
+      name: s.name, initial: s.initial, photoBg: s.photoBg || 'none', pick,
+      bg: on ? ink(h) : '#fff', fg: on ? '#fff' : text, border: on ? ink(h) : '#fff',
+      dot: on ? 'rgba(255,255,255,.25)' : tint(h), dotFg: on ? '#fff' : ink(h)
+    });
+
+    // add expense
+    const amt = this.num(st.amt), addS = byId(st.addP), payA = acct(st.addA);
+    const after = addS ? addS.left - amt : 0;
+    let preview = 'Enter an amount and pick a pocket.', previewColor = 'var(--color-neutral-700)';
+    if (addS && amt > 0) {
+      preview = after >= 0 ? `${this.fmt(after)} will be left in ${addS.name} this week.` : `This puts ${addS.name} ${this.fmt(-after)} over for the week.`;
+      if (after < 0) previewColor = red;
+    }
+    const cantSave = !(amt > 0 && addS && payA);
+
+    // pocket sheet
+    const s = st.sel ? byId(st.sel) : null;
+    const cantMoveSel = !s || s.left <= 0.004;
+    const sel = s ? {
+      ...s, tint: tint(s.hue), ink: ink(s.hue),
+      leftLabel: s.left < 0 ? 'Over budget this week' : 'Left this week',
+      leftAbsFmt: this.fmt(Math.abs(s.left)), leftFmt: this.fmt(s.left), leftColor: s.left < 0 ? red : ink(s.hue),
+      pct: pctOf(s.spent, s.budget), weeklyFmt: this.fmt(s.weekly), netMoveFmt: this.fmt(s.mIn - s.mOut, true),
+      spentFmt: this.fmt(s.spent), budgetFmt: this.fmt(s.budget),
+      items: lastRow(st.expenses.filter(e => e.p === s.id).map(expRow)),
+      empty: !st.expenses.some(e => e.p === s.id), cantMove: cantMoveSel, moveOpacity: cantMoveSel ? .45 : 1, edit: () => this.openEditPocket(s.id)
+    } : { name: '', items: [], empty: false, cantMove: true, moveOpacity: .45 };
+
+    // move
+    const mAmt = this.num(st.moveAmt);
+    const tgtP = st.moveTo ? byId(st.moveTo) : null, tgtG = st.goals.find(g => g.id === st.moveTo);
+    const tgtName = tgtP ? tgtP.name : tgtG ? tgtG.name : null;
+    const tooMuch = s && mAmt > s.left + 0.004;
+    const cantMove = !s || mAmt <= 0 || tooMuch || !tgtName;
+    const moveHint = !s ? '' : tooMuch ? `You can move up to ${this.fmt(s.left)}.` :
+      tgtP && mAmt > 0 ? `${tgtP.name} will have ${this.fmt(tgtP.left + mAmt)} left this week.` :
+      tgtG && mAmt > 0 ? `${tgtG.name} goes to ${this.fmt(tgtG.saved + mAmt)} of ${this.fmt(tgtG.target)}.` : 'Choose where the money should go.';
+    const openMoveFor = (pid, to) => {
+      const src = byId(pid); if (!src || src.left <= 0.004) return;
+      const first = to || (all.find(x => x.id !== pid) || st.goals[0] || {}).id;
+      this.setState({ sheet: 'move', sel: pid, moveAmt: String(this.isCOP() ? Math.floor(src.left) : Math.floor(src.left * 100) / 100), moveTo: first });
+    };
+
+    // insights
+    const split = spentTotal > 0 ? all.filter(x => x.spent > 0).sort((a, b) => b.spent - a.spent).map(x => ({
+      name: x.name, mid: mid(x.hue), pct: (x.spent / spentTotal * 100).toFixed(1) + '%', pctLabel: Math.round(x.spent / spentTotal * 100) + '%', amtFmt: this.fmt(x.spent)
+    })) : [];
+    const weekSpent = all.reduce((a, x) => a + x.spent, 0);
+    const lastWeek = all.reduce((a, x) => a + (LAST_WEEK[x.id] || 0), 0);
+    const maxW = Math.max(weekSpent, lastWeek, 1);
+    const best = all.filter(x => x.budget > 0 && x.left > 0).sort((a, b) => b.left / b.budget - a.left / a.budget)[0];
+    const goal0 = st.goals[0];
+    const tip = best && goal0 ? {
+      text: `${best.name} still has ${this.fmt(best.left)} this week. Move some to ${goal0.name}?`,
+      cta: 'Move to goal', act: () => openMoveFor(best.id, goal0.id)
+    } : null;
+
+    // add account
+    const T = { bank: 'Bank', savings: 'Savings', cash: 'Cash', card: 'Card' };
+    const na = st.na, isCard = na.type === 'card';
+    const cantSaveAcct = !na.name.trim() || (isCard && !(this.num(na.limit) > 0));
+    const setNA = k => e => { const v = e.target.value; this.setState(x => ({ na: { ...x.na, [k]: v } })); };
+
+    // pay card
+    const pc = st.payId ? acct(st.payId) : null, pFrom = acct(st.payFrom), pAmt = this.num(st.payAmt);
+    const payBad = !pc || !pFrom || pAmt <= 0 || pAmt > pc.bal + 0.004 || pAmt > pFrom.bal + 0.004;
+    const payHint = !pc ? '' : pAmt > pc.bal + 0.004 ? `That's more than the ${this.fmt(pc.bal)} you owe.` :
+      pFrom && pAmt > pFrom.bal + 0.004 ? `${pFrom.name} only has ${this.fmt(pFrom.bal)}.` :
+      pFrom && pAmt > 0 ? `${pFrom.name} goes to ${this.fmt(pFrom.bal - pAmt)}. You'll owe ${this.fmt(pc.bal - pAmt)}.` : '';
+
+    // goal
+    const g = st.goalId ? st.goals.find(x => x.id === st.goalId) : null, gAmt = this.num(st.goalAmt);
+    const q = this.isCOP() ? [50000, 100000, 250000] : [25, 50, 100];
+
+    // tags + search
+    const tagHue = t => HUES[Math.max(0, st.tags.indexOf(t)) % HUES.length];
+    const addTag = () => {
+      const t = st.newTag.trim().toLowerCase().replace(/^#+/, '');
+      if (!t) return;
+      this.setState(x => ({ tags: x.tags.includes(t) ? x.tags : [...x.tags, t], tagSel: x.tagSel.includes(t) ? x.tagSel : [...x.tagSel, t], newTag: '' }));
+    };
+    const tagChips = st.tags.map(t => {
+      const onT = st.tagSel.includes(t);
+      return { name: t, bg: onT ? ink(tagHue(t)) : '#fff', fg: onT ? '#fff' : text,
+        toggle: () => this.setState(x => ({ tagSel: x.tagSel.includes(t) ? x.tagSel.filter(y => y !== t) : [...x.tagSel, t] })) };
+    });
+    const qs = st.search.trim().toLowerCase().replace(/^#/, '');
+    const matches = [...st.expenses, ...(st.history || [])].filter(e => {
+      const tg = e.tags || [];
+      if (st.filterTag && !tg.includes(st.filterTag)) return false;
+      if (!qs) return true;
+      const pn = ((byId(e.p) || {}).name || '').toLowerCase(), an = ((acct(e.a) || {}).name || '').toLowerCase();
+      return e.note.toLowerCase().includes(qs) || pn.includes(qs) || an.includes(qs) || tg.some(t => t.includes(qs));
+    });
+    const tagCount = t => st.expenses.filter(e => (e.tags || []).includes(t)).length;
+    const filterChips = [{ label: 'All', on: !st.filterTag, pick: () => this.setState({ filterTag: null }) },
+      ...st.tags.filter(tagCount).map(t => ({ label: `#${t} · ${tagCount(t)}`, on: st.filterTag === t, hue: tagHue(t), pick: () => this.setState(x => ({ filterTag: x.filterTag === t ? null : t })) }))]
+      .map(c => ({ ...c, bg: c.on ? (c.hue != null ? ink(c.hue) : text) : '#fff', fg: c.on ? '#fff' : text }));
+    const tagTotals = st.tags.map(t => {
+      const es = st.expenses.filter(e => (e.tags || []).includes(t));
+      return { t, n: es.length, sum: es.reduce((a, e) => a + e.amt, 0) };
+    }).filter(x => x.n > 0).sort((a, b) => b.sum - a.sum);
+    const maxTag = Math.max(1, ...tagTotals.map(x => x.sum));
+    const tagStats = tagTotals.map(x => ({
+      name: x.t, tint: tint(tagHue(x.t)), ink: ink(x.t ? tagHue(x.t) : 0), mid: mid(tagHue(x.t)),
+      countLabel: x.n === 1 ? '1 expense' : `${x.n} expenses`, amtFmt: this.fmt(x.sum), pct: pctOf(x.sum, maxTag),
+      open: () => this.setState({ sheet: 'search', filterTag: x.t, search: '' })
+    }));
+    const tab = st.tab, on = k => tab === k;
+    const tb = k => on(k) ? 'var(--color-accent-100)' : 'transparent', tf = k => on(k) ? 'var(--color-accent-700)' : 'var(--color-neutral-600)';
+
+    return {
+      cur, weeks,
+      isHome: on('home'), isAccounts: on('accounts'), isBudget: on('budget'), isInsights: on('insights'), isAssistant: on('assistant'), goAssistant: () => this.setState({ tab: 'assistant' }),
+      padBottom: on('assistant') ? '200px' : '130px', scrollRef: this.scrollRef,
+      chatEmpty: st.chat.length === 0 && !st.thinking,
+      suggestions: ['How much can I still spend this week?', 'Gasté 45 mil en el mercado con la Visa', 'Make me a budget for a gym pocket', 'Where am I spending the most?'].map(l => ({ label: l, ask: () => this.send(l) })),
+      chat: st.chat.map(m => {
+        const u = m.role === 'user';
+        return { align: u ? 'flex-end' : 'flex-start', bg: u ? 'var(--color-accent)' : '#fff', fg: u ? '#fff' : text, radius: u ? '22px 22px 6px 22px' : '22px 22px 22px 6px', text: m.text, hasText: !!m.text, voice: !!m.voice, cards: m.cards || [] };
+      }),
+      thinking: st.thinking, listening: st.listening,
+      listenLabel: st.interim ? st.interim : 'Listening… tap the mic to stop',
+      draft: st.listening ? st.interim : st.draft,
+      onDraft: e => this.setState({ draft: e.target.value }),
+      onDraftKey: e => { if (e.key === 'Enter') { e.preventDefault(); this.send(this.state.draft); } },
+      sendDraft: () => this.send(this.state.draft),
+      cantSend: !st.draft.trim() || st.thinking, sendOpacity: !st.draft.trim() || st.thinking ? .4 : 1,
+      toggleMic: () => this.toggleMic(),
+      micBg: st.listening ? 'var(--color-accent)' : 'var(--color-accent-100)', micFg: st.listening ? '#fff' : 'var(--color-accent-700)',
+      micRing: st.listening ? '0 0 0 6px color-mix(in srgb, var(--color-accent) 22%, transparent)' : 'none',
+      t: { homeBg: tb('home'), homeFg: tf('home'), accBg: tb('accounts'), accFg: tf('accounts'), budBg: tb('budget'), budFg: tf('budget'), insBg: tb('insights'), insFg: tf('insights'), aiBg: tb('assistant'), aiFg: tf('assistant'),
+        homeOn: on('home'), accOn: on('accounts'), budOn: on('budget'), insOn: on('insights'), aiOn: on('assistant'),
+        homeFlex: on('home') ? '2.3' : '1', accFlex: on('accounts') ? '2.3' : '1', budFlex: on('budget') ? '2.3' : '1', insFlex: on('insights') ? '2.3' : '1', aiFlex: on('assistant') ? '2.3' : '1' },
+      goHome: () => this.setState({ tab: 'home' }), goAccounts: () => this.setState({ tab: 'accounts' }),
+      goBudget: () => this.setState({ tab: 'budget' }), goInsights: () => this.setState({ tab: 'insights' }),
+      dateLabel: 'Tuesday, November 3', weekLabel: `Week 1 of ${weeks}`, daysLeft: 5,
+      weekLeftFmt: this.fmt(weekLeft), weekBudgetFmt: this.fmt(weekBudget), weekSpentPct: pctOf(weekSpent, weekBudget),
+      netWorthFmt: this.fmt(assets - debt), accountCount: st.accounts.length,
+      spentFmt: this.fmt(spentTotal), spentOfIncome: income > 0 ? Math.round(spentTotal / income * 100) + '%' : '—',
+      pocketRows, upcoming, recent: lastRow(st.expenses.slice(0, 5).map(expRow)),
+      assetsFmt: this.fmt(assets), debtFmt: this.fmt(debt), assetPct: pctOf(assets, assets + debt),
+      cashAccts, cards,
+      fileRef: this.fileRef, onFile: e => this.onFile(e),
+      profilePhoto: st.profilePhoto, profileBg: st.profilePhoto ? 'url(' + st.profilePhoto + ')' : 'none', noProfilePhoto: !st.profilePhoto, pickProfilePhoto: () => this.pickPhoto({ kind: 'profile' }),
+      exportAll: () => this.setState({ sheet: 'export', expAcct: 'all', expMonth: '2026-11' }),
+      isAcct: st.sheet === 'acct', isEditAcct: st.sheet === 'editAcct',
+      ad: (() => {
+        const a = st.acctId && acct(st.acctId);
+        if (!a) return { txns: [], empty: false, isCard: false, noPhoto: true };
+        const { list, card } = this.acctTxns(a.id, st);
+        const mKey = t => t.date.slice(0, 7);
+        const mTotals = {};
+        list.forEach(t => { if (t.kind === 'expense') mTotals[mKey(t)] = (mTotals[mKey(t)] || 0) + Math.abs(t.show); });
+        const txns = lastRow(list.map((t, i) => ({
+          showHeader: i === 0 || mKey(list[i - 1]) !== mKey(t),
+          monthLabel: new Date(t.date + 'T12:00').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+          monthTotal: 'Spent ' + this.fmt(mTotals[mKey(t)] || 0),
+          note: t.note, initial: t.icon != null ? t.icon : (t.pocket || t.note).charAt(0).toUpperCase(), photoBg: t.photoBg || 'none', tint: tint(t.hue), ink: ink(t.hue),
+          meta: [new Date(t.date + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), t.pocket].filter(Boolean).join(' · '),
+          hasTags: t.tags.length > 0, tagLine: t.tags.map(x => '#' + x).join('  '),
+          amtFmt: (t.show > 0 ? '+' : '−') + this.fmt(Math.abs(t.show)), amtColor: t.show > 0 ? 'oklch(0.5 0.12 150)' : text,
+          afterFmt: (card ? 'Owed ' : 'Bal. ') + this.fmt(t.after)
+        })));
+        return {
+          ...a, tint: tint(a.hue), ink: ink(a.hue), initial: a.name.trim().charAt(0).toUpperCase() || '·', photo: a.photo || null, photoBg: a.photo ? 'url(' + a.photo + ')' : 'none', noPhoto: !a.photo,
+          isCard: card, balLabel: card ? 'Balance owed' : 'Current balance', balFmt: this.fmt(a.bal),
+          usePct: pctOf(a.bal, a.limit), limitFmt: this.fmt(a.limit || 0), availFmt: this.fmt((a.limit || 0) - a.bal), due: a.due || '—',
+          txns, empty: list.length === 0, countLabel: list.length === 1 ? '1 transaction' : `${list.length} transactions`,
+          pickPhoto: () => this.pickPhoto({ kind: 'acct', id: a.id }),
+          export: () => this.setState({ sheet: 'export', expAcct: a.id, expMonth: '2026-11' }),
+          pay: () => this.setState(x => ({ sheet: 'pay', payId: a.id, payAmt: String(a.bal), payFrom: (x.accounts.find(y => y.type !== 'card') || {}).id })),
+          edit: () => this.setState({ sheet: 'editAcct', ea: { id: a.id, name: a.name, type: a.type, bal: String(a.bal), limit: String(a.limit || ''), due: a.due || '', photo: a.photo || null, confirmDel: false } })
+        };
+      })(),
+      ea: (() => {
+        const e = st.ea;
+        if (!e) return { types: [], noPhoto: true };
+        const isCardE = e.type === 'card', base = acct(e.id) || {}, hue = base.hue ?? 250;
+        const setE = k => ev => { const v = ev.target.value; this.setState(x => ({ ea: { ...x.ea, [k]: v } })); };
+        const cant = !e.name.trim() || (isCardE && !(this.num(e.limit) > 0));
+        const TT = { bank: 'Bank', savings: 'Savings', cash: 'Cash', card: 'Card' };
+        return {
+          ...e, isCard: isCardE, tint: tint(hue), ink: ink(hue), initial: e.name.trim().charAt(0).toUpperCase() || '·', photo: e.photo || null, photoBg: e.photo ? 'url(' + e.photo + ')' : 'none', noPhoto: !e.photo,
+          photoCta: e.photo ? 'Change photo' : 'Add photo', balLabel: isCardE ? 'Balance owed' : 'Current balance',
+          types: Object.keys(TT).map(k => ({ label: TT[k], bg: e.type === k ? '#fff' : 'transparent', shadow: e.type === k ? 'var(--shadow-sm)' : 'none', pick: () => this.setState(x => ({ ea: { ...x.ea, type: k } })) })),
+          pickPhoto: () => this.pickPhoto({ kind: 'edit' }), removePhoto: () => this.setState(x => ({ ea: { ...x.ea, photo: null } })),
+          onName: setE('name'), onBal: setE('bal'), onLimit: setE('limit'), onDue: setE('due'),
+          cant, opacity: cant ? .45 : 1,
+          save: () => {
+            if (cant) return;
+            const kind = { bank: 'Checking', savings: 'Savings', cash: 'Wallet', card: 'Credit card' }[e.type];
+            this.setState(x => ({ accounts: x.accounts.map(a => a.id === e.id ? { ...a, name: e.name.trim(), type: e.type, kind, bal: this.round(this.num(e.bal)), limit: isCardE ? this.num(e.limit) : undefined, due: isCardE ? (e.due.trim() || 'Nov 25') : undefined, photo: e.photo } : a), sheet: 'acct', acctId: e.id }));
+            this.flash('Account updated');
+          },
+          removeLabel: e.confirmDel ? 'Tap again to delete' : 'Delete account',
+          remove: () => {
+            if (!e.confirmDel) { this.setState(x => ({ ea: { ...x.ea, confirmDel: true } })); return; }
+            this.setState(x => ({ accounts: x.accounts.filter(a => a.id !== e.id), sheet: null, ea: null, acctId: null, addA: x.addA === e.id ? (x.accounts.find(a => a.id !== e.id) || {}).id : x.addA }));
+            this.flash(`${e.name} deleted`);
+          }
+        };
+      })(),
+      openAddAcct: () => this.setState({ sheet: 'addAcct', na: { type: 'bank', name: '', bal: '', limit: '', due: '' } }),
+      incomeStr: st.incomeStr, onIncome: e => this.setState({ incomeStr: e.target.value }),
+      perWeekFmt: this.fmt(income / weeks),
+      allocPct: pctOf(alloc, income), allocColor: unalloc < 0 ? 'var(--color-accent)' : 'oklch(0.62 0.12 160)', allocFmt: this.fmt(alloc),
+      unallocLabel: unalloc < 0 ? 'Over your income by' : 'Free for bills and saving', unallocAbsFmt: this.fmt(Math.abs(unalloc)), unallocColor: unalloc < 0 ? red : text,
+      addPocket: () => this.openEditPocket(null),
+      goalRows,
+      tip, split, weekSpentFmt: this.fmt(weekSpent), lastWeekFmt: this.fmt(lastWeek),
+      thisWeekBar: pctOf(weekSpent, maxW), lastWeekBar: pctOf(lastWeek, maxW),
+      weekCompare: weekSpent <= lastWeek ? `${this.fmt(lastWeek - weekSpent)} less than last week so far.` : `${this.fmt(weekSpent - lastWeek)} more than last week.`,
+      billRows: lastRow(st.bills.map(billRow)), billsTotalFmt: this.fmt(st.bills.reduce((a, b) => a + b.amt, 0)),
+      toast: st.toast,
+      catChips: (st.cats || CATS).map(c => {
+        const sel = c.name === st.addCat;
+        return { name: c.name, bg: sel ? text : '#fff', fg: sel ? '#fff' : text, pick: () => this.setState({ addCat: c.name, addSub: c.subs[0] || '', catTouched: true }) };
+      }),
+      subChips: (((st.cats || CATS).find(c => c.name === st.addCat) || { subs: [] }).subs).map(s => {
+        const sel = s === st.addSub;
+        return { name: s, bg: sel ? 'var(--color-accent-100)' : 'transparent', fg: sel ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', border: sel ? 'var(--color-accent-300)' : 'var(--color-neutral-300)', pick: () => this.setState({ addSub: s, catTouched: true }) };
+      }),
+      catPath: st.addCat + (st.addSub ? ' › ' + st.addSub : ''),
+      newCat: st.newCat || '', onNewCat: e => this.setState({ newCat: e.target.value }),
+      newSub: st.newSub || '', onNewSub: e => this.setState({ newSub: e.target.value }),
+      addCatFn: () => {
+        const n = (st.newCat || '').trim(); if (!n) return;
+        this.setState(x => ({ cats: (x.cats || CATS).some(c => c.name.toLowerCase() === n.toLowerCase()) ? x.cats : [...(x.cats || CATS), { name: n, subs: ['General'] }], addCat: n, addSub: 'General', newCat: '', catTouched: true }));
+      },
+      addSubFn: () => {
+        const n = (st.newSub || '').trim(); if (!n) return;
+        this.setState(x => ({ cats: (x.cats || CATS).map(c => c.name === x.addCat && !c.subs.includes(n) ? { ...c, subs: [...c.subs, n] } : c), addSub: n, newSub: '', catTouched: true }));
+      },
+      onCatKey: e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } },
+      isExport: st.sheet === 'export',
+      expMonths: [...this.allMonths().slice().reverse(), 'all'].map(m => ({ label: this.monthLabel(m), bg: m === st.expMonth ? text : '#fff', fg: m === st.expMonth ? '#fff' : text, pick: () => this.setState({ expMonth: m }) })),
+      expAccts: [{ id: 'all', name: 'All accounts' }, ...st.accounts].map(a => ({ label: a.name, bg: a.id === st.expAcct ? text : '#fff', fg: a.id === st.expAcct ? '#fff' : text, pick: () => this.setState({ expAcct: a.id }) })),
+      expPreview: (() => {
+        if (st.sheet !== 'export') return { count: '', total: '', cats: [], payments: '', sheets: '' };
+        const d = this.exportData(st.expMonth, st.expAcct);
+        const byCat = {};
+        d.details.forEach(x => { byCat[x.category] = (byCat[x.category] || 0) + x.amount; });
+        const tot = d.details.reduce((a, x) => a + x.amount, 0);
+        const catsP = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([n, v]) => ({ name: n, amt: this.fmt(v), pct: pctOf(v, tot) }));
+        const sh = ['Summary', 'Details', 'Card payments'].concat(d.statement ? ['Statement'] : []);
+        return { count: d.details.length === 1 ? '1 expense' : d.details.length + ' expenses', total: this.fmt(tot), cats: catsP, payments: d.payments.length === 1 ? '1 card payment' : d.payments.length + ' card payments', sheets: sh.join(' · ') };
+      })(),
+      doExport: () => this.exportMonth(st.expMonth, st.expAcct),
+      exportCta: st.exporting ? 'Preparing file…' : 'Download Excel', exportOpacity: st.exporting ? .6 : 1,
+      tagChips, newTag: st.newTag, onNewTag: e => this.setState({ newTag: e.target.value }), addTag,
+      onTagKey: e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } },
+      isSearch: st.sheet === 'search', openSearch: () => this.setState({ sheet: 'search', search: '', filterTag: null }),
+      search: st.search, onSearch: e => this.setState({ search: e.target.value }), clearSearch: () => this.setState({ search: '' }),
+      filterChips, results: lastRow(matches.map(expRow)), noResults: matches.length === 0,
+      resultCount: matches.length === 1 ? '1 transaction' : `${matches.length} transactions`,
+      resultTotal: '−' + this.fmt(matches.reduce((a, e) => a + e.amt, 0)),
+      tagStats, noTagStats: tagStats.length === 0,
+
+      sheetOpen: !!st.sheet,
+      isAdd: st.sheet === 'add', isPocket: st.sheet === 'pocket', isSaved: st.sheet === 'saved', isMove: st.sheet === 'move',
+      isAddAcct: st.sheet === 'addAcct', isPay: st.sheet === 'pay', isGoal: st.sheet === 'goal',
+      isEditPocket: st.sheet === 'editPocket',
+      ep: (() => {
+        const e = st.ep;
+        if (!e) return { emojis: [], cant: true, opacity: .45, photoBg: 'none' };
+        const base = e.id && st.pockets.find(p => p.id === e.id), hue = base ? base.hue : HUES[st.pockets.length % HUES.length];
+        const EM = ['🛒', '🚌', '🍽️', '🎟️', '🧴', '💪', '☕', '🎁', '🐶', '✈️', '📚', '💊', '🏠', '🎮', '👗', '🍺', '⛽', '🎬', '💄', '🧾', '🍔', '🚗', '🎵', '🌱'];
+        const setP = k => ev => { const v = ev.target.value; this.setState(x => ({ ep: { ...x.ep, [k]: v } })); };
+        const cant = !e.name.trim(), w = this.num(e.weekly);
+        return {
+          ...e, tint: tint(hue), ink: ink(hue), photoBg: e.photo ? 'url(' + e.photo + ')' : 'none',
+          icon: e.photo ? '' : (e.emoji || e.name.trim().charAt(0).toUpperCase() || '·'),
+          photoCta: e.photo ? 'Change image' : 'Upload image',
+          emojis: EM.map(m => ({ e: m, bg: !e.photo && e.emoji === m ? tint(hue) : 'transparent', pick: () => this.setState(x => ({ ep: { ...x.ep, emoji: m, photo: null } })) })),
+          pickPhoto: () => this.pickPhoto({ kind: 'pedit' }), removePhoto: () => this.setState(x => ({ ep: { ...x.ep, photo: null } })),
+          onName: setP('name'), onWeekly: setP('weekly'),
+          hint: `${this.fmt(w * weeks)} a month over ${weeks} weeks`,
+          cant, opacity: cant ? .45 : 1, cta: e.isNew ? 'Create pocket' : 'Save changes',
+          canDelete: !e.isNew, removeLabel: e.confirmDel ? 'Tap again to delete' : 'Delete pocket',
+          save: () => {
+            if (cant) return;
+            const patch = { name: e.name.trim(), weeklyStr: String(w), emoji: e.emoji, photo: e.photo };
+            if (e.isNew) this.setState(x => ({ pockets: [...x.pockets, { id: 'p' + Date.now(), hue: HUES[x.pockets.length % HUES.length], ...patch }], sheet: null }));
+            else this.setState(x => ({ pockets: x.pockets.map(p => p.id === e.id ? { ...p, ...patch } : p), sheet: 'pocket', sel: e.id }));
+            this.flash(e.isNew ? `${patch.name} created` : 'Pocket updated');
+          },
+          remove: () => {
+            if (!e.confirmDel) { this.setState(x => ({ ep: { ...x.ep, confirmDel: true } })); return; }
+            this.setState(x => ({ pockets: x.pockets.filter(p => p.id !== e.id), expenses: x.expenses.filter(z => z.p !== e.id), moves: x.moves.filter(m => m.from !== e.id && m.to !== e.id), sheet: null, ep: null, sel: null }));
+            this.flash(`${e.name} deleted`);
+          }
+        };
+      })(),
+      sheetTitle: { editPocket: st.ep && st.ep.isNew ? 'New pocket' : 'Edit pocket', export: 'Download Excel', acct: (st.acctId && (acct(st.acctId) || {}).name) || '', editAcct: 'Edit account', search: 'Transactions', add: 'New expense', pocket: s ? s.name : '', saved: 'Saved', move: 'Move money', addAcct: 'New account', pay: pc ? `Pay ${pc.name}` : '', goal: g ? g.name : '' }[st.sheet] || '',
+      closeSheet: () => this.setState({ sheet: null }),
+      openAdd: () => this.setState(x => ({ sheet: 'add', amt: '', note: '', tagSel: [], newTag: '', catTouched: false, newCat: '', newSub: '', addP: x.pockets.some(p => p.id === x.addP) ? x.addP : (x.pockets[0] || {}).id })),
+      addHere: () => this.setState(x => ({ sheet: 'add', amt: '', note: '', tagSel: [], newTag: '', catTouched: false, newCat: '', newSub: '', addP: x.sel })),
+      amt: st.amt, note: st.note, onAmt: e => this.setState({ amt: e.target.value }), onNote: e => this.setState({ note: e.target.value }),
+      pickRows: all.map(x => chip(x, x.id === st.addP, () => this.setState(s => { const d = POCKET_CAT[x.id]; return s.catTouched || !d ? { addP: x.id } : { addP: x.id, addCat: d[0], addSub: d[1] }; }), x.hue)),
+      payRows: st.accounts.map(a => ({
+        name: a.name, sub: a.type === 'card' ? `${this.fmt(a.limit - a.bal)} available` : this.fmt(a.bal),
+        bg: a.id === st.addA ? tint(a.hue) : '#fff', border: a.id === st.addA ? ink(a.hue) : '#fff',
+        pick: () => this.setState({ addA: a.id })
+      })),
+      preview, previewColor, cantSave, saveOpacity: cantSave ? .45 : 1,
+      saveExpense: () => {
+        if (cantSave) return;
+        const v = this.round(amt);
+        this.setState(x => ({
+          expenses: [{ id: Date.now(), p: x.addP, a: x.addA, amt: v, note: x.note.trim() || addS.name, day: 'Today', tags: x.tagSel, cat: x.addCat, sub: x.addSub }, ...x.expenses],
+          accounts: x.accounts.map(a => a.id === x.addA ? { ...a, bal: a.type === 'card' ? a.bal + v : a.bal - v } : a),
+          sheet: 'saved', sel: x.addP
+        }));
+      },
+      sel, openMove: () => s && openMoveFor(s.id),
+      moveAmt: st.moveAmt, onMoveAmt: e => this.setState({ moveAmt: e.target.value }),
+      movePockets: all.filter(x => !s || x.id !== s.id).map(x => chip(x, x.id === st.moveTo, () => this.setState({ moveTo: x.id }), x.hue)),
+      moveGoals: st.goals.map(x => chip(x, x.id === st.moveTo, () => this.setState({ moveTo: x.id }), x.hue)),
+      moveHint, moveHintColor: tooMuch ? red : 'var(--color-neutral-700)',
+      cantMove, moveOpacity: cantMove ? .45 : 1,
+      moveCta: tgtName ? `Move ${this.fmt(mAmt)} to ${tgtName}` : 'Move',
+      confirmMove: () => {
+        if (cantMove) return;
+        const v = this.round(mAmt);
+        this.setState(x => ({
+          moves: [...x.moves, { from: s.id, to: x.moveTo, amt: v }],
+          goals: tgtG ? x.goals.map(y => y.id === tgtG.id ? { ...y, saved: y.saved + v } : y) : x.goals,
+          sheet: null
+        }));
+        this.flash(`Moved ${this.fmt(v)} to ${tgtName}`);
+      },
+
+      acctTypes: Object.keys(T).map(k => ({ label: T[k], bg: na.type === k ? '#fff' : 'transparent', shadow: na.type === k ? 'var(--shadow-sm)' : 'none', pick: () => this.setState(x => ({ na: { ...x.na, type: k } })) })),
+      newAcct: {
+        ...na, isCard,
+        namePh: { bank: 'Davivienda', savings: 'Emergency savings', cash: 'Wallet', card: 'Visa Platinum' }[na.type],
+        balLabel: isCard ? 'Balance owed' : 'Current balance',
+        typeLabel: isCard ? 'card' : 'account'
+      },
+      onNA_name: setNA('name'), onNA_bal: setNA('bal'), onNA_limit: setNA('limit'), onNA_due: setNA('due'),
+      cantSaveAcct, saveAcctOpacity: cantSaveAcct ? .45 : 1,
+      saveAcct: () => {
+        if (cantSaveAcct) return;
+        const kind = { bank: 'Checking', savings: 'Savings', cash: 'Wallet', card: 'Credit card' }[na.type];
+        const a = { id: 'x' + Date.now(), name: na.name.trim(), kind, type: na.type, bal: this.round(this.num(na.bal)), hue: HUES[st.accounts.length % HUES.length] };
+        if (isCard) { a.limit = this.num(na.limit); a.due = na.due.trim() || 'Nov 25'; }
+        this.setState(x => ({ accounts: [...x.accounts, a], sheet: null, tab: 'accounts' }));
+        this.flash(`${a.name} added`);
+      },
+
+      payCard: pc ? { balFmt: this.fmt(pc.bal), due: pc.due } : { balFmt: '', due: '' },
+      payAmt: st.payAmt, onPayAmt: e => this.setState({ payAmt: e.target.value }), payAmtFmt: this.fmt(pAmt),
+      payFromRows: st.accounts.filter(a => a.type !== 'card').map(a => ({ ...acctRow(a), border: a.id === st.payFrom ? ink(a.hue) : '#fff', pick: () => this.setState({ payFrom: a.id }) })),
+      payHint, payHintColor: payBad && pAmt > 0 ? red : 'var(--color-neutral-700)',
+      cantPay: payBad, payOpacity: payBad ? .45 : 1,
+      confirmPay: () => {
+        if (payBad) return;
+        const v = this.round(pAmt);
+        this.setState(x => ({ accounts: x.accounts.map(a => a.id === pc.id ? { ...a, bal: a.bal - v } : a.id === pFrom.id ? { ...a, bal: a.bal - v } : a), payments: [...x.payments, { id: 'pay' + Date.now(), ts: Date.now(), from: pFrom.id, to: pc.id, amt: v, date: '2026-11-03' }], sheet: null }));
+        this.flash(`Paid ${this.fmt(v)} to ${pc.name}`);
+      },
+
+      goalSel: g ? { savedFmt: this.fmt(g.saved), targetFmt: this.fmt(g.target) } : { savedFmt: '', targetFmt: '' },
+      goalAmt: st.goalAmt, onGoalAmt: e => this.setState({ goalAmt: e.target.value }),
+      goalQuick: q.map(v => ({ label: '+' + this.fmt(v), pick: () => this.setState({ goalAmt: String(v) }) })),
+      goalHint: g && gAmt > 0 ? `You'll be at ${Math.min(100, Math.round((g.saved + gAmt) / g.target * 100))}% of your goal.` : 'How much are you setting aside?',
+      cantGoal: !(g && gAmt > 0), goalOpacity: g && gAmt > 0 ? 1 : .45,
+      confirmGoal: () => {
+        if (!(g && gAmt > 0)) return;
+        const v = this.round(gAmt);
+        this.setState(x => ({ goals: x.goals.map(y => y.id === g.id ? { ...y, saved: y.saved + v } : y), sheet: null }));
+        this.flash(`${this.fmt(v)} added to ${g.name}`);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
