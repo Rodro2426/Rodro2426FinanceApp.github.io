@@ -97,7 +97,7 @@ export function Segmented<K extends string>({ items, value, onPick, h = 38, mt =
   );
 }
 
-export interface ExpView { key: string; initial: string; photoBg: string; tint: string; ink: string; note: string; meta: string; amtFmt: string; tagLine: string }
+export interface ExpView { key: string; initial: string; photoBg: string; tint: string; ink: string; note: string; meta: string; amtFmt: string; tagLine: string; amtColor?: string }
 export function expView(d: Data, e: Expense, c: Ctx, stats?: Map<string, PocketStats>): ExpView {
   const p = stats?.get(e.p) || pocketStats(d, e.p, c), a = d.accounts.find(x => x.id === e.a);
   return {
@@ -116,7 +116,7 @@ export function ExpRow({ v, last, size = 40, onClick }: { v: ExpView; last: bool
         <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{v.meta}</span>
         {v.tagLine && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-accent-700)' }}>{v.tagLine}</span>}
       </div>
-      <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap' }}>{v.amtFmt}</span>
+      <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', color: v.amtColor }}>{v.amtFmt}</span>
     </div>
   );
 }

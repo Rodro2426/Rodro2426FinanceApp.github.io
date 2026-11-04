@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp, setData, setUI, flash } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
-import { chargeAccount, fmt, num, roundAmt } from '../lib/derive';
+import { chargeAccount, fmt, incomeMoves, num, roundAmt } from '../lib/derive';
 import type { Account, Sheet } from '../lib/types';
 import { BigAmount, FieldLabel, GhostDanger, PickChip, PrimaryBtn, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
@@ -40,6 +40,9 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
   }
 
   const accounts = kind === 'income' ? d.accounts.filter(a => a.type !== 'card' || a.id === t.a) : d.accounts;
+  const linked = inc ? incomeMoves(d.moves, inc) : [];
+  const splitTotal = linked.reduce((a, m) => a + m.amt, 0);
+  const splitNames = linked.map(m => d.pockets.find(p => p.id === m.to)?.name).filter(Boolean).join(', ');
   const v = num(amt);
   const cant = !(v > 0) || !date || !d.accounts.some(a => a.id === acct);
   const curCat = d.cats.find(c => c.name === cat);
@@ -55,18 +58,32 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
         return { accounts, expenses: x.expenses.map(y => (y.id === e.id ? { ...y, amt: val, note: note.trim() || y.note, date, a: acct, p: pocket, cat, sub, tags, orig: val === roundAmt(y.amt) ? y.orig : undefined } : y)) };
       });
     } else if (inc) {
-      setData(x => ({
-        accounts: credit(credit(x.accounts, inc.a, -inc.amt), acct, val),
-        incomes: x.incomes.map(y => (y.id === inc.id ? { ...y, amt: val, note: note.trim() || y.note, date, a: acct, orig: val === roundAmt(y.amt) ? y.orig : undefined } : y))
-      }));
+      setData(x => {
+        // If the income is now smaller than what was split from it, shrink each pocket's share to fit.
+        const linked = incomeMoves(x.moves, inc), split = linked.reduce((a, m) => a + m.amt, 0);
+        const f = split > val ? val / split : 1;
+        // Scale each share, then put the rounding difference on the last one so they add up to exactly `val`.
+        const scaled = new Map(linked.map(m => [m.id, roundAmt(m.amt * f)]));
+        if (f < 1 && linked.length) { const diff = roundAmt(val - [...scaled.values()].reduce((a, n) => a + n, 0)); const lastId = linked[linked.length - 1].id; scaled.set(lastId, roundAmt(scaled.get(lastId)! + diff)); }
+        const ids = new Set(linked.map(m => m.id));
+        return {
+          accounts: credit(credit(x.accounts, inc.a, -inc.amt), acct, val),
+          incomes: x.incomes.map(y => (y.id === inc.id ? { ...y, amt: val, note: note.trim() || y.note, date, a: acct, orig: val === roundAmt(y.amt) ? y.orig : undefined } : y)),
+          moves: f < 1 ? x.moves.map(m => (ids.has(m.id) ? { ...m, amt: scaled.get(m.id)!, income: inc.id } : m)) : x.moves
+        };
+      });
     }
     flash('Transaction updated'); done();
   };
   const remove = () => {
     if (!confirmDel) return setConfirmDel(true);
     if (e) setData(x => ({ accounts: chargeAccount(x.accounts, e.a, -e.amt), expenses: x.expenses.filter(y => y.id !== e.id) }));
-    else if (inc) setData(x => ({ accounts: credit(x.accounts, inc.a, -inc.amt), incomes: x.incomes.filter(y => y.id !== inc.id) }));
-    flash(`${t.note} deleted`); done();
+    else if (inc) setData(x => {
+      // Money this income added to pockets goes away with it.
+      const ids = new Set(incomeMoves(x.moves, inc).map(m => m.id));
+      return { accounts: credit(x.accounts, inc.a, -inc.amt), incomes: x.incomes.filter(y => y.id !== inc.id), moves: x.moves.filter(m => !ids.has(m.id)) };
+    });
+    flash(splitTotal > 0 ? `${t.note} deleted · ${fmt(splitTotal)} taken back out of your pockets` : `${t.note} deleted`); done();
   };
 
   return (
@@ -124,8 +141,13 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
         </>}
 
         {(e?.ruleId || inc?.ruleId) && <span style={{ margin: '12px 4px 0', fontSize: 12, color: 'var(--color-neutral-600)' }}>This came from a scheduled item. Editing it only changes this one; deleting it won't charge it again.</span>}
+        {splitTotal > 0 && (
+          <div style={{ marginTop: 14, background: 'oklch(0.95 0.045 155)', borderRadius: 16, padding: '10px 12px', fontSize: 13, lineHeight: 1.4, color: 'oklch(0.36 0.08 155)' }}>
+            {fmt(splitTotal)} of this income was split into {splitNames || 'your pockets'}. Deleting it takes that money back out of those pockets{num(amt) > 0 && num(amt) < splitTotal ? `. With ${fmt(num(amt))}, each pocket's share is reduced to match` : ''}.
+          </div>
+        )}
         <PrimaryBtn onClick={save} disabled={cant} mt={18}>Save changes</PrimaryBtn>
-        <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : `Delete ${kind}`}</GhostDanger>
+        <GhostDanger onClick={remove}>{confirmDel ? (splitTotal > 0 ? `Tap again to delete (and remove ${fmt(splitTotal)} from pockets)` : 'Tap again to delete') : `Delete ${kind}`}</GhostDanger>
       </div>
     </SheetFrame>
   );

@@ -1,8 +1,9 @@
 import { useApp, openSheet, setUI } from '../lib/store';
 import { LINE, RED, ink, tint } from '../lib/constants';
-import { allStats, ctxOf, fmt, monthExpenses, monthStats, num, pctOf, sortedExpenses, weekExpenses, type PocketStats } from '../lib/derive';
-import { useRef, useState, type ReactNode } from 'react';
-import { daysBetween, daysInMonth } from '../lib/dates';
+import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, weekExpenses, type PocketStats } from '../lib/derive';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { daysBetween, daysInMonth, relDay } from '../lib/dates';
+import type { PocketView } from '../lib/types';
 import { fmtDay, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
 import { BillBadge, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
@@ -32,7 +33,16 @@ export default function Home() {
   const debt = d.accounts.filter(a => a.type === 'card').reduce((x, a) => x + a.bal, 0);
   const spent = monthExpenses(d, c).reduce((a, e) => a + e.amt, 0), income = num(d.incomeStr);
   const upcoming = billRows(d, c).filter(b => !b.paid).sort((a, b) => a.inDays - b.inDays).slice(0, 3);
-  const recent = sortedExpenses(d).slice(0, 5).map(e => expView(d, e, c, stats));
+  // Latest money in and out together (daily account interest is left out: it updates every day).
+  const recent = [
+    ...d.expenses.map(e => ({ kind: 'expense' as const, date: e.date, ts: e.ts, id: e.id, e })),
+    ...d.incomes.filter(t => !t.interest).map(t => ({ kind: 'income' as const, date: t.date, ts: t.ts, id: t.id, t }))
+  ].sort(byDateDesc).slice(0, 8);
+  const days = all.map(p => dayStats(d, p.id, c, p));
+  const todayActive = days.filter(x => x.active);
+  const todayBudget = todayActive.reduce((a, x) => a + x.allowance, 0), todayLeft = days.reduce((a, x) => a + x.left, 0);
+  const todaySpent = days.reduce((a, x) => a + x.spentToday, 0);
+  const todayTone = toneOf(todayBudget > 0 ? todayLeft / todayBudget : todaySpent > 0 ? 0 : 1);
   const photo = d.settings.profilePhoto;
   const unread = d.notifications.filter(n => !n.read && !n.dismissed).length;
   // Card colour follows how much of the week's budget is still safe to spend.
@@ -42,7 +52,7 @@ export default function Home() {
   const monthBudget = months.reduce((a, x) => a + x.budget, 0), monthLeft = months.reduce((a, x) => a + x.left, 0);
   const monthTone = toneOf(monthBudget > 0 ? monthLeft / monthBudget : 0);
   const monthDaysLeft = daysBetween(c.today, `${c.month}-${String(daysInMonth(c.month)).padStart(2, '0')}`) + 1;
-  const [pocketPage, setPocketPage] = useState(0);
+  const [pocketPage, setPocketPage] = useState(1);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -65,7 +75,9 @@ export default function Home() {
         </div>
       </div>
 
-      <Pager label="Safe to spend" pages={[
+      <Pager label="Safe to spend" names={['today', 'this week', 'this month']} initial={1} pages={[
+        <SafeCard key="d" tone={todayTone} title="Safe to spend today" left={todayLeft} budget={todayBudget} spent={todaySpent}
+          sub={todayActive.length ? `of ${fmt(todayBudget)} for ${todayActive.length === all.length ? 'all your pockets' : todayActive.length === 1 ? '1 pocket' : `${todayActive.length} pockets`} today` : 'No pocket has today as a spending day'} />,
         <SafeCard key="w" tour tone={tone} title="Safe to spend this week" left={weekLeft} budget={weekBudget} spent={weekSpent} sub={`of ${fmt(weekBudget)} · ${c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left`} />,
         <SafeCard key="m" tone={monthTone} title={`Left to spend in ${monthName(c.month)}`} left={monthLeft} budget={monthBudget} spent={monthBudget - monthLeft} sub={`of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in the month`} />
       ]} />
@@ -83,10 +95,11 @@ export default function Home() {
         </div>
       </div>
 
-      <SectionHead title="Pockets" right={pocketPage === 0 ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
-      {all.length > 0 && <Pager label="Pockets" onPage={setPocketPage} pages={[
-        <PocketGrid key="w" items={all.map(p => ({ p, left: p.left, budget: p.budget }))} tour />,
-        <PocketGrid key="m" items={all.map((p, i) => ({ p, left: months[i].left, budget: months[i].budget }))} />
+      <SectionHead title="Pockets" right={pocketPage === 0 ? 'Today' : pocketPage === 1 ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
+      {all.length > 0 && <Pager label="Pockets" names={['today', 'this week', 'this month']} initial={1} onPage={setPocketPage} pages={[
+        <PocketGrid key="d" view="day" items={all.map((p, i) => ({ p, left: days[i].left, budget: days[i].allowance, off: !days[i].active ? (days[i].spentToday > 0 ? `Spent ${fmt(days[i].spentToday)} today` : days[i].next ? `Not today · ${dayLabel(days[i].next!.date, c).slice(0, 3)} ${fmt(days[i].next!.amount)}` : 'Not today') : undefined }))} />,
+        <PocketGrid key="w" view="week" items={all.map(p => ({ p, left: p.left, budget: p.budget }))} tour />,
+        <PocketGrid key="m" view="month" items={all.map((p, i) => ({ p, left: months[i].left, budget: months[i].budget }))} />
       ]} />}
       {all.length === 0 && <EmptyHint text="No pockets yet. Create them in the Budget tab." onClick={() => setUI({ tab: 'budget' })} />}
 
@@ -107,8 +120,14 @@ export default function Home() {
 
       <SectionHead title="Recent" right="Search" onRight={() => openSheet({ name: 'search' })} />
       <ListCard>
-        {recent.map((v, i) => <ExpRow key={v.key} v={v} last={i === recent.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key })} />)}
-        {recent.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No expenses yet. Tap + to add one.</div>}
+        {recent.map((r, i) => {
+          const last = i === recent.length - 1;
+          if (r.kind === 'expense') { const v = expView(d, r.e, c, stats); return <ExpRow key={r.id} v={v} last={last} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: r.id })} />; }
+          const t = r.t, acct = d.accounts.find(a => a.id === t.a)?.name;
+          return <ExpRow key={r.id} last={last} onClick={() => openSheet({ name: 'txn', kind: 'income', id: r.id })}
+            v={{ key: r.id, initial: '💰', photoBg: 'none', tint: 'oklch(0.95 0.045 155)', ink: 'oklch(0.42 0.09 155)', note: t.note, meta: ['Income', acct, relDay(t.date, c.today)].filter(Boolean).join(' · '), amtFmt: '+' + fmt(t.amt), tagLine: '', amtColor: 'oklch(0.45 0.11 150)' }} />;
+        })}
+        {recent.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing yet. Tap + to add an expense or income.</div>}
       </ListCard>
     </div>
   );
@@ -116,23 +135,25 @@ export default function Home() {
 
 const toneOf = (r: number) => (r > 0.5 ? SAFE_TONES.green : r >= 0.3 ? SAFE_TONES.yellow : SAFE_TONES.red);
 
-/** Side-by-side pages you swipe between, with dots below. */
-function Pager({ pages, label, onPage }: { pages: ReactNode[]; label: string; onPage?: (i: number) => void }) {
-  const [i, setI] = useState(0);
+/** Side-by-side pages you swipe between, with dots below. Opens on page `initial`. */
+function Pager({ pages, label, names, initial = 0, onPage }: { pages: ReactNode[]; label: string; names: string[]; initial?: number; onPage?: (i: number) => void }) {
+  const [i, setI] = useState(initial);
+  const box = useRef<HTMLDivElement>(null);
+  const step = () => (box.current ? box.current.clientWidth + 10 : 1);
+  useLayoutEffect(() => { box.current?.scrollTo({ left: initial * step() }); }, []);
   const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget, n = Math.round(el.scrollLeft / Math.max(1, el.clientWidth + 10));
+    const n = Math.round(e.currentTarget.scrollLeft / step());
     if (n !== i) { setI(n); onPage?.(n); }
   };
-  const box = useRef<HTMLDivElement>(null);
-  const go = (n: number) => { const el = box.current; el?.scrollTo({ left: n * (el.clientWidth + 10), behavior: 'smooth' }); };
+  const go = (n: number) => box.current?.scrollTo({ left: n * step(), behavior: 'smooth' });
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div ref={box} onScroll={onScroll} className="noscroll" aria-roledescription="carousel" aria-label={label}
         style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', overscrollBehaviorX: 'contain', alignItems: 'stretch' }}>
         {pages.map((pg, k) => <div key={k} aria-hidden={k !== i} style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', scrollSnapStop: 'always', display: 'flex', flexDirection: 'column' }}>{pg}</div>)}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
-        {pages.map((_, k) => <button key={k} aria-label={`${label}: ${k === 0 ? 'this week' : 'this month'}`} onClick={() => go(k)}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+        {pages.map((_, k) => <button key={k} aria-label={`${label}: ${names[k]}`} aria-current={k === i} onClick={() => go(k)}
           style={{ width: k === i ? 18 : 7, height: 7, borderRadius: 99, border: 0, padding: 0, cursor: 'pointer', background: k === i ? 'var(--color-text)' : 'var(--color-neutral-300)', transition: 'width .2s, background .2s' }} />)}
       </div>
     </div>
@@ -152,11 +173,11 @@ function SafeCard({ tone, title, left, budget, spent, sub, tour }: { tone: typeo
   );
 }
 
-function PocketGrid({ items, tour }: { items: { p: PocketStats; left: number; budget: number }[]; tour?: boolean }) {
+function PocketGrid({ items, tour, view }: { items: { p: PocketStats; left: number; budget: number; off?: string }[]; tour?: boolean; view: PocketView }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 10 }}>
-      {items.map(({ p, left, budget }) => (
-        <div key={p.id} data-tour={tour ? 'pocket' : undefined} onClick={() => openSheet({ name: 'pocket', id: p.id })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
+      {items.map(({ p, left, budget, off }) => (
+        <div key={p.id} data-tour={tour ? 'pocket' : undefined} onClick={() => openSheet({ name: 'pocket', id: p.id, view })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.85)', backgroundImage: p.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{p.initial}</span>
@@ -168,8 +189,13 @@ function PocketGrid({ items, tour }: { items: { p: PocketStats; left: number; bu
             </svg>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em', color: left < 0 ? RED : ink(p.hue) }}>{fmt(left)}</span>
-            <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>left of {fmt(budget)}</span>
+            {off ? <>
+              <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em', color: left < 0 ? RED : ink(p.hue), lineHeight: 1.3 }}>{left < 0 ? fmt(left) : 'No spending today'}</span>
+              <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>{off}</span>
+            </> : <>
+              <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em', color: left < 0 ? RED : ink(p.hue) }}>{fmt(left)}</span>
+              <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>left of {fmt(budget)}{view === 'day' ? ' today' : ''}</span>
+            </>}
           </div>
         </div>
       ))}

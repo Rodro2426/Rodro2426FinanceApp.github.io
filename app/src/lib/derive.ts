@@ -1,6 +1,6 @@
-import type { Account, Data, Expense } from './types';
+import type { Account, Data, Expense, Income, Move } from './types';
 import { POCKET_CAT } from './constants';
-import { addDays, daysBetween, inRange, makeCtx, monthKey, type Ctx } from './dates';
+import { addDays, daysBetween, fmtDay, inRange, makeCtx, monthKey, parse, type Ctx } from './dates';
 import { getData } from './store';
 
 export const num = (s: unknown) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
@@ -67,6 +67,62 @@ export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
   const budget = weekly * c.weeks + extra;
   return { id, budget, spent, left: budget - spent, extra };
 }
+/* ---------------- Days ---------------- */
+export const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+export const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+export const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+/** 0 = Monday … 6 = Sunday. */
+export const weekdayOf = (iso: string) => (parse(iso).getDay() + 6) % 7;
+export const daysOf = (p?: { days?: number[] }) => (p?.days && p.days.length ? p.days : ALL_DAYS);
+
+export interface DayPlan { date: string; wd: number; active: boolean; past: boolean; today: boolean; spent: number; amount: number }
+export interface DayStats {
+  /** Today is one of the pocket's spending days. */
+  active: boolean;
+  /** What today gets: the week's money left this morning, shared by today and the spending days still to come. */
+  allowance: number; spentToday: number; left: number;
+  /** Each spending day after today gets this (what's left after today, shared evenly). */
+  futureShare: number;
+  next?: DayPlan; week: DayPlan[];
+}
+/**
+ * One pocket for today. The week's budget is shared by its spending days: today's allowance is fixed for the
+ * whole day (what was left this morning ÷ spending days left, including today), so today + the days to come
+ * always add up to what's left in the week.
+ */
+export function dayStats(d: Data, id: string, c: Ctx = ctxOf(d), s: PocketStats | null = pocketStats(d, id, c)): DayStats {
+  const p = d.pockets.find(x => x.id === id), on = new Set(daysOf(p));
+  const exp = weekExpenses(d, c).filter(e => e.p === id);
+  const spentOn = (iso: string) => exp.filter(e => e.date === iso).reduce((a, e) => a + e.amt, 0);
+  const budget = s?.budget ?? 0;
+  const spentBefore = exp.filter(e => e.date < c.today).reduce((a, e) => a + e.amt, 0);
+  const spentToday = spentOn(c.today);
+  const dates = ALL_DAYS.map(i => addDays(c.weekStart, i));
+  const active = on.has(weekdayOf(c.today));
+  const future = dates.filter(x => x > c.today && on.has(weekdayOf(x)));
+  const leftBefore = budget - spentBefore;
+  const allowance = active ? Math.max(0, leftBefore / (future.length + 1)) : 0;
+  const left = allowance - spentToday;
+  const weekLeftNow = leftBefore - spentToday;
+  const futureShare = future.length ? Math.max(0, weekLeftNow - Math.max(0, left)) / future.length : 0;
+  const week: DayPlan[] = dates.map(x => {
+    const wd = weekdayOf(x), act = on.has(wd), past = x < c.today, today = x === c.today;
+    return { date: x, wd, active: act, past, today, spent: spentOn(x), amount: today ? allowance : past || !act ? 0 : futureShare };
+  });
+  return { active, allowance, spentToday, left, futureShare, next: week.find(x => x.date > c.today && x.active), week };
+}
+export const dayLabel = (iso: string, c: Ctx) => (iso === addDays(c.today, 1) ? 'Tomorrow' : fmtDay(iso, { weekday: 'long' }));
+
+/* ---------------- Income split into pockets ---------------- */
+/**
+ * Pocket moves that came from an income. Older splits had no link, so they're matched by the time they
+ * were saved together (both ids start with the same timestamp).
+ */
+export function incomeMoves(moves: Move[], inc: Income): Move[] {
+  const stamp = inc.id.startsWith('in') ? inc.id.slice(2, 10) : '';
+  return moves.filter(m => m.from === '_income' && (m.income ? m.income === inc.id : !!stamp && m.id.slice(1, 9) === stamp));
+}
+
 /** Weeks left in the month, counting this one. */
 export const weeksLeft = (c: Ctx) => Math.max(1, c.weeks - c.weekNo + 1);
 

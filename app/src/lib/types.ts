@@ -1,7 +1,8 @@
 export type Currency = 'COP' | '$' | '€' | '£';
 export type AcctType = 'bank' | 'savings' | 'cash' | 'card';
 
-export interface Pocket { id: string; name: string; emoji?: string; photo?: string | null; weeklyStr: string; hue: number }
+/** `days` are the weekdays the pocket is spent on (0 = Monday … 6 = Sunday); missing = every day. */
+export interface Pocket { id: string; name: string; emoji?: string; photo?: string | null; weeklyStr: string; hue: number; days?: number[] }
 /**
  * `rate` is an annual return (% E.A.) for bank/savings accounts, like Nu's Cajitas.
  * Interest is added daily (compound) up to `accruedTo`; `earned` is the total so far.
@@ -17,7 +18,7 @@ export interface Income { id: string; ts: number; a: string; amt: number; note: 
  * Money moved into or out of a pocket for one week (`week` = its Monday).
  * With `month`, it was income split for the whole month: it's spread evenly over `spread` weeks starting at `week`.
  */
-export interface Move { id: string; week: string; from: string; to: string; amt: number; month?: string; spread?: number }
+export interface Move { id: string; week: string; from: string; to: string; amt: number; month?: string; spread?: number; /** The income it was split from. */ income?: string }
 /** A transfer between accounts (card payments), or into/out of a CDT when `cdt` is set (then `from`/`to` is 'cdt:<id>'). */
 export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string; ruleId?: string; ruleMonth?: string; cdt?: string }
 export type ScheduleKind = 'Income' | 'Bill' | 'Subscription' | 'CardPayment';
@@ -76,12 +77,13 @@ export interface Data {
   tags: string[];
 }
 
+export type PocketView = 'day' | 'week' | 'month';
 export type Tab = 'home' | 'accounts' | 'budget' | 'insights' | 'calendar';
 
 export type Sheet =
   | { name: 'search'; tag?: string | null }
   | { name: 'add'; pocket?: string; mode?: 'expense' | 'income' }
-  | { name: 'pocket'; id: string }
+  | { name: 'pocket'; id: string; view?: PocketView }
   | { name: 'saved'; id: string }
   | { name: 'move'; id: string; to?: string }
   | { name: 'editPocket'; id: string | null }
