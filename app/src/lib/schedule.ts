@@ -155,10 +155,11 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
     notify(`low:${c.weekStart}`, today, 'budget', 'Running low this week', `Only ${fmt(Math.max(0, left))} (${Math.round(Math.max(0, left) / budget * 100)}%) is safe to spend, with ${c.daysLeft} days to go.`);
   }
 
-  // 5. Remind to back up when the last backup is over 30 days old (or never), once a month.
-  const last = d.settings.lastBackup;
-  if ((d.expenses.length || d.accounts.length) && (!last || addDays(last, 30) <= today)) {
-    notify(`backup:${monthKey(today)}`, today, 'backup', 'Back up your data', `${last ? `Your last backup was on ${shortDate(last)}.` : "You haven't made a backup yet."} Open Profile → Back up to save it to iCloud Drive.`);
+  // 5. Monthly backup reminder on the chosen day, unless a backup was made since that day.
+  const last = d.settings.lastBackup, bday = Math.min(28, Math.max(1, d.settings.backupDay || 1));
+  const due = `${monthKey(today)}-${pad(bday)}`;
+  if (d.settings.backupReminder !== false && (d.expenses.length || d.accounts.length) && today >= due && (!last || last < due)) {
+    notify(`backup:${monthKey(today)}`, today, 'backup', 'Time for your monthly backup', `${last ? `Last backup: ${shortDate(last)}.` : "You haven't made a backup yet."} Tap Back up now and save it to your folder in Files.`);
   }
 
   // Keep the last ~2 months of notifications.

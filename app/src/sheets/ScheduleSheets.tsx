@@ -8,6 +8,7 @@ import { KIND_LABEL, describeDay, ordinal } from '../lib/schedule';
 import type { Bill, NotifKind, ScheduleKind } from '../lib/types';
 import { BillBadge, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
 import { pickPhoto } from '../lib/photo';
+import { makeBackup } from '../lib/backup';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
 
@@ -210,6 +211,21 @@ export const NOTIF_TONE: Record<NotifKind, { bg: string; fg: string }> = {
 export const NotifIcon = ({ kind, size = 18 }: { kind: NotifKind; size?: number }) =>
   kind === 'income' ? <I.Plus size={size} /> : kind === 'budget' ? <I.Alert size={size} /> : kind === 'card' ? <I.Card size={size} /> : kind === 'backup' ? <I.Download size={size} /> : <I.Calendar size={size} />;
 
+/** One tap: opens the share sheet with the backup file, then clears the reminder. */
+export function BackupNowButton({ id }: { id: string }) {
+  return (
+    <button onClick={async e => {
+      e.stopPropagation();
+      const r = await makeBackup();
+      if (r === 'cancelled') return;
+      setData(x => ({ notifications: x.notifications.map(n => (n.id === id ? { ...n, dismissed: true, bannered: true } : n)) }));
+      flash(r === 'shared' ? 'Backup saved' : 'Backup downloaded to Files');
+    }} style={{ alignSelf: 'flex-start', marginTop: 8, height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+      <I.Download size={14} />Back up now
+    </button>
+  );
+}
+
 export function NotificationsSheet() {
   const { data: d } = useApp();
   const today = todayISO();
@@ -232,6 +248,7 @@ export function NotificationsSheet() {
                 <span style={{ fontSize: 15, fontWeight: 700 }}>{n.title}</span>
                 <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', lineHeight: 1.35 }}>{n.body}</span>
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-neutral-500)', marginTop: 2 }}>{relDay(n.date, today)}</span>
+                {n.kind === 'backup' && <BackupNowButton id={n.id} />}
               </div>
               <button onClick={() => dismiss(n.id)} aria-label="Dismiss" style={{ width: 30, height: 30, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.X size={14} /></button>
             </div>

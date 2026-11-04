@@ -9,7 +9,7 @@ import { makeBackup, pickBackupFile, readBackup, restoreBackup } from '../lib/ba
 import { dailyRate, earnsInterest, perDay } from '../lib/interest';
 import { emptyData, sampleData } from '../lib/seed';
 import type { AcctType, Currency } from '../lib/types';
-import { AcctBadge, Bar, BigAmount, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, textInput } from '../ui/bits';
+import { AcctBadge, Bar, BigAmount, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -383,6 +383,19 @@ export function SettingsSheet() {
               const f = await pickBackupFile(); if (!f) return;
               try { const r = await readBackup(f); setRestore(r); } catch (e) { flash((e as Error).message); }
             }} className="hv-n200" style={{ height: 48, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Restore</button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 10, borderTop: '1px solid var(--color-neutral-200)' }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>Monthly reminder</span>
+              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>A one-tap "Back up now" on the day you pick</span>
+            </div>
+            {st.backupReminder !== false && (
+              <select aria-label="Reminder day" value={st.backupDay || 1} onChange={e => setS({ backupDay: Number(e.target.value) })}
+                style={{ height: 36, borderRadius: 12, border: 0, background: 'var(--color-neutral-100)', fontWeight: 700, padding: '0 8px', color: TEXT }}>
+                {Array.from({ length: 28 }, (_, i) => i + 1).map(n => <option key={n} value={n}>Day {n}</option>)}
+              </select>
+            )}
+            <Toggle on={st.backupReminder !== false} onChange={v => setS({ backupReminder: v })} label="Monthly backup reminder" />
           </div>
           {restore && (
             <div style={{ background: 'var(--color-accent-100)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>

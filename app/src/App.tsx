@@ -20,7 +20,8 @@ import Insights from './screens/Insights';
 import CalendarScreen from './screens/Calendar';
 import Investments from './screens/Investments';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
-import { NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
+import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
+import { CropperHost } from './ui/Cropper';
 import { AddSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
 import * as I from './ui/icons';
@@ -79,7 +80,7 @@ export default function App() {
   // Today's newest notification shows as a banner at the top until dismissed or it times out.
   const banner = data.notifications.find(n => n.date === todayISO() && !n.dismissed && !n.bannered);
   useEffect(() => {
-    if (!banner) return;
+    if (!banner || banner.kind === 'backup') return;
     const t = setTimeout(() => setData(x => ({ notifications: x.notifications.map(n => (n.id === banner.id ? { ...n, bannered: true } : n)) })), 7000);
     return () => clearTimeout(t);
   }, [banner?.id]);
@@ -122,6 +123,7 @@ export default function App() {
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 14, fontWeight: 700 }}>{banner.title}</span>
             <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', lineHeight: 1.3 }}>{banner.body}</span>
+            {banner.kind === 'backup' && <BackupNowButton id={banner.id} />}
           </div>
           <button onClick={e => { e.stopPropagation(); patchNotif(banner.id, { dismissed: true }); }} aria-label="Dismiss notification" style={{ width: 30, height: 30, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.X size={14} /></button>
         </div>
@@ -148,6 +150,7 @@ export default function App() {
       {ui.page === 'investments' && <Investments />}
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
+      <CropperHost />
     </div>
   );
 }
