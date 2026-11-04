@@ -5,6 +5,7 @@ import { fmtDay, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
 import { BillBadge, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
+import { billAmount } from '../lib/schedule';
 
 const C = 100.53; // ring circumference (r=16)
 
@@ -109,7 +110,7 @@ export default function Home() {
               <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
               <span style={{ fontSize: 12, color: b.dueColor }}>{b.dueLabel}</span>
             </div>
-            <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap' }}>{fmt(b.amt)}</span>
+            <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap' }}>{billAmount(b)}</span>
           </div>
         ))}
         {upcoming.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>All bills paid for {monthName(c.month)}.</div>}

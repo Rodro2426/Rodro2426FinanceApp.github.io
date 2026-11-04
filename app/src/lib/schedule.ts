@@ -1,9 +1,26 @@
 // Scheduled income, bills and subscriptions, plus the notifications they produce.
 // `runSchedule` is idempotent: it can run any number of times a day and only
 // applies or notifies what hasn't been handled yet.
-import type { Account, Bill, Data, Expense, Income, Notif, NotifKind } from './types';
+import type { Account, Bill, Data, Expense, FxOrig, Income, Notif, NotifKind } from './types';
 import { allStats, ctxOf, fmt, uid } from './derive';
 import { addDays, daysInMonth, monthKey, prevMonthKey, shortDate, todayISO } from './dates';
+import { fmtUsd, isUsd, latestRate, trmFor } from './trm';
+
+/**
+ * Local amount for one occurrence. Dollar items use the TRM of `date`; if that
+ * lookup failed, the newest known rate. Returns null while the TRM is still loading.
+ */
+export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig?: FxOrig } | null {
+  if (!isUsd(b)) return { amt: b.amt };
+  const trm = trmFor(d, date);
+  if (!trm && !d.fx?.tried[date]) return null;
+  const rate = trm ?? latestRate(d);
+  return { amt: Math.round(b.amt * rate), orig: { amt: b.amt, cur: 'USD', rate, official: !!trm } };
+}
+/** Text for a bill's amount: "$44.900" or "US$20,00". */
+export const billAmount = (b: Bill) => (isUsd(b) ? fmtUsd(b.amt) : fmt(b.amt));
+/** Approximate local value for totals and previews. */
+export const approxLocal = (d: Data, b: Bill) => (isUsd(b) ? b.amt * latestRate(d) : b.amt);
 
 const pad = (n: number) => String(n).padStart(2, '0');
 /** Date of the item in month `m`; days past the month's end fall on its last day. */
@@ -22,12 +39,13 @@ export function applyOccurrence(d: Data, b: Bill, m: string, date: string): Part
   const markPaid = (x: Bill) => (x.id !== b.id ? x : { ...x, paidMonths: [...x.paidMonths.filter(y => y !== m), m], skipMonths: (x.skipMonths || []).filter(y => y !== m) });
   if (!isAuto(b, d)) return { bills: d.bills.map(markPaid) };
   const ts = Date.now();
+  const { amt, orig } = localAmount(d, b, date) ?? { amt: Math.round(b.amt * (isUsd(b) ? latestRate(d) : 1)) };
   if (isIncome(b)) {
-    const inc: Income = { id: uid('in'), ts, a: b.acct!, amt: b.amt, note: b.name, date, ruleId: b.id, ruleMonth: m };
-    return { incomes: [inc, ...d.incomes], accounts: move(d.accounts, b.acct!, b.amt, true), bills: d.bills.map(markPaid) };
+    const inc: Income = { id: uid('in'), ts, a: b.acct!, amt, note: b.name, date, ruleId: b.id, ruleMonth: m, orig };
+    return { incomes: [inc, ...d.incomes], accounts: move(d.accounts, b.acct!, amt, true), bills: d.bills.map(markPaid) };
   }
-  const exp: Expense = { id: uid('e'), ts, p: b.pocket && d.pockets.some(p => p.id === b.pocket) ? b.pocket : '', a: b.acct!, amt: b.amt, note: b.name, date, tags: [], cat: b.cat || (b.kind === 'Bill' ? 'Home' : 'Entertainment'), sub: b.sub || '', ruleId: b.id, ruleMonth: m };
-  return { expenses: [exp, ...d.expenses], accounts: move(d.accounts, b.acct!, b.amt, false), bills: d.bills.map(markPaid) };
+  const exp: Expense = { id: uid('e'), ts, p: b.pocket && d.pockets.some(p => p.id === b.pocket) ? b.pocket : '', a: b.acct!, amt, note: b.name, date, tags: [], cat: b.cat || (b.kind === 'Bill' ? 'Home' : 'Entertainment'), sub: b.sub || '', ruleId: b.id, ruleMonth: m, orig };
+  return { expenses: [exp, ...d.expenses], accounts: move(d.accounts, b.acct!, amt, false), bills: d.bills.map(markPaid) };
 }
 
 /** Reverses a handled month: removes the money it moved and stops it from running again. */
@@ -73,9 +91,12 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
       const b = d.bills.find(x => x.id === b0.id)!;
       const due = dueDate(b, m);
       if (due < start || due > today || b.paidMonths.includes(m) || (b.skipMonths || []).includes(m)) continue;
+      const local = localAmount(d, b, due);
+      if (!local) continue; // waiting for that day's TRM; runs again once it arrives
       apply(applyOccurrence(d, b, m, due));
-      if (isIncome(b)) notify(`ran:${b.id}:${m}`, due, 'income', `${b.name} received`, `+${fmt(b.amt)} added to ${acctName(b.acct)}.`);
-      else notify(`ran:${b.id}:${m}`, due, 'bill', `${b.name} paid`, `−${fmt(b.amt)} from ${acctName(b.acct)}.`);
+      const how = local.orig ? ` (${fmtUsd(b.amt)} at ${local.orig.official ? 'TRM' : 'about'} ${fmt(local.orig.rate)})` : '';
+      if (isIncome(b)) notify(`ran:${b.id}:${m}`, due, 'income', `${b.name} received`, `+${fmt(local.amt)}${how} added to ${acctName(b.acct)}.`);
+      else notify(`ran:${b.id}:${m}`, due, 'bill', `${b.name} paid`, `−${fmt(local.amt)}${how} from ${acctName(b.acct)}.`);
     }
   }
 
@@ -86,11 +107,11 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
     const tm = monthKey(tomorrow);
     if (dueDate(b, tm) === tomorrow && !handled(tm) && (!b.start || tomorrow >= b.start)) {
       const auto = isAuto(b, d);
-      if (isIncome(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'income', `${b.name} arrives tomorrow`, `+${fmt(b.amt)}${auto ? ` will be added to ${acctName(b.acct)}` : ''}.`);
-      else notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${fmt(b.amt)}${auto ? ` will be paid automatically from ${acctName(b.acct)}` : '. Remember to pay it'}.`);
+      if (isIncome(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'income', `${b.name} arrives tomorrow`, `+${billAmount(b)}${auto ? ` will be added to ${acctName(b.acct)}` : ''}.`);
+      else notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}${isUsd(b) ? ' (converted with that day\'s TRM)' : ''}${auto ? ` will be paid automatically from ${acctName(b.acct)}` : '. Remember to pay it'}.`);
     }
     const m = monthKey(today);
-    if (!isAuto(b, d) && !isIncome(b) && dueDate(b, m) === today && !handled(m)) notify(`today:${b.id}:${today}`, today, 'bill', `${b.name} is due today`, `${fmt(b.amt)}. Tick it off in Insights once it's paid.`);
+    if (!isAuto(b, d) && !isIncome(b) && dueDate(b, m) === today && !handled(m)) notify(`today:${b.id}:${today}`, today, 'bill', `${b.name} is due today`, `${billAmount(b)}. Tick it off in Insights once it's paid.`);
   }
 
   // 3. Credit card payment dates.
@@ -132,3 +153,18 @@ export function eventsOn(d: Data, date: string) {
 export const describeDay = (b: Bill) => `Every month on the ${ordinal(b.dueDay)}${b.dueDay > 28 ? ' (or the last day)' : ''}`;
 export function ordinal(n: number) { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
 export const shortDue = (b: Bill, m: string) => shortDate(dueDate(b, m));
+
+/** Dates whose TRM is needed: today, plus any dollar item waiting to run. */
+export function trmNeeded(d: Data, today = todayISO()): string[] {
+  if (!d.bills.some(isUsd)) return [];
+  const out = [today];
+  for (const b of d.bills) {
+    if (!isUsd(b) || !isAuto(b, d)) continue;
+    const start = b.start || today;
+    for (let m = monthKey(start); m <= monthKey(today); m = nextMonth(m)) {
+      const due = dueDate(b, m);
+      if (due >= start && due <= today && !b.paidMonths.includes(m) && !(b.skipMonths || []).includes(m)) out.push(due);
+    }
+  }
+  return out;
+}

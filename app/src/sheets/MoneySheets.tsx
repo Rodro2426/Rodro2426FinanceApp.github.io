@@ -151,7 +151,7 @@ export function AcctSheet({ id }: { id: string }) {
                   <div style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: tint(t.hue), backgroundImage: t.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', color: ink(t.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flex: 'none' }}>{t.icon != null ? t.icon : (t.pocket || t.note).charAt(0).toUpperCase()}</div>
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: 15, fontWeight: 600 }}>{t.note}</span>
-                    <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[shortDate(t.date), t.pocket].filter(Boolean).join(' · ')}</span>
+                    <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[shortDate(t.date), t.pocket, t.fx].filter(Boolean).join(' · ')}</span>
                     {t.tags.length > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-accent-700)' }}>{t.tags.map(x => '#' + x).join('  ')}</span>}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>

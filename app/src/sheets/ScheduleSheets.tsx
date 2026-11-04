@@ -3,6 +3,7 @@ import { useApp, setData, closeSheet, flash } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
 import { fmt, num, roundAmt, uid } from '../lib/derive';
 import { relDay, todayISO } from '../lib/dates';
+import { ensureTrm, fmtUsd, latestRate, trmFor } from '../lib/trm';
 import { describeDay, ordinal } from '../lib/schedule';
 import type { Bill, NotifKind, ScheduleKind } from '../lib/types';
 import { BillBadge, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
@@ -22,6 +23,12 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const [kind, setKind] = useState<ScheduleKind>(base?.kind ?? kind0 ?? 'Bill');
   const [name, setName] = useState(base?.name ?? '');
   const [amt, setAmt] = useState(base ? String(base.amt) : '');
+  const [currency, setCurrency] = useState<'USD' | 'COP'>(base?.currency ?? 'COP');
+  const canUsd = d.settings.currency === 'COP';
+  const usd = canUsd && currency === 'USD';
+  const todayTrm = trmFor(d, todayISO());
+  useEffect(() => { if (usd) ensureTrm([todayISO()]); }, [usd]);
+  const rate = todayTrm ?? latestRate(d);
   const [dueDay, setDueDay] = useState(base?.dueDay ?? day ?? 1);
   const [acct, setAcct] = useState(base?.acct ?? (d.accounts.find(a => a.type === 'bank') || d.accounts[0])?.id ?? '');
   const [auto, setAuto] = useState(base ? !!base.auto : true);
@@ -50,7 +57,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
     const restart = !base || (auto && (!base.auto || base.acct !== acct));
     const subs = d.cats.find(c => c.name === cat)?.subs || [];
     const patch: Partial<Bill> = {
-      name: name.trim(), kind, amt: roundAmt(v), dueDay, photo, acct: acctOk ? acct : undefined, auto: auto && acctOk,
+      name: name.trim(), kind, amt: usd ? Math.round(v * 100) / 100 : roundAmt(v), currency: usd ? 'USD' : undefined, dueDay, photo, acct: acctOk ? acct : undefined, auto: auto && acctOk,
       pocket: income ? undefined : pocket || undefined, cat: income ? undefined : cat, sub: income ? undefined : base?.cat === cat ? base.sub : subs[0] || '',
       start: restart ? today : base?.start
     };
@@ -79,8 +86,28 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
         </div>
         <FieldLabel m="14px 4px 6px">Name</FieldLabel>
         <input value={name} placeholder={PLACEHOLDER[kind]} onChange={e => setName(e.target.value)} style={textInput} />
-        <FieldLabel m="14px 4px 6px">Amount</FieldLabel>
-        <SmallAmount value={amt} onChange={setAmt} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '14px 4px 6px', gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Amount</span>
+          {canUsd && (
+            <div style={{ display: 'flex', gap: 2, background: 'var(--color-neutral-200)', borderRadius: 999, padding: 3 }}>
+              {(['COP', 'USD'] as const).map(c => (
+                <button key={c} onClick={() => { if (c !== currency) { setCurrency(c); setAmt(''); } }} style={{ height: 28, padding: '0 12px', borderRadius: 999, border: 0, background: currency === c ? '#fff' : 'transparent', boxShadow: currency === c ? 'var(--shadow-sm)' : 'none', color: TEXT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{c === 'COP' ? 'Pesos' : 'Dollars'}</button>
+              ))}
+            </div>
+          )}
+        </div>
+        {usd ? (
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: '#fff', borderRadius: 18, padding: '13px 18px' }}>
+            <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-neutral-400)' }}>US$</span>
+            <input type="text" inputMode="decimal" placeholder="0,00" value={amt.replace('.', ',')} onChange={e => setAmt(e.target.value.replace(',', '.').replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1').replace(/(\.\d{2}).+/, '$1'))}
+              style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 18, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />
+          </div>
+        ) : <SmallAmount value={amt} onChange={setAmt} />}
+        {usd && (
+          <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
+            {todayTrm ? `Today's TRM is ${fmt(todayTrm)}` : `About ${fmt(rate)} per dollar`}{v > 0 ? `, so ${fmtUsd(v)} ≈ ${fmt(v * rate)}` : ''}. {auto ? 'On the day it runs, it uses that day\'s official TRM.' : ''}
+          </span>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '14px 4px 6px' }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Day of the month</span>
@@ -108,7 +135,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 600 }}>{income ? 'Add to my balance automatically' : 'Pay automatically'}</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
-              {auto && acctName ? `${income ? '+' : '−'}${fmt(v)} ${income ? 'into' : 'from'} ${acctName} on the ${ordinal(dueDay)}` : "Just remind me, I'll tick it off myself"}
+              {auto && acctName ? `${income ? '+' : '−'}${usd ? fmtUsd(v) + ' in pesos' : fmt(v)} ${income ? 'into' : 'from'} ${acctName} on the ${ordinal(dueDay)}` : "Just remind me, I'll tick it off myself"}
             </span>
           </div>
           <Toggle on={auto} onChange={setAuto} label="Automatic" />

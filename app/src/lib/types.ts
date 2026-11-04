@@ -8,9 +8,11 @@ export interface Pocket { id: string; name: string; emoji?: string; photo?: stri
  */
 export interface Account { id: string; name: string; kind: string; type: AcctType; bal: number; limit?: number; due?: string; hue: number; photo?: string | null; rate?: number; accruedTo?: string; earned?: number }
 /** `p` is '' for expenses that don't belong to a weekly pocket (e.g. a scheduled bill). */
-export interface Expense { id: string; ts: number; p: string; a: string; amt: number; note: string; date: string; tags: string[]; cat: string; sub: string; ruleId?: string; ruleMonth?: string }
+/** `orig` keeps the dollar amount and the TRM used when a USD subscription was converted. */
+export interface FxOrig { amt: number; cur: 'USD'; rate: number; official: boolean }
+export interface Expense { id: string; ts: number; p: string; a: string; amt: number; note: string; date: string; tags: string[]; cat: string; sub: string; ruleId?: string; ruleMonth?: string; orig?: FxOrig }
 /** Money received into an account (from a scheduled income). */
-export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean }
+export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig }
 export interface Move { id: string; week: string; from: string; to: string; amt: number }
 export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string }
 export type ScheduleKind = 'Income' | 'Bill' | 'Subscription';
@@ -22,6 +24,8 @@ export type ScheduleKind = 'Income' | 'Bill' | 'Subscription';
 export interface Bill {
   id: string; name: string; kind: ScheduleKind; amt: number; dueDay: number; hue: number; paidMonths: string[];
   acct?: string; auto?: boolean; start?: string; pocket?: string; cat?: string; sub?: string; skipMonths?: string[]; photo?: string | null;
+  /** 'USD' = amount is in dollars and is converted with that day's TRM. */
+  currency?: 'USD' | 'COP';
 }
 export type NotifKind = 'bill' | 'income' | 'budget' | 'card';
 /** `id` is a stable key, so the same event never notifies twice. */
@@ -47,6 +51,8 @@ export interface Data {
   incomes: Income[];
   notifications: Notif[];
   investments: Investments;
+  /** TRM per date (COP per USD), and dates whose lookup failed. */
+  fx: { trm: Record<string, number>; tried: Record<string, number> };
   moves: Move[];
   payments: Payment[];
   bills: Bill[];

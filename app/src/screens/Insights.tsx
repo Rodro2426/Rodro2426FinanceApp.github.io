@@ -3,7 +3,7 @@ import { HUES, LINE, ink, mid, tint } from '../lib/constants';
 import { allStats, ctxOf, fmt, monthExpenses, pctOf, plural } from '../lib/derive';
 import { inRange, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
-import { applyOccurrence, undoOccurrence } from '../lib/schedule';
+import { applyOccurrence, approxLocal, billAmount, undoOccurrence } from '../lib/schedule';
 import { getData } from '../lib/store';
 import { Bar, BillBadge, ListCard } from '../ui/bits';
 import * as I from '../ui/icons';
@@ -108,7 +108,7 @@ export default function Insights() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0', gap: 8 }}>
         <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Bills and subscriptions</span>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(bills.reduce((a, b) => a + b.amt, 0))} / mo</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(bills.reduce((a, b) => a + approxLocal(d, b), 0))} / mo</span>
       </div>
       <ListCard>
         {bills.map((b, i) => (
@@ -118,7 +118,7 @@ export default function Insights() {
               <span style={{ fontSize: 15, fontWeight: 600, textDecoration: b.paid ? 'line-through' : 'none' }}>{b.name}</span>
               <span style={{ fontSize: 12, color: b.dueColor }}>{b.kind} · {b.dueLabel}</span>
             </div>
-            <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', color: b.paid ? 'var(--color-neutral-500)' : 'var(--color-text)' }}>{fmt(b.amt)}</span>
+            <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', color: b.paid ? 'var(--color-neutral-500)' : 'var(--color-text)' }}>{billAmount(b)}</span>
             <button onClick={e => { e.stopPropagation(); toggleBill(b.id); }} aria-label={b.paid ? 'Mark unpaid' : 'Mark paid'} style={{ width: 30, height: 30, borderRadius: 999, border: `2px solid ${b.paid ? 'oklch(0.62 0.12 160)' : 'var(--color-neutral-300)'}`, background: b.paid ? 'oklch(0.62 0.12 160)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}>
               <I.Check size={14} />
             </button>

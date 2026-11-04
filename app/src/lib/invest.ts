@@ -83,6 +83,11 @@ export async function refreshQuotes(): Promise<{ ok: number; failed: string[]; e
 export async function refreshUsdRate(force = false) {
   const inv = getData().investments;
   if (inv.usdManual || (!force && Date.now() - inv.usdRateAt < 6 * 3600e3)) return;
+  // Prefer Colombia's official TRM for today; fall back to a market rate.
+  const { fetchTrm } = await import('./trm');
+  const { todayISO } = await import('./dates');
+  const trm = await fetchTrm(todayISO());
+  if (trm) { setData(x => ({ investments: { ...x.investments, usdRate: trm, usdRateAt: Date.now() }, fx: { ...x.fx, trm: { ...x.fx.trm, [todayISO()]: trm } } })); return; }
   try {
     const r = await fetch('https://open.er-api.com/v6/latest/USD');
     const j = await r.json();

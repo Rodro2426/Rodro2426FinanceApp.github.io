@@ -6,6 +6,7 @@ import { daysInMonth, fmtDay, monthLabel, parse, prevMonthKey, relDay } from '..
 import { dueDate, eventsOn, ordinal } from '../lib/schedule';
 import { BillBadge, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
+import { approxLocal, billAmount } from '../lib/schedule';
 
 const GREEN = 'oklch(0.62 0.12 160)', GREEN_TEXT = 'oklch(0.5 0.12 150)', BILL = 'var(--color-accent)', SPEND = 'var(--color-neutral-400)';
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -25,8 +26,8 @@ export default function CalendarScreen() {
   const spentOn = (date: string) => d.expenses.filter(e => e.date === date);
   const incomeOn = (date: string) => (d.incomes || []).filter(t => t.date === date);
   const scheduled = d.bills.filter(b => !b.start || dueDate(b, month) >= b.start);
-  const incomeTotal = scheduled.filter(b => b.kind === 'Income').reduce((a, b) => a + b.amt, 0);
-  const billTotal = scheduled.filter(b => b.kind !== 'Income').reduce((a, b) => a + b.amt, 0);
+  const incomeTotal = scheduled.filter(b => b.kind === 'Income').reduce((a, b) => a + approxLocal(d, b), 0);
+  const billTotal = scheduled.filter(b => b.kind !== 'Income').reduce((a, b) => a + approxLocal(d, b), 0);
 
   const selEvents = eventsOn(d, sel);
   const selSpent = spentOn(sel).sort((x, y) => y.ts - x.ts).map(e => expView(d, e, c));
@@ -92,7 +93,7 @@ export default function CalendarScreen() {
                 <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
                 <span style={{ fontSize: 12, color: paid ? GREEN_TEXT : 'var(--color-neutral-700)' }}>{[b.kind, status, acct].filter(Boolean).join(' · ')}</span>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{inc ? '+' : '−'}{fmt(b.amt)}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{inc ? '+' : '−'}{billAmount(b)}</span>
             </div>
           );
         })}
@@ -132,7 +133,7 @@ export default function CalendarScreen() {
                   {`Every ${ordinal(b.dueDay)} · `}{b.auto && acct ? <><I.Repeat size={11} />{`Auto · ${acct}`}</> : 'Reminder'} · next {fmtDay(dueDate(b, dueDate(b, c.month) >= c.today ? c.month : nextMonth(c.month)), { month: 'short', day: 'numeric' })}
                 </span>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{inc ? '+' : '−'}{fmt(b.amt)}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{inc ? '+' : '−'}{billAmount(b)}</span>
             </div>
           );
         })}

@@ -15,6 +15,8 @@ export const roundAmt = (n: number) => (isCOP() ? Math.round(n) : Math.round(n *
 export const pctOf = (a: number, b: number) => (b > 0 ? Math.max(0, Math.min(100, (a / b) * 100)) : 0).toFixed(1) + '%';
 export const uid = (p: string) => p + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
 
+/** "US$20,00 at TRM $4.123" for converted dollar amounts. */
+export const fxText = (o?: { amt: number; rate: number; official: boolean }) => (o ? `US$${o.amt.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} at ${o.official ? 'TRM ' : '≈'}${fmt(o.rate)}` : undefined);
 export const ctxOf = (d: Data) => makeCtx(d.settings.weeks);
 export const catOf = (e: Expense): [string, string] => (e.cat ? [e.cat, e.sub || ''] : POCKET_CAT[e.p] || ['Other', 'Other']);
 export const byDateDesc = (x: { date: string; ts: number }, y: { date: string; ts: number }) => (y.date > x.date ? 1 : y.date < x.date ? -1 : y.ts - x.ts);
@@ -45,7 +47,7 @@ export const allStats = (d: Data, c: Ctx = ctxOf(d)) => d.pockets.map(p => pocke
 
 export interface Txn {
   kind: 'expense' | 'payment' | 'income'; icon: string | null; photoBg: string; ts: number; date: string; note: string; pocket: string;
-  hue: number; tags: string[]; category: string; show: number; effect: number; after: number;
+  hue: number; tags: string[]; category: string; show: number; effect: number; after: number; fx?: string;
 }
 /** Every movement on an account, newest first, with the running balance after each one. */
 export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; card: boolean } {
@@ -58,12 +60,12 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
       return {
         kind: 'expense' as const, icon: p ? (p.photo ? '' : p.emoji || p.name.charAt(0).toUpperCase()) : null,
         photoBg: p && p.photo ? `url(${p.photo})` : 'none', ts: e.ts, date: e.date, note: e.note, pocket: p ? p.name : '',
-        hue: p ? p.hue : a.hue, tags: e.tags || [], category: catOf(e)[0], show: -e.amt, effect: card ? e.amt : -e.amt, after: 0
+        hue: p ? p.hue : a.hue, tags: e.tags || [], category: catOf(e)[0], show: -e.amt, effect: card ? e.amt : -e.amt, after: 0, fx: fxText(e.orig)
       };
     }),
     ...(d.incomes || []).filter(t => t.a === id).map(t => ({
       kind: 'income' as const, icon: '💰', photoBg: 'none', ts: t.ts, date: t.date, note: t.note, pocket: 'Income',
-      hue: 150, tags: [], category: 'Income', show: t.amt, effect: card ? -t.amt : t.amt, after: 0
+      hue: 150, tags: [], category: 'Income', show: t.amt, effect: card ? -t.amt : t.amt, after: 0, fx: fxText(t.orig)
     })),
     ...d.payments.filter(p => p.from === id || p.to === id).map(p => {
       const out = p.from === id, other = d.accounts.find(x => x.id === (out ? p.to : p.from));

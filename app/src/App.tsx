@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, setData, getData } from './lib/store';
-import { runSchedule } from './lib/schedule';
+import { runSchedule, trmNeeded } from './lib/schedule';
+import { ensureTrm } from './lib/trm';
 import { runInterest } from './lib/interest';
 import type { Data } from './lib/types';
 
@@ -58,7 +59,7 @@ export default function App() {
 
   // Run scheduled income/bills and build notifications whenever data changes,
   // when the app comes back to the foreground, and once a minute (to catch midnight).
-  useEffect(() => { const p = runAutomations(data); if (p) setData(p); }, [data]);
+  useEffect(() => { ensureTrm(trmNeeded(data)); const p = runAutomations(data); if (p) setData(p); }, [data]);
   useEffect(() => {
     const tick = () => { if (document.visibilityState === 'visible') { const p = runAutomations(getData()); if (p) setData(p); } };
     document.addEventListener('visibilitychange', tick);
