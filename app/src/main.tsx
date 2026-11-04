@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { loadData } from './lib/store';
+import { watchForUpdates } from './lib/update';
 import './styles.css';
 
 // Keep the app sized to the visible area when the iPhone keyboard opens, and stop
@@ -17,6 +18,8 @@ vv?.addEventListener('resize', syncViewport);
 vv?.addEventListener('scroll', syncViewport);
 window.addEventListener('resize', syncViewport);
 syncViewport();
+
+watchForUpdates();
 
 loadData().then(() => {
   createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
