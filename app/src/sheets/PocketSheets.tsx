@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { EMOJIS, HUES, LINE, POCKET_CAT, RED, TEXT, ink, tint } from '../lib/constants';
-import { allStats, chargeAccount, ctxOf, fmt, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses } from '../lib/derive';
+import { allStats, chargeAccount, ctxOf, curSymbol, fmt, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses } from '../lib/derive';
 import { pickPhoto } from '../lib/photo';
 import type { Data } from '../lib/types';
-import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PrimaryBtn, SmallAmount, expView, textInput } from '../ui/bits';
+import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
+import { MoneyInput } from '../ui/MoneyInput';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
 
@@ -67,8 +68,113 @@ export function SearchSheet({ tag }: { tag?: string | null }) {
   );
 }
 
+/** The + button: add an expense or register income. */
+export function AddSheet({ pocket, mode: mode0 }: { pocket?: string; mode?: 'expense' | 'income' }) {
+  const [mode, setMode] = useState<'expense' | 'income'>(mode0 ?? 'expense');
+  return (
+    <SheetFrame title={mode === 'income' ? 'New income' : 'New expense'}>
+      <Segmented items={[['expense', 'Expense'], ['income', 'Income']]} value={mode} onPick={setMode} mt={4} />
+      {mode === 'income' ? <IncomeForm /> : <ExpenseForm pocket={pocket} />}
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Register income, keep it or split it into pockets ---------------- */
+function IncomeForm() {
+  const { data: d } = useApp();
+  const c = ctxOf(d);
+  const accounts = d.accounts.filter(a => a.type !== 'card');
+  const [amt, setAmt] = useState('');
+  const [a, setA] = useState((accounts.find(x => x.type === 'bank') || accounts[0])?.id ?? '');
+  const [note, setNote] = useState('');
+  const [split, setSplit] = useState(false);
+  const [parts, setParts] = useState<Record<string, string>>({});
+  const all = allStats(d, c);
+  const v = num(amt);
+  const assigned = all.reduce((s, p) => s + num(parts[p.id]), 0);
+  const left = v - assigned, over = split && left < -0.004;
+  const cant = !(v > 0) || !accounts.some(x => x.id === a) || over;
+  const acctName = accounts.find(x => x.id === a)?.name;
+
+  const evenly = () => {
+    if (!all.length || !(v > 0)) return;
+    const each = Math.floor(roundAmt(v / all.length));
+    setParts(Object.fromEntries(all.map((p, i) => [p.id, String(i === all.length - 1 ? roundAmt(v - each * (all.length - 1)) : each)])));
+  };
+  const byBudget = () => {
+    const tot = all.reduce((s, p) => s + p.weekly, 0);
+    if (!tot || !(v > 0)) return evenly();
+    let used = 0;
+    setParts(Object.fromEntries(all.map((p, i) => { const x = i === all.length - 1 ? roundAmt(v - used) : Math.floor(roundAmt(v * p.weekly / tot)); used += x; return [p.id, String(x)]; })));
+  };
+
+  const save = () => {
+    if (cant) return;
+    const val = roundAmt(v), ts = Date.now();
+    const moves = split ? all.filter(p => num(parts[p.id]) > 0).map(p => ({ id: uid('m'), week: c.weekStart, from: '_income', to: p.id, amt: roundAmt(num(parts[p.id])) })) : [];
+    setData(x => ({
+      incomes: [{ id: uid('in'), ts, a, amt: val, note: note.trim() || 'Income', date: c.today }, ...x.incomes],
+      accounts: x.accounts.map(y => (y.id === a ? { ...y, bal: y.bal + val } : y)),
+      moves: [...x.moves, ...moves]
+    }));
+    const spread = moves.reduce((s, m) => s + m.amt, 0);
+    closeSheet();
+    flash(moves.length ? `+${fmt(val)} to ${acctName} · ${fmt(spread)} split into ${moves.length === 1 ? '1 pocket' : moves.length + ' pockets'}` : `+${fmt(val)} saved in ${acctName}`);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <BigAmount value={amt} onChange={setAmt} autoFocus mt={12} />
+      <FieldLabel>Goes into</FieldLabel>
+      <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
+        {accounts.map(x => (
+          <button key={x.id} onClick={() => setA(x.id)} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${x.id === a ? ink(x.hue) : '#fff'}`, background: x.id === a ? tint(x.hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+            <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{x.name}</span>
+            <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(x.bal)}</span>
+          </button>
+        ))}
+        {accounts.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add a bank or cash account first, in the Accounts tab.</span>}
+      </div>
+      <input placeholder="What is it? Freelance, gift, refund…" value={note} onChange={e => setNote(e.target.value)} style={{ ...textInput, marginTop: 16 }} />
+      <FieldLabel m="16px 4px 0">What to do with it</FieldLabel>
+      <Segmented items={[['keep', 'Keep it saved'], ['split', 'Split into pockets']]} value={split ? 'split' : 'keep'} onPick={k => setSplit(k === 'split')} mt={6} />
+      {split ? (
+        <div style={{ marginTop: 10, background: '#fff', borderRadius: 22, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {[['Evenly', evenly], ['By budget', byBudget], ['Clear', () => setParts({})]].map(([l, f]) => (
+              <button key={l as string} onClick={f as () => void} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{l as string}</button>
+            ))}
+          </div>
+          {all.map(p => (
+            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: `1px solid ${LINE}` }}>
+              <PocketDot st={p} size={32} fs={15} bg={tint(p.hue)} color={ink(p.hue)} />
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{fmt(p.left)} → <b style={{ color: TEXT }}>{fmt(p.left + num(parts[p.id]))}</b> left</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(p.hue), borderRadius: 14, padding: '8px 10px', width: 120, flex: 'none' }}>
+                <span style={{ fontSize: 14, color: ink(p.hue) }}>{curSymbol()}</span>
+                <MoneyInput value={parts[p.id] || ''} onChange={x => setParts(s => ({ ...s, [p.id]: x }))} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(p.hue), padding: 0, outline: 'none', textAlign: 'right' }} />
+              </div>
+            </div>
+          ))}
+          {all.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Create pockets in the Budget tab first.</span>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: `1px solid ${LINE}`, fontSize: 13 }}>
+            <span style={{ color: over ? RED : 'var(--color-neutral-700)' }}>{over ? 'More than the income by' : 'Stays saved in the account'}</span>
+            <b style={{ color: over ? RED : TEXT }}>{fmt(Math.abs(left))}</b>
+          </div>
+        </div>
+      ) : (
+        <span style={{ margin: '8px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>{v > 0 && acctName ? `${acctName} goes to ${fmt((accounts.find(x => x.id === a)?.bal || 0) + v)}. Your pockets stay the same.` : 'The money is added to the account without changing your pockets.'}</span>
+      )}
+      {split && <span style={{ margin: '8px 4px 0', fontSize: 12, color: 'var(--color-neutral-600)' }}>Split money is added to each pocket's budget for this week.</span>}
+      <PrimaryBtn onClick={save} disabled={cant} bg="oklch(0.5 0.12 150)" hover="hv-green">Save income</PrimaryBtn>
+    </div>
+  );
+}
+
 /* ---------------- Add expense ---------------- */
-export function AddSheet({ pocket }: { pocket?: string }) {
+function ExpenseForm({ pocket }: { pocket?: string }) {
   const { data: d, ui } = useApp();
   const c = ctxOf(d);
   const first = [pocket, ui.lastAdd.pocket].find(id => id && d.pockets.some(p => p.id === id)) || d.pockets[0]?.id || '';
@@ -125,7 +231,7 @@ export function AddSheet({ pocket }: { pocket?: string }) {
   };
 
   return (
-    <SheetFrame title="New expense">
+    <>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <BigAmount value={amt} onChange={setAmt} autoFocus mt={10} />
         <FieldLabel m="18px 4px 8px">Pocket</FieldLabel>
@@ -182,7 +288,7 @@ export function AddSheet({ pocket }: { pocket?: string }) {
         <div style={{ margin: '14px 4px 0', fontSize: 13, color: previewColor }}>{preview}</div>
         <PrimaryBtn onClick={save} disabled={cant} fs={17}>Save expense</PrimaryBtn>
       </div>
-    </SheetFrame>
+    </>
   );
 }
 

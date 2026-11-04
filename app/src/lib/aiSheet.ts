@@ -16,7 +16,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const weeks = d.settings.weeks;
   const acc = (id: string) => d.accounts.find(a => a.id === id);
   const pocketName = (id: string) => (id ? d.pockets.find(p => p.id === id)?.name || 'Deleted pocket' : 'No pocket (scheduled bill)');
-  const goalOrPocket = (id: string) => d.pockets.find(p => p.id === id)?.name || d.goals.find(g => g.id === id)?.name || 'Deleted';
+  const goalOrPocket = (id: string) => (id === '_income' ? 'New income' : d.pockets.find(p => p.id === id)?.name || d.goals.find(g => g.id === id)?.name || 'Deleted');
   const period = months.length === 1 ? monthLabel(months[0]) : `${monthLabel(months[0])} to ${monthLabel(months[months.length - 1])}`;
   const acctLabel = acctId === 'all' ? 'All accounts' : acc(acctId)?.name || '';
   const cur = d.settings.currency;
@@ -138,7 +138,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const periodWeeks = new Set(weekRows.map(r => r[0]));
   const moves = d.moves.filter(m => periodWeeks.has(`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`));
   sections.push({
-    title: 'Money moved between pockets and goals', header: ['Week', 'From pocket', 'To', 'Amount'],
+    title: 'Money moved between pockets and goals', header: ['Week', 'From', 'To', 'Amount'],
     rows: moves.map(m => [`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`, goalOrPocket(m.from), goalOrPocket(m.to), money(m.amt)])
   });
 
