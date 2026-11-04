@@ -36,7 +36,7 @@ export interface Notif { id: string; date: string; ts: number; kind: NotifKind; 
 export interface Goal { id: string; name: string; saved: number; target: number; months: number; hue: number }
 export interface Category { name: string; subs: string[] }
 
-export interface Settings { name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean }
+export interface Settings { name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean }
 
 /** One buy or sell of a stock/ETF. Prices are in the stock's own currency. */
 export interface Trade { id: string; ts: number; ticker: string; name: string; currency: 'USD' | 'COP'; side: 'buy' | 'sell'; qty: number; price: number; fee: number; date: string }
@@ -68,7 +68,7 @@ export type Tab = 'home' | 'accounts' | 'budget' | 'insights' | 'calendar';
 
 export type Sheet =
   | { name: 'search'; tag?: string | null }
-  | { name: 'add'; pocket?: string }
+  | { name: 'add'; pocket?: string; mode?: 'expense' | 'income' }
   | { name: 'pocket'; id: string }
   | { name: 'saved'; id: string }
   | { name: 'move'; id: string; to?: string }
@@ -99,4 +99,6 @@ export interface UI {
   welcome?: boolean;
   /** Home-screen install guide: shown in iPhone Safari, or opened from Profile. */
   install?: false | 'auto' | 'profile';
+  /** The feature tour. */
+  tour?: boolean;
 }

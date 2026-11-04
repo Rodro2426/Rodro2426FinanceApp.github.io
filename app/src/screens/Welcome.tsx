@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { finishWelcome, flash } from '../lib/store';
+import { finishWelcome, flash, setUI } from '../lib/store';
 import { emptyData, sampleData } from '../lib/seed';
 import { pickBackupFile, readBackup } from '../lib/backup';
 import { TEXT } from '../lib/constants';
@@ -14,11 +14,12 @@ export default function Welcome() {
   const scratch = () => {
     const d = emptyData(sampleData());
     finishWelcome({ ...d, settings: { ...d.settings, name: who || 'there', lastBackup: undefined } });
+    setUI({ tour: true });
   };
   const sample = () => {
     const d = sampleData();
     finishWelcome(who ? { ...d, settings: { ...d.settings, name: who } } : d);
-    flash('Sample data loaded. Start fresh anytime in Profile.');
+    setUI({ tour: true });
   };
   const restore = async () => {
     const f = await pickBackupFile(); if (!f) return;

@@ -19,6 +19,7 @@ import Budget from './screens/Budget';
 import Insights from './screens/Insights';
 import CalendarScreen from './screens/Calendar';
 import Welcome from './screens/Welcome';
+import Tour from './screens/Tour';
 import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
@@ -36,7 +37,7 @@ const TABS: [Tab, string, (p: { size?: number; sw?: number }) => ReactNode][] = 
 function SheetRouter({ sheet }: { sheet: Sheet }) {
   switch (sheet.name) {
     case 'search': return <SearchSheet tag={sheet.tag} />;
-    case 'add': return <AddSheet pocket={sheet.pocket} />;
+    case 'add': return <AddSheet pocket={sheet.pocket} mode={sheet.mode} />;
     case 'pocket': return <PocketSheet id={sheet.id} />;
     case 'saved': return <SavedSheet id={sheet.id} />;
     case 'move': return <MoveSheet id={sheet.id} to={sheet.to} />;
@@ -155,6 +156,7 @@ export default function App() {
       {ui.page === 'investments' && <Investments />}
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
+      {ui.tour && <Tour />}
       {ui.welcome && <Welcome />}
       {ui.install && <InstallGuide fromProfile={ui.install === 'profile'} onClose={() => setUI({ install: false })} />}
       <CropperHost />
