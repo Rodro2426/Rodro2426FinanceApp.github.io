@@ -13,7 +13,11 @@ export interface FxOrig { amt: number; cur: 'USD'; rate: number; official: boole
 export interface Expense { id: string; ts: number; p: string; a: string; amt: number; note: string; date: string; tags: string[]; cat: string; sub: string; ruleId?: string; ruleMonth?: string; orig?: FxOrig }
 /** Money received into an account (from a scheduled income). */
 export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig }
-export interface Move { id: string; week: string; from: string; to: string; amt: number }
+/**
+ * Money moved into or out of a pocket for one week (`week` = its Monday).
+ * With `month`, it was income split for the whole month: it's spread evenly over `spread` weeks starting at `week`.
+ */
+export interface Move { id: string; week: string; from: string; to: string; amt: number; month?: string; spread?: number }
 /** A transfer between accounts (card payments), or into/out of a CDT when `cdt` is set (then `from`/`to` is 'cdt:<id>'). */
 export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string; ruleId?: string; ruleMonth?: string; cdt?: string }
 export type ScheduleKind = 'Income' | 'Bill' | 'Subscription' | 'CardPayment';

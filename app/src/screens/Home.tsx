@@ -1,6 +1,8 @@
 import { useApp, openSheet, setUI } from '../lib/store';
 import { LINE, RED, ink, tint } from '../lib/constants';
-import { allStats, ctxOf, fmt, monthExpenses, num, pctOf, sortedExpenses, weekExpenses } from '../lib/derive';
+import { allStats, ctxOf, fmt, monthExpenses, monthStats, num, pctOf, sortedExpenses, weekExpenses, type PocketStats } from '../lib/derive';
+import { useRef, useState, type ReactNode } from 'react';
+import { daysBetween, daysInMonth } from '../lib/dates';
 import { fmtDay, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
 import { BillBadge, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
@@ -35,7 +37,12 @@ export default function Home() {
   const unread = d.notifications.filter(n => !n.read && !n.dismissed).length;
   // Card colour follows how much of the week's budget is still safe to spend.
   const leftRatio = weekBudget > 0 ? weekLeft / weekBudget : 0;
-  const tone = leftRatio > 0.5 ? SAFE_TONES.green : leftRatio >= 0.3 ? SAFE_TONES.yellow : SAFE_TONES.red;
+  const tone = toneOf(leftRatio);
+  const months = all.map(p => monthStats(d, p.id, c));
+  const monthBudget = months.reduce((a, x) => a + x.budget, 0), monthLeft = months.reduce((a, x) => a + x.left, 0);
+  const monthTone = toneOf(monthBudget > 0 ? monthLeft / monthBudget : 0);
+  const monthDaysLeft = daysBetween(c.today, `${c.month}-${String(daysInMonth(c.month)).padStart(2, '0')}`) + 1;
+  const [pocketPage, setPocketPage] = useState(0);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -58,14 +65,10 @@ export default function Home() {
         </div>
       </div>
 
-      <div data-tour="safe" style={{ background: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background .4s ease' }}>
-        <span style={{ fontSize: 14, color: tone.label, fontWeight: 600 }}>Safe to spend this week</span>
-        <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: tone.amount }}>{fmt(weekLeft)}</span>
-        <span style={{ fontSize: 13, color: tone.label }}>of {fmt(weekBudget)} · {c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left</span>
-        <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: '#fff', overflow: 'hidden' }}>
-          <div style={{ height: 10, borderRadius: 999, width: pctOf(weekSpent, weekBudget), background: tone.bar, transition: 'width .5s ease, background .4s ease' }} />
-        </div>
-      </div>
+      <Pager label="Safe to spend" pages={[
+        <SafeCard key="w" tour tone={tone} title="Safe to spend this week" left={weekLeft} budget={weekBudget} spent={weekSpent} sub={`of ${fmt(weekBudget)} · ${c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left`} />,
+        <SafeCard key="m" tone={monthTone} title={`Left to spend in ${monthName(c.month)}`} left={monthLeft} budget={monthBudget} spent={monthBudget - monthLeft} sub={`of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in the month`} />
+      ]} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 10 }}>
         <div onClick={() => setUI({ tab: 'accounts' })} className="hv-n100" style={{ background: '#fff', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -80,27 +83,11 @@ export default function Home() {
         </div>
       </div>
 
-      <SectionHead title="Pockets" right={`Week ${c.weekNo} of ${c.weeks}`} muted />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 10 }}>
-        {all.map(p => (
-          <div key={p.id} data-tour="pocket" onClick={() => openSheet({ name: 'pocket', id: p.id })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.85)', backgroundImage: p.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{p.initial}</span>
-                <span style={{ fontSize: 14, fontWeight: 600, color: ink(p.hue), lineHeight: 1.25 }}>{p.name}</span>
-              </span>
-              <svg width="34" height="34" viewBox="0 0 40 40" style={{ flex: 'none', transform: 'rotate(-90deg)' }}>
-                <circle cx="20" cy="20" r="16" style={{ fill: 'none', stroke: 'rgba(255,255,255,.85)', strokeWidth: 6 }} />
-                <circle cx="20" cy="20" r="16" style={{ fill: 'none', stroke: ink(p.hue), strokeWidth: 6, strokeLinecap: 'round', strokeDasharray: `${(p.budget > 0 ? Math.max(0, p.left) / p.budget : 0) * C} ${C}`, transition: 'stroke-dasharray .5s ease' }} />
-              </svg>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em', color: p.left < 0 ? RED : ink(p.hue) }}>{fmt(p.left)}</span>
-              <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>left of {fmt(p.budget)}</span>
-            </div>
-          </div>
-        ))}
-      </div>
+      <SectionHead title="Pockets" right={pocketPage === 0 ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
+      {all.length > 0 && <Pager label="Pockets" onPage={setPocketPage} pages={[
+        <PocketGrid key="w" items={all.map(p => ({ p, left: p.left, budget: p.budget }))} tour />,
+        <PocketGrid key="m" items={all.map((p, i) => ({ p, left: months[i].left, budget: months[i].budget }))} />
+      ]} />}
       {all.length === 0 && <EmptyHint text="No pockets yet. Create them in the Budget tab." onClick={() => setUI({ tab: 'budget' })} />}
 
       <SectionHead title="Coming up" right="All bills" onRight={() => setUI({ tab: 'insights' })} />
@@ -123,6 +110,69 @@ export default function Home() {
         {recent.map((v, i) => <ExpRow key={v.key} v={v} last={i === recent.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key })} />)}
         {recent.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No expenses yet. Tap + to add one.</div>}
       </ListCard>
+    </div>
+  );
+}
+
+const toneOf = (r: number) => (r > 0.5 ? SAFE_TONES.green : r >= 0.3 ? SAFE_TONES.yellow : SAFE_TONES.red);
+
+/** Side-by-side pages you swipe between, with dots below. */
+function Pager({ pages, label, onPage }: { pages: ReactNode[]; label: string; onPage?: (i: number) => void }) {
+  const [i, setI] = useState(0);
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget, n = Math.round(el.scrollLeft / Math.max(1, el.clientWidth + 10));
+    if (n !== i) { setI(n); onPage?.(n); }
+  };
+  const box = useRef<HTMLDivElement>(null);
+  const go = (n: number) => { const el = box.current; el?.scrollTo({ left: n * (el.clientWidth + 10), behavior: 'smooth' }); };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div ref={box} onScroll={onScroll} className="noscroll" aria-roledescription="carousel" aria-label={label}
+        style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', overscrollBehaviorX: 'contain', alignItems: 'stretch' }}>
+        {pages.map((pg, k) => <div key={k} aria-hidden={k !== i} style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', scrollSnapStop: 'always', display: 'flex', flexDirection: 'column' }}>{pg}</div>)}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
+        {pages.map((_, k) => <button key={k} aria-label={`${label}: ${k === 0 ? 'this week' : 'this month'}`} onClick={() => go(k)}
+          style={{ width: k === i ? 18 : 7, height: 7, borderRadius: 99, border: 0, padding: 0, cursor: 'pointer', background: k === i ? 'var(--color-text)' : 'var(--color-neutral-300)', transition: 'width .2s, background .2s' }} />)}
+      </div>
+    </div>
+  );
+}
+
+function SafeCard({ tone, title, left, budget, spent, sub, tour }: { tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string; tour?: boolean }) {
+  return (
+    <div data-tour={tour ? 'safe' : undefined} style={{ flex: 1, background: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background .4s ease' }}>
+      <span style={{ fontSize: 14, color: tone.label, fontWeight: 600 }}>{title}</span>
+      <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: tone.amount }}>{fmt(left)}</span>
+      <span style={{ fontSize: 13, color: tone.label }}>{sub}</span>
+      <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: '#fff', overflow: 'hidden' }}>
+        <div style={{ height: 10, borderRadius: 999, width: pctOf(spent, budget), background: tone.bar, transition: 'width .5s ease, background .4s ease' }} />
+      </div>
+    </div>
+  );
+}
+
+function PocketGrid({ items, tour }: { items: { p: PocketStats; left: number; budget: number }[]; tour?: boolean }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 10 }}>
+      {items.map(({ p, left, budget }) => (
+        <div key={p.id} data-tour={tour ? 'pocket' : undefined} onClick={() => openSheet({ name: 'pocket', id: p.id })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+              <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.85)', backgroundImage: p.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{p.initial}</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: ink(p.hue), lineHeight: 1.25 }}>{p.name}</span>
+            </span>
+            <svg width="34" height="34" viewBox="0 0 40 40" style={{ flex: 'none', transform: 'rotate(-90deg)' }}>
+              <circle cx="20" cy="20" r="16" style={{ fill: 'none', stroke: 'rgba(255,255,255,.85)', strokeWidth: 6 }} />
+              <circle cx="20" cy="20" r="16" style={{ fill: 'none', stroke: ink(p.hue), strokeWidth: 6, strokeLinecap: 'round', strokeDasharray: `${(budget > 0 ? Math.max(0, left) / budget : 0) * C} ${C}`, transition: 'stroke-dasharray .5s ease' }} />
+            </svg>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em', color: left < 0 ? RED : ink(p.hue) }}>{fmt(left)}</span>
+            <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>left of {fmt(budget)}</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

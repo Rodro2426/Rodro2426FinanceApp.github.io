@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { EMOJIS, HUES, LINE, POCKET_CAT, RED, TEXT, ink, tint } from '../lib/constants';
-import { allStats, chargeAccount, ctxOf, curSymbol, fmt, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses } from '../lib/derive';
+import { allStats, chargeAccount, ctxOf, curSymbol, fmt, num, pctOf, monthStats, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft } from '../lib/derive';
+import { monthName } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import type { Data } from '../lib/types';
 import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
@@ -89,7 +90,10 @@ function IncomeForm() {
   const [note, setNote] = useState('');
   const [split, setSplit] = useState(false);
   const [parts, setParts] = useState<Record<string, string>>({});
+  const [period, setPeriod] = useState<'week' | 'month'>('week');
   const all = allStats(d, c);
+  const months = new Map(all.map(p => [p.id, monthStats(d, p.id, c)]));
+  const nWeeks = weeksLeft(c);
   const v = num(amt);
   const assigned = all.reduce((s, p) => s + num(parts[p.id]), 0);
   const left = v - assigned, over = split && left < -0.004;
@@ -111,7 +115,7 @@ function IncomeForm() {
   const save = () => {
     if (cant) return;
     const val = roundAmt(v), ts = Date.now();
-    const moves = split ? all.filter(p => num(parts[p.id]) > 0).map(p => ({ id: uid('m'), week: c.weekStart, from: '_income', to: p.id, amt: roundAmt(num(parts[p.id])) })) : [];
+    const moves = split ? all.filter(p => num(parts[p.id]) > 0).map(p => ({ id: uid('m'), week: c.weekStart, from: '_income', to: p.id, amt: roundAmt(num(parts[p.id])), ...(period === 'month' ? { month: c.month, spread: nWeeks } : {}) })) : [];
     setData(x => ({
       incomes: [{ id: uid('in'), ts, a, amt: val, note: note.trim() || 'Income', date: c.today }, ...x.incomes],
       accounts: x.accounts.map(y => (y.id === a ? { ...y, bal: y.bal + val } : y)),
@@ -119,7 +123,7 @@ function IncomeForm() {
     }));
     const spread = moves.reduce((s, m) => s + m.amt, 0);
     closeSheet();
-    flash(moves.length ? `+${fmt(val)} to ${acctName} · ${fmt(spread)} split into ${moves.length === 1 ? '1 pocket' : moves.length + ' pockets'}` : `+${fmt(val)} saved in ${acctName}`);
+    flash(moves.length ? `+${fmt(val)} to ${acctName} · ${fmt(spread)} split into ${moves.length === 1 ? '1 pocket' : moves.length + ' pockets'} for ${period === 'month' ? 'the month' : 'this week'}` : `+${fmt(val)} saved in ${acctName}`);
   };
 
   return (
@@ -140,6 +144,11 @@ function IncomeForm() {
       <Segmented items={[['keep', 'Keep it saved'], ['split', 'Split into pockets']]} value={split ? 'split' : 'keep'} onPick={k => setSplit(k === 'split')} mt={6} />
       {split ? (
         <div style={{ marginTop: 10, background: '#fff', borderRadius: 22, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ margin: '2px 2px 0', fontSize: 12.5, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Add it to</span>
+          <Segmented items={[['week', 'This week'], ['month', `Rest of ${monthName(c.month)}`]]} value={period} onPick={setPeriod} mt={0} h={36} />
+          <span style={{ margin: '0 2px 4px', fontSize: 12, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>
+            {period === 'week' ? 'Each pocket gets the money to spend this week. On Monday it starts over.' : nWeeks > 1 ? `Spread over the ${nWeeks} weeks left in ${monthName(c.month)}: each week gets an equal share, starting now.` : `This is the last week of ${monthName(c.month)}, so it all goes to this week.`}
+          </span>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {[['Evenly', evenly], ['By budget', byBudget], ['Clear', () => setParts({})]].map(([l, f]) => (
               <button key={l as string} onClick={f as () => void} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{l as string}</button>
@@ -150,7 +159,9 @@ function IncomeForm() {
               <PocketDot st={p} size={32} fs={15} bg={tint(p.hue)} color={ink(p.hue)} />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{fmt(p.left)} → <b style={{ color: TEXT }}>{fmt(p.left + num(parts[p.id]))}</b> left</span>
+                {period === 'week'
+                  ? <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Week: {fmt(p.left)} → <b style={{ color: TEXT }}>{fmt(p.left + num(parts[p.id]))}</b> left</span>
+                  : <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Month: {fmt(months.get(p.id)!.left)} → <b style={{ color: TEXT }}>{fmt(months.get(p.id)!.left + num(parts[p.id]))}</b>{num(parts[p.id]) > 0 && nWeeks > 1 ? ` · +${fmt(roundAmt(num(parts[p.id]) / nWeeks))}/wk` : ''}</span>}
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(p.hue), borderRadius: 14, padding: '8px 10px', width: 120, flex: 'none' }}>
                 <span style={{ fontSize: 14, color: ink(p.hue) }}>{curSymbol()}</span>
@@ -167,7 +178,6 @@ function IncomeForm() {
       ) : (
         <span style={{ margin: '8px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>{v > 0 && acctName ? `${acctName} goes to ${fmt((accounts.find(x => x.id === a)?.bal || 0) + v)}. Your pockets stay the same.` : 'The money is added to the account without changing your pockets.'}</span>
       )}
-      {split && <span style={{ margin: '8px 4px 0', fontSize: 12, color: 'var(--color-neutral-600)' }}>Split money is added to each pocket's budget for this week.</span>}
       <PrimaryBtn onClick={save} disabled={cant} bg="oklch(0.5 0.12 150)" hover="hv-green">Save income</PrimaryBtn>
     </div>
   );

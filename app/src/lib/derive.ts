@@ -1,6 +1,6 @@
 import type { Account, Data, Expense } from './types';
 import { POCKET_CAT } from './constants';
-import { inRange, makeCtx, monthKey, type Ctx } from './dates';
+import { addDays, daysBetween, inRange, makeCtx, monthKey, type Ctx } from './dates';
 import { getData } from './store';
 
 export const num = (s: unknown) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
@@ -32,8 +32,8 @@ export function pocketStats(d: Data, id: string, c: Ctx = ctxOf(d)): PocketStats
   const p = d.pockets.find(x => x.id === id);
   if (!p) return null;
   const weekly = num(p.weeklyStr);
-  const moves = d.moves.filter(m => m.week === c.weekStart);
-  const mIn = moves.filter(m => m.to === id).reduce((a, m) => a + m.amt, 0);
+  const moves = d.moves.filter(m => !m.month && m.week === c.weekStart);
+  const mIn = moves.filter(m => m.to === id).reduce((a, m) => a + m.amt, 0) + spreadThisWeek(d, id, c);
   const mOut = moves.filter(m => m.from === id).reduce((a, m) => a + m.amt, 0);
   const spent = weekExpenses(d, c).filter(e => e.p === id).reduce((a, e) => a + e.amt, 0);
   const budget = weekly + mIn - mOut;
@@ -44,6 +44,31 @@ export function pocketStats(d: Data, id: string, c: Ctx = ctxOf(d)): PocketStats
   };
 }
 export const allStats = (d: Data, c: Ctx = ctxOf(d)) => d.pockets.map(p => pocketStats(d, p.id, c)!);
+
+/** This week's share of income split for the month: each monthly move is spread evenly over its weeks. */
+function spreadThisWeek(d: Data, id: string, c: Ctx) {
+  return d.moves.filter(m => m.month && m.to === id).reduce((a, m) => {
+    const i = daysBetween(m.week, c.weekStart) / 7, n = Math.max(1, m.spread ?? 1);
+    return i >= 0 && i < n ? a + m.amt / n : a;
+  }, 0);
+}
+
+/** The week a move belongs to counts for the month its Sunday is in (week 1 can start last month). */
+const moveMonth = (m: { week: string; month?: string }) => m.month ?? monthKey(addDays(m.week, 6));
+
+export interface MonthStats { id: string; budget: number; spent: number; left: number; extra: number }
+/** A pocket for the whole month: weekly budget × weeks, plus money moved in this month, minus what was spent. */
+export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
+  const p = d.pockets.find(x => x.id === id);
+  const weekly = num(p?.weeklyStr);
+  const moves = d.moves.filter(m => moveMonth(m) === c.month);
+  const extra = moves.filter(m => m.to === id).reduce((a, m) => a + m.amt, 0) - moves.filter(m => m.from === id).reduce((a, m) => a + m.amt, 0);
+  const spent = monthExpenses(d, c).filter(e => e.p === id).reduce((a, e) => a + e.amt, 0);
+  const budget = weekly * c.weeks + extra;
+  return { id, budget, spent, left: budget - spent, extra };
+}
+/** Weeks left in the month, counting this one. */
+export const weeksLeft = (c: Ctx) => Math.max(1, c.weeks - c.weekNo + 1);
 
 export interface Txn {
   kind: 'expense' | 'payment' | 'income'; id: string; icon: string | null; photoBg: string; ts: number; date: string; note: string; pocket: string;
