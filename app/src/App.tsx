@@ -18,6 +18,7 @@ import Accounts from './screens/Accounts';
 import Budget from './screens/Budget';
 import Insights from './screens/Insights';
 import CalendarScreen from './screens/Calendar';
+import Welcome from './screens/Welcome';
 import Investments from './screens/Investments';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
@@ -150,6 +151,7 @@ export default function App() {
       {ui.page === 'investments' && <Investments />}
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
+      {ui.welcome && <Welcome />}
       <CropperHost />
     </div>
   );

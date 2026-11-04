@@ -15,7 +15,10 @@ const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
+/** Off until the welcome choice is made, so nothing is saved before the person picks. */
+let persistOn = true;
 function persist() {
+  if (!persistOn) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { set(KEY, state.data).catch(err => console.warn('Could not save data', err)); }, 300);
 }
@@ -50,10 +53,18 @@ export async function loadData() {
   try {
     const saved = await get<Data>(KEY);
     if (saved && saved.version === 1) state = { ...state, data: normalize(saved) };
-    else await set(KEY, state.data);
+    else { persistOn = false; state = { ...state, ui: { ...state.ui, welcome: true } }; }
   } catch (err) { console.warn('Could not load saved data', err); }
   const d = state.data;
   state.ui.lastAdd = { pocket: d.pockets[0]?.id ?? '', acct: (d.accounts.find(a => a.type === 'bank') || d.accounts[0])?.id ?? '' };
+}
+
+/** Ends the welcome screen with the chosen starting data and starts saving. */
+export function finishWelcome(d: Data) {
+  persistOn = true;
+  replaceData(d);
+  const nd = state.data;
+  setUI({ welcome: false, tab: 'home', sheet: null, page: null, lastAdd: { pocket: nd.pockets[0]?.id ?? '', acct: (nd.accounts.find(a => a.type === 'bank') || nd.accounts[0])?.id ?? '' } });
 }
 
 let toastTimer: ReturnType<typeof setTimeout> | undefined;

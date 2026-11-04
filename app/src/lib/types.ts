@@ -94,4 +94,6 @@ export interface UI {
   lastAdd: { pocket: string; acct: string };
   /** A full-screen page shown over the tabs. */
   page?: 'investments' | null;
+  /** First open on this device: choose sample data, a fresh start or a backup. */
+  welcome?: boolean;
 }
