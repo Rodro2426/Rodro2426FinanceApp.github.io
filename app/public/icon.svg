@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#fff2ef"/><rect x="112" y="150" width="288" height="230" rx="64" fill="#ec3013"/><path d="M112 214h288" stroke="#ffe0d9" stroke-width="28"/><circle cx="340" cy="298" r="26" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a6340"/><stop offset="1" stop-color="#143a24"/></linearGradient>
+    <linearGradient id="blush" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7bcae"/><stop offset="1" stop-color="#e9958a"/></linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfd5f7"/><stop offset="1" stop-color="#8eafe8"/></linearGradient>
+    <linearGradient id="mint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2faf3"/><stop offset="1" stop-color="#cbe7d1"/></linearGradient>
+    <linearGradient id="forest" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f7146"/><stop offset="1" stop-color="#16422a"/></linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#0b2416" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="512" height="512" rx="114" fill="url(#bg)"/>
+  <g filter="url(#soft)">
+    <rect x="170" y="118" width="172" height="118" rx="36" fill="url(#blush)"/>
+    <rect x="148" y="160" width="216" height="128" rx="40" fill="url(#sky)"/>
+    <path d="M136 258 Q256 312 376 258 L376 360 Q376 396 340 396 L172 396 Q136 396 136 360 Z" fill="url(#mint)"/>
+  </g>
+  <path d="M136 258 Q256 312 376 258" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>
+</svg>

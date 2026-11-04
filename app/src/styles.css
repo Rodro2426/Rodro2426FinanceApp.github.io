@@ -105,3 +105,11 @@ input::placeholder { color: var(--color-neutral-500); }
 .dot:nth-child(2) { animation-delay: .15s; }
 .dot:nth-child(3) { animation-delay: .3s; }
 @media (prefers-reduced-motion: reduce) { .sheet-panel, .sheet-scrim, .dot, .banner { animation: none; } }
+
+/* Brand lockup shown behind the content when pulling down at the top. */
+.brand-reveal {
+  position: absolute; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + 6px); z-index: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none;
+  opacity: 0; transform: translateY(-40px) scale(.86); transform-origin: 50% 0; will-change: opacity, transform;
+}
+.brand-reveal span { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: #1d4a2e; line-height: 1; }

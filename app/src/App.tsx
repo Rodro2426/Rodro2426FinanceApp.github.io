@@ -56,6 +56,15 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
 export default function App() {
   const { ui, data } = useApp();
   const scroll = useRef<HTMLDivElement>(null);
+  const brand = useRef<HTMLDivElement>(null);
+  // Pull down at the top (iPhone rubber-band) to reveal the logo behind the content.
+  const onScroll = () => {
+    const el = scroll.current, b = brand.current;
+    if (!el || !b) return;
+    const pull = Math.max(0, -el.scrollTop), t = Math.min(1, Math.max(0, (pull - 14) / 70));
+    b.style.opacity = String(t);
+    b.style.transform = `translateY(${Math.min(0, pull * 0.45 - 40)}px) scale(${0.86 + 0.14 * t})`;
+  };
 
   // Run scheduled income/bills and build notifications whenever data changes,
   // when the app comes back to the foreground, and once a minute (to catch midnight).
@@ -85,7 +94,11 @@ export default function App() {
 
   return (
     <div className="shell">
-      <div ref={scroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0 }}>
+      <div ref={brand} className="brand-reveal" aria-hidden="true">
+        <img src="./pockets-mark.svg" alt="" width={50} height={57} />
+        <span>Pockets</span>
+      </div>
+      <div ref={scroll} onScroll={onScroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 1 }}>
         <div className="scroll-body" style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}>
         {ui.tab === 'home' && <Home />}
         {ui.tab === 'accounts' && <Accounts />}
