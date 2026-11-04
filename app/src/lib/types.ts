@@ -35,6 +35,8 @@ export interface Bill {
   /** Card payments: the card to pay (`acct` is the account it's paid from) and how much. */
   toCard?: string;
   payMode?: 'full' | 'fixed';
+  /** Someone else pays it (e.g. a shared plan): listed for reference, but never charged, reminded or counted. */
+  notMine?: boolean;
 }
 export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup';
 /** `id` is a stable key, so the same event never notifies twice. */

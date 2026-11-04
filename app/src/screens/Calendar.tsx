@@ -27,7 +27,7 @@ export default function CalendarScreen() {
   const incomeOn = (date: string) => (d.incomes || []).filter(t => t.date === date);
   const scheduled = d.bills.filter(b => !b.start || dueDate(b, month) >= b.start);
   const incomeTotal = scheduled.filter(b => b.kind === 'Income').reduce((a, b) => a + approxLocal(d, b), 0);
-  const billTotal = scheduled.filter(b => b.kind === 'Bill' || b.kind === 'Subscription').reduce((a, b) => a + approxLocal(d, b), 0);
+  const billTotal = scheduled.filter(b => (b.kind === 'Bill' || b.kind === 'Subscription') && !b.notMine).reduce((a, b) => a + approxLocal(d, b), 0);
   // Card payments: what was actually paid this month, otherwise what it would pay now.
   const cardTotal = scheduled.filter(b => b.kind === 'CardPayment').reduce((a, b) => a + (d.payments.find(p => p.ruleId === b.id && p.ruleMonth === month)?.amt ?? approxLocal(d, b)), 0);
   const amountText = (b: typeof d.bills[number]) => (b.kind === 'CardPayment' && b.payMode !== 'fixed' ? 'Full balance' : `${b.kind === 'Income' ? '+' : '−'}${billAmount(b)}`);
@@ -60,7 +60,7 @@ export default function CalendarScreen() {
             const ev = eventsOn(d, date), on = date === sel, isToday = date === c.today;
             const dots = [
               ...(ev.some(e => e.b.kind === 'Income') || incomeOn(date).length ? [GREEN] : []),
-              ...(ev.some(e => e.b.kind === 'Bill' || e.b.kind === 'Subscription') ? [BILL] : []),
+              ...(ev.some(e => (e.b.kind === 'Bill' || e.b.kind === 'Subscription') && !e.b.notMine) ? [BILL] : []),
               ...(ev.some(e => e.b.kind === 'CardPayment') ? [CARD] : []),
               ...(spentOn(date).some(e => !e.ruleId) ? [SPEND] : [])
             ];
@@ -89,7 +89,7 @@ export default function CalendarScreen() {
       <ListCard>
         {selEvents.map(({ b, paid, auto, past }, i) => {
           const inc = b.kind === 'Income';
-          const status = paid ? (inc ? 'Received' : 'Paid') : past ? (auto ? 'Skipped' : 'Not ticked off') : auto ? 'Auto' : 'Reminder';
+          const status = b.notMine && !inc ? 'Not paid by you' : paid ? (inc ? 'Received' : 'Paid') : past ? (auto ? 'Skipped' : 'Not ticked off') : auto ? 'Auto' : 'Reminder';
           const acct = d.accounts.find(a => a.id === b.acct)?.name;
           return (
             <div key={b.id} onClick={() => openSheet({ name: 'schedule', id: b.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selEvents.length - 1 && !selSpent.length && !selIncome.length ? 'transparent' : LINE}`, cursor: 'pointer' }}>
@@ -98,7 +98,7 @@ export default function CalendarScreen() {
                 <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name}</span>
                 <span style={{ fontSize: 12, color: paid ? GREEN_TEXT : 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[status, acct].filter(Boolean).join(' · ')}</span>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{amountText(b)}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : b.notMine ? 'var(--color-neutral-500)' : TEXT }}>{amountText(b)}</span>
             </div>
           );
         })}
@@ -135,10 +135,10 @@ export default function CalendarScreen() {
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name}</span>
                 <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {[fmtDay(dueDate(b, dueDate(b, c.month) >= c.today ? c.month : nextMonth(c.month)), { month: 'short', day: 'numeric' }), acct].filter(Boolean).join(' · ')}
+                  {[fmtDay(dueDate(b, dueDate(b, c.month) >= c.today ? c.month : nextMonth(c.month)), { month: 'short', day: 'numeric' }), b.notMine && !inc ? 'Not paid by you' : acct].filter(Boolean).join(' · ')}
                 </span>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{amountText(b)}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : b.notMine ? 'var(--color-neutral-500)' : TEXT }}>{amountText(b)}</span>
             </div>
           );
         })}

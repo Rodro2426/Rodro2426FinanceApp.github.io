@@ -32,7 +32,7 @@ export default function Home() {
   const assets = d.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0) + cdtTotal(d);
   const debt = d.accounts.filter(a => a.type === 'card').reduce((x, a) => x + a.bal, 0);
   const spent = monthExpenses(d, c).reduce((a, e) => a + e.amt, 0), income = num(d.incomeStr);
-  const upcoming = billRows(d, c).filter(b => !b.paid).sort((a, b) => a.inDays - b.inDays).slice(0, 3);
+  const upcoming = billRows(d, c).filter(b => !b.paid && !b.others).sort((a, b) => a.inDays - b.inDays).slice(0, 3);
   // Latest money in and out together (daily account interest is left out: it updates every day).
   const recent = [
     ...d.expenses.map(e => ({ kind: 'expense' as const, date: e.date, ts: e.ts, id: e.id, e })),

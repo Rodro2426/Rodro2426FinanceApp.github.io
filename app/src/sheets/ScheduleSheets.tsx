@@ -35,6 +35,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const [dueDay, setDueDay] = useState(base?.dueDay ?? day ?? 1);
   const [acct, setAcct] = useState(base?.acct ?? (d.accounts.find(a => a.type === 'bank') || d.accounts[0])?.id ?? '');
   const [auto, setAuto] = useState(base ? !!base.auto : true);
+  const [others, setOthers] = useState(!!base?.notMine);
   const [pocket, setPocket] = useState(base?.pocket ?? '');
   const [cat, setCat] = useState(base?.cat ?? DEFAULT_CAT[base?.kind ?? kind0 ?? 'Bill']);
   const [confirmDel, setConfirmDel] = useState(false);
@@ -48,7 +49,8 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const acctOk = accounts.some(a => a.id === acct);
   const card = cards.find(c => c.id === toCard);
   const v = num(amt);
-  const cant = cardPay ? !card || !acctOk || (payMode === 'fixed' && !(v > 0)) : !name.trim() || !(v > 0) || (auto && !acctOk);
+  const notMineOn = others && !income && !cardPay;
+  const cant = cardPay ? !card || !acctOk || (payMode === 'fixed' && !(v > 0)) : !name.trim() || !(v > 0) || (auto && !notMineOn && !acctOk);
   const acctName = accounts.find(a => a.id === acct)?.name;
   const hue = base?.hue ?? (income ? 150 : HUES[d.bills.length % HUES.length]);
 
@@ -69,8 +71,8 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
       name: `${card!.name} payment`, hue: card!.hue, kind, amt: payMode === 'fixed' ? roundAmt(v) : 0, currency: undefined, dueDay, photo: card!.photo ?? null, acct, toCard, payMode, auto,
       pocket: undefined, cat: undefined, sub: undefined, start: restart ? today : base?.start
     } : {
-      name: name.trim(), kind, amt: usd ? Math.round(v * 100) / 100 : roundAmt(v), currency: usd ? 'USD' : undefined, dueDay, photo, acct: acctOk ? acct : undefined, auto: auto && acctOk,
-      pocket: income ? undefined : pocket || undefined, cat: income ? undefined : cat, sub: income ? undefined : base && base.cat === cat ? base.sub : subs[0] || '',
+      name: name.trim(), kind, amt: usd ? Math.round(v * 100) / 100 : roundAmt(v), currency: usd ? 'USD' : undefined, dueDay, photo, acct: acctOk && !notMineOn ? acct : undefined, auto: auto && acctOk && !notMineOn, notMine: notMineOn || undefined,
+      pocket: income || notMineOn ? undefined : pocket || undefined, cat: income ? undefined : cat, sub: income ? undefined : base && base.cat === cat ? base.sub : subs[0] || '',
       start: restart ? today : base?.start
     };
     if (base) setData(x => ({ bills: x.bills.map(b => (b.id === base.id ? { ...b, ...patch } : b)) }));
@@ -155,6 +157,17 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
         </div>
         {dueDay > 28 && <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>In shorter months it happens on the last day.</span>}
 
+        {!income && !cardPay && (
+          <div style={{ marginTop: 16, background: '#fff', borderRadius: 20, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: 15, fontWeight: 600 }}>Not paid by me</span>
+              <span style={{ fontSize: 12, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>{others ? 'Someone else pays it. It stays on your list, but no money is taken, no reminders are sent and it isn’t counted in your totals.' : 'Turn on for things you use but someone else pays, like a shared family plan.'}</span>
+            </div>
+            <Toggle on={others} onChange={setOthers} label="Not paid by me" />
+          </div>
+        )}
+
+        {!notMineOn && <>
         <FieldLabel>{income ? 'Goes into' : 'Paid from'}</FieldLabel>
         <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
           {accounts.map(a => (
@@ -175,8 +188,9 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           </div>
           <Toggle on={auto} onChange={setAuto} label="Automatic" />
         </div>
+        </>}
 
-        {!income && !cardPay && <>
+        {!income && !cardPay && !notMineOn && <>
           <FieldLabel>Pocket (optional)</FieldLabel>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {[{ id: '', name: 'No pocket' }, ...d.pockets].map(p => (

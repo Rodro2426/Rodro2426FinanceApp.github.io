@@ -108,7 +108,7 @@ export default function Insights() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0', gap: 8 }}>
         <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Bills and subscriptions</span>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(bills.reduce((a, b) => a + approxLocal(d, b), 0))} / mo</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(bills.filter(b => !b.others).reduce((a, b) => a + approxLocal(d, b), 0))} / mo</span>
       </div>
       <ListCard>
         {bills.map((b, i) => (
@@ -118,12 +118,14 @@ export default function Insights() {
               <span style={{ fontSize: 15, fontWeight: 600, textDecoration: b.paid ? 'line-through' : 'none' }}>{b.name}</span>
               <span style={{ fontSize: 12, color: b.dueColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.dueLabel}</span>
             </div>
-            <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', color: b.paid ? 'var(--color-neutral-500)' : 'var(--color-text)' }}>{billAmount(b)}</span>
+            <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', color: b.paid || b.others ? 'var(--color-neutral-500)' : 'var(--color-text)' }}>{billAmount(b)}</span>
+            {b.others ? <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 8px', borderRadius: 999, background: 'var(--color-neutral-100)', color: 'var(--color-neutral-700)', flex: 'none' }}>Not you</span> :
             <button onClick={e => { e.stopPropagation(); toggleBill(b.id); }} aria-label={b.paid ? 'Mark unpaid' : 'Mark paid'} style={{ width: 30, height: 30, borderRadius: 999, border: `2px solid ${b.paid ? 'oklch(0.62 0.12 160)' : 'var(--color-neutral-300)'}`, background: b.paid ? 'oklch(0.62 0.12 160)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}>
               <I.Check size={14} />
-            </button>
+            </button>}
           </div>
         ))}
+        {bills.some(b => b.others) && <span style={{ display: 'block', padding: '10px 0 2px', fontSize: 12, color: 'var(--color-neutral-600)' }}>Items marked “Not you” are paid by someone else and aren’t in the total.</span>}
         <button onClick={() => openSheet({ name: 'schedule', id: null, kind: 'Bill' })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', border: 0, background: 'transparent', cursor: 'pointer', color: 'var(--color-accent-700)', fontSize: 15, fontWeight: 700, textAlign: 'left' }}>
           <span style={{ width: 40, height: 40, borderRadius: 14, border: '2px dashed var(--color-accent-300)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Plus size={18} /></span>
           Add bill or subscription

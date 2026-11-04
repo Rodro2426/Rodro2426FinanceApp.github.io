@@ -29,7 +29,9 @@ export const dueDate = (b: Bill, m: string) => `${m}-${pad(Math.min(b.dueDay, da
 export const isIncome = (b: Bill) => b.kind === 'Income';
 export const isCardPay = (b: Bill) => b.kind === 'CardPayment';
 export const KIND_LABEL: Record<Bill['kind'], string> = { Income: 'Income', Bill: 'Bill', Subscription: 'Subscription', CardPayment: 'Card payment' };
-export const isAuto = (b: Bill, d: Data) => !!(b.auto && b.acct && d.accounts.some(a => a.id === b.acct) && (!isCardPay(b) || d.accounts.some(a => a.id === b.toCard && a.type === 'card')));
+/** Bills or subscriptions someone else pays. */
+export const notMine = (b: Bill) => !!b.notMine && b.kind !== 'Income' && b.kind !== 'CardPayment';
+export const isAuto = (b: Bill, d: Data) => !notMine(b) && !!(b.auto && b.acct && d.accounts.some(a => a.id === b.acct) && (!isCardPay(b) || d.accounts.some(a => a.id === b.toCard && a.type === 'card')));
 /** How much a card payment would pay right now: the full balance owed, or the fixed amount (never more than owed or than the account has). */
 export function cardPayAmount(d: Data, b: Bill) {
   const card = d.accounts.find(a => a.id === b.toCard), from = d.accounts.find(a => a.id === b.acct);
@@ -47,6 +49,7 @@ function move(accts: Account[], id: string, amt: number, incoming: boolean) {
 /** Applies one occurrence of `b` for month `m`, dated `date`. Returns the data patch. */
 export function applyOccurrence(d: Data, b: Bill, m: string, date: string): Partial<Data> {
   const markPaid = (x: Bill) => (x.id !== b.id ? x : { ...x, paidMonths: [...x.paidMonths.filter(y => y !== m), m], skipMonths: (x.skipMonths || []).filter(y => y !== m) });
+  if (notMine(b)) return {};
   if (!isAuto(b, d)) return { bills: d.bills.map(markPaid) };
   const ts = Date.now();
   const { amt, orig } = localAmount(d, b, date) ?? { amt: Math.round(b.amt * (isUsd(b) ? latestRate(d) : 1)) };
@@ -124,6 +127,7 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
   // 2. Reminders for tomorrow and for manual bills due today.
   const tomorrow = addDays(today, 1);
   for (const b of d.bills) {
+    if (notMine(b)) continue;
     const handled = (m: string) => b.paidMonths.includes(m) || (b.skipMonths || []).includes(m);
     const tm = monthKey(tomorrow);
     if (dueDate(b, tm) === tomorrow && !handled(tm) && (!b.start || tomorrow >= b.start)) {
