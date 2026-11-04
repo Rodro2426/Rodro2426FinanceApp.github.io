@@ -54,7 +54,7 @@ function spreadThisWeek(d: Data, id: string, c: Ctx) {
 }
 
 /** The week a move belongs to counts for the month its Sunday is in (week 1 can start last month). */
-const moveMonth = (m: { week: string; month?: string }) => m.month ?? monthKey(addDays(m.week, 6));
+export const moveMonth = (m: { week: string; month?: string }) => m.month ?? monthKey(addDays(m.week, 6));
 
 export interface MonthStats { id: string; budget: number; spent: number; left: number; extra: number }
 /** A pocket for the whole month: weekly budget × weeks, plus money moved in this month, minus what was spent. */
@@ -121,6 +121,42 @@ export const dayLabel = (iso: string, c: Ctx) => (iso === addDays(c.today, 1) ? 
 export function incomeMoves(moves: Move[], inc: Income): Move[] {
   const stamp = inc.id.startsWith('in') ? inc.id.slice(2, 10) : '';
   return moves.filter(m => m.from === '_income' && (m.income ? m.income === inc.id : !!stamp && m.id.slice(1, 9) === stamp));
+}
+
+/* ---------------- Fixing moves ---------------- */
+/** When a move was made (its id starts with the time it was saved). */
+export const moveTime = (m: Move) => { const t = parseInt(m.id.slice(1, 9), 36); return t > 1.5e12 && t < 4e12 ? t : 0; };
+
+/** Undo a move: the money goes back where it came from (a goal gets its savings reduced). */
+export function undoMove(d: Data, id: string): Partial<Data> {
+  const m = d.moves.find(x => x.id === id);
+  if (!m) return {};
+  return {
+    moves: d.moves.filter(x => x.id !== id),
+    goals: d.goals.map(g => (g.id === m.to ? { ...g, saved: Math.max(0, g.saved - m.amt) } : g))
+  };
+}
+
+/** Change how much a move moved; goals follow the difference. */
+export function editMove(d: Data, id: string, amt: number): Partial<Data> {
+  const m = d.moves.find(x => x.id === id);
+  if (!m) return {};
+  if (!(amt > 0)) return undoMove(d, id);
+  const diff = amt - m.amt;
+  return {
+    moves: d.moves.map(x => (x.id === id ? { ...x, amt } : x)),
+    goals: d.goals.map(g => (g.id === m.to ? { ...g, saved: Math.max(0, g.saved + diff) } : g))
+  };
+}
+
+/** The most a move can be changed to: an income split can't exceed the income; a pocket can't give more than it has left. */
+export function moveMax(d: Data, m: Move, c: Ctx = ctxOf(d)): number {
+  if (m.from === '_income') {
+    const inc = d.incomes.find(t => incomeMoves([m], t).length);
+    return inc ? inc.amt - incomeMoves(d.moves, inc).filter(x => x.id !== m.id).reduce((a, x) => a + x.amt, 0) : Infinity;
+  }
+  const src = pocketStats(d, m.from, c);
+  return src && m.week === c.weekStart ? Math.max(0, src.left) + m.amt : Infinity;
 }
 
 /** Weeks left in the month, counting this one. */

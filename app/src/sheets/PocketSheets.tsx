@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { EMOJIS, HUES, LINE, POCKET_CAT, RED, TEXT, ink, tint } from '../lib/constants';
-import { DAY_LETTERS, DAY_NAMES, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
-import { monthName } from '../lib/dates';
+import { DAY_LETTERS, DAY_NAMES, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
+import { monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
-import type { Data, PocketView } from '../lib/types';
+import type { Data, Move, PocketView } from '../lib/types';
 import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { SheetFrame } from './Sheet';
@@ -361,6 +361,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
         </div>
 
         {view === 'day' && <DayPlanner id={id} hue={s.hue} ds={ds} />}
+        {view !== 'day' && <MovesCard id={id} />}
 
         <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '4px 16px' }}>
           {items.map((e, i) => (
@@ -388,6 +389,84 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
     </SheetFrame>
   );
 }
+
+/** Every move in or out of a pocket this month, each one editable or reversible. */
+function MovesCard({ id }: { id: string }) {
+  const { data: d } = useApp();
+  const c = ctxOf(d);
+  const [open, setOpen] = useState<string | null>(null);
+  const [amt, setAmt] = useState('');
+  const [confirmAll, setConfirmAll] = useState(false);
+  const list = d.moves.filter(m => (m.to === id || m.from === id) && (moveMonth(m) === c.month || m.week === c.weekStart))
+    .sort((a, b) => moveTime(b) - moveTime(a) || (b.week > a.week ? 1 : -1));
+  if (!list.length) return null;
+  const nameOf = (x: string) => d.pockets.find(p => p.id === x)?.name ?? d.goals.find(g => g.id === x)?.name ?? 'a deleted pocket';
+  const incomeOf = (m: Move) => d.incomes.find(t => incomeMoves([m], t).length);
+  const label = (m: Move) => m.to === id
+    ? (m.from === '_income' ? `From income${incomeOf(m) ? ` · ${incomeOf(m)!.note}` : ''}` : `From ${nameOf(m.from)}`)
+    : `To ${nameOf(m.to)}${d.goals.some(g => g.id === m.to) ? ' (goal)' : ''}`;
+  const when = (m: Move) => {
+    const t = moveTime(m), w = `week of ${shortDate(m.week)}`;
+    return [t ? relDay(isoOf(t), c.today) : '', m.month ? `spread over ${m.spread ?? 1} week${(m.spread ?? 1) > 1 ? 's' : ''}` : w].filter(Boolean).join(' · ');
+  };
+  const net = list.reduce((a, m) => a + (m.to === id ? m.amt : -m.amt), 0);
+  const save = (m: Move) => {
+    const v = roundAmt(num(amt)), max = moveMax(d, m, c);
+    if (v > max + 0.004) { flash(`The most this can be is ${fmt(max)}`); return; }
+    setData(x => editMove(x, m.id, v)); setOpen(null); flash(v > 0 ? `Move changed to ${fmt(v)}` : 'Move undone');
+  };
+  const undo = (m: Move) => { setData(x => undoMove(x, m.id)); setOpen(null); flash(`Undone · ${fmt(m.amt)} ${m.to === id ? `went back to ${m.from === '_income' ? 'your saved income' : nameOf(m.from)}` : `came back to this pocket`}`); };
+  const undoAll = () => {
+    if (!confirmAll) { setConfirmAll(true); return; }
+    setData(x => list.reduce<Data>((acc, m) => ({ ...acc, ...undoMove(acc, m.id) }), x));
+    setConfirmAll(false); flash(`${list.length === 1 ? '1 move' : `${list.length} moves`} undone`);
+  };
+  return (
+    <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '12px 16px 8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ fontSize: 15, fontWeight: 700 }}>Moves this month</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: net < 0 ? RED : 'oklch(0.45 0.11 150)' }}>{fmt(net, true)}</span>
+      </div>
+      <span style={{ display: 'block', marginTop: 2, fontSize: 12, color: 'var(--color-neutral-700)' }}>Tap a move to change it or undo it.</span>
+      {list.map((m, i) => {
+        const inn = m.to === id, isOpen = open === m.id;
+        return (
+          <div key={m.id} style={{ borderBottom: `1px solid ${i === list.length - 1 ? 'transparent' : LINE}` }}>
+            <button onClick={() => { setOpen(isOpen ? null : m.id); setAmt(String(m.amt)); }} aria-expanded={isOpen}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', border: 0, background: 'transparent', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+              <span style={{ width: 30, height: 30, borderRadius: 999, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: inn ? 'oklch(0.95 0.045 155)' : 'var(--color-accent-100)', color: inn ? 'oklch(0.42 0.09 155)' : 'var(--color-accent-700)', fontSize: 15, fontWeight: 800 }}>{inn ? '↓' : '↑'}</span>
+              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label(m)}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{when(m)}</span>
+              </span>
+              <span style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', color: inn ? 'oklch(0.45 0.11 150)' : RED }}>{inn ? '+' : '−'}{fmt(m.amt)}</span>
+            </button>
+            {isOpen && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 12 }}>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ ...textInput, flex: 1, display: 'flex', alignItems: 'baseline', gap: 4, padding: '11px 14px', background: 'var(--color-neutral-100)' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--color-neutral-500)' }}>{curSymbol()}</span>
+                    <MoneyInput value={amt} onChange={setAmt} style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />
+                  </div>
+                  <button onClick={() => save(m)} style={{ height: 46, padding: '0 16px', borderRadius: 16, border: 0, background: TEXT, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                </div>
+                <button onClick={() => undo(m)} style={{ height: 42, borderRadius: 999, border: 0, background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Undo this move</button>
+                <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
+                  {m.from === '_income' ? 'Undoing it takes the money out of this pocket; the income stays in your account, just not assigned to a pocket.'
+                    : inn ? `Undoing it gives the money back to ${nameOf(m.from)}.` : `Undoing it brings the money back to this pocket${d.goals.some(g => g.id === m.to) ? ' and takes it off the goal' : ''}.`} Moves never change your account balances.
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <button onClick={undoAll} style={{ width: '100%', marginTop: 4, height: 40, border: 0, borderRadius: 999, background: confirmAll ? 'var(--color-accent-100)' : 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+        {confirmAll ? `Tap again to undo all ${list.length} and reset this pocket to its plan` : 'Undo all moves (reset pocket)'}
+      </button>
+    </div>
+  );
+}
+const isoOf = (t: number) => { const x = new Date(t); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
 
 /** Saves a pocket's spending days; every day = no restriction. Keeps at least one day. */
 export const setPocketDays = (id: string, days: number[]) => setData(x => ({ pockets: x.pockets.map(p => (p.id === id ? { ...p, days: days.length === 7 ? undefined : [...days].sort() } : p)) }));
