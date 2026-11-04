@@ -127,17 +127,17 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
   // 2. Reminders for tomorrow and for manual bills due today.
   const tomorrow = addDays(today, 1);
   for (const b of d.bills) {
-    if (notMine(b)) continue;
     const handled = (m: string) => b.paidMonths.includes(m) || (b.skipMonths || []).includes(m);
     const tm = monthKey(tomorrow);
     if (dueDate(b, tm) === tomorrow && !handled(tm) && (!b.start || tomorrow >= b.start)) {
       const auto = isAuto(b, d);
       if (isCardPay(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'card', `${acctName(b.toCard)} payment tomorrow`, `${b.payMode === 'fixed' ? fmt(b.amt) : `The full balance (now ${fmt(d.accounts.find(a => a.id === b.toCard)?.bal || 0)})`}${auto ? ` will be paid from ${acctName(b.acct)}` : ''}.`);
       else if (isIncome(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'income', `${b.name} arrives tomorrow`, `+${billAmount(b)}${auto ? ` will be added to ${acctName(b.acct)}` : ''}.`);
+      else if (notMine(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}, paid by someone else. Nothing is taken from your accounts.`);
       else notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}${isUsd(b) ? ' (converted with that day\'s TRM)' : ''}${auto ? ` will be paid automatically from ${acctName(b.acct)}` : '. Remember to pay it'}.`);
     }
     const m = monthKey(today);
-    if (!isAuto(b, d) && !isIncome(b) && dueDate(b, m) === today && !handled(m)) notify(`today:${b.id}:${today}`, today, 'bill', `${b.name} is due today`, `${billAmount(b)}. Tick it off in Insights once it's paid.`);
+    if (!isAuto(b, d) && !isIncome(b) && dueDate(b, m) === today && !handled(m)) notify(`today:${b.id}:${today}`, today, 'bill', `${b.name} is due today`, notMine(b) ? `${billAmount(b)}, paid by someone else. Nothing is taken from your accounts.` : `${billAmount(b)}. Tick it off in Insights once it's paid.`);
   }
 
   // 3. Credit card payment dates.

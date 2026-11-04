@@ -161,7 +161,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           <div style={{ marginTop: 16, background: '#fff', borderRadius: 20, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>Not paid by me</span>
-              <span style={{ fontSize: 12, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>{others ? 'Someone else pays it. It stays on your list, but no money is taken, no reminders are sent and it isn’t counted in your totals.' : 'Turn on for things you use but someone else pays, like a shared family plan.'}</span>
+              <span style={{ fontSize: 12, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>{others ? 'Someone else pays it. It stays on your list and you still get reminders, but no money is taken and it isn’t counted in your totals.' : 'Turn on for things you use but someone else pays, like a shared family plan.'}</span>
             </div>
             <Toggle on={others} onChange={setOthers} label="Not paid by me" />
           </div>
