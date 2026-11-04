@@ -1,6 +1,15 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, setData, getData } from './lib/store';
 import { runSchedule } from './lib/schedule';
+import { runInterest } from './lib/interest';
+import type { Data } from './lib/types';
+
+/** Interest first (it uses yesterday's balance), then scheduled items and notifications. */
+function runAutomations(d: Data) {
+  const a = runInterest(d), d1 = a ? { ...d, ...a } : d;
+  const b = runSchedule(d1);
+  return a || b ? { ...(a || {}), ...(b || {}) } : null;
+}
 import { todayISO } from './lib/dates';
 import type { Sheet, Tab } from './lib/types';
 import Home from './screens/Home';
@@ -8,6 +17,8 @@ import Accounts from './screens/Accounts';
 import Budget from './screens/Budget';
 import Insights from './screens/Insights';
 import CalendarScreen from './screens/Calendar';
+import Investments from './screens/Investments';
+import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { AddSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
@@ -35,6 +46,9 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'settings': return <SettingsSheet />;
     case 'schedule': return <ScheduleSheet id={sheet.id} day={sheet.day} kind={sheet.kind} />;
     case 'notifications': return <NotificationsSheet />;
+    case 'trade': return <TradeSheet ticker={sheet.ticker} side={sheet.side} />;
+    case 'holding': return <HoldingSheet ticker={sheet.ticker} />;
+    case 'priceSettings': return <PriceSettingsSheet />;
   }
 }
 
@@ -44,9 +58,9 @@ export default function App() {
 
   // Run scheduled income/bills and build notifications whenever data changes,
   // when the app comes back to the foreground, and once a minute (to catch midnight).
-  useEffect(() => { const p = runSchedule(data); if (p) setData(p); }, [data]);
+  useEffect(() => { const p = runAutomations(data); if (p) setData(p); }, [data]);
   useEffect(() => {
-    const tick = () => { if (document.visibilityState === 'visible') { const p = runSchedule(getData()); if (p) setData(p); } };
+    const tick = () => { if (document.visibilityState === 'visible') { const p = runAutomations(getData()); if (p) setData(p); } };
     document.addEventListener('visibilitychange', tick);
     const t = setInterval(tick, 60000);
     return () => { document.removeEventListener('visibilitychange', tick); clearInterval(t); };
@@ -61,7 +75,7 @@ export default function App() {
   }, [banner?.id]);
   const patchNotif = (id: string, p: { dismissed?: boolean; bannered?: boolean }) => setData(x => ({ notifications: x.notifications.map(n => (n.id === id ? { ...n, ...p } : n)) }));
 
-  useEffect(() => { scroll.current?.scrollTo({ top: 0 }); }, [ui.tab]);
+  useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUI({ sheet: null }); };
     window.addEventListener('keydown', onKey);
@@ -114,6 +128,8 @@ export default function App() {
           <I.Plus size={26} sw={2.5} />
         </button>
       </div>
+
+      {ui.page === 'investments' && <Investments />}
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
     </div>

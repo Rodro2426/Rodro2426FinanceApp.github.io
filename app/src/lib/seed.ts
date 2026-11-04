@@ -63,6 +63,7 @@ export function sampleData(today = todayISO()): Data {
     ],
     incomes: [],
     notifications: [],
+    investments: { trades: [], quotes: {}, usdRate: 4000, usdRateAt: 0 },
     moves: [],
     payments: [
       { id: 's2', ts: 2, from: 'a1', to: 'c1', amt: 1800000, date: `${prev}-15` },
@@ -90,7 +91,7 @@ export function emptyData(prev: Data): Data {
     version: 1,
     settings: { ...prev.settings },
     incomeStr: '0',
-    pockets: [], accounts: [], expenses: [], incomes: [], notifications: [], moves: [], payments: [], bills: [], goals: [],
+    pockets: [], accounts: [], expenses: [], incomes: [], notifications: [], investments: { trades: [], quotes: {}, usdRate: prev.investments?.usdRate ?? 4000, usdRateAt: 0 }, moves: [], payments: [], bills: [], goals: [],
     cats: CATS.map(c => ({ ...c, subs: [...c.subs] })), tags: []
   };
 }

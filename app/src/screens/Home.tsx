@@ -3,7 +3,7 @@ import { LINE, RED, ink, tint } from '../lib/constants';
 import { allStats, ctxOf, fmt, monthExpenses, num, pctOf, sortedExpenses, weekExpenses } from '../lib/derive';
 import { fmtDay, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
-import { ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
+import { BillBadge, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
 
 const C = 100.53; // ring circumference (r=16)
@@ -104,7 +104,7 @@ export default function Home() {
       <ListCard>
         {upcoming.map((b, i) => (
           <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === upcoming.length - 1 ? 'transparent' : LINE}` }}>
-            <div style={{ width: 40, height: 40, borderRadius: 14, background: tint(b.hue), color: ink(b.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{b.name.charAt(0)}</div>
+            <BillBadge b={b} />
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
               <span style={{ fontSize: 12, color: b.dueColor }}>{b.dueLabel}</span>

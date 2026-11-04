@@ -32,6 +32,13 @@ Each person's data is saved only on their own phone (IndexedDB). Nothing is uplo
     so you can send the file to any AI chat and ask questions about your month.
   - **Summary**, **Details**, **Card payments**, and **Statement** (single account only).
 - `src/lib/aiSheet.ts` — builds the For AI page.
+- `src/lib/interest.ts` — daily compound interest (% E.A.) for bank/savings accounts, like Nu's
+  Cajitas: (1 + EA)^(1/365) − 1 per day, added once per day and logged as a monthly "Interest" entry.
+- `src/lib/invest.ts` + `src/screens/Investments.tsx` — stock portfolio (Accounts → trend button):
+  trades, average-cost holdings, a ring chart of allocation, live prices from Finnhub (free key
+  pasted in Prices, kept on the device), USD→COP from open.er-api.com, prices you can type in,
+  and a returns simulator.
+- `src/ui/MoneyInput.tsx` — amount fields that show thousands separators while you type.
 - `src/lib/schedule.ts` — scheduled income, bills and subscriptions (monthly, on a set day).
   Automatic ones add or take the money from their account on the day; the app catches up on
   any days it wasn't opened. It also builds notifications (due tomorrow, money received or paid,

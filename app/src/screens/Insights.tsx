@@ -5,7 +5,7 @@ import { inRange, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
 import { applyOccurrence, undoOccurrence } from '../lib/schedule';
 import { getData } from '../lib/store';
-import { Bar, ListCard } from '../ui/bits';
+import { Bar, BillBadge, ListCard } from '../ui/bits';
 import * as I from '../ui/icons';
 
 export default function Insights() {
@@ -113,7 +113,7 @@ export default function Insights() {
       <ListCard>
         {bills.map((b, i) => (
           <div key={b.id} onClick={() => openSheet({ name: 'schedule', id: b.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${LINE}`, cursor: 'pointer' }}>
-            <div style={{ width: 40, height: 40, borderRadius: 14, background: tint(b.hue), color: ink(b.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{b.name.charAt(0)}</div>
+            <BillBadge b={b} />
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600, textDecoration: b.paid ? 'line-through' : 'none' }}>{b.name}</span>
               <span style={{ fontSize: 12, color: b.dueColor }}>{b.kind} · {b.dueLabel}</span>

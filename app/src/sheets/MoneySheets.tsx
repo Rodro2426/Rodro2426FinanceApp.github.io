@@ -5,11 +5,13 @@ import { acctTxns, fmt, initialOf, num, pctOf, plural, roundAmt, uid } from '../
 import { allMonths, downloadCSV, exportData } from '../lib/exportData';
 import { monthLabel, shortDate, todayISO } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
+import { dailyRate, earnsInterest, perDay } from '../lib/interest';
 import { emptyData, sampleData } from '../lib/seed';
 import type { AcctType, Currency } from '../lib/types';
 import { AcctBadge, Bar, BigAmount, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
+import { MoneyInput } from '../ui/MoneyInput';
 
 const TYPES = Object.entries(ACCT_TYPE_LABEL) as [AcctType, string][];
 const GREEN_TEXT = 'oklch(0.5 0.12 150)';
@@ -108,6 +110,12 @@ export function AcctSheet({ id }: { id: string }) {
             </div>
           </div>
           <span style={{ marginTop: 10, fontSize: 38, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: k }}>{fmt(a.bal)}</span>
+          {earnsInterest(a) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: GREEN_TEXT, background: 'rgba(255,255,255,.8)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>+{fmt(a.earned || 0)} earned</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: k, background: 'rgba(255,255,255,.7)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>{String(a.rate).replace('.', ',')}% E.A. · +{fmt(perDay(a))} a day</span>
+            </div>
+          )}
           {card && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
               <Bar pct={pctOf(a.bal, lim)} track="rgba(255,255,255,.8)" fill={k} ease="0s" />
@@ -163,8 +171,15 @@ export function AcctSheet({ id }: { id: string }) {
 }
 
 /* ---------------- Account form (edit + add) ---------------- */
+/** Interest settings from the form; turning a rate on starts counting from today. */
+function rateFields(prev: { rate?: number; accruedTo?: string; earned?: number } | null, f: { type: AcctType; rate: string }) {
+  const r = f.type === 'bank' || f.type === 'savings' ? num(f.rate) : 0;
+  if (!(r > 0)) return { rate: undefined, accruedTo: undefined };
+  return { rate: r, accruedTo: prev?.rate ? prev.accruedTo : todayISO(), earned: prev?.earned ?? 0 };
+}
+
 function AcctForm({ initial, isNew, onSave, onDelete }: {
-  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; photo: string | null; hue: number };
+  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; photo: string | null; hue: number; rate: string };
   isNew: boolean; onSave: (v: typeof initial) => void; onDelete?: () => void;
 }) {
   const [f, setF] = useState(initial);
@@ -191,13 +206,26 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8, marginTop: 14 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Credit limit</span>
-            <input type="number" inputMode="decimal" placeholder="0" value={f.limit} onChange={e => set('limit')(e.target.value)} style={{ ...textInput, fontWeight: 600 }} />
+            <MoneyInput value={f.limit} onChange={set('limit')} style={{ ...textInput, fontWeight: 600 }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Payment due</span>
             <input placeholder="Nov 25" value={f.due} onChange={e => set('due')(e.target.value)} style={{ ...textInput, fontWeight: 600 }} />
           </div>
         </div>
+      )}
+      {(f.type === 'bank' || f.type === 'savings') && (
+        <>
+          <FieldLabel m="14px 4px 6px">Annual return (% E.A.)</FieldLabel>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: '#fff', borderRadius: 18, padding: '13px 18px' }}>
+            <input type="text" inputMode="decimal" placeholder="0" value={f.rate} onChange={e => set('rate')(e.target.value.replace(/[^\d.,]/g, ''))}
+              style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 18, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />
+            <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-neutral-400)' }}>% E.A.</span>
+          </div>
+          <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
+            {num(f.rate) > 0 ? `Like a Cajita: interest is added every day. ${fmt(num(f.bal) * dailyRate(num(f.rate)))} a day on this balance.` : 'Leave at 0 if this account earns no interest.'}
+          </span>
+        </>
       )}
       <PrimaryBtn onClick={() => onSave(f)} disabled={cant} mt={20}>{isNew ? `Add ${isCard ? 'card' : 'account'}` : 'Save changes'}</PrimaryBtn>
       {onDelete && <GhostDanger onClick={() => (confirmDel ? onDelete() : setConfirmDel(true))}>{confirmDel ? 'Tap again to delete' : 'Delete account'}</GhostDanger>}
@@ -212,10 +240,10 @@ export function EditAcctSheet({ id }: { id: string }) {
   return (
     <SheetFrame title="Edit account">
       <AcctForm isNew={false}
-        initial={{ name: a.name, type: a.type, bal: String(a.bal), limit: String(a.limit || ''), due: a.due || '', photo: a.photo || null, hue: a.hue }}
+        initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '' }}
         onSave={f => {
           const card = f.type === 'card';
-          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: roundAmt(num(f.bal)), limit: card ? num(f.limit) : undefined, due: card ? f.due.trim() || 'Nov 25' : undefined, photo: f.photo } : y)) }));
+          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: Math.abs(num(f.bal) - y.bal) < 1 ? y.bal : roundAmt(num(f.bal)), limit: card ? num(f.limit) : undefined, due: card ? f.due.trim() || 'Nov 25' : undefined, photo: f.photo, ...rateFields(y, f) } : y)) }));
           openSheet({ name: 'acct', id }); flash('Account updated');
         }}
         onDelete={() => {
@@ -231,10 +259,10 @@ export function AddAcctSheet() {
   const { data: d } = useApp();
   return (
     <SheetFrame title="New account">
-      <AcctForm isNew initial={{ name: '', type: 'bank', bal: '', limit: '', due: '', photo: null, hue: HUES[d.accounts.length % HUES.length] }}
+      <AcctForm isNew initial={{ name: '', type: 'bank', bal: '', limit: '', due: '', photo: null, hue: HUES[d.accounts.length % HUES.length], rate: '' }}
         onSave={f => {
           const card = f.type === 'card';
-          const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card ? { limit: num(f.limit), due: f.due.trim() || 'Nov 25' } : {}) };
+          const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card ? { limit: num(f.limit), due: f.due.trim() || 'Nov 25' } : {}), ...rateFields(null, f) };
           setData(x => ({ accounts: [...x.accounts, a] }));
           setUI({ sheet: null, tab: 'accounts' }); flash(`${a.name} added`);
         }} />
@@ -384,7 +412,7 @@ export function NewGoalSheet() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Already saved</span>
-            <input type="number" inputMode="decimal" placeholder="0" value={saved} onChange={e => setSaved(e.target.value)} style={{ ...textInput, fontWeight: 600 }} />
+            <MoneyInput value={saved} onChange={setSaved} style={{ ...textInput, fontWeight: 600 }} />
           </div>
         </div>
         <span style={{ margin: '10px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>

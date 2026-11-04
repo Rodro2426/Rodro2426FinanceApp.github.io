@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useApp, openSheet } from '../lib/store';
-import { LINE, TEXT, ink, tint } from '../lib/constants';
+import { LINE, TEXT, tint } from '../lib/constants';
 import { ctxOf, fmt } from '../lib/derive';
 import { daysInMonth, fmtDay, monthLabel, parse, prevMonthKey, relDay } from '../lib/dates';
 import { dueDate, eventsOn, ordinal } from '../lib/schedule';
-import { ListCard, SectionHead, expView } from '../ui/bits';
+import { BillBadge, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
 
 const GREEN = 'oklch(0.62 0.12 160)', GREEN_TEXT = 'oklch(0.5 0.12 150)', BILL = 'var(--color-accent)', SPEND = 'var(--color-neutral-400)';
@@ -87,7 +87,7 @@ export default function CalendarScreen() {
           const acct = d.accounts.find(a => a.id === b.acct)?.name;
           return (
             <div key={b.id} onClick={() => openSheet({ name: 'schedule', id: b.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selEvents.length - 1 && !selSpent.length && !selIncome.length ? 'transparent' : LINE}`, cursor: 'pointer' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 14, background: tint(inc ? 150 : b.hue), color: ink(inc ? 150 : b.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{b.name.charAt(0).toUpperCase()}</div>
+              <BillBadge b={b} />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
                 <span style={{ fontSize: 12, color: paid ? GREEN_TEXT : 'var(--color-neutral-700)' }}>{[b.kind, status, acct].filter(Boolean).join(' · ')}</span>
@@ -125,14 +125,11 @@ export default function CalendarScreen() {
           const inc = b.kind === 'Income', acct = d.accounts.find(a => a.id === b.acct)?.name;
           return (
             <div key={b.id} onClick={() => openSheet({ name: 'schedule', id: b.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === arr.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
-              <div style={{ width: 40, height: 40, borderRadius: 14, background: 'var(--color-neutral-100)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 'none', lineHeight: 1 }}>
-                <span style={{ fontSize: 15, fontWeight: 700 }}>{b.dueDay}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--color-neutral-600)', textTransform: 'uppercase' }}>{ordinal(b.dueDay).replace(/\d+/, '')}</span>
-              </div>
+              <BillBadge b={b} />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
                 <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  {b.auto && acct ? <><I.Repeat size={11} />{`Auto · ${acct}`}</> : 'Reminder only'} · next {fmtDay(dueDate(b, dueDate(b, c.month) >= c.today ? c.month : nextMonth(c.month)), { month: 'short', day: 'numeric' })}
+                  {`Every ${ordinal(b.dueDay)} · `}{b.auto && acct ? <><I.Repeat size={11} />{`Auto · ${acct}`}</> : 'Reminder'} · next {fmtDay(dueDate(b, dueDate(b, c.month) >= c.today ? c.month : nextMonth(c.month)), { month: 'short', day: 'numeric' })}
                 </span>
               </div>
               <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{inc ? '+' : '−'}{fmt(b.amt)}</span>

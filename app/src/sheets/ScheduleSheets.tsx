@@ -5,7 +5,8 @@ import { fmt, num, roundAmt, uid } from '../lib/derive';
 import { relDay, todayISO } from '../lib/dates';
 import { describeDay, ordinal } from '../lib/schedule';
 import type { Bill, NotifKind, ScheduleKind } from '../lib/types';
-import { FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
+import { BillBadge, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
+import { pickPhoto } from '../lib/photo';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
 
@@ -27,6 +28,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const [pocket, setPocket] = useState(base?.pocket ?? '');
   const [cat, setCat] = useState(base?.cat ?? DEFAULT_CAT[base?.kind ?? kind0 ?? 'Bill']);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [photo, setPhoto] = useState<string | null>(base?.photo ?? null);
 
   const income = kind === 'Income';
   const accounts = income ? d.accounts.filter(a => a.type !== 'card') : d.accounts;
@@ -48,7 +50,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
     const restart = !base || (auto && (!base.auto || base.acct !== acct));
     const subs = d.cats.find(c => c.name === cat)?.subs || [];
     const patch: Partial<Bill> = {
-      name: name.trim(), kind, amt: roundAmt(v), dueDay, acct: acctOk ? acct : undefined, auto: auto && acctOk,
+      name: name.trim(), kind, amt: roundAmt(v), dueDay, photo, acct: acctOk ? acct : undefined, auto: auto && acctOk,
       pocket: income ? undefined : pocket || undefined, cat: income ? undefined : cat, sub: income ? undefined : base?.cat === cat ? base.sub : subs[0] || '',
       start: restart ? today : base?.start
     };
@@ -66,6 +68,15 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
     <SheetFrame title={base ? `Edit ${base.kind.toLowerCase()}` : 'New scheduled item'}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <Segmented items={KIND_ITEMS} value={kind} onPick={pickKind} mt={6} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#fff', borderRadius: 22, padding: 12, marginTop: 12 }}>
+          <BillBadge b={{ name: name || PLACEHOLDER[kind], hue, kind, photo }} size={56} radius={18} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+            <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <I.Image size={14} />{photo ? 'Change logo' : 'Add logo'}
+            </button>
+            {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Remove logo</button>}
+          </div>
+        </div>
         <FieldLabel m="14px 4px 6px">Name</FieldLabel>
         <input value={name} placeholder={PLACEHOLDER[kind]} onChange={e => setName(e.target.value)} style={textInput} />
         <FieldLabel m="14px 4px 6px">Amount</FieldLabel>

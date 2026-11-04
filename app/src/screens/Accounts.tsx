@@ -1,4 +1,7 @@
-import { useApp, openSheet } from '../lib/store';
+import { useApp, openSheet, setUI } from '../lib/store';
+import { earnsInterest } from '../lib/interest';
+
+const GREEN_TEXT = 'oklch(0.5 0.12 150)';
 import { LINE, ink, tint } from '../lib/constants';
 import { acctTxns, fmt, initialOf, pctOf, plural } from '../lib/derive';
 import { AcctBadge, ListCard } from '../ui/bits';
@@ -16,10 +19,15 @@ export default function Accounts() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ padding: '4px 4px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Accounts</span>
+        <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={() => setUI({ page: 'investments' })} aria-label="Investments" className="hv-n200" style={{ width: 38, height: 38, borderRadius: 999, border: 0, background: '#fff', color: GREEN_TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+          <I.TrendUp size={17} />
+        </button>
         <button onClick={() => openSheet({ name: 'export', acct: 'all' })} className="hv-n200" style={{ height: 38, padding: '0 14px', borderRadius: 999, border: 0, background: '#fff', color: 'var(--color-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
           <I.Download size={15} color="oklch(0.5 0.12 150)" />
           Excel
         </button>
+        </div>
       </div>
       <div style={{ background: '#fff', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Net worth</span>
@@ -42,7 +50,10 @@ export default function Accounts() {
               <span style={{ fontSize: 15, fontWeight: 600 }}>{a.name}</span>
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{a.kind} · {plural(acctTxns(d, a.id).list.length, 'transaction')}</span>
             </div>
-            <span style={{ fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(a.bal)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+              <span style={{ fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(a.bal)}</span>
+              {earnsInterest(a) && <span style={{ fontSize: 11.5, fontWeight: 700, color: GREEN_TEXT, whiteSpace: 'nowrap' }}>+{fmt(a.earned || 0)} · {String(a.rate).replace('.', ',')}%</span>}
+            </div>
             <I.Chevron size={16} color="var(--color-neutral-400)" />
           </div>
         ))}

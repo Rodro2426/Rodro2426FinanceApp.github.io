@@ -3,6 +3,7 @@ import type { Data, Expense } from '../lib/types';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
 import { curSymbol, fmt, initialOf, pocketStats, type PocketStats } from '../lib/derive';
 import { relDay, type Ctx } from '../lib/dates';
+import { MoneyInput } from './MoneyInput';
 
 export const s = (o: CSSProperties) => o;
 
@@ -51,7 +52,7 @@ export function BigAmount({ value, onChange, autoFocus, mt = 12 }: { value: stri
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: mt, background: '#fff', borderRadius: 24, padding: '16px 20px' }}>
       <span style={{ fontSize: 40, fontWeight: 700, color: 'var(--color-neutral-400)' }}>{curSymbol()}</span>
-      <input type="number" inputMode="decimal" placeholder="0" value={value} onChange={e => onChange(e.target.value)} autoFocus={autoFocus}
+      <MoneyInput value={value} onChange={onChange} autoFocus={autoFocus}
         style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 40, fontWeight: 700, letterSpacing: '-0.03em', color: TEXT, padding: 0, outline: 'none' }} />
     </div>
   );
@@ -61,7 +62,7 @@ export function SmallAmount({ value, onChange }: { value: string; onChange: (v: 
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: '#fff', borderRadius: 18, padding: '13px 18px' }}>
       <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-neutral-400)' }}>{curSymbol()}</span>
-      <input type="number" inputMode="decimal" placeholder="0" value={value} onChange={e => onChange(e.target.value)}
+      <MoneyInput value={value} onChange={onChange}
         style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 18, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />
     </div>
   );
@@ -135,5 +136,15 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
     <button role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} style={{ width: 52, height: 32, borderRadius: 999, border: 0, padding: 3, background: on ? 'oklch(0.62 0.12 160)' : 'var(--color-neutral-300)', cursor: 'pointer', flex: 'none', transition: 'background .2s' }}>
       <span style={{ display: 'block', width: 26, height: 26, borderRadius: 999, background: '#fff', boxShadow: 'var(--shadow-sm)', transform: on ? 'translateX(20px)' : 'none', transition: 'transform .2s' }} />
     </button>
+  );
+}
+
+/** Logo (uploaded image) or first letter for a scheduled income, bill or subscription. */
+export function BillBadge({ b, size = 40, radius = 14 }: { b: { name: string; hue: number; kind: string; photo?: string | null }; size?: number; radius?: number }) {
+  const hue = b.kind === 'Income' ? 150 : b.hue;
+  return (
+    <div style={{ width: size, height: size, borderRadius: radius, background: b.photo ? '#fff' : `oklch(0.94 0.04 ${hue})`, backgroundImage: b.photo ? `url(${b.photo})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: b.photo ? 'inset 0 0 0 1px var(--color-neutral-200)' : 'none', color: `oklch(0.42 0.1 ${hue})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: size * 0.38, flex: 'none' }}>
+      {b.photo ? '' : b.name.trim().charAt(0).toUpperCase() || '·'}
+    </div>
   );
 }

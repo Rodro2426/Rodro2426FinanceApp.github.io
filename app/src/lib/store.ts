@@ -42,7 +42,7 @@ export function useApp(): State {
 
 /** Fill in fields added after a user's data was first saved, so older data keeps working. */
 export function normalize(d: Data): Data {
-  return { ...d, incomes: d.incomes ?? [], notifications: d.notifications ?? [], bills: (d.bills ?? []).map(b => ({ ...b, paidMonths: b.paidMonths ?? [] })) };
+  return { ...d, incomes: d.incomes ?? [], notifications: d.notifications ?? [], investments: { ...{ trades: [], quotes: {}, usdRate: 4000, usdRateAt: 0 }, ...((d as Partial<Data>).investments || {}) }, bills: (d.bills ?? []).map(b => ({ ...b, paidMonths: b.paidMonths ?? [] })) };
 }
 
 /** Load saved data, or keep the sample data on first run. */
