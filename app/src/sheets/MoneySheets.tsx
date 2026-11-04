@@ -409,6 +409,7 @@ export function SettingsSheet() {
             </div>
           )}
         </div>
+        <button onClick={() => setUI({ sheet: null, install: 'profile' })} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>How to install Pockets on iPhone</button>
         <span style={{ margin: '14px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Start over</span>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 10 }}>
           <button onClick={() => {

@@ -97,4 +97,6 @@ export interface UI {
   page?: 'investments' | null;
   /** First open on this device: choose sample data, a fresh start or a backup. */
   welcome?: boolean;
+  /** Home-screen install guide: shown in iPhone Safari, or opened from Profile. */
+  install?: false | 'auto' | 'profile';
 }

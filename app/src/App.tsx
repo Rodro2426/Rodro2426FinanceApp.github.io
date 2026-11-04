@@ -19,6 +19,7 @@ import Budget from './screens/Budget';
 import Insights from './screens/Insights';
 import CalendarScreen from './screens/Calendar';
 import Welcome from './screens/Welcome';
+import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
@@ -90,6 +91,7 @@ export default function App() {
   const patchNotif = (id: string, p: { dismissed?: boolean; bannered?: boolean }) => setData(x => ({ notifications: x.notifications.map(n => (n.id === id ? { ...n, ...p } : n)) }));
 
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
+  useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUI({ sheet: null }); };
     window.addEventListener('keydown', onKey);
@@ -154,6 +156,7 @@ export default function App() {
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
       {ui.welcome && <Welcome />}
+      {ui.install && <InstallGuide fromProfile={ui.install === 'profile'} onClose={() => setUI({ install: false })} />}
       <CropperHost />
     </div>
   );
