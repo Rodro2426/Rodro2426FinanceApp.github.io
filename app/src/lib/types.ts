@@ -13,7 +13,8 @@ export interface Account { id: string; name: string; kind: string; type: AcctTyp
 export interface FxOrig { amt: number; cur: 'USD'; rate: number; official: boolean }
 export interface Expense { id: string; ts: number; p: string; a: string; amt: number; note: string; date: string; tags: string[]; cat: string; sub: string; ruleId?: string; ruleMonth?: string; orig?: FxOrig }
 /** Money received into an account (from a scheduled income). */
-export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig }
+/** `inBase`: an extra income already counted in the typed monthly income, so it isn't added again. */
+export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig; inBase?: boolean }
 /**
  * Money moved into or out of a pocket for one week (`week` = its Monday).
  * With `month`, it was income split for the whole month: it's spread evenly over `spread` weeks starting at `week`.
@@ -103,6 +104,7 @@ export type Sheet =
   | { name: 'holding'; ticker: string }
   | { name: 'cdt'; id?: string | null }
   | { name: 'cdtInfo'; id: string }
+  | { name: 'reconcile' }
   | { name: 'priceSettings' }
   | { name: 'txn'; kind: 'expense' | 'income'; id: string; back?: Sheet };
 

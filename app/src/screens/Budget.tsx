@@ -1,17 +1,42 @@
-import { useApp, openSheet, setData } from '../lib/store';
-import { RED, ink, tint } from '../lib/constants';
+import { useRef, useState } from 'react';
+import { useApp, openSheet, setData, flash } from '../lib/store';
+import { extraIncomes, findMismatches, markIncluded, monthSummary } from '../lib/plan';
+import { incomeMoves } from '../lib/derive';
+import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { allStats, ctxOf, curSymbol, fmt, num, pctOf } from '../lib/derive';
 import { monthLabel } from '../lib/dates';
 import { Bar } from '../ui/bits';
 import * as I from '../ui/icons';
 import { MoneyInput } from '../ui/MoneyInput';
 
+const line = (label: string, value: string, sub?: string, color?: string) => (
+  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', fontSize: 14, gap: 8 }}>
+    <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <span style={{ color: 'var(--color-neutral-700)' }}>{label}</span>
+      {sub && <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)' }}>{sub}</span>}
+    </span>
+    <span style={{ fontWeight: 700, color: color ?? 'var(--color-text)', whiteSpace: 'nowrap' }}>{value}</span>
+  </div>
+);
+
 export default function Budget() {
   const { data: d } = useApp();
   const c = ctxOf(d), weeks = c.weeks, cur = curSymbol();
   const income = num(d.incomeStr);
   const all = allStats(d, c);
-  const alloc = all.reduce((a, s) => a + s.weekly, 0) * weeks, unalloc = income - alloc;
+  const sum = monthSummary(d, c), extras = extraIncomes(d, c);
+  const mm = findMismatches(d, c), issues = mm.orphan.length + mm.included.length;
+  const splitFromExtra = sum.plan - all.reduce((a, s) => a + s.weekly, 0) * weeks;
+  // Editing the typed income when this month already has extra income: ask whether it's already in there.
+  const typedAtFocus = useRef(d.incomeStr);
+  const [ask, setAsk] = useState<null | 'q' | 'pick'>(null);
+  const [keep, setKeep] = useState<string[]>([]);
+  const extraTotal = extras.reduce((a, t) => a + t.amt, 0);
+  const onIncomeBlur = () => { if (d.incomeStr !== typedAtFocus.current && extras.length) { setKeep([]); setAsk('q'); } };
+  const confirmIncluded = () => {
+    setData(x => markIncluded(x, extras.map(t => t.id), keep));
+    setAsk(null); flash(`Not added again · ${fmt(extraTotal)} of extra income is in your typed amount`);
+  };
   const setPocket = (id: string, patch: { name?: string; weeklyStr?: string }) => setData(x => ({ pockets: x.pockets.map(p => p.id === id ? { ...p, ...patch } : p) }));
   const removePocket = (id: string) => setData(x => ({ pockets: x.pockets.filter(p => p.id !== id), moves: x.moves.filter(m => m.from !== id && m.to !== id) }));
   const chipStyle = { fontSize: 13, fontWeight: 600, background: 'var(--color-neutral-200)', padding: '7px 12px', borderRadius: 999, whiteSpace: 'nowrap' } as const;
@@ -24,15 +49,47 @@ export default function Budget() {
       </div>
       <div data-tour="income" style={{ background: '#fff', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Monthly income</span>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+        <div onFocus={() => { typedAtFocus.current = d.incomeStr; }} onBlur={onIncomeBlur} style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
           <span style={{ fontSize: 34, fontWeight: 700, color: 'var(--color-neutral-500)' }}>{cur}</span>
-          <MoneyInput value={d.incomeStr} onChange={v => setData({ incomeStr: v })}
+          <MoneyInput value={d.incomeStr} onChange={v => setData({ incomeStr: v })} ariaLabel="Monthly income"
             style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 34, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--color-text)', padding: 0, outline: 'none' }} />
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
           <span style={chipStyle}>{weeks} weeks</span>
           <span style={chipStyle}>{fmt(income / weeks)} per week</span>
+          {sum.extra > 0 && <span style={{ ...chipStyle, background: 'oklch(0.95 0.045 155)', color: 'oklch(0.36 0.08 155)' }}>+{fmt(sum.extra)} extra this month</span>}
         </div>
+        {sum.extra > 0 && <span style={{ marginTop: 4, fontSize: 13, color: 'var(--color-neutral-700)' }}>Month income: <b style={{ color: TEXT }}>{fmt(sum.income)}</b> ({fmt(sum.base)} typed + {fmt(sum.extra)} from {extras.length === 1 ? '1 extra income' : `${extras.length} extra incomes`})</span>}
+        {ask === 'q' && (
+          <div role="alertdialog" aria-label="Already included?" style={{ marginTop: 10, background: 'oklch(0.96 0.055 92)', borderRadius: 18, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontSize: 14.5, fontWeight: 700, lineHeight: 1.35, color: 'oklch(0.33 0.07 70)' }}>Does this amount already include this month's extra income ({fmt(extraTotal)})?</span>
+            <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'oklch(0.4 0.08 70)' }}>{extras.map(t => `${t.note} ${fmt(t.amt)}`).join(' · ')}</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => setAsk('pick')} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'oklch(0.33 0.07 70)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Yes, it's included</button>
+              <button onClick={() => { setAsk(null); flash(`Added on top: month income is ${fmt(sum.income)}`); }} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>No, add it on top</button>
+            </div>
+          </div>
+        )}
+        {ask === 'pick' && (
+          <div role="alertdialog" aria-label="Which splits to keep" style={{ marginTop: 10, background: 'oklch(0.96 0.055 92)', borderRadius: 18, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'oklch(0.33 0.07 70)' }}>Then their pocket splits would count twice. Keep any of them?</span>
+            {extras.map(t => {
+              const split = incomeMoves(d.moves, t).reduce((a, m) => a + m.amt, 0), on = keep.includes(t.id);
+              return (
+                <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: `1px solid ${LINE}`, fontSize: 13.5 }}>
+                  <input type="checkbox" checked={on} onChange={() => setKeep(k => (on ? k.filter(x => x !== t.id) : [...k, t.id]))} style={{ width: 20, height: 20 }} />
+                  <span style={{ flex: 1 }}>{t.note} · {fmt(t.amt)}</span>
+                  <span style={{ color: 'var(--color-neutral-700)' }}>{split ? `${fmt(split)} in pockets` : 'not split'}</span>
+                </label>
+              );
+            })}
+            <span style={{ fontSize: 12, color: 'oklch(0.4 0.08 70)' }}>Ticked = keep its pocket split. The rest is taken back out of the pockets.</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={confirmIncluded} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'oklch(0.33 0.07 70)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Confirm</button>
+              <button onClick={() => setAsk('q')} style={{ height: 42, padding: '0 16px', borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Back</button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0' }}>
@@ -65,15 +122,19 @@ export default function Budget() {
         </button>
       </div>
 
-      <div style={{ background: '#fff', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <Bar pct={pctOf(alloc, income)} track="var(--color-neutral-200)" fill={unalloc < 0 ? 'var(--color-accent)' : 'oklch(0.62 0.12 160)'} ease=".3s" />
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, gap: 8 }}>
-          <span style={{ color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>Planned for {weeks} weeks</span><span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(alloc)}</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, gap: 8 }}>
-          <span style={{ color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{unalloc < 0 ? 'Over your income by' : 'Free for bills and saving'}</span>
-          <span style={{ fontWeight: 700, color: unalloc < 0 ? RED : 'var(--color-text)', whiteSpace: 'nowrap' }}>{fmt(Math.abs(unalloc))}</span>
-        </div>
+      <div aria-label="Month plan" style={{ background: '#fff', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <Bar pct={pctOf(sum.plan, sum.income)} track="var(--color-neutral-200)" fill={sum.planGap < 0 ? 'var(--color-accent)' : 'oklch(0.62 0.12 160)'} ease=".3s" />
+        {line('Month income', fmt(sum.income), sum.extra > 0 ? `${fmt(sum.base)} typed + ${fmt(sum.extra)} extra` : undefined)}
+        {line(`Planned for ${weeks} weeks`, fmt(sum.plan), splitFromExtra > 0 ? `includes ${fmt(splitFromExtra)} split from extra income` : undefined)}
+        {line(sum.planGap < 0 ? 'Over your income by' : 'Free for bills and saving', fmt(Math.abs(sum.planGap)), undefined, sum.planGap < 0 ? RED : undefined)}
+        <div style={{ height: 1, background: LINE, margin: '2px 0' }} />
+        {line('Left to spend in pockets', fmt(sum.toSpend), 'what your pockets still promise this month')}
+        {line('In your accounts', fmt(sum.balance), 'debit, savings and cash, minus card debt')}
+        {line(sum.real > 0 ? 'Real shortfall' : 'Covered by your accounts', fmt(Math.abs(sum.real)), sum.real > 0 ? 'the number that matters: it ignores what you already spent' : 'your accounts cover every pocket', sum.real > 0 ? RED : 'oklch(0.45 0.11 150)')}
+        {sum.real > 0.004 && <div role="alert" style={{ background: 'var(--color-accent-100)', borderRadius: 14, padding: '10px 12px', fontSize: 13, lineHeight: 1.4, color: 'var(--color-accent-900)' }}>Your pockets add up to <b>{fmt(sum.real)}</b> more than you have in your accounts.</div>}
+        <button onClick={() => openSheet({ name: 'reconcile' })} className="hv-n200" style={{ height: 42, borderRadius: 999, border: 0, background: issues ? 'oklch(0.96 0.055 92)' : 'var(--color-neutral-100)', color: issues ? 'oklch(0.33 0.07 70)' : TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          {issues ? `Review mismatches (${issues})` : 'Review mismatches'}
+        </button>
       </div>
 
       <div style={{ padding: '10px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Savings goals</div>

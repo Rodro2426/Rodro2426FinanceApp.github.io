@@ -1,6 +1,6 @@
 import { useApp, openSheet, setUI } from '../lib/store';
 import { LINE, RED, ink, tint } from '../lib/constants';
-import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, weekExpenses, type PocketStats } from '../lib/derive';
+import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthExpenses, monthStats, pctOf, weekExpenses, type PocketStats } from '../lib/derive';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { daysBetween, daysInMonth, relDay } from '../lib/dates';
 import type { PocketView } from '../lib/types';
@@ -9,6 +9,7 @@ import { billRows } from '../lib/bills';
 import { BillBadge, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
 import { cdtTotal } from '../lib/cdt';
+import { monthSummary } from '../lib/plan';
 import { billAmount } from '../lib/schedule';
 
 const C = 100.53; // ring circumference (r=16)
@@ -31,7 +32,7 @@ export default function Home() {
   // CDTs count as money you have: opening one moves money out of an account, not out of your net worth.
   const assets = d.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0) + cdtTotal(d);
   const debt = d.accounts.filter(a => a.type === 'card').reduce((x, a) => x + a.bal, 0);
-  const spent = monthExpenses(d, c).reduce((a, e) => a + e.amt, 0), income = num(d.incomeStr);
+  const spent = monthExpenses(d, c).reduce((a, e) => a + e.amt, 0), income = monthSummary(d, c).income;
   const upcoming = billRows(d, c).filter(b => !b.paid && !b.others).sort((a, b) => a.inDays - b.inDays).slice(0, 3);
   // Latest money in and out together (daily account interest is left out: it updates every day).
   const recent = [

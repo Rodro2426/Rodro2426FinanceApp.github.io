@@ -2,6 +2,7 @@ import type { Account, Data, Expense, Income, Move } from './types';
 import { POCKET_CAT } from './constants';
 import { addDays, daysBetween, fmtDay, inRange, makeCtx, monthKey, parse, type Ctx } from './dates';
 import { getData } from './store';
+import { unitsFor, weekShares } from './split';
 
 export const num = (s: unknown) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
 const isCOP = () => getData().settings.currency === 'COP';
@@ -49,7 +50,7 @@ export const allStats = (d: Data, c: Ctx = ctxOf(d)) => d.pockets.map(p => pocke
 function spreadThisWeek(d: Data, id: string, c: Ctx) {
   return d.moves.filter(m => m.month && m.to === id).reduce((a, m) => {
     const i = daysBetween(m.week, c.weekStart) / 7, n = Math.max(1, m.spread ?? 1);
-    return i >= 0 && i < n ? a + m.amt / n : a;
+    return i >= 0 && i < n ? a + weekShares(m.amt, n, unitsFor(d.settings.currency))[i] : a;
   }, 0);
 }
 

@@ -26,6 +26,7 @@ import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
+import { ReconcileSheet } from './sheets/ReconcileSheet';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
 import { EditTxnSheet } from './sheets/EditTxn';
@@ -59,6 +60,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'holding': return <HoldingSheet ticker={sheet.ticker} />;
     case 'cdt': return <CdtSheet id={sheet.id ?? null} />;
     case 'cdtInfo': return <CdtInfoSheet id={sheet.id} />;
+    case 'reconcile': return <ReconcileSheet />;
     case 'priceSettings': return <PriceSettingsSheet />;
     case 'txn': return <EditTxnSheet kind={sheet.kind} id={sheet.id} back={sheet.back} />;
   }

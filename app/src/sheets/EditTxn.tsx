@@ -2,12 +2,11 @@ import { useState } from 'react';
 import { useApp, setData, setUI, flash } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
 import { chargeAccount, fmt, incomeMoves, num, roundAmt } from '../lib/derive';
-import type { Account, Sheet } from '../lib/types';
+import type { Sheet } from '../lib/types';
 import { BigAmount, FieldLabel, GhostDanger, PickChip, PrimaryBtn, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
+import { deleteIncome, editIncomeAmount } from '../lib/plan';
 
-/** Money in (+) to an account; cards owe less. */
-const credit = (accts: Account[], id: string, amt: number) => accts.map(a => (a.id !== id ? a : { ...a, bal: a.type === 'card' ? a.bal - amt : a.bal + amt }));
 const chip = (on: boolean) => ({ background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT });
 const acctBtn = (on: boolean, hue: number) => ({ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${on ? ink(hue) : '#fff'}`, background: on ? tint(hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }) as const;
 
@@ -58,31 +57,15 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
         return { accounts, expenses: x.expenses.map(y => (y.id === e.id ? { ...y, amt: val, note: note.trim() || y.note, date, a: acct, p: pocket, cat, sub, tags, orig: val === roundAmt(y.amt) ? y.orig : undefined } : y)) };
       });
     } else if (inc) {
-      setData(x => {
-        // If the income is now smaller than what was split from it, shrink each pocket's share to fit.
-        const linked = incomeMoves(x.moves, inc), split = linked.reduce((a, m) => a + m.amt, 0);
-        const f = split > val ? val / split : 1;
-        // Scale each share, then put the rounding difference on the last one so they add up to exactly `val`.
-        const scaled = new Map(linked.map(m => [m.id, roundAmt(m.amt * f)]));
-        if (f < 1 && linked.length) { const diff = roundAmt(val - [...scaled.values()].reduce((a, n) => a + n, 0)); const lastId = linked[linked.length - 1].id; scaled.set(lastId, roundAmt(scaled.get(lastId)! + diff)); }
-        const ids = new Set(linked.map(m => m.id));
-        return {
-          accounts: credit(credit(x.accounts, inc.a, -inc.amt), acct, val),
-          incomes: x.incomes.map(y => (y.id === inc.id ? { ...y, amt: val, note: note.trim() || y.note, date, a: acct, orig: val === roundAmt(y.amt) ? y.orig : undefined } : y)),
-          moves: f < 1 ? x.moves.map(m => (ids.has(m.id) ? { ...m, amt: scaled.get(m.id)!, income: inc.id } : m)) : x.moves
-        };
-      });
+      // Same rules as everywhere else: the account follows the difference, and the split shrinks to fit if needed.
+      setData(x => editIncomeAmount(x, inc.id, val, acct, { note: note.trim() || inc.note, date }));
     }
     flash('Transaction updated'); done();
   };
   const remove = () => {
     if (!confirmDel) return setConfirmDel(true);
     if (e) setData(x => ({ accounts: chargeAccount(x.accounts, e.a, -e.amt), expenses: x.expenses.filter(y => y.id !== e.id) }));
-    else if (inc) setData(x => {
-      // Money this income added to pockets goes away with it.
-      const ids = new Set(incomeMoves(x.moves, inc).map(m => m.id));
-      return { accounts: credit(x.accounts, inc.a, -inc.amt), incomes: x.incomes.filter(y => y.id !== inc.id), moves: x.moves.filter(m => !ids.has(m.id)) };
-    });
+    else if (inc) setData(x => deleteIncome(x, inc.id));
     flash(splitTotal > 0 ? `${t.note} deleted · ${fmt(splitTotal)} taken back out of your pockets` : `${t.note} deleted`); done();
   };
 

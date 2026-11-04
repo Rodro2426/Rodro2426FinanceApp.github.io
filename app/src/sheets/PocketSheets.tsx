@@ -4,6 +4,8 @@ import { EMOJIS, HUES, LINE, POCKET_CAT, RED, TEXT, ink, tint } from '../lib/con
 import { DAY_LETTERS, DAY_NAMES, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
 import { monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
+import { addExtraIncome, coverFirst, monthSummary, splitAmong, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
+import { unitsFor, weekShares } from '../lib/split';
 import type { Data, Move, PocketView } from '../lib/types';
 import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -80,7 +82,7 @@ export function AddSheet({ pocket, mode: mode0 }: { pocket?: string; mode?: 'exp
   );
 }
 
-/* ---------------- Register income, keep it or split it into pockets ---------------- */
+/* ---------------- Register income: save it, or split some of it into pockets ---------------- */
 function IncomeForm() {
   const { data: d } = useApp();
   const c = ctxOf(d);
@@ -88,43 +90,42 @@ function IncomeForm() {
   const [amt, setAmt] = useState('');
   const [a, setA] = useState((accounts.find(x => x.type === 'bank') || accounts[0])?.id ?? '');
   const [note, setNote] = useState('');
-  const [split, setSplit] = useState(false);
-  const [parts, setParts] = useState<Record<string, string>>({});
-  const [period, setPeriod] = useState<'week' | 'month'>('week');
-  const all = allStats(d, c);
-  const months = new Map(all.map(p => [p.id, monthStats(d, p.id, c)]));
-  const nWeeks = weeksLeft(c);
-  const v = num(amt);
-  const assigned = all.reduce((s, p) => s + num(parts[p.id]), 0);
-  const left = v - assigned, over = split && left < -0.004;
-  const cant = !(v > 0) || !accounts.some(x => x.id === a) || over;
+  const [toP, setToP] = useState('0');
+  const [mode, setMode] = useState<SplitMode>('month');
+  const [dist, setDist] = useState<SplitDist>('budget');
+  const [manual, setManual] = useState<Record<string, string>>({});
+  const nWeeks = weeksLeft(c), scale = unitsFor(d.settings.currency);
+  const X = roundAmt(num(amt));
+  const manualNums = Object.fromEntries(d.pockets.map(p => [p.id, roundAmt(num(manual[p.id]))]));
+  const A = dist === 'manual' ? Object.values(manualNums).reduce((s, n) => s + n, 0) : Math.min(X, roundAmt(num(toP)));
+  const tooMuch = A > X + 0.004;
+  const cant = !(X > 0) || !accounts.some(x => x.id === a) || tooMuch;
+
+  const before = monthSummary(d, c);
+  const input: ExtraIncome = { amt: X, acct: a, note, toPockets: A, mode, dist, manual: manualNums };
+  const preview = X > 0 && !tooMuch && accounts.some(x => x.id === a) ? { ...d, ...addExtraIncome(d, c, { ...input, id: 'preview' }) } : null;
+  const after = preview ? monthSummary(preview, c) : null;
+  const parts = A > 0 && !tooMuch ? splitAmong(d, A, dist, manualNums) : {};
   const acctName = accounts.find(x => x.id === a)?.name;
+  const cover = coverFirst(d, c, X);
 
-  const evenly = () => {
-    if (!all.length || !(v > 0)) return;
-    const each = Math.floor(roundAmt(v / all.length));
-    setParts(Object.fromEntries(all.map((p, i) => [p.id, String(i === all.length - 1 ? roundAmt(v - each * (all.length - 1)) : each)])));
-  };
-  const byBudget = () => {
-    const tot = all.reduce((s, p) => s + p.weekly, 0);
-    if (!tot || !(v > 0)) return evenly();
-    let used = 0;
-    setParts(Object.fromEntries(all.map((p, i) => { const x = i === all.length - 1 ? roundAmt(v - used) : Math.floor(roundAmt(v * p.weekly / tot)); used += x; return [p.id, String(x)]; })));
-  };
-
+  const quick = (v: number) => { setDist(dd => (dd === 'manual' ? 'budget' : dd)); setToP(String(v)); };
   const save = () => {
     if (cant) return;
-    const val = roundAmt(v), ts = Date.now(), incId = uid('in');
-    const moves = split ? all.filter(p => num(parts[p.id]) > 0).map(p => ({ id: uid('m'), week: c.weekStart, from: '_income', to: p.id, amt: roundAmt(num(parts[p.id])), income: incId, ...(period === 'month' ? { month: c.month, spread: nWeeks } : {}) })) : [];
-    setData(x => ({
-      incomes: [{ id: incId, ts, a, amt: val, note: note.trim() || 'Income', date: c.today }, ...x.incomes],
-      accounts: x.accounts.map(y => (y.id === a ? { ...y, bal: y.bal + val } : y)),
-      moves: [...x.moves, ...moves]
-    }));
-    const spread = moves.reduce((s, m) => s + m.amt, 0);
+    setData(x => addExtraIncome(x, ctxOf(x), input));
     closeSheet();
-    flash(moves.length ? `+${fmt(val)} to ${acctName} · ${fmt(spread)} split into ${moves.length === 1 ? '1 pocket' : moves.length + ' pockets'} for ${period === 'month' ? 'the month' : 'this week'}` : `+${fmt(val)} saved in ${acctName}`);
+    const warn = after && after.real > 0.004 ? ` · Your pockets add up to ${fmt(after.real)} more than you have in your accounts` : '';
+    flash(`+${fmt(X)} to ${acctName}${A > 0 ? ` · ${fmt(A)} to pockets` : ' · all saved'}${warn}`);
   };
+  const chipBtn = (label: string, on: boolean, f: () => void, key?: string) => (
+    <button key={key ?? label} onClick={f} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--color-neutral-100)', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{label}</button>
+  );
+  const row = (label: string, b: number, x: number | undefined, sign = false) => (
+    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13, padding: '3px 0' }}>
+      <span style={{ color: 'var(--color-neutral-700)' }}>{label}</span>
+      <span style={{ whiteSpace: 'nowrap' }}>{fmt(b, sign)} → <b style={{ color: x !== undefined && x !== b ? TEXT : 'var(--color-neutral-600)' }}>{x === undefined ? '—' : fmt(x, sign)}</b></span>
+    </div>
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -140,44 +141,75 @@ function IncomeForm() {
         {accounts.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add a bank or cash account first, in the Accounts tab.</span>}
       </div>
       <input placeholder="What is it? Freelance, gift, refund…" value={note} onChange={e => setNote(e.target.value)} style={{ ...textInput, marginTop: 16 }} />
-      <FieldLabel m="16px 4px 0">What to do with it</FieldLabel>
-      <Segmented items={[['keep', 'Keep it saved'], ['split', 'Split into pockets']]} value={split ? 'split' : 'keep'} onPick={k => setSplit(k === 'split')} mt={6} />
-      {split ? (
-        <div style={{ marginTop: 10, background: '#fff', borderRadius: 22, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ margin: '2px 2px 0', fontSize: 12.5, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Add it to</span>
-          <Segmented items={[['week', 'This week'], ['month', `Rest of ${monthName(c.month)}`]]} value={period} onPick={setPeriod} mt={0} h={36} />
-          <span style={{ margin: '0 2px 4px', fontSize: 12, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>
-            {period === 'week' ? 'Each pocket gets the money to spend this week. On Monday it starts over.' : nWeeks > 1 ? `Spread over the ${nWeeks} weeks left in ${monthName(c.month)}: each week gets an equal share, starting now.` : `This is the last week of ${monthName(c.month)}, so it all goes to this week.`}
-          </span>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {[['Evenly', evenly], ['By budget', byBudget], ['Clear', () => setParts({})]].map(([l, f]) => (
-              <button key={l as string} onClick={f as () => void} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{l as string}</button>
-            ))}
-          </div>
-          {all.map(p => (
-            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: `1px solid ${LINE}` }}>
-              <PocketDot st={p} size={32} fs={15} bg={tint(p.hue)} color={ink(p.hue)} />
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-                {period === 'week'
-                  ? <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Week: {fmt(p.left)} → <b style={{ color: TEXT }}>{fmt(p.left + num(parts[p.id]))}</b> left</span>
-                  : <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Month: {fmt(months.get(p.id)!.left)} → <b style={{ color: TEXT }}>{fmt(months.get(p.id)!.left + num(parts[p.id]))}</b>{num(parts[p.id]) > 0 && nWeeks > 1 ? ` · +${fmt(roundAmt(num(parts[p.id]) / nWeeks))}/wk` : ''}</span>}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(p.hue), borderRadius: 14, padding: '8px 10px', width: 120, flex: 'none' }}>
-                <span style={{ fontSize: 14, color: ink(p.hue) }}>{curSymbol()}</span>
-                <MoneyInput value={parts[p.id] || ''} onChange={x => setParts(s => ({ ...s, [p.id]: x }))} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(p.hue), padding: 0, outline: 'none', textAlign: 'right' }} />
-              </div>
-            </div>
-          ))}
-          {all.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Create pockets in the Budget tab first.</span>}
-          <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: `1px solid ${LINE}`, fontSize: 13 }}>
-            <span style={{ color: over ? RED : 'var(--color-neutral-700)' }}>{over ? 'More than the income by' : 'Stays saved in the account'}</span>
-            <b style={{ color: over ? RED : TEXT }}>{fmt(Math.abs(left))}</b>
-          </div>
+
+      <FieldLabel m="16px 4px 6px">How much goes to pockets?</FieldLabel>
+      <div style={{ background: '#fff', borderRadius: 22, padding: '12px 12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: 'var(--color-neutral-100)', borderRadius: 16, padding: '10px 14px', opacity: dist === 'manual' ? 0.6 : 1 }}>
+          <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-neutral-500)' }}>{curSymbol()}</span>
+          {dist === 'manual'
+            ? <span aria-label="To pockets" style={{ flex: 1, fontSize: 20, fontWeight: 700 }}>{fmt(A).replace(curSymbol(), '')}</span>
+            : <MoneyInput value={toP} onChange={setToP} ariaLabel="To pockets" style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 20, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />}
+          <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>of {fmt(X)}</span>
         </div>
-      ) : (
-        <span style={{ margin: '8px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>{v > 0 && acctName ? `${acctName} goes to ${fmt((accounts.find(x => x.id === a)?.bal || 0) + v)}. Your pockets stay the same.` : 'The money is added to the account without changing your pockets.'}</span>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {chipBtn('None', dist !== 'manual' && A === 0, () => quick(0))}
+          {chipBtn('All', dist !== 'manual' && X > 0 && A === X, () => quick(X))}
+          {before.real > 0.004 && chipBtn(`Cover the shortfall first (${fmt(Math.min(X, before.real))})`, dist !== 'manual' && X > 0 && A === cover, () => quick(cover), 'cover')}
+        </div>
+        <span style={{ fontSize: 12, lineHeight: 1.4, color: tooMuch ? RED : 'var(--color-neutral-700)' }}>
+          {tooMuch ? `That's more than the ${fmt(X)} you received.` : `${fmt(Math.max(0, X - A))} stays saved: it adds to this month's income without adding to the plan.`}
+          {before.real > 0.004 && !tooMuch ? ` Your pockets already promise ${fmt(before.real)} more than your accounts have; "Cover the shortfall first" saves that much before splitting.` : ''}
+        </span>
+      </div>
+
+      {(A > 0 || dist === 'manual') && (
+        <div style={{ marginTop: 10, background: '#fff', borderRadius: 22, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <Segmented items={[['week', 'This week'], ['month', `Rest of ${monthName(c.month)}`]]} value={mode} onPick={setMode} mt={0} h={36} />
+          <span style={{ margin: '0 2px', fontSize: 12, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>
+            {mode === 'week' ? 'All of it goes to this week. On Monday the pockets start over.' : nWeeks > 1 ? `Shared equally over the ${nWeeks} weeks left in ${monthName(c.month)}, this one included.` : `This is the last week of ${monthName(c.month)}, so it all goes to this week.`}
+          </span>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
+            {chipBtn('By budget', dist === 'budget', () => setDist('budget'))}
+            {chipBtn('Evenly', dist === 'even', () => setDist('even'))}
+            {chipBtn('Manual', dist === 'manual', () => { setManual(Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, String(v)]))); setDist('manual'); })}
+          </div>
+          {d.pockets.map(p => {
+            const ms0 = monthStats(d, p.id, c), part = parts[p.id] ?? 0;
+            const perWeek = mode === 'month' ? weekShares(part, nWeeks, scale)[0] : part;
+            const st = allStats(d, c).find(x => x.id === p.id)!;
+            return (
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: `1px solid ${LINE}` }}>
+                <PocketDot st={st} size={32} fs={15} bg={tint(p.hue)} color={ink(p.hue)} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                  <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Left in month: {fmt(ms0.left)} → <b style={{ color: TEXT }}>{fmt(ms0.left + part)}</b></span>
+                  {part > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'oklch(0.45 0.11 150)' }}>{mode === 'month' ? `+${fmt(perWeek)}/week` : `+${fmt(part)} this week`}</span>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(p.hue), borderRadius: 14, padding: '8px 10px', width: 116, flex: 'none' }}>
+                  <span style={{ fontSize: 14, color: ink(p.hue) }}>{curSymbol()}</span>
+                  {dist === 'manual'
+                    ? <MoneyInput value={manual[p.id] || ''} onChange={x => setManual(s0 => ({ ...s0, [p.id]: x }))} ariaLabel={`${p.name} share`} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(p.hue), padding: 0, outline: 'none', textAlign: 'right' }} />
+                    : <span style={{ width: '100%', fontSize: 16, fontWeight: 700, color: ink(p.hue), textAlign: 'right' }}>{fmt(part).replace(curSymbol(), '')}</span>}
+                </div>
+              </div>
+            );
+          })}
+          {d.pockets.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Create pockets in the Budget tab first.</span>}
+        </div>
       )}
+
+      <div aria-label="Preview" style={{ marginTop: 10, background: '#fff', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Before → after</span>
+        {row('Month income', before.income, after?.income)}
+        {row('Month plan', before.plan, after?.plan)}
+        {row(after && after.planGap < 0 || (!after && before.planGap < 0) ? 'Plan vs income (short)' : 'Plan vs income (free)', before.planGap, after?.planGap, true)}
+        {row('Real shortfall', Math.max(0, before.real), after ? Math.max(0, after.real) : undefined)}
+        {after && after.real > 0.004 && (
+          <div role="alert" style={{ marginTop: 8, background: 'var(--color-accent-100)', borderRadius: 14, padding: '9px 11px', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-accent-900)' }}>
+            Your pockets add up to <b>{fmt(after.real)}</b> more than you have in your accounts.
+          </div>
+        )}
+      </div>
       <PrimaryBtn onClick={save} disabled={cant} bg="oklch(0.5 0.12 150)" hover="hv-green">Save income</PrimaryBtn>
     </div>
   );
