@@ -3,6 +3,8 @@ import { HUES, LINE, ink, mid, tint } from '../lib/constants';
 import { allStats, ctxOf, fmt, monthExpenses, pctOf, plural } from '../lib/derive';
 import { inRange, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
+import { applyOccurrence, undoOccurrence } from '../lib/schedule';
+import { getData } from '../lib/store';
 import { Bar, ListCard } from '../ui/bits';
 import * as I from '../ui/icons';
 
@@ -14,7 +16,8 @@ export default function Insights() {
   const spentMonth = monthExp.reduce((a, e) => a + e.amt, 0);
 
   const byPocket = all.map(p => ({ ...p, month: monthExp.filter(e => e.p === p.id).reduce((a, e) => a + e.amt, 0) }));
-  const split = spentMonth > 0 ? byPocket.filter(x => x.month > 0).sort((a, b) => b.month - a.month) : [];
+  const other = monthExp.filter(e => !all.some(p => p.id === e.p)).reduce((a, e) => a + e.amt, 0);
+  const split = spentMonth > 0 ? [...byPocket.filter(x => x.month > 0), ...(other > 0 ? [{ id: '_other', name: 'Bills and other', hue: -1, month: other }] : [])].sort((a, b) => b.month - a.month) : [];
 
   const known = new Set(d.pockets.map(p => p.id));
   const weekSpent = all.reduce((a, x) => a + x.spent, 0);
@@ -32,7 +35,12 @@ export default function Insights() {
   const maxTag = Math.max(1, ...tagTotals.map(x => x.sum));
 
   const bills = billRows(d, c);
-  const toggleBill = (id: string) => setData(x => ({ bills: x.bills.map(b => b.id !== id ? b : { ...b, paidMonths: b.paidMonths.includes(c.month) ? b.paidMonths.filter(m => m !== c.month) : [...b.paidMonths, c.month] }) }));
+  // Ticking an automatic bill pays it now; unticking a paid one gives the money back.
+  const toggleBill = (id: string) => {
+    const x = getData(), b = x.bills.find(y => y.id === id);
+    if (!b) return;
+    setData(b.paidMonths.includes(c.month) ? undoOccurrence(x, b, c.month) : applyOccurrence(x, b, c.month, c.today));
+  };
   const card = { background: '#fff', borderRadius: 26, padding: 20, display: 'flex', flexDirection: 'column' } as const;
 
   return (
@@ -55,12 +63,12 @@ export default function Insights() {
           <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>{fmt(spentMonth)}</span>
         </div>
         <div style={{ display: 'flex', height: 14, borderRadius: 999, overflow: 'hidden', gap: 3, background: split.length ? 'transparent' : 'var(--color-neutral-200)' }}>
-          {split.map(s => <div key={s.id} style={{ height: 14, width: (s.month / spentMonth * 100).toFixed(1) + '%', background: mid(s.hue), borderRadius: 999 }} />)}
+          {split.map(s => <div key={s.id} style={{ height: 14, width: (s.month / spentMonth * 100).toFixed(1) + '%', background: s.hue < 0 ? 'var(--color-neutral-400)' : mid(s.hue), borderRadius: 999 }} />)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {split.map(s => (
             <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', fontSize: 14 }}>
-              <span style={{ width: 10, height: 10, borderRadius: 999, background: mid(s.hue), flex: 'none' }} />
+              <span style={{ width: 10, height: 10, borderRadius: 999, background: s.hue < 0 ? 'var(--color-neutral-400)' : mid(s.hue), flex: 'none' }} />
               <span style={{ flex: 1 }}>{s.name}</span>
               <span style={{ color: 'var(--color-neutral-700)' }}>{Math.round(s.month / spentMonth * 100)}%</span>
               <span style={{ fontWeight: 700, width: 96, textAlign: 'right' }}>{fmt(s.month)}</span>
@@ -100,23 +108,26 @@ export default function Insights() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0', gap: 8 }}>
         <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Bills and subscriptions</span>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(d.bills.reduce((a, b) => a + b.amt, 0))} / mo</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(bills.reduce((a, b) => a + b.amt, 0))} / mo</span>
       </div>
       <ListCard>
         {bills.map((b, i) => (
-          <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === bills.length - 1 ? 'transparent' : LINE}` }}>
+          <div key={b.id} onClick={() => openSheet({ name: 'schedule', id: b.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${LINE}`, cursor: 'pointer' }}>
             <div style={{ width: 40, height: 40, borderRadius: 14, background: tint(b.hue), color: ink(b.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{b.name.charAt(0)}</div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600, textDecoration: b.paid ? 'line-through' : 'none' }}>{b.name}</span>
               <span style={{ fontSize: 12, color: b.dueColor }}>{b.kind} · {b.dueLabel}</span>
             </div>
             <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', color: b.paid ? 'var(--color-neutral-500)' : 'var(--color-text)' }}>{fmt(b.amt)}</span>
-            <button onClick={() => toggleBill(b.id)} aria-label={b.paid ? 'Mark unpaid' : 'Mark paid'} style={{ width: 30, height: 30, borderRadius: 999, border: `2px solid ${b.paid ? 'oklch(0.62 0.12 160)' : 'var(--color-neutral-300)'}`, background: b.paid ? 'oklch(0.62 0.12 160)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}>
+            <button onClick={e => { e.stopPropagation(); toggleBill(b.id); }} aria-label={b.paid ? 'Mark unpaid' : 'Mark paid'} style={{ width: 30, height: 30, borderRadius: 999, border: `2px solid ${b.paid ? 'oklch(0.62 0.12 160)' : 'var(--color-neutral-300)'}`, background: b.paid ? 'oklch(0.62 0.12 160)' : 'transparent', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}>
               <I.Check size={14} />
             </button>
           </div>
         ))}
-        {bills.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No bills added.</div>}
+        <button onClick={() => openSheet({ name: 'schedule', id: null, kind: 'Bill' })} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', border: 0, background: 'transparent', cursor: 'pointer', color: 'var(--color-accent-700)', fontSize: 15, fontWeight: 700, textAlign: 'left' }}>
+          <span style={{ width: 40, height: 40, borderRadius: 14, border: '2px dashed var(--color-accent-300)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Plus size={18} /></span>
+          Add bill or subscription
+        </button>
       </ListCard>
     </div>
   );

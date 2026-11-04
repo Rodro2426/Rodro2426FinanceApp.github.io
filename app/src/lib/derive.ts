@@ -44,7 +44,7 @@ export function pocketStats(d: Data, id: string, c: Ctx = ctxOf(d)): PocketStats
 export const allStats = (d: Data, c: Ctx = ctxOf(d)) => d.pockets.map(p => pocketStats(d, p.id, c)!);
 
 export interface Txn {
-  kind: 'expense' | 'payment'; icon: string | null; photoBg: string; ts: number; date: string; note: string; pocket: string;
+  kind: 'expense' | 'payment' | 'income'; icon: string | null; photoBg: string; ts: number; date: string; note: string; pocket: string;
   hue: number; tags: string[]; category: string; show: number; effect: number; after: number;
 }
 /** Every movement on an account, newest first, with the running balance after each one. */
@@ -61,6 +61,10 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
         hue: p ? p.hue : a.hue, tags: e.tags || [], category: catOf(e)[0], show: -e.amt, effect: card ? e.amt : -e.amt, after: 0
       };
     }),
+    ...(d.incomes || []).filter(t => t.a === id).map(t => ({
+      kind: 'income' as const, icon: '💰', photoBg: 'none', ts: t.ts, date: t.date, note: t.note, pocket: 'Income',
+      hue: 150, tags: [], category: 'Income', show: t.amt, effect: card ? -t.amt : t.amt, after: 0
+    })),
     ...d.payments.filter(p => p.from === id || p.to === id).map(p => {
       const out = p.from === id, other = d.accounts.find(x => x.id === (out ? p.to : p.from));
       return {

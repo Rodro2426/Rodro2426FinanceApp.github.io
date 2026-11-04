@@ -15,7 +15,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const today = todayISO(), curMonth = today.slice(0, 7);
   const weeks = d.settings.weeks;
   const acc = (id: string) => d.accounts.find(a => a.id === id);
-  const pocketName = (id: string) => d.pockets.find(p => p.id === id)?.name || 'Deleted pocket';
+  const pocketName = (id: string) => (id ? d.pockets.find(p => p.id === id)?.name || 'Deleted pocket' : 'No pocket (scheduled bill)');
   const goalOrPocket = (id: string) => d.pockets.find(p => p.id === id)?.name || d.goals.find(g => g.id === id)?.name || 'Deleted';
   const period = months.length === 1 ? monthLabel(months[0]) : `${monthLabel(months[0])} to ${monthLabel(months[months.length - 1])}`;
   const acctLabel = acctId === 'all' ? 'All accounts' : acc(acctId)?.name || '';
@@ -27,12 +27,13 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const income = num(d.incomeStr);
   const weeklyTotal = d.pockets.reduce((a, p) => a + num(p.weeklyStr), 0);
   const plannedMonth = weeklyTotal * weeks;
+  const incs = (d.incomes || []).filter(t => months.includes(t.date.slice(0, 7)) && (acctId === 'all' || t.a === acctId));
   const pays = d.payments.filter(p => months.includes(p.date.slice(0, 7)) && (acctId === 'all' || p.from === acctId || p.to === acctId));
   const days = months.reduce((a, m) => a + (m === curMonth ? Number(today.slice(8, 10)) : daysInMonth(m)), 0);
 
   const intro = [
     `This workbook is an export from Pockets, ${d.settings.name}'s personal budgeting app. This sheet contains everything needed to answer questions about ${period}. Amounts are in ${curName}.`,
-    'How the budget works: a monthly income is split into weekly budgets called "pockets". Weeks run Monday to Sunday. Money left in a pocket can be moved to another pocket or to a savings goal for that week. Card payments move money from a bank account to a credit card and are not spending.',
+    'How the budget works: a monthly income is split into weekly budgets called "pockets". Weeks run Monday to Sunday. Money left in a pocket can be moved to another pocket or to a savings goal for that week. Card payments move money from a bank account to a credit card and are not spending. Scheduled items (income, bills, subscriptions) repeat every month on a set day; automatic ones add or take the money from their account on that day, and scheduled bills may not belong to any pocket.',
     `Spending figures cover ${period}${acctId === 'all' ? '' : ` and only the account "${acctLabel}"`}. Account balances, card limits, savings goals and pocket budgets are current values as of ${fmtDay(today, { month: 'long', day: 'numeric', year: 'numeric' })}.`,
     months.includes(curMonth) ? `${monthLabel(curMonth)} is still in progress, so its figures are partial (${Number(today.slice(8, 10))} of ${daysInMonth(curMonth)} days).` : '',
     'Other sheets: "Details" lists every expense (date, category, merchant, amount, pocket, account, tags), "Card payments" lists payments to cards, "Summary" has totals by month and category, and "Statement" (single account only) has the running balance.'
@@ -49,6 +50,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
       ['Total of weekly pocket budgets', money(weeklyTotal)],
       [`Planned spending per month (weekly total × ${weeks})`, money(plannedMonth)],
       ['Income not assigned to pockets', money(income - plannedMonth)],
+      ['Income received in the period', money(incs.reduce((a, t) => a + t.amt, 0))],
       ['Total spent in the period', money(total)],
       ['Number of expenses', exp.length],
       ['Average spent per day', money(days ? Math.round(total / days) : 0)],
@@ -124,8 +126,13 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   });
 
   sections.push({
-    title: 'Bills and subscriptions (monthly)', header: ['Name', 'Type', 'Amount', 'Due day of month', ...months.map(m => `Paid in ${monthLabel(m)}`)],
-    rows: d.bills.map(b => [b.name, b.kind, money(b.amt), b.dueDay, ...months.map(m => (b.paidMonths.includes(m) ? 'Yes' : 'No'))])
+    title: 'Scheduled income, bills and subscriptions (every month)', note: '"Automatic" items move the money on their day; the others are reminders ticked off by hand.',
+    header: ['Name', 'Type', 'Amount', 'Day of month', 'Account', 'Automatic', 'Pocket', ...months.map(m => `Done in ${monthLabel(m)}`)],
+    rows: d.bills.map(b => [b.name, b.kind, money(b.amt), b.dueDay, acc(b.acct || '')?.name || '', b.auto && b.acct ? 'Yes' : 'No', b.pocket ? pocketName(b.pocket) : '', ...months.map(m => (b.paidMonths.includes(m) ? 'Yes' : 'No'))])
+  });
+  sections.push({
+    title: 'Income received', header: ['Date', 'Description', 'Account', 'Amount'],
+    rows: [...incs].sort((a, b) => (a.date < b.date ? -1 : 1)).map(t => [t.date, t.note, acc(t.a)?.name || '', money(t.amt)])
   });
 
   const periodWeeks = new Set(weekRows.map(r => r[0]));

@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { Data, Expense } from '../lib/types';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
-import { curSymbol, fmt, pocketStats, type PocketStats } from '../lib/derive';
+import { curSymbol, fmt, initialOf, pocketStats, type PocketStats } from '../lib/derive';
 import { relDay, type Ctx } from '../lib/dates';
 
 export const s = (o: CSSProperties) => o;
@@ -100,8 +100,8 @@ export interface ExpView { key: string; initial: string; photoBg: string; tint: 
 export function expView(d: Data, e: Expense, c: Ctx, stats?: Map<string, PocketStats>): ExpView {
   const p = stats?.get(e.p) || pocketStats(d, e.p, c), a = d.accounts.find(x => x.id === e.a);
   return {
-    key: e.id, initial: p ? p.initial : '·', photoBg: p ? p.photoBg : 'none', tint: tint(p ? p.hue : 0), ink: ink(p ? p.hue : 0), note: e.note,
-    meta: [p && p.name, a && a.name, relDay(e.date, c.today)].filter(Boolean).join(' · '), amtFmt: '−' + fmt(e.amt),
+    key: e.id, initial: p ? p.initial : initialOf(e.note), photoBg: p ? p.photoBg : 'none', tint: tint(p ? p.hue : 0), ink: ink(p ? p.hue : 0), note: e.note,
+    meta: [p ? p.name : e.ruleId ? 'Scheduled' : '', a && a.name, relDay(e.date, c.today)].filter(Boolean).join(' · '), amtFmt: '−' + fmt(e.amt),
     tagLine: (e.tags || []).map(t => '#' + t).join('  ')
   };
 }
@@ -126,5 +126,14 @@ export function AcctBadge({ photo, initial, size, radius, bg, color, fs }: { pho
     <span style={{ width: size, height: size, borderRadius: radius, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fs, flex: 'none', overflow: 'hidden' }}>
       {photo ? <span style={{ width: '100%', height: '100%', backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center' }} /> : <span>{initial}</span>}
     </span>
+  );
+}
+
+/** iOS-style on/off switch. */
+export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} style={{ width: 52, height: 32, borderRadius: 999, border: 0, padding: 3, background: on ? 'oklch(0.62 0.12 160)' : 'var(--color-neutral-300)', cursor: 'pointer', flex: 'none', transition: 'background .2s' }}>
+      <span style={{ display: 'block', width: 26, height: 26, borderRadius: 999, background: '#fff', boxShadow: 'var(--shadow-sm)', transform: on ? 'translateX(20px)' : 'none', transition: 'transform .2s' }} />
+    </button>
   );
 }

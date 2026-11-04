@@ -53,7 +53,7 @@ input::placeholder { color: var(--color-neutral-500); }
 
 /* The phone-sized app column. Full screen on phones; a framed phone on wide screens. */
 .shell {
-  position: relative; height: 100dvh; max-width: 440px; margin: 0 auto; overflow: hidden;
+  position: relative; height: var(--app-h, 100dvh); max-width: 440px; margin: 0 auto; overflow: hidden;
   display: flex; flex-direction: column; background: #f7f5f3;
 }
 @media (min-width: 560px) and (min-height: 700px) {
@@ -79,6 +79,10 @@ input::placeholder { color: var(--color-neutral-500); }
 .pr92:active { transform: scale(.92); }
 
 @keyframes sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes banner-in { from { transform: translateY(-120%); opacity: 0; } to { transform: none; opacity: 1; } }
+.banner { animation: banner-in .35s cubic-bezier(.2, .8, .2, 1); }
+/* While the on-screen keyboard is open, hide the floating tab bar. */
+.kb .tabbar { display: none !important; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
 .sheet-panel { animation: sheet-in .28s cubic-bezier(.2, .8, .2, 1); }
@@ -86,4 +90,4 @@ input::placeholder { color: var(--color-neutral-500); }
 .dot { animation: pulse 1.2s ease-in-out infinite; }
 .dot:nth-child(2) { animation-delay: .15s; }
 .dot:nth-child(3) { animation-delay: .3s; }
-@media (prefers-reduced-motion: reduce) { .sheet-panel, .sheet-scrim, .dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sheet-panel, .sheet-scrim, .dot, .banner { animation: none; } }

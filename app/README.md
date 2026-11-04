@@ -21,7 +21,7 @@ Each person's data is saved only on their own phone (IndexedDB). Nothing is uplo
 
 ## How it's put together
 
-- `src/screens/` — Home, Accounts, Budget, Insights tabs.
+- `src/screens/` — Home, Accounts, Budget, Insights and Calendar tabs.
 - `src/sheets/` — every bottom sheet (new expense, pocket, move money, edit pocket, search,
   account history, edit/add account, pay card, savings goals, Excel export, profile/settings).
 - `src/lib/store.ts` — app state, saved to IndexedDB on the device.
@@ -32,6 +32,12 @@ Each person's data is saved only on their own phone (IndexedDB). Nothing is uplo
     so you can send the file to any AI chat and ask questions about your month.
   - **Summary**, **Details**, **Card payments**, and **Statement** (single account only).
 - `src/lib/aiSheet.ts` — builds the For AI page.
+- `src/lib/schedule.ts` — scheduled income, bills and subscriptions (monthly, on a set day).
+  Automatic ones add or take the money from their account on the day; the app catches up on
+  any days it wasn't opened. It also builds notifications (due tomorrow, money received or paid,
+  over budget, running low, card payment due), each shown once as a banner and kept in the
+  bell list until dismissed. Notifications appear when the app is open; lock-screen alerts
+  would need a push server.
 
 ## Notes
 

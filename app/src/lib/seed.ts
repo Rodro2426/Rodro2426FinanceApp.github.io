@@ -61,17 +61,20 @@ export function sampleData(today = todayISO()): Data {
       { id: 'e1', ts: now + 1, p: 'fun', a: 'c2', amt: 38000, note: 'Cinema', date: addDays(today, -2), tags: ['friends', 'date'], cat: 'Entertainment', sub: 'Movies' },
       ...makeHistory(prev)
     ],
+    incomes: [],
+    notifications: [],
     moves: [],
     payments: [
       { id: 's2', ts: 2, from: 'a1', to: 'c1', amt: 1800000, date: `${prev}-15` },
       { id: 's3', ts: 3, from: 'a1', to: 'c2', amt: 900000, date: `${prev}-22` }
     ],
     bills: [
-      { id: 'b1', name: 'Netflix', kind: 'Subscription', amt: 44900, dueDay: 8, hue: 25, paidMonths: [] },
-      { id: 'b2', name: 'Spotify', kind: 'Subscription', amt: 16900, dueDay: 12, hue: 150, paidMonths: [] },
-      { id: 'b3', name: 'Internet', kind: 'Bill', amt: 95000, dueDay: 18, hue: 250, paidMonths: [] },
-      { id: 'b4', name: 'Phone plan', kind: 'Bill', amt: 55000, dueDay: 20, hue: 80, paidMonths: [] },
-      { id: 'b5', name: 'Rent', kind: 'Bill', amt: 1400000, dueDay: 30, hue: 300, paidMonths: [] }
+      { id: 'i1', name: 'Salary', kind: 'Income', amt: 4800000, dueDay: 1, hue: 150, paidMonths: [], acct: 'a1', auto: true, start: today },
+      { id: 'b1', name: 'Netflix', kind: 'Subscription', amt: 44900, dueDay: 8, hue: 25, paidMonths: [], acct: 'c1', auto: true, start: today, cat: 'Entertainment', sub: 'Movies' },
+      { id: 'b2', name: 'Spotify', kind: 'Subscription', amt: 16900, dueDay: 12, hue: 150, paidMonths: [], acct: 'c1', auto: true, start: today, cat: 'Entertainment', sub: 'Events' },
+      { id: 'b3', name: 'Internet', kind: 'Bill', amt: 95000, dueDay: 18, hue: 250, paidMonths: [], acct: 'a1', auto: true, start: today, cat: 'Home', sub: 'Internet' },
+      { id: 'b4', name: 'Phone plan', kind: 'Bill', amt: 55000, dueDay: 20, hue: 80, paidMonths: [], acct: 'a1', auto: false, start: today, cat: 'Home', sub: 'Utilities' },
+      { id: 'b5', name: 'Rent', kind: 'Bill', amt: 1400000, dueDay: 30, hue: 300, paidMonths: [], acct: 'a1', auto: true, start: today, cat: 'Home', sub: 'Rent' }
     ],
     goals: [
       { id: 'g1', name: 'Trip to Cartagena', saved: 1200000, target: 3000000, months: 4, hue: 195 },
@@ -87,7 +90,7 @@ export function emptyData(prev: Data): Data {
     version: 1,
     settings: { ...prev.settings },
     incomeStr: '0',
-    pockets: [], accounts: [], expenses: [], moves: [], payments: [], bills: [], goals: [],
+    pockets: [], accounts: [], expenses: [], incomes: [], notifications: [], moves: [], payments: [], bills: [], goals: [],
     cats: CATS.map(c => ({ ...c, subs: [...c.subs] })), tags: []
   };
 }

@@ -34,17 +34,22 @@ export function setUI(p: Patch<UI>) {
   state = { ...state, ui: { ...state.ui, ...patch } };
   emit();
 }
-export function replaceData(d: Data) { state = { ...state, data: d }; persist(); emit(); }
+export function replaceData(d: Data) { state = { ...state, data: normalize(d) }; persist(); emit(); }
 
 export function useApp(): State {
   return useSyncExternalStore(cb => { listeners.add(cb); return () => listeners.delete(cb); }, getState);
+}
+
+/** Fill in fields added after a user's data was first saved, so older data keeps working. */
+export function normalize(d: Data): Data {
+  return { ...d, incomes: d.incomes ?? [], notifications: d.notifications ?? [], bills: (d.bills ?? []).map(b => ({ ...b, paidMonths: b.paidMonths ?? [] })) };
 }
 
 /** Load saved data, or keep the sample data on first run. */
 export async function loadData() {
   try {
     const saved = await get<Data>(KEY);
-    if (saved && saved.version === 1) state = { ...state, data: saved };
+    if (saved && saved.version === 1) state = { ...state, data: normalize(saved) };
     else await set(KEY, state.data);
   } catch (err) { console.warn('Could not load saved data', err); }
   const d = state.data;

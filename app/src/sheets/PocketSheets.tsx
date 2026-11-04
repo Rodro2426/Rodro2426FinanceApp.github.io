@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { EMOJIS, HUES, LINE, POCKET_CAT, RED, TEXT, ink, tint } from '../lib/constants';
 import { allStats, chargeAccount, ctxOf, fmt, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses } from '../lib/derive';
@@ -22,6 +22,9 @@ export function SearchSheet({ tag }: { tag?: string | null }) {
   const c = ctxOf(d);
   const [q, setQ] = useState('');
   const [filterTag, setFilterTag] = useState<string | null>(tag ?? null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  // Focus after the sheet has slid in, without letting Safari scroll the page.
+  useEffect(() => { const t = setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 300); return () => clearTimeout(t); }, []);
   const stats = new Map(allStats(d, c).map(x => [x.id, x]));
   const qs = q.trim().toLowerCase().replace(/^#/, '');
   const matches = sortedExpenses(d).filter(e => {
@@ -38,11 +41,11 @@ export function SearchSheet({ tag }: { tag?: string | null }) {
     ...d.tags.filter(tagCount).map(t => ({ key: t, label: `#${t} · ${tagCount(t)}`, on: filterTag === t, hue: tagHue(t), pick: () => setFilterTag(f => (f === t ? null : t)) }))];
 
   return (
-    <SheetFrame title="Transactions">
+    <SheetFrame title="Transactions" topOnFocus>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 560 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, background: '#fff', borderRadius: 999, padding: '0 16px', height: 50 }}>
           <I.Search size={18} color="var(--color-neutral-500)" />
-          <input placeholder="Search by name, pocket or #tag" value={q} onChange={e => setQ(e.target.value)} autoFocus style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 16, color: TEXT, padding: 0, outline: 'none' }} />
+          <input placeholder="Search by name, pocket or #tag" value={q} onChange={e => setQ(e.target.value)} ref={searchRef} style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 16, color: TEXT, padding: 0, outline: 'none' }} />
           {q && <button onClick={() => setQ('')} aria-label="Clear" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.X size={12} sw={3} /></button>}
         </div>
         <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '12px -20px 0', padding: '0 20px' }}>

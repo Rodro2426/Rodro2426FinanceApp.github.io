@@ -29,6 +29,7 @@ export default function Home() {
   const upcoming = billRows(d, c).filter(b => !b.paid).sort((a, b) => a.inDays - b.inDays).slice(0, 3);
   const recent = sortedExpenses(d).slice(0, 5).map(e => expView(d, e, c, stats));
   const photo = d.settings.profilePhoto;
+  const unread = d.notifications.filter(n => !n.read && !n.dismissed).length;
   // Card colour follows how much of the week's budget is still safe to spend.
   const leftRatio = weekBudget > 0 ? weekLeft / weekBudget : 0;
   const tone = leftRatio > 0.5 ? SAFE_TONES.green : leftRatio >= 0.3 ? SAFE_TONES.yellow : SAFE_TONES.red;
@@ -41,6 +42,10 @@ export default function Home() {
           <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>Hi, {d.settings.name}</span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => openSheet({ name: 'notifications' })} aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'} className="hv-n200" style={{ position: 'relative', width: 44, height: 44, borderRadius: 999, background: '#fff', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+            <I.Bell size={19} />
+            {unread > 0 && <span style={{ position: 'absolute', top: 6, right: 6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: 'var(--color-accent)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px #fff' }}>{unread > 9 ? '9+' : unread}</span>}
+          </button>
           <button onClick={() => openSheet({ name: 'search' })} aria-label="Search transactions" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: '#fff', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
             <I.Search size={19} />
           </button>

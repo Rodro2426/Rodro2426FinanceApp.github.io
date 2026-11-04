@@ -1,16 +1,20 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { useApp, setUI, openSheet } from './lib/store';
+import { useApp, setUI, openSheet, setData, getData } from './lib/store';
+import { runSchedule } from './lib/schedule';
+import { todayISO } from './lib/dates';
 import type { Sheet, Tab } from './lib/types';
 import Home from './screens/Home';
 import Accounts from './screens/Accounts';
 import Budget from './screens/Budget';
 import Insights from './screens/Insights';
+import CalendarScreen from './screens/Calendar';
+import { NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { AddSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
 import * as I from './ui/icons';
 
 const TABS: [Tab, string, (p: { size?: number; sw?: number }) => ReactNode][] = [
-  ['home', 'Home', I.Home], ['accounts', 'Accounts', I.Card], ['budget', 'Budget', I.Wallet], ['insights', 'Insights', I.Chart]
+  ['home', 'Home', I.Home], ['accounts', 'Accounts', I.Card], ['budget', 'Budget', I.Wallet], ['insights', 'Insights', I.Chart], ['calendar', 'Calendar', I.Calendar]
 ];
 
 function SheetRouter({ sheet }: { sheet: Sheet }) {
@@ -29,12 +33,33 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'goal': return <GoalSheet id={sheet.id} />;
     case 'newGoal': return <NewGoalSheet />;
     case 'settings': return <SettingsSheet />;
+    case 'schedule': return <ScheduleSheet id={sheet.id} day={sheet.day} kind={sheet.kind} />;
+    case 'notifications': return <NotificationsSheet />;
   }
 }
 
 export default function App() {
-  const { ui } = useApp();
+  const { ui, data } = useApp();
   const scroll = useRef<HTMLDivElement>(null);
+
+  // Run scheduled income/bills and build notifications whenever data changes,
+  // when the app comes back to the foreground, and once a minute (to catch midnight).
+  useEffect(() => { const p = runSchedule(data); if (p) setData(p); }, [data]);
+  useEffect(() => {
+    const tick = () => { if (document.visibilityState === 'visible') { const p = runSchedule(getData()); if (p) setData(p); } };
+    document.addEventListener('visibilitychange', tick);
+    const t = setInterval(tick, 60000);
+    return () => { document.removeEventListener('visibilitychange', tick); clearInterval(t); };
+  }, []);
+
+  // Today's newest notification shows as a banner at the top until dismissed or it times out.
+  const banner = data.notifications.find(n => n.date === todayISO() && !n.dismissed && !n.bannered);
+  useEffect(() => {
+    if (!banner) return;
+    const t = setTimeout(() => setData(x => ({ notifications: x.notifications.map(n => (n.id === banner.id ? { ...n, bannered: true } : n)) })), 7000);
+    return () => clearTimeout(t);
+  }, [banner?.id]);
+  const patchNotif = (id: string, p: { dismissed?: boolean; bannered?: boolean }) => setData(x => ({ notifications: x.notifications.map(n => (n.id === id ? { ...n, ...p } : n)) }));
 
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); }, [ui.tab]);
   useEffect(() => {
@@ -50,6 +75,7 @@ export default function App() {
         {ui.tab === 'accounts' && <Accounts />}
         {ui.tab === 'budget' && <Budget />}
         {ui.tab === 'insights' && <Insights />}
+        {ui.tab === 'calendar' && <CalendarScreen />}
       </div>
 
       {ui.toast && (
@@ -59,7 +85,19 @@ export default function App() {
         </div>
       )}
 
-      <div style={{ position: 'absolute', left: 14, right: 14, bottom: 'var(--tb)', zIndex: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
+      {banner && !ui.sheet && (
+        <div className="banner" role="alert" onClick={() => { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); }}
+          style={{ position: 'absolute', left: 12, right: 12, top: 'calc(var(--top) - 10px)', zIndex: 35, background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 22, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 10px 30px rgba(45,43,43,.18),0 0 0 1px rgba(45,43,43,.05)', cursor: 'pointer' }}>
+          <div style={{ width: 38, height: 38, borderRadius: 999, background: NOTIF_TONE[banner.kind].bg, color: NOTIF_TONE[banner.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={banner.kind} /></div>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>{banner.title}</span>
+            <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', lineHeight: 1.3 }}>{banner.body}</span>
+          </div>
+          <button onClick={e => { e.stopPropagation(); patchNotif(banner.id, { dismissed: true }); }} aria-label="Dismiss notification" style={{ width: 30, height: 30, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.X size={14} /></button>
+        </div>
+      )}
+
+      <div className="tabbar" style={{ position: 'absolute', left: 14, right: 14, bottom: 'var(--tb)', zIndex: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
         <nav style={{ flex: 1, display: 'flex', background: 'rgba(255,255,255,.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 999, padding: 5, boxShadow: '0 8px 24px rgba(45,43,43,.12),0 0 0 1px rgba(45,43,43,.04)' }}>
           {TABS.map(([k, label, Icon]) => {
             const on = ui.tab === k;
