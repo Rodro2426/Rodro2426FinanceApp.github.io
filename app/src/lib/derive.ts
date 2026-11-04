@@ -69,6 +69,14 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
     })),
     ...d.payments.filter(p => p.from === id || p.to === id).map(p => {
       const out = p.from === id, other = d.accounts.find(x => x.id === (out ? p.to : p.from));
+      if (p.cdt) {
+        const bank = d.investments.cdts?.find(c => c.id === p.cdt)?.bank ?? '';
+        return {
+          kind: 'payment' as const, id: p.id, icon: null, photoBg: 'none', ts: p.ts, date: p.date,
+          note: out ? `Opened CDT · ${bank}` : `CDT returned · ${bank}`, pocket: 'CDT', hue: 175, tags: [], category: 'CDT',
+          show: out ? -p.amt : p.amt, effect: (out ? -p.amt : p.amt) * (card ? -1 : 1), after: 0
+        };
+      }
       return {
         kind: 'payment' as const, id: p.id, icon: null, photoBg: 'none', ts: p.ts, date: p.date,
         note: out ? `Payment to ${other ? other.name : 'card'}` : `Payment from ${other ? other.name : 'account'}`,

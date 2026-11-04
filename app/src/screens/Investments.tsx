@@ -5,6 +5,9 @@ import { fmt, num } from '../lib/derive';
 import { dailyRate, monthlyRate } from '../lib/interest';
 import { OTHER, colorOf, holdings, refreshQuotes, refreshUsdRate, type Holding } from '../lib/invest';
 import { MoneyInput } from '../ui/MoneyInput';
+import { cdtView, cdtsOf, type CdtView } from '../lib/cdt';
+import { CdtBadge } from '../sheets/CdtSheets';
+import { fmtDay } from '../lib/dates';
 import { ListCard, Segmented } from '../ui/bits';
 import * as I from '../ui/icons';
 
@@ -61,18 +64,21 @@ function Portfolio() {
   };
   useEffect(() => { refresh(true); }, []);
 
-  const total = all.reduce((a, h) => a + h.valueLocal, 0);
-  const invested = all.reduce((a, h) => a + h.investedLocal, 0);
-  const gain = total - invested, day = all.reduce((a, h) => a + h.dayChangeLocal, 0);
+  const cdts = cdtsOf(d).map(c => cdtView(c)).sort((a, b) => (a.status === 'closed' ? 1 : 0) - (b.status === 'closed' ? 1 : 0) || (a.end < b.end ? -1 : 1));
+  const open = cdts.filter(v => v.status !== 'closed');
+  const cdtValue = open.reduce((a, v) => a + v.value, 0), cdtIn = open.reduce((a, v) => a + v.c.amount, 0), cdtEarned = open.reduce((a, v) => a + v.earned, 0);
+  const stockTotal = all.reduce((a, h) => a + h.valueLocal, 0), stockIn = all.reduce((a, h) => a + h.investedLocal, 0);
+  const total = stockTotal + cdtValue, invested = stockIn + cdtIn;
+  const gain = stockTotal - stockIn + cdtEarned, day = all.reduce((a, h) => a + h.dayChangeLocal, 0) + open.reduce((a, v) => a + v.perDay, 0);
   const lastAt = Math.max(0, ...all.map(h => (h.quote && !h.quote.manual ? h.quote.at : 0)));
-  const focused = all.find(h => h.ticker === focus);
+  const focused = focus === '_cdt' ? { ticker: 'CDTs', valueLocal: cdtValue, gain: cdtEarned, gainPct: cdtIn ? cdtEarned / cdtIn : 0 } : all.find(h => h.ticker === focus);
   const sorted = [...all].sort((a, b) => b.valueLocal - a.valueLocal);
   const trades = [...inv.trades].sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : b.ts - a.ts)).slice(0, 8);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ background: '#fff', borderRadius: 28, padding: '20px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-        <Donut all={all} total={total} focus={focus} onFocus={setFocus}>
+        <Donut all={all} total={total} extra={cdtValue > 0 ? [{ key: '_cdt', v: cdtValue, color: CDT_COLOR }] : []} focus={focus} onFocus={setFocus}>
           {focused ? (
             <>
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-neutral-700)' }}>{focused.ticker}</span>
@@ -122,6 +128,18 @@ function Portfolio() {
         <I.Plus size={18} sw={2.5} />Add buy or sell
       </button>
 
+      <div data-tour="cdts" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 4px 0' }}>
+        <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>CDTs</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{open.length ? `${fmt(cdtValue)} · ${open.length === 1 ? '1 active' : `${open.length} active`}` : 'Fixed-term deposits'}</span>
+      </div>
+      <ListCard>
+        {cdts.map((v, i) => <CdtRow key={v.c.id} v={v} last={i === cdts.length - 1} />)}
+        {cdts.length === 0 && <div style={{ padding: '16px 0', fontSize: 14, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>No CDTs yet. Add one you already have, or compare popular CDTs from Colombian banks and see what you'd earn.</div>}
+      </ListCard>
+      <button onClick={() => openSheet({ name: 'cdt', id: null })} className="hv-n200" style={{ height: 54, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <I.Plus size={18} sw={2.5} />Add CDT
+      </button>
+
       {trades.length > 0 && <>
         <div style={{ padding: '6px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Activity</div>
         <ListCard>
@@ -157,6 +175,28 @@ export function TickerLogo({ h, size = 40, color }: { h: { ticker: string; quote
   );
 }
 
+const CDT_COLOR = '#6250d6';
+function CdtRow({ v, last }: { v: CdtView; last: boolean }) {
+  const c = v.c, closed = v.status === 'closed';
+  const sub = closed ? `${c.closed!.how === 'renew' ? 'Renewed' : 'Cashed out'} ${fmtDay(c.closed!.date, { month: 'short', day: 'numeric' })}`
+    : v.status === 'matured' ? 'Matured · tap to cash out or renew' : `${pctCdt(c.rate)} E.A. · ${v.daysLeft} days left`;
+  return (
+    <div onClick={() => openSheet({ name: 'cdtInfo', id: c.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${last ? 'transparent' : LINE}`, cursor: 'pointer', opacity: closed ? 0.55 : 1 }}>
+      <CdtBadge bank={c.bank} hue={c.hue} />
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.bank}</span>
+        <span style={{ fontSize: 12, fontWeight: v.status === 'matured' ? 700 : 400, color: v.status === 'matured' ? 'oklch(0.45 0.11 150)' : 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</span>
+        {!closed && <div style={{ marginTop: 6, height: 4, borderRadius: 99, background: 'var(--color-neutral-200)', overflow: 'hidden' }}><div style={{ width: `${Math.min(100, v.progress * 100)}%`, height: '100%', background: CDT_COLOR }} /></div>}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(closed ? c.closed!.amt : v.value)}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', color: UP }}>+{fmt(v.earned)}</span>
+      </div>
+    </div>
+  );
+}
+const pctCdt = (n: number) => n.toLocaleString('es-CO', { maximumFractionDigits: 2 }) + '%';
+
 function HoldingRow({ h, color, last, total }: { h: Holding; color: string; last: boolean; total: number }) {
   return (
     <div onClick={() => openSheet({ name: 'holding', ticker: h.ticker })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${last ? 'transparent' : LINE}`, cursor: 'pointer' }}>
@@ -174,16 +214,17 @@ function HoldingRow({ h, color, last, total }: { h: Holding; color: string; last
 }
 
 /** Ring of holdings by value; up to 7 named slices, the rest folded into "Other". Tap a slice to see it. */
-function Donut({ all, total, focus, onFocus, children }: { all: Holding[]; total: number; focus: string | null; onFocus: (t: string | null) => void; children: React.ReactNode }) {
-  const S = 230, R = 96, W = 20, C = 2 * Math.PI * R, GAP = all.length > 1 ? 3 : 0;
+function Donut({ all, total, extra = [], focus, onFocus, children }: { all: Holding[]; total: number; extra?: { key: string; v: number; color: string }[]; focus: string | null; onFocus: (t: string | null) => void; children: React.ReactNode }) {
+  const S = 230, R = 96, W = 20, C = 2 * Math.PI * R, GAP = all.length + extra.length > 1 ? 3 : 0;
   const slices = useMemo(() => {
     const named = all.filter(h => colorOf(all, h.ticker) !== OTHER).sort((a, b) => a.firstTs - b.firstTs);
     const rest = all.filter(h => colorOf(all, h.ticker) === OTHER);
     const s = named.map(h => ({ key: h.ticker, v: h.valueLocal, color: colorOf(all, h.ticker) }));
     if (rest.length) s.push({ key: '_other', v: rest.reduce((a, h) => a + h.valueLocal, 0), color: OTHER });
+    s.push(...extra);
     let at = 0;
     return s.filter(x => x.v > 0).map(x => { const len = total ? (x.v / total) * C : 0, o = { ...x, off: at, len }; at += len; return o; });
-  }, [all, total]);
+  }, [all, total, extra.map(e => e.v).join()]);
   return (
     <div style={{ position: 'relative', width: S, height: S }}>
       <svg width={S} height={S} viewBox={`0 0 ${S} ${S}`} style={{ transform: 'rotate(-90deg)' }} role="img" aria-label="Portfolio by holding">

@@ -14,7 +14,8 @@ export interface Expense { id: string; ts: number; p: string; a: string; amt: nu
 /** Money received into an account (from a scheduled income). */
 export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig }
 export interface Move { id: string; week: string; from: string; to: string; amt: number }
-export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string; ruleId?: string; ruleMonth?: string }
+/** A transfer between accounts (card payments), or into/out of a CDT when `cdt` is set (then `from`/`to` is 'cdt:<id>'). */
+export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string; ruleId?: string; ruleMonth?: string; cdt?: string }
 export type ScheduleKind = 'Income' | 'Bill' | 'Subscription' | 'CardPayment';
 /**
  * Something that happens every month on `dueDay`: income, a bill or a subscription.
@@ -42,7 +43,14 @@ export interface Settings { name: string; currency: Currency; weeks: 4 | 5; voic
 export interface Trade { id: string; ts: number; ticker: string; name: string; currency: 'USD' | 'COP'; side: 'buy' | 'sell'; qty: number; price: number; fee: number; date: string }
 /** Last known price per ticker (from Finnhub, or typed in when `manual`). */
 export interface Quote { price: number; change: number; changePct: number; at: number; manual?: boolean; name?: string; logo?: string }
-export interface Investments { trades: Trade[]; quotes: Record<string, Quote>; usdRate: number; usdRateAt: number; usdManual?: boolean; sim?: { amt: string; rate: string; months: string; deposit: string } }
+/**
+ * A CDT (term deposit). `rate` is % E.A.; interest is paid at maturity or every `payout` days.
+ * `acct` is where the money came from and where interest/maturity money goes.
+ * `paid` counts periodic interest payments already made; `closed` is set once cashed out or renewed.
+ */
+export type CdtPayout = 'end' | 'monthly' | 'quarterly' | 'semiannual';
+export interface Cdt { id: string; ts: number; bank: string; amount: number; rate: number; days: number; start: string; payout: CdtPayout; withholding: boolean; acct?: string; hue: number; paid?: number; closed?: { date: string; how: 'cashout' | 'renew'; amt: number }; renewedFrom?: string }
+export interface Investments { cdts?: Cdt[]; trades: Trade[]; quotes: Record<string, Quote>; usdRate: number; usdRateAt: number; usdManual?: boolean; sim?: { amt: string; rate: string; months: string; deposit: string } }
 
 export interface Data {
   version: 1;
@@ -85,6 +93,8 @@ export type Sheet =
   | { name: 'notifications' }
   | { name: 'trade'; ticker?: string; side?: 'buy' | 'sell' }
   | { name: 'holding'; ticker: string }
+  | { name: 'cdt'; id?: string | null }
+  | { name: 'cdtInfo'; id: string }
   | { name: 'priceSettings' }
   | { name: 'txn'; kind: 'expense' | 'income'; id: string; back?: Sheet };
 

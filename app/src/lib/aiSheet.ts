@@ -28,7 +28,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const weeklyTotal = d.pockets.reduce((a, p) => a + num(p.weeklyStr), 0);
   const plannedMonth = weeklyTotal * weeks;
   const incs = (d.incomes || []).filter(t => months.includes(t.date.slice(0, 7)) && (acctId === 'all' || t.a === acctId));
-  const pays = d.payments.filter(p => months.includes(p.date.slice(0, 7)) && (acctId === 'all' || p.from === acctId || p.to === acctId));
+  const pays = d.payments.filter(p => !p.cdt && months.includes(p.date.slice(0, 7)) && (acctId === 'all' || p.from === acctId || p.to === acctId));
   const days = months.reduce((a, m) => a + (m === curMonth ? Number(today.slice(8, 10)) : daysInMonth(m)), 0);
 
   const intro = [

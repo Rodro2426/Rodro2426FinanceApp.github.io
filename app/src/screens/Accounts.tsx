@@ -6,10 +6,12 @@ import { LINE, ink, tint } from '../lib/constants';
 import { acctTxns, fmt, initialOf, pctOf, plural } from '../lib/derive';
 import { AcctBadge, ListCard } from '../ui/bits';
 import * as I from '../ui/icons';
+import { cdtTotal } from '../lib/cdt';
 
 export default function Accounts() {
   const { data: d } = useApp();
-  const assets = d.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0);
+  // CDTs count as money you have: opening one moves money out of an account, not out of your net worth.
+  const assets = d.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0) + cdtTotal(d);
   const debt = d.accounts.filter(a => a.type === 'card').reduce((x, a) => x + a.bal, 0);
   const cash = d.accounts.filter(a => a.type !== 'card');
   const cards = d.accounts.filter(a => a.type === 'card');
@@ -36,7 +38,7 @@ export default function Accounts() {
           <div style={{ height: 10, borderRadius: 999, width: pctOf(assets, assets + debt), background: pos }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 4, gap: 8 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 8, height: 8, borderRadius: 999, background: pos }} />You have {fmt(assets)}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 8, height: 8, borderRadius: 999, background: pos }} />You have {fmt(assets)}{cdtTotal(d) > 0 ? ' (with CDTs)' : ''}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ width: 8, height: 8, borderRadius: 999, background: neg }} />You owe {fmt(debt)}</span>
         </div>
       </div>

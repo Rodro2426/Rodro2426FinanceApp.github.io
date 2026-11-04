@@ -5,6 +5,7 @@ import { fmtDay, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
 import { BillBadge, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
+import { cdtTotal } from '../lib/cdt';
 import { billAmount } from '../lib/schedule';
 
 const C = 100.53; // ring circumference (r=16)
@@ -24,7 +25,8 @@ export default function Home() {
   const weekBudget = all.reduce((a, x) => a + x.budget, 0);
   const weekLeft = all.reduce((a, x) => a + x.left, 0);
   const weekSpent = weekExpenses(d, c).filter(e => stats.has(e.p)).reduce((a, e) => a + e.amt, 0);
-  const assets = d.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0);
+  // CDTs count as money you have: opening one moves money out of an account, not out of your net worth.
+  const assets = d.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0) + cdtTotal(d);
   const debt = d.accounts.filter(a => a.type === 'card').reduce((x, a) => x + a.bal, 0);
   const spent = monthExpenses(d, c).reduce((a, e) => a + e.amt, 0), income = num(d.incomeStr);
   const upcoming = billRows(d, c).filter(b => !b.paid).sort((a, b) => a.inDays - b.inDays).slice(0, 3);
@@ -69,7 +71,7 @@ export default function Home() {
         <div onClick={() => setUI({ tab: 'accounts' })} className="hv-n100" style={{ background: '#fff', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Net worth</span>
           <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{fmt(assets - debt)}</span>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{d.accounts.length} accounts</span>
+          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{d.accounts.length} accounts{cdtTotal(d) > 0 ? ' + CDTs' : ''}</span>
         </div>
         <div onClick={() => setUI({ tab: 'insights' })} className="hv-n100" style={{ background: '#fff', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Spent in {monthName(c.month)}</span>

@@ -3,13 +3,15 @@ import { useApp, setUI, openSheet, setData, getData } from './lib/store';
 import { runSchedule, trmNeeded } from './lib/schedule';
 import { ensureTrm } from './lib/trm';
 import { runInterest } from './lib/interest';
+import { runCdts } from './lib/cdt';
 import type { Data } from './lib/types';
 
 /** Interest first (it uses yesterday's balance), then scheduled items and notifications. */
 function runAutomations(d: Data) {
   const a = runInterest(d), d1 = a ? { ...d, ...a } : d;
-  const b = runSchedule(d1);
-  return a || b ? { ...(a || {}), ...(b || {}) } : null;
+  const b = runSchedule(d1), d2 = b ? { ...d1, ...b } : d1;
+  const c = runCdts(d2);
+  return a || b || c ? { ...(a || {}), ...(b || {}), ...(c || {}) } : null;
 }
 import { todayISO } from './lib/dates';
 import type { Sheet, Tab } from './lib/types';
@@ -23,6 +25,7 @@ import Tour from './screens/Tour';
 import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
+import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
 import { EditTxnSheet } from './sheets/EditTxn';
@@ -54,6 +57,8 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'notifications': return <NotificationsSheet />;
     case 'trade': return <TradeSheet ticker={sheet.ticker} side={sheet.side} />;
     case 'holding': return <HoldingSheet ticker={sheet.ticker} />;
+    case 'cdt': return <CdtSheet id={sheet.id ?? null} />;
+    case 'cdtInfo': return <CdtInfoSheet id={sheet.id} />;
     case 'priceSettings': return <PriceSettingsSheet />;
     case 'txn': return <EditTxnSheet kind={sheet.kind} id={sheet.id} back={sheet.back} />;
   }
