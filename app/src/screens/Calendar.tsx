@@ -103,7 +103,7 @@ export default function CalendarScreen() {
           );
         })}
         {selIncome.map((t, i) => (
-          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selIncome.length - 1 && !selSpent.length ? 'transparent' : LINE}` }}>
+          <div key={t.id} onClick={() => openSheet({ name: 'txn', kind: 'income', id: t.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selIncome.length - 1 && !selSpent.length ? 'transparent' : LINE}`, cursor: 'pointer' }}>
             <div style={{ width: 40, height: 40, borderRadius: 999, background: tint(150), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flex: 'none' }}>💰</div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{t.note}</span>
@@ -113,7 +113,7 @@ export default function CalendarScreen() {
           </div>
         ))}
         {selSpent.map((v, i) => (
-          <div key={v.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selSpent.length - 1 ? 'transparent' : LINE}` }}>
+          <div key={v.key} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selSpent.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
             <span style={{ width: 40, height: 40, borderRadius: 999, backgroundColor: v.tint, backgroundImage: v.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', color: v.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{v.initial}</span>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{v.note}</span>

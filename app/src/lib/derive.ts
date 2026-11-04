@@ -46,7 +46,7 @@ export function pocketStats(d: Data, id: string, c: Ctx = ctxOf(d)): PocketStats
 export const allStats = (d: Data, c: Ctx = ctxOf(d)) => d.pockets.map(p => pocketStats(d, p.id, c)!);
 
 export interface Txn {
-  kind: 'expense' | 'payment' | 'income'; icon: string | null; photoBg: string; ts: number; date: string; note: string; pocket: string;
+  kind: 'expense' | 'payment' | 'income'; id: string; icon: string | null; photoBg: string; ts: number; date: string; note: string; pocket: string;
   hue: number; tags: string[]; category: string; show: number; effect: number; after: number; fx?: string;
 }
 /** Every movement on an account, newest first, with the running balance after each one. */
@@ -58,19 +58,19 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
     ...d.expenses.filter(e => e.a === id).map(e => {
       const p = d.pockets.find(x => x.id === e.p);
       return {
-        kind: 'expense' as const, icon: p ? (p.photo ? '' : p.emoji || p.name.charAt(0).toUpperCase()) : null,
+        kind: 'expense' as const, id: e.id, icon: p ? (p.photo ? '' : p.emoji || p.name.charAt(0).toUpperCase()) : null,
         photoBg: p && p.photo ? `url(${p.photo})` : 'none', ts: e.ts, date: e.date, note: e.note, pocket: p ? p.name : '',
         hue: p ? p.hue : a.hue, tags: e.tags || [], category: catOf(e)[0], show: -e.amt, effect: card ? e.amt : -e.amt, after: 0, fx: fxText(e.orig)
       };
     }),
     ...(d.incomes || []).filter(t => t.a === id).map(t => ({
-      kind: 'income' as const, icon: '💰', photoBg: 'none', ts: t.ts, date: t.date, note: t.note, pocket: 'Income',
+      kind: 'income' as const, id: t.id, icon: '💰', photoBg: 'none', ts: t.ts, date: t.date, note: t.note, pocket: 'Income',
       hue: 150, tags: [], category: 'Income', show: t.amt, effect: card ? -t.amt : t.amt, after: 0, fx: fxText(t.orig)
     })),
     ...d.payments.filter(p => p.from === id || p.to === id).map(p => {
       const out = p.from === id, other = d.accounts.find(x => x.id === (out ? p.to : p.from));
       return {
-        kind: 'payment' as const, icon: null, photoBg: 'none', ts: p.ts, date: p.date,
+        kind: 'payment' as const, id: p.id, icon: null, photoBg: 'none', ts: p.ts, date: p.date,
         note: out ? `Payment to ${other ? other.name : 'card'}` : `Payment from ${other ? other.name : 'account'}`,
         pocket: 'Card payment', hue: 150, tags: [], category: 'Card payment', show: out ? -p.amt : p.amt, effect: -p.amt, after: 0
       };

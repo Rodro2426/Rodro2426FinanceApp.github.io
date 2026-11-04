@@ -59,7 +59,7 @@ export function SearchSheet({ tag }: { tag?: string | null }) {
           <span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>−{fmt(matches.reduce((a, e) => a + e.amt, 0))}</span>
         </div>
         <div style={{ background: '#fff', borderRadius: 22, padding: '4px 16px' }}>
-          {shown.map((v, i) => <ExpRow key={v.key} v={v} size={38} last={i === shown.length - 1} />)}
+          {shown.map((v, i) => <ExpRow key={v.key} v={v} size={38} last={i === shown.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key, back: { name: 'search', tag: filterTag } })} />)}
           {matches.length === 0 && <div style={{ padding: '18px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No transactions match.</div>}
           {matches.length > shown.length && <div style={{ padding: '14px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Showing the latest {shown.length}. Refine your search to see more.</div>}
         </div>
@@ -316,7 +316,7 @@ export function PocketSheet({ id }: { id: string }) {
         </div>
         <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '4px 16px' }}>
           {items.map((e, i) => (
-            <div key={e.key} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === items.length - 1 ? 'transparent' : LINE}`, fontSize: 14 }}>
+            <div key={e.key} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: e.key, back: { name: 'pocket', id } })} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === items.length - 1 ? 'transparent' : LINE}`, fontSize: 14, cursor: 'pointer' }}>
               <span style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontWeight: 600 }}>{e.note}</span>
                 <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{e.meta}</span>

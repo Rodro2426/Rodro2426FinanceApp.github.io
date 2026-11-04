@@ -118,7 +118,7 @@ export default function Home() {
 
       <SectionHead title="Recent" right="Search" onRight={() => openSheet({ name: 'search' })} />
       <ListCard>
-        {recent.map((v, i) => <ExpRow key={v.key} v={v} last={i === recent.length - 1} />)}
+        {recent.map((v, i) => <ExpRow key={v.key} v={v} last={i === recent.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key })} />)}
         {recent.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No expenses yet. Tap + to add one.</div>}
       </ListCard>
     </div>

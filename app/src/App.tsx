@@ -23,6 +23,7 @@ import Investments from './screens/Investments';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
+import { EditTxnSheet } from './sheets/EditTxn';
 import { AddSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
 import * as I from './ui/icons';
@@ -52,6 +53,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'trade': return <TradeSheet ticker={sheet.ticker} side={sheet.side} />;
     case 'holding': return <HoldingSheet ticker={sheet.ticker} />;
     case 'priceSettings': return <PriceSettingsSheet />;
+    case 'txn': return <EditTxnSheet kind={sheet.kind} id={sheet.id} back={sheet.back} />;
   }
 }
 

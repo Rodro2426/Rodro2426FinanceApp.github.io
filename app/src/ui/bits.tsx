@@ -107,9 +107,9 @@ export function expView(d: Data, e: Expense, c: Ctx, stats?: Map<string, PocketS
   };
 }
 
-export function ExpRow({ v, last, size = 40 }: { v: ExpView; last: boolean; size?: number }) {
+export function ExpRow({ v, last, size = 40, onClick }: { v: ExpView; last: boolean; size?: number; onClick?: () => void }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${last ? 'transparent' : LINE}` }}>
+    <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${last ? 'transparent' : LINE}`, cursor: onClick ? 'pointer' : 'default' }}>
       <PocketDot st={v} size={size} fs={size > 38 ? 15 : 14} bg={v.tint} color={v.ink} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 15, fontWeight: 600 }}>{v.note}</span>

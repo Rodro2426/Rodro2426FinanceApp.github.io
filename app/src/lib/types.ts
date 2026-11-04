@@ -85,7 +85,8 @@ export type Sheet =
   | { name: 'notifications' }
   | { name: 'trade'; ticker?: string; side?: 'buy' | 'sell' }
   | { name: 'holding'; ticker: string }
-  | { name: 'priceSettings' };
+  | { name: 'priceSettings' }
+  | { name: 'txn'; kind: 'expense' | 'income'; id: string; back?: Sheet };
 
 export interface UI {
   tab: Tab;

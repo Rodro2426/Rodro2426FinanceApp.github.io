@@ -148,7 +148,7 @@ export function AcctSheet({ id }: { id: string }) {
                     <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap' }}>Spent {fmt(mTotals[mk] || 0)}</span>
                   </div>
                 )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === shown.length - 1 ? 'transparent' : LINE}` }}>
+                <div onClick={() => t.kind !== 'payment' && openSheet({ name: 'txn', kind: t.kind, id: t.id, back: { name: 'acct', id } })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === shown.length - 1 ? 'transparent' : LINE}`, cursor: t.kind === 'payment' ? 'default' : 'pointer' }}>
                   <div style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: tint(t.hue), backgroundImage: t.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', color: ink(t.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flex: 'none' }}>{t.icon != null ? t.icon : (t.pocket || t.note).charAt(0).toUpperCase()}</div>
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: 15, fontWeight: 600 }}>{t.note}</span>
