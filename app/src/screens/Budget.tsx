@@ -22,7 +22,7 @@ export default function Budget() {
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{monthLabel(c.month)}</span>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Budget</span>
       </div>
-      <div style={{ background: '#fff', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div data-tour="income" style={{ background: '#fff', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Monthly income</span>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
           <span style={{ fontSize: 34, fontWeight: 700, color: 'var(--color-neutral-500)' }}>{cur}</span>
@@ -59,7 +59,7 @@ export default function Budget() {
             </div>
           );
         })}
-        <button onClick={() => openSheet({ name: 'editPocket', id: null })} className="hv-white" style={{ height: 50, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <button data-tour="add-pocket" onClick={() => openSheet({ name: 'editPocket', id: null })} className="hv-white" style={{ height: 50, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <I.Plus size={18} />
           Add pocket
         </button>

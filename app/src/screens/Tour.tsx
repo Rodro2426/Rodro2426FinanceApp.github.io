@@ -1,118 +1,185 @@
-import { useRef, useState, type ReactNode } from 'react';
-import { setUI, setData } from '../lib/store';
-import type { Sheet, Tab, UI } from '../lib/types';
-import * as I from '../ui/icons';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useApp, setUI, setTourStep, endTour, type State } from '../lib/store';
+import { num } from '../lib/derive';
+import type { Tab } from '../lib/types';
 
-/** A guided tour of every key feature: one card per feature, with where to find it. */
+/**
+ * Guided tour on a practice copy of the app. Each step spotlights the real
+ * button or form to use; action steps move on by themselves once done,
+ * information steps have a Next button.
+ */
+interface Counts { accounts: number; pockets: number; expenses: number; incomes: number; bills: number; income: string }
 interface Step {
-  icon: (p: { size?: number }) => ReactNode;
-  tone: [string, string]; // background, ink
   title: string;
-  intro: string;
-  points: string[];
-  where?: string;
-  go?: { tab?: Tab; sheet?: Sheet; page?: UI['page'] };
+  text: string;
+  /** CSS selector of what to spotlight; none = centered card. */
+  target?: string;
+  /** Done when this becomes true (compared with counts at the start of the step). */
+  done?: (s: State, base: Counts) => boolean;
+  /** Steps back if this stops being true (e.g. the sheet was closed). */
+  needs?: (s: State) => boolean;
+  /** Where to be when the step starts. */
+  at?: { tab?: Tab; closeSheet?: boolean };
 }
 
-const G: [string, string] = ['oklch(0.94 0.05 155)', 'oklch(0.38 0.09 155)'];
-const B: [string, string] = ['oklch(0.94 0.04 250)', 'oklch(0.4 0.1 250)'];
-const R: [string, string] = ['var(--color-accent-100)', 'var(--color-accent-700)'];
-const Y: [string, string] = ['oklch(0.96 0.055 92)', 'oklch(0.45 0.09 75)'];
-const P: [string, string] = ['oklch(0.94 0.04 300)', 'oklch(0.42 0.1 300)'];
+const SHEET = '.sheet-panel';
+const counts = (s: State): Counts => ({ accounts: s.data.accounts.length, pockets: s.data.pockets.length, expenses: s.data.expenses.length, incomes: s.data.incomes.length, bills: s.data.bills.length, income: s.data.incomeStr });
+const tab = (t: Tab) => (s: State) => s.ui.tab === t && !s.ui.sheet;
+const sheetIs = (n: string) => (s: State) => s.ui.sheet?.name === n;
 
 const STEPS: Step[] = [
-  { icon: I.Wallet, tone: G, title: 'How Pockets works', intro: 'Pockets turns your monthly income into small weekly budgets, so you always know what you can spend.',
-    points: ['Set how much you earn in a month.', 'Split it into pockets like Groceries, Transport or Fun.', 'Each pocket gets a weekly amount that starts over every Monday.', 'When you spend, the pocket goes down. Leftovers can move to another pocket or to savings.'] },
-  { icon: I.Home, tone: G, title: 'Home', intro: 'Your week at a glance.',
-    points: ['"Safe to spend this week" is what’s left across all pockets. It turns green, yellow or red as you spend.', 'Tap any pocket to see what you spent in it, edit it, or move leftover money.', '"Coming up" shows your next bills. "Recent" shows your latest expenses; tap one to edit it.', 'Pull down at the top of any screen to see the Pockets logo.'],
-    where: 'First tab', go: { tab: 'home' } },
-  { icon: I.Plus, tone: R, title: 'Add an expense', intro: 'Log what you spend in a few seconds with the red + button.',
-    points: ['Type the amount (dots appear by themselves: 45.000).', 'Pick the pocket and the account or card you paid with.', 'Optionally add a description, category and #tags so it’s easy to find later.', 'Before saving, it shows how much will be left in that pocket.'],
-    where: 'Red + button, bottom right', go: { sheet: { name: 'add' } } },
-  { icon: I.Download, tone: G, title: 'Add income', intro: 'Got paid or received money? Use + and switch to Income.',
-    points: ['Choose the account it goes into.', '"Keep it saved" just adds it to your balance.', '"Split into pockets" adds it to this week’s pockets: evenly, by budget or by hand.', 'Whatever you don’t assign stays saved in the account.'],
-    where: '+ button → Income', go: { sheet: { name: 'add', mode: 'income' } } },
-  { icon: I.Wallet, tone: Y, title: 'Budget', intro: 'Plan your month.',
-    points: ['Enter your monthly income and see how much is left after your pockets.', 'Change each pocket’s weekly amount, or tap its icon to rename it, pick an emoji or add a photo.', 'Add new pockets and savings goals with a target and a date.'],
-    where: 'Third tab', go: { tab: 'budget' } },
-  { icon: I.Card, tone: B, title: 'Accounts and cards', intro: 'All your money in one place.',
-    points: ['Add bank accounts, savings, cash and credit cards. Net worth is what you have minus what you owe.', 'Tap an account to see its full history with the balance after each movement. Tap a line to edit or delete it.', 'Savings accounts can earn a % E.A. like Nu’s Cajitas: the balance grows every day and a green number shows what it earned.', 'Credit cards show their limit, what’s available and a Pay button.'],
-    where: 'Second tab', go: { tab: 'accounts' } },
-  { icon: I.Calendar, tone: B, title: 'Calendar and scheduled payments', intro: 'Set things that happen every month once, and Pockets does the rest.',
-    points: ['Schedule your salary, rent, bills, subscriptions or a credit card payment on a day of the month.', 'Turn on "automatic" and the money is added or taken from the account on that day.', 'Subscriptions in dollars are converted with that day’s TRM.', 'Tap any day to see what happened or what’s coming.'],
-    where: 'Last tab', go: { tab: 'calendar' } },
-  { icon: I.Bell, tone: R, title: 'Notifications', intro: 'Pockets reminds you before things happen.',
-    points: ['Bills due tomorrow, money that arrived or was paid, pockets over budget and when you’re running low.', 'They slide in at the top on the day. Tap X to dismiss any of them.', 'The bell on Home shows how many are new.'],
-    where: 'Bell on Home', go: { tab: 'home', sheet: { name: 'notifications' } } },
-  { icon: I.Chart, tone: P, title: 'Insights', intro: 'See where your money goes.',
-    points: ['Spending this month by pocket, and this week compared with last week.', 'Spending by #tag, and a tip when a pocket has money left over.', 'All your bills and subscriptions: tap one to edit it, or tick it when paid.'],
-    where: 'Fourth tab', go: { tab: 'insights' } },
-  { icon: I.Search, tone: Y, title: 'Search', intro: 'Find any transaction.',
-    points: ['Search by name, pocket, account, category or #tag.', 'Filter by tag and see the total of what matches.'],
-    where: 'Magnifying glass on Home', go: { tab: 'home', sheet: { name: 'search' } } },
-  { icon: I.TrendUp, tone: G, title: 'Investments', intro: 'Track your stocks and simulate your savings.',
-    points: ['Add each buy or sell with its ticker, shares and price.', 'See your portfolio in a ring chart, with total return and today’s change.', 'Connect a free Finnhub key for live prices, or type prices in yourself.', 'The Returns simulator shows what your money earns per day, per month and in total.'],
-    where: 'Accounts → green trend button', go: { tab: 'accounts', page: 'investments' } },
-  { icon: I.Download, tone: B, title: 'Excel', intro: 'Download any month as a spreadsheet.',
-    points: ['Choose a month and one or all accounts.', 'The "For AI" sheet explains your month so you can send the file to any AI and ask questions.'],
-    where: 'Accounts → Excel', go: { tab: 'accounts', sheet: { name: 'export', acct: 'all' } } },
-  { icon: I.Refresh, tone: R, title: 'Back up your data', intro: 'Your data lives only on this phone. Back it up so you never lose it.',
-    points: ['Profile → Back up → Save to Files → iCloud Drive.', 'A monthly reminder gives you a one-tap "Back up now".', 'If you ever delete the app, reinstall it and choose "Restore a backup".'],
-    where: 'Tap your profile circle on Home', go: { tab: 'home', sheet: { name: 'settings' } } },
-  { icon: I.Check, tone: G, title: 'You’re all set', intro: 'Start by adding your accounts, your monthly income and a few pockets. You can replay this tour anytime from Profile → App tutorial.', points: [] }
+  { title: 'Let’s practice', text: 'This tour uses a practice copy of the app, so try anything. At the end you can keep what you added or start from scratch.' },
+  { title: 'Your accounts', target: '[data-tour="tab-accounts"]', text: 'First, your money. Tap Accounts.', done: tab('accounts'), at: { closeSheet: true } },
+  { title: 'Add an account', target: '[data-tour="add-account"]', text: 'Add a bank account, savings, cash or a credit card. Tap here.', done: sheetIs('addAcct'), at: { tab: 'accounts', closeSheet: true } },
+  { title: 'Fill it in', target: SHEET, text: 'Pick the type, give it a name (like "Bancolombia") and type how much it has. Then tap Add account.', done: (s, b) => s.data.accounts.length > b.accounts, needs: sheetIs('addAcct') },
+  { title: 'Plan your month', target: '[data-tour="tab-budget"]', text: 'Now let’s plan. Tap Budget.', done: tab('budget'), at: { closeSheet: true } },
+  { title: 'Monthly income', target: '[data-tour="income"]', text: 'Type how much you earn in a month. Dots appear by themselves, like 2.500.000. Tap Next when you’re done.', at: { tab: 'budget' } },
+  { title: 'Create a pocket', target: '[data-tour="add-pocket"]', text: 'Pockets are weekly budgets, like Groceries, Transport or Fun. Tap Add pocket.', done: sheetIs('editPocket'), at: { tab: 'budget' } },
+  { title: 'Set it up', target: SHEET, text: 'Pick an emoji, name it and set how much it gets each week. Then tap Create pocket.', done: (s, b) => s.data.pockets.length > b.pockets, needs: sheetIs('editPocket') },
+  { title: 'Back to Home', target: '[data-tour="tab-home"]', text: 'Tap Home.', done: tab('home'), at: { closeSheet: true } },
+  { title: 'Safe to spend', target: '[data-tour="safe"]', text: 'This is what’s left in all your pockets this week. It turns green, yellow or red as you spend, and starts over every Monday.', at: { tab: 'home' } },
+  { title: 'Add an expense', target: '[data-tour="add"]', text: 'Spent money? Tap the red + button.', done: sheetIs('add'), at: { tab: 'home', closeSheet: true } },
+  { title: 'Log it', target: SHEET, text: 'Type the amount, choose the pocket and the account you paid with. You can also add a description, category or #tag. Then tap Save expense.', done: (s, b) => s.data.expenses.length > b.expenses, needs: sheetIs('add') },
+  { title: 'What’s left', target: SHEET, text: 'This shows how much is left in that pocket. Tap Done.', done: s => !s.ui.sheet },
+  { title: 'Add income', target: '[data-tour="add"]', text: 'Got paid? Tap + again.', done: sheetIs('add'), at: { tab: 'home', closeSheet: true } },
+  { title: 'Register it', target: SHEET, text: 'Switch to Income at the top. Type the amount, pick the account, and choose "Keep it saved" or "Split into pockets". Then tap Save income.', done: (s, b) => s.data.incomes.length > b.incomes, needs: sheetIs('add') },
+  { title: 'Open a pocket', target: '[data-tour="pocket"]', text: 'Tap your pocket to see what you spent in it.', done: sheetIs('pocket'), at: { tab: 'home', closeSheet: true } },
+  { title: 'Inside a pocket', target: SHEET, text: 'Here you can edit the pocket, add an expense to it, or move leftover money to another pocket or a savings goal. Tip: tap any transaction anywhere in the app to edit or delete it.' },
+  { title: 'Every month', target: '[data-tour="tab-calendar"]', text: 'Tap Calendar.', done: tab('calendar'), at: { closeSheet: true } },
+  { title: 'Schedule a payment', target: '[data-tour="add-schedule"]', text: 'Your salary, rent, Netflix or a credit card payment can repeat every month. Tap here.', done: sheetIs('schedule'), at: { tab: 'calendar' } },
+  { title: 'Set it once', target: SHEET, text: 'Choose the type, name, amount, day and account. With "automatic" on, the money moves by itself on that day. Then tap Schedule.', done: (s, b) => s.data.bills.length > b.bills, needs: sheetIs('schedule') },
+  { title: 'Insights', target: '[data-tour="tab-insights"]', text: 'See where your money goes: by pocket, by #tag, this week vs last week, and all your bills. Tap Insights to look.', done: tab('insights'), at: { closeSheet: true } },
+  { title: 'Investments', target: '[data-tour="invest"]', text: 'In Accounts, this button opens your stock portfolio and a returns simulator, like Nu’s Cajitas.', at: { tab: 'accounts', closeSheet: true } },
+  { title: 'Excel', target: '[data-tour="excel"]', text: 'Download any month as Excel. It includes a "For AI" page you can send to any AI to ask about your money.', at: { tab: 'accounts' } },
+  { title: 'Notifications', target: '[data-tour="bell"]', text: 'Bills due tomorrow, money that arrived or was paid, and budget warnings show up here and at the top of the screen.', at: { tab: 'home', closeSheet: true } },
+  { title: 'Search', target: '[data-tour="search"]', text: 'Find any transaction by name, pocket, account or #tag.', at: { tab: 'home' } },
+  { title: 'Your profile', target: '[data-tour="profile"]', text: 'Your name, currency, monthly backups to iCloud, and this tour again. Back up often: your data lives only on this phone.', at: { tab: 'home' } },
+  { title: 'You’re ready', text: '' }
 ];
 
+interface Box { x: number; y: number; w: number; h: number }
+
 export default function Tour() {
-  const [i, setI] = useState(0);
-  const start = useRef<{ x: number; y: number } | null>(null);
-  const s = STEPS[i], last = i === STEPS.length - 1;
-  const finish = (go?: Step['go']) => {
-    setData(x => ({ settings: { ...x.settings, tourSeen: true } }));
-    setUI({ tour: false, ...(go?.tab ? { tab: go.tab } : {}), page: go?.page ?? null, sheet: go?.sheet ?? null });
-  };
-  const next = () => (last ? finish() : setI(i + 1));
-  const prev = () => setI(Math.max(0, i - 1));
-  const Icon = s.icon;
+  const st = useApp();
+  const tour = st.ui.tour!;
+  const i = Math.min(tour.step, STEPS.length - 1), s = STEPS[i], last = i === STEPS.length - 1;
+  const base = useRef<Counts>(counts(st));
+  const [box, setBox] = useState<Box | null>(null);
+  const root = useRef<HTMLDivElement>(null);
+
+  // Arrive where the step happens and remember the counts it compares against.
+  useLayoutEffect(() => {
+    if (s.at) setUI({ ...(s.at.tab ? { tab: s.at.tab, page: null } : {}), ...(s.at.closeSheet ? { sheet: null } : {}) });
+    base.current = counts(st);
+  }, [i]);
+
+  // Move on when the step is done; step back if what it needs was closed.
+  useEffect(() => {
+    if (s.done && s.done(st, base.current)) { const t = setTimeout(() => setTourStep(i + 1), 350); return () => clearTimeout(t); }
+    if (s.needs && !s.needs(st)) { const t = setTimeout(() => setTourStep(Math.max(0, i - 1)), 250); return () => clearTimeout(t); }
+  }, [st, i]);
+
+  // Follow the target's position (it can move as sheets slide in or the keyboard opens).
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const shell = root.current?.parentElement, el = s.target ? document.querySelector(s.target) : null;
+      if (shell && el) {
+        const r = el.getBoundingClientRect(), p = shell.getBoundingClientRect();
+        const nb = { x: r.left - p.left, y: r.top - p.top, w: r.width, h: r.height };
+        setBox(b => (b && Math.abs(b.x - nb.x) < 0.5 && Math.abs(b.y - nb.y) < 0.5 && Math.abs(b.w - nb.w) < 0.5 && Math.abs(b.h - nb.h) < 0.5 ? b : nb));
+      } else setBox(null);
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, [i]);
+
+  // Bring the target into view inside the scrolling screen.
+  useEffect(() => {
+    if (!s.target || s.target === SHEET) return;
+    const t = setTimeout(() => document.querySelector(s.target!)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120);
+    return () => clearTimeout(t);
+  }, [i]);
+
+  const next = () => setTourStep(i + 1);
+  /** Exiting goes to the last card, where they choose what happens to the practice data. */
+  const exit = () => { setUI({ sheet: null }); setTourStep(STEPS.length - 1); };
+
+  // Spotlight geometry.
+  const W = root.current?.clientWidth ?? 400, H = root.current?.clientHeight ?? 800;
+  const isSheet = s.target === SHEET;
+  const pad = isSheet ? 0 : 8;
+  const hole = box ? { x: box.x - pad, y: box.y - pad, w: box.w + pad * 2, h: box.h + pad * 2 } : null;
+  const radius = isSheet ? 32 : hole ? Math.min(28, hole.h / 2) : 0;
+  const below = hole ? H - (hole.y + hole.h) : 0, above = hole ? hole.y : 0;
+  const bubblePos: React.CSSProperties = !hole ? { top: '50%', transform: 'translateY(-50%)' }
+    : isSheet ? { top: 'calc(var(--top) - 8px)' }
+    : below > 230 ? { top: hole.y + hole.h + 14 } : above > 230 ? { bottom: H - hole.y + 14 } : { top: 'calc(var(--top) - 8px)' };
+
+  const counter = `${i + 1} of ${STEPS.length}`;
+  const card = (
+    <div className="tour-bubble" style={{ position: 'absolute', left: 14, right: 14, ...bubblePos, zIndex: 3, background: '#fff', borderRadius: 24, padding: isSheet ? '12px 14px' : '16px 16px 14px', boxShadow: '0 14px 40px rgba(20,40,28,.28)', display: 'flex', flexDirection: 'column', gap: isSheet ? 4 : 8, pointerEvents: 'auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: '#2f7146' }}>{tour.mode === 'replay' ? 'Practice' : 'Tour'} · {counter}</span>
+        {!last && <button onClick={exit} style={{ border: 0, background: 'transparent', color: 'var(--color-neutral-600)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>Exit tour</button>}
+      </div>
+      <span style={{ fontSize: isSheet ? 16 : 19, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-text)' }}>{s.title}</span>
+      <span style={{ fontSize: isSheet ? 13.5 : 14.5, lineHeight: 1.42, color: 'var(--color-neutral-800)' }}>{s.text}</span>
+      {!s.done ? (
+        <button onClick={next} style={{ alignSelf: 'flex-end', marginTop: 2, height: 40, padding: '0 20px', borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{i === 0 ? 'Start' : 'Next'}</button>
+      ) : (
+        <button onClick={next} style={{ alignSelf: 'flex-end', border: 0, background: 'transparent', color: 'var(--color-neutral-600)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', padding: '2px 0' }}>Skip this step</button>
+      )}
+    </div>
+  );
+
+  if (last) {
+    const first = tour.mode === 'first';
+    const d = st.data;
+    const made = [d.accounts.length && `${d.accounts.length} account${d.accounts.length > 1 ? 's' : ''}`, d.pockets.length && `${d.pockets.length} pocket${d.pockets.length > 1 ? 's' : ''}`, d.expenses.length && `${d.expenses.length} expense${d.expenses.length > 1 ? 's' : ''}`, (d.incomes.length || num(d.incomeStr) > 0) && 'your income', d.bills.length && `${d.bills.length} scheduled payment${d.bills.length > 1 ? 's' : ''}`].filter(Boolean) as string[];
+    return (
+      <div ref={root} role="dialog" aria-label="Tour finished" style={{ position: 'absolute', inset: 0, zIndex: 95, background: 'rgba(18,30,22,.55)', display: 'flex', alignItems: 'center', padding: 18 }}>
+        <div className="tour-bubble" style={{ width: '100%', background: '#fff', borderRadius: 28, padding: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <img src="./pockets-mark.svg" alt="" width={52} height={60} style={{ alignSelf: 'center' }} />
+          <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', textAlign: 'center' }}>You’re ready!</span>
+          <span style={{ fontSize: 14.5, lineHeight: 1.45, color: 'var(--color-neutral-800)', textAlign: 'center' }}>
+            {first
+              ? made.length ? `During the practice you added ${made.join(', ')}. Do you want to keep it, or start with a clean app?` : 'Start with a clean app and add your real accounts, income and pockets.'
+              : 'That was a practice copy. Your real data is safe and comes back now.'}
+          </span>
+          {first ? <>
+            {made.length > 0 && <button onClick={() => endTour('keep')} style={{ height: 52, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer', marginTop: 6 }}>Keep what I added</button>}
+            <button onClick={() => endTour('fresh')} style={{ height: 52, borderRadius: 999, border: 0, background: made.length ? 'var(--color-neutral-100)' : '#1d4a2e', color: made.length ? 'var(--color-text)' : '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer' }}>Start from scratch</button>
+          </> : <button onClick={() => endTour('restore')} style={{ height: 52, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer', marginTop: 6 }}>Back to my data</button>}
+          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)', textAlign: 'center' }}>Replay this tour anytime from Profile → App tutorial.</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Dark layer with a hole over the target; four blockers stop taps outside it.
+  const blockers = hole ? [
+    { left: 0, top: 0, width: W, height: Math.max(0, hole.y) },
+    { left: 0, top: hole.y + hole.h, width: W, height: Math.max(0, H - hole.y - hole.h) },
+    { left: 0, top: hole.y, width: Math.max(0, hole.x), height: hole.h },
+    { left: hole.x + hole.w, top: hole.y, width: Math.max(0, W - hole.x - hole.w), height: hole.h }
+  ] : [{ left: 0, top: 0, width: W, height: H }];
 
   return (
-    <div role="dialog" aria-label="App tutorial" className="noscroll"
-      onPointerDown={e => { start.current = { x: e.clientX, y: e.clientY }; }}
-      onPointerUp={e => { const st = start.current; start.current = null; if (!st) return; const dx = e.clientX - st.x; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(e.clientY - st.y)) (dx < 0 ? next : prev)(); }}
-      style={{ position: 'absolute', inset: 0, zIndex: 82, background: '#f7f5f3', display: 'flex', flexDirection: 'column', padding: 'calc(var(--top) + 4px) 20px calc(var(--tb) + 14px)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-neutral-600)' }}>{i + 1} of {STEPS.length}</span>
-        {!last && <button onClick={() => finish()} style={{ border: 0, background: 'transparent', color: 'var(--color-neutral-700)', fontSize: 15, fontWeight: 700, cursor: 'pointer', padding: 8 }}>Skip</button>}
-      </div>
-      <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-        {STEPS.map((_, k) => <span key={k} style={{ flex: 1, height: 4, borderRadius: 999, background: k <= i ? '#1d4a2e' : 'var(--color-neutral-300)', transition: 'background .2s' }} />)}
-      </div>
-
-      <div key={i} className="tour-card noscroll" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 26 }}>
-        <div style={{ width: 76, height: 76, borderRadius: 26, background: s.tone[0], color: s.tone[1], display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon size={36} /></div>
-        <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>{s.title}</span>
-        <span style={{ fontSize: 16, lineHeight: 1.45, color: 'var(--color-neutral-800)' }}>{s.intro}</span>
-        {s.points.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: 24, padding: '6px 16px', display: 'flex', flexDirection: 'column' }}>
-            {s.points.map((p, k) => (
-              <div key={k} style={{ display: 'flex', gap: 12, padding: '11px 0', borderTop: k ? '1px solid var(--color-neutral-200)' : 0 }}>
-                <span style={{ width: 22, height: 22, borderRadius: 999, background: s.tone[0], color: s.tone[1], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flex: 'none', marginTop: 1 }}>{k + 1}</span>
-                <span style={{ fontSize: 14.5, lineHeight: 1.45, color: 'var(--color-text)' }}>{p}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        {s.where && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.tone[0], borderRadius: 18, padding: '10px 10px 10px 14px' }}>
-            <span style={{ fontSize: 13, color: s.tone[1] }}>Where: <b>{s.where}</b></span>
-            {s.go && <button onClick={() => finish(s.go)} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: '#fff', color: s.tone[1], fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Show me</button>}
-          </div>
-        )}
-      </div>
-
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-        {i > 0 && <button onClick={prev} aria-label="Previous" style={{ width: 56, height: 56, borderRadius: 999, border: 0, background: '#fff', color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flex: 'none' }}><I.ChevronLeft size={22} /></button>}
-        <button onClick={next} style={{ flex: 1, height: 56, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>{last ? 'Start using Pockets' : i === 0 ? 'Start the tour' : 'Next'}</button>
-      </div>
+    <div ref={root} aria-live="polite" className={isSheet ? 'tour-on-sheet' : undefined} style={{ position: 'absolute', inset: 0, zIndex: 95, pointerEvents: 'none' }}>
+      <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }} aria-hidden="true">
+        <defs>
+          <mask id="tour-hole">
+            <rect width="100%" height="100%" fill="#fff" />
+            {hole && <rect x={hole.x} y={hole.y} width={hole.w} height={hole.h} rx={radius} fill="#000" />}
+          </mask>
+        </defs>
+        <rect width="100%" height="100%" fill={isSheet ? 'rgba(18,30,22,.35)' : 'rgba(18,30,22,.6)'} mask="url(#tour-hole)" />
+      </svg>
+      {hole && !isSheet && <div className="tour-ring" style={{ position: 'absolute', left: hole.x, top: hole.y, width: hole.w, height: hole.h, borderRadius: radius }} />}
+      {blockers.map((b, k) => <div key={k} style={{ position: 'absolute', ...b, pointerEvents: 'auto' }} />)}
+      {card}
     </div>
   );
 }

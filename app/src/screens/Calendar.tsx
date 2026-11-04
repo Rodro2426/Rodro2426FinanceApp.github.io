@@ -144,7 +144,7 @@ export default function CalendarScreen() {
         })}
         {d.bills.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing scheduled yet. Add your salary, rent or subscriptions.</div>}
       </ListCard>
-      <button onClick={() => openSheet({ name: 'schedule', id: null, day: selDay })} className="hv-white" style={{ height: 50, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: TEXT, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <button data-tour="add-schedule" onClick={() => openSheet({ name: 'schedule', id: null, day: selDay })} className="hv-white" style={{ height: 50, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: TEXT, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <I.Plus size={18} />
         Add income, bill or subscription
       </button>

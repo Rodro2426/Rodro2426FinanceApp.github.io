@@ -43,20 +43,20 @@ export default function Home() {
           <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>Hi, {d.settings.name}</span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => openSheet({ name: 'notifications' })} aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'} className="hv-n200" style={{ position: 'relative', width: 44, height: 44, borderRadius: 999, background: '#fff', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+          <button data-tour="bell" onClick={() => openSheet({ name: 'notifications' })} aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'} className="hv-n200" style={{ position: 'relative', width: 44, height: 44, borderRadius: 999, background: '#fff', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
             <I.Bell size={19} />
             {unread > 0 && <span style={{ position: 'absolute', top: 6, right: 6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: 'var(--color-accent)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px #fff' }}>{unread > 9 ? '9+' : unread}</span>}
           </button>
-          <button onClick={() => openSheet({ name: 'search' })} aria-label="Search transactions" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: '#fff', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+          <button data-tour="search" onClick={() => openSheet({ name: 'search' })} aria-label="Search transactions" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: '#fff', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
             <I.Search size={19} />
           </button>
-          <button onClick={() => openSheet({ name: 'settings' })} aria-label="Profile and settings" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, border: 0, padding: 0, cursor: 'pointer', overflow: 'hidden' }}>
+          <button data-tour="profile" onClick={() => openSheet({ name: 'settings' })} aria-label="Profile and settings" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, border: 0, padding: 0, cursor: 'pointer', overflow: 'hidden' }}>
             {photo ? <div style={{ width: '100%', height: '100%', backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center' }} /> : <span>{d.settings.name.trim().charAt(0).toUpperCase() || 'S'}</span>}
           </button>
         </div>
       </div>
 
-      <div style={{ background: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background .4s ease' }}>
+      <div data-tour="safe" style={{ background: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background .4s ease' }}>
         <span style={{ fontSize: 14, color: tone.label, fontWeight: 600 }}>Safe to spend this week</span>
         <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: tone.amount }}>{fmt(weekLeft)}</span>
         <span style={{ fontSize: 13, color: tone.label }}>of {fmt(weekBudget)} · {c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left</span>
@@ -81,7 +81,7 @@ export default function Home() {
       <SectionHead title="Pockets" right={`Week ${c.weekNo} of ${c.weeks}`} muted />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 10 }}>
         {all.map(p => (
-          <div key={p.id} onClick={() => openSheet({ name: 'pocket', id: p.id })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
+          <div key={p.id} data-tour="pocket" onClick={() => openSheet({ name: 'pocket', id: p.id })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                 <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.85)', backgroundImage: p.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{p.initial}</span>

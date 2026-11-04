@@ -118,3 +118,12 @@ input::placeholder { color: var(--color-neutral-500); }
 @keyframes tour-in { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
 .tour-card { animation: tour-in .25s ease; }
 @media (prefers-reduced-motion: reduce) { .tour-card { animation: none; } }
+
+/* Guided tour spotlight */
+@keyframes tour-pulse { 0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(76, 175, 110, .9); } 50% { box-shadow: 0 0 0 3px #fff, 0 0 0 14px rgba(76, 175, 110, 0); } }
+.tour-ring { pointer-events: none; animation: tour-pulse 1.6s ease-in-out infinite; }
+@keyframes tour-pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+.tour-bubble { animation: tour-pop .28s cubic-bezier(.2, .8, .2, 1); }
+/* Leave room above an open sheet for the tour's instructions. */
+:has(> .tour-on-sheet) .sheet-panel { max-height: calc(100% - var(--top) - 150px) !important; }
+@media (prefers-reduced-motion: reduce) { .tour-ring { animation: none; box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(76, 175, 110, .9); } .tour-bubble { animation: none; } }

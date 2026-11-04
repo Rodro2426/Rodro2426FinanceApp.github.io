@@ -20,10 +20,10 @@ export default function Accounts() {
       <div style={{ padding: '4px 4px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Accounts</span>
         <div style={{ display: 'flex', gap: 8 }}>
-        <button onClick={() => setUI({ page: 'investments' })} aria-label="Investments" className="hv-n200" style={{ width: 38, height: 38, borderRadius: 999, border: 0, background: '#fff', color: GREEN_TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+        <button data-tour="invest" onClick={() => setUI({ page: 'investments' })} aria-label="Investments" className="hv-n200" style={{ width: 38, height: 38, borderRadius: 999, border: 0, background: '#fff', color: GREEN_TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
           <I.TrendUp size={17} />
         </button>
-        <button onClick={() => openSheet({ name: 'export', acct: 'all' })} className="hv-n200" style={{ height: 38, padding: '0 14px', borderRadius: 999, border: 0, background: '#fff', color: 'var(--color-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+        <button data-tour="excel" onClick={() => openSheet({ name: 'export', acct: 'all' })} className="hv-n200" style={{ height: 38, padding: '0 14px', borderRadius: 999, border: 0, background: '#fff', color: 'var(--color-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
           <I.Download size={15} color="oklch(0.5 0.12 150)" />
           Excel
         </button>
@@ -85,7 +85,7 @@ export default function Accounts() {
         );
       })}
 
-      <button onClick={() => openSheet({ name: 'addAcct' })} className="hv-white" style={{ height: 54, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <button data-tour="add-account" onClick={() => openSheet({ name: 'addAcct' })} className="hv-white" style={{ height: 54, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <I.Plus size={18} />
         Add account or card
       </button>

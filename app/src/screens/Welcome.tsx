@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { finishWelcome, flash, setUI } from '../lib/store';
+import { finishWelcome, flash, startTour } from '../lib/store';
 import { emptyData, sampleData } from '../lib/seed';
 import { pickBackupFile, readBackup } from '../lib/backup';
 import { TEXT } from '../lib/constants';
@@ -13,13 +13,12 @@ export default function Welcome() {
 
   const scratch = () => {
     const d = emptyData(sampleData());
-    finishWelcome({ ...d, settings: { ...d.settings, name: who || 'there', lastBackup: undefined } });
-    setUI({ tour: true });
+    finishWelcome({ ...d, settings: { ...d.settings, name: who || 'there', lastBackup: undefined, tourSeen: true } });
   };
+  const tour = () => startTour('first', who || 'there');
   const sample = () => {
     const d = sampleData();
     finishWelcome(who ? { ...d, settings: { ...d.settings, name: who } } : d);
-    setUI({ tour: true });
   };
   const restore = async () => {
     const f = await pickBackupFile(); if (!f) return;
@@ -52,11 +51,12 @@ export default function Welcome() {
           style={{ border: 0, borderRadius: 18, background: '#fff', fontSize: 16, color: TEXT, padding: '15px 18px', outline: 'none' }} />
       </label>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {option('Start from scratch', 'Add your own accounts, pockets and income', scratch, true)}
+        {option('Start with a quick tour', 'Recommended. Try every feature on a practice copy, then keep it or start clean', tour, true)}
+        {option('Start from scratch', 'Skip the tour and add your own accounts', scratch)}
         {option('Try it with sample data', 'Explore with made-up accounts and expenses', sample)}
         {option('Restore a backup', 'Bring back your data from a backup file', restore)}
       </div>
-      <span style={{ marginTop: 14, fontSize: 12, color: '#2f5a3e', opacity: 0.75, textAlign: 'center' }}>Your data stays on this phone. You can change your choice later in Profile.</span>
+      <span style={{ marginTop: 14, fontSize: 12, color: '#2f5a3e', opacity: 0.75, textAlign: 'center' }}>Your data stays on this phone. You can replay the tour anytime from Profile.</span>
     </div>
   );
 }

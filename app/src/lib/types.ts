@@ -99,6 +99,6 @@ export interface UI {
   welcome?: boolean;
   /** Home-screen install guide: shown in iPhone Safari, or opened from Profile. */
   install?: false | 'auto' | 'profile';
-  /** The feature tour. */
-  tour?: boolean;
+  /** The guided tour, running on a practice copy of the data. */
+  tour?: { step: number; mode: 'first' | 'replay' } | null;
 }
