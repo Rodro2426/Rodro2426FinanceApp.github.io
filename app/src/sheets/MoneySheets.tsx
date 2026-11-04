@@ -354,6 +354,9 @@ export function SettingsSheet() {
   const st = d.settings;
   const [confirm, setConfirm] = useState<null | 'erase' | 'sample'>(null);
   const [restore, setRestore] = useState<Awaited<ReturnType<typeof readBackup>> | null>(null);
+  const [askTour, setAskTour] = useState(false);
+  const logged = d.expenses.length + d.incomes.length;
+  const hasData = logged + d.accounts.length + d.pockets.length + d.bills.length > 0;
   const setS = (patch: Partial<typeof st>) => setData(x => ({ settings: { ...x.settings, ...patch } }));
   return (
     <SheetFrame title="Profile">
@@ -409,7 +412,18 @@ export function SettingsSheet() {
             </div>
           )}
         </div>
-        <button onClick={() => startTour('replay')} className="hv-n200" style={{ marginTop: 18, height: 46, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>App tutorial</button>
+        {askTour ? (
+          <div role="alertdialog" aria-label="Tutorial with your data" style={{ marginTop: 18, background: '#e3f1e6', borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#1d4a2e' }}>
+              {logged > 0 ? `I noticed you already have ${logged} transaction${logged > 1 ? 's' : ''} logged. Would you like to see the tutorial without altering your logs?` : 'I noticed you already have data in the app. Would you like to see the tutorial without altering it?'}
+            </span>
+            <span style={{ fontSize: 13, lineHeight: 1.4, color: '#2f5a3e' }}>The tutorial uses a separate practice copy. Your accounts, pockets and transactions stay saved, nothing you do in the tutorial touches them, and they come back as soon as you finish or exit.</span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => { setAskTour(false); startTour('replay'); }} style={{ flex: 1, height: 44, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Yes, use a practice copy</button>
+              <button onClick={() => setAskTour(false)} style={{ flex: 'none', padding: '0 18px', height: 44, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+            </div>
+          </div>
+        ) : <button onClick={() => (hasData ? setAskTour(true) : startTour('replay'))} className="hv-n200" style={{ marginTop: 18, height: 46, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>App tutorial</button>}
         <button onClick={() => setUI({ sheet: null, install: 'profile' })} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>How to install Pockets on iPhone</button>
         <span style={{ margin: '14px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Start over</span>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 10 }}>

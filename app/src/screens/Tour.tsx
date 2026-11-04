@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useApp, setUI, setTourStep, endTour, type State } from '../lib/store';
+import { useApp, setUI, setTourStep, endTour, flash, type State } from '../lib/store';
 import { num } from '../lib/derive';
 import type { Tab } from '../lib/types';
 
@@ -146,12 +146,12 @@ export default function Tour() {
           <span style={{ fontSize: 14.5, lineHeight: 1.45, color: 'var(--color-neutral-800)', textAlign: 'center' }}>
             {first
               ? made.length ? `During the practice you added ${made.join(', ')}. Do you want to keep it, or start with a clean app?` : 'Start with a clean app and add your real accounts, income and pockets.'
-              : 'That was a practice copy. Your real data is safe and comes back now.'}
+              : 'That was a practice copy. Your real accounts and transactions were never touched and come back now, exactly as you left them.'}
           </span>
           {first ? <>
             {made.length > 0 && <button onClick={() => endTour('keep')} style={{ height: 52, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer', marginTop: 6 }}>Keep what I added</button>}
             <button onClick={() => endTour('fresh')} style={{ height: 52, borderRadius: 999, border: 0, background: made.length ? 'var(--color-neutral-100)' : '#1d4a2e', color: made.length ? 'var(--color-text)' : '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer' }}>Start from scratch</button>
-          </> : <button onClick={() => endTour('restore')} style={{ height: 52, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer', marginTop: 6 }}>Back to my data</button>}
+          </> : <button onClick={() => { void endTour('restore').then(() => flash('Your data is back, nothing was changed')); }} style={{ height: 52, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer', marginTop: 6 }}>Back to my data</button>}
           <span style={{ fontSize: 12, color: 'var(--color-neutral-600)', textAlign: 'center' }}>Replay this tour anytime from Profile → App tutorial.</span>
         </div>
       </div>
