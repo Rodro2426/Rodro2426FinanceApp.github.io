@@ -46,12 +46,12 @@ export default function Budget() {
             <div key={s.id} style={{ background: '#fff', borderRadius: 22, padding: '10px 10px 10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
               <button onClick={() => openSheet({ name: 'editPocket', id: s.id })} aria-label="Edit pocket" style={{ width: 40, height: 40, borderRadius: 999, border: 0, padding: 0, cursor: 'pointer', backgroundColor: tint(s.hue), backgroundImage: s.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', color: ink(s.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flex: 'none' }}>{s.initial}</button>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                <input value={p.name} onChange={e => setPocket(s.id, { name: e.target.value })} style={{ border: 0, background: 'transparent', fontSize: 15, fontWeight: 600, color: 'var(--color-text)', padding: '1px 0', outline: 'none', minWidth: 0 }} />
+                <input value={p.name} onChange={e => setPocket(s.id, { name: e.target.value })} style={{ border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: 'var(--color-text)', padding: '1px 0', outline: 'none', minWidth: 0 }} />
                 <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{fmt(s.weekly * weeks)} / month</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(s.hue), borderRadius: 14, padding: '9px 12px', width: 116, flex: 'none' }}>
                 <span style={{ fontSize: 14, color: ink(s.hue) }}>{cur}</span>
-                <MoneyInput value={p.weeklyStr} onChange={v => setPocket(s.id, { weeklyStr: v })} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 15, fontWeight: 700, color: ink(s.hue), padding: 0, outline: 'none', textAlign: 'right' }} />
+                <MoneyInput value={p.weeklyStr} onChange={v => setPocket(s.id, { weeklyStr: v })} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(s.hue), padding: 0, outline: 'none', textAlign: 'right' }} />
               </div>
               <button onClick={() => removePocket(s.id)} aria-label="Remove pocket" className="hv-acc100r" style={{ width: 30, height: 30, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 0, background: 'transparent', color: 'var(--color-neutral-500)', cursor: 'pointer', padding: 0, flex: 'none' }}>
                 <I.X size={15} />

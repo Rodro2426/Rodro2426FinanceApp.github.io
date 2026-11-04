@@ -84,12 +84,14 @@ export default function App() {
 
   return (
     <div className="shell">
-      <div ref={scroll} className="noscroll" style={{ flex: 1, overflowY: 'auto', padding: `var(--top) 18px calc(var(--tb) + 100px)`, scrollBehavior: 'smooth' }}>
+      <div ref={scroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0 }}>
+        <div className="scroll-body" style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}>
         {ui.tab === 'home' && <Home />}
         {ui.tab === 'accounts' && <Accounts />}
         {ui.tab === 'budget' && <Budget />}
         {ui.tab === 'insights' && <Insights />}
         {ui.tab === 'calendar' && <CalendarScreen />}
+        </div>
       </div>
 
       {ui.toast && (

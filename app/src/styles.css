@@ -34,6 +34,15 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; }
+/* Lock the page itself so only the app's own areas scroll (no whole-page drag on iPhone). */
+html, body { position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; }
+#root { height: 100%; overflow: hidden; }
+/* Every scroll area is always a little taller than its box, so short screens still bounce back smoothly. */
+.scroller { overflow-y: auto; overscroll-behavior-y: contain; -webkit-overflow-scrolling: touch; }
+.scroller > .scroll-body { min-height: calc(100% + 1px); }
+/* Taps never trigger double-tap zoom; text boxes stay at 16px so iOS doesn't zoom in when typing. */
+button, a, input, label { touch-action: manipulation; }
+input, select, textarea { font-size: max(16px, 1em); }
 body {
   background: #ebe8e6;
   color: var(--color-text);
@@ -85,6 +94,7 @@ input::placeholder { color: var(--color-neutral-500); }
 .kb .tabbar { display: none !important; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+.sheet-panel { overscroll-behavior: contain; }
 .sheet-panel { animation: sheet-in .28s cubic-bezier(.2, .8, .2, 1); }
 .sheet-scrim { animation: fade-in .2s ease; }
 .dot { animation: pulse 1.2s ease-in-out infinite; }

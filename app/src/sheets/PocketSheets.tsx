@@ -143,7 +143,7 @@ export function AddSheet({ pocket }: { pocket?: string }) {
               return <button key={k.name} onClick={() => { setCat([k.name, k.subs[0] || '']); setCatTouched(true); }} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)', transition: 'all .15s' }}>{k.name}</button>;
             })}
             <div style={{ flex: 'none', display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
-              <input placeholder="New category" value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={blurOnEnter} onBlur={addCat} style={{ width: 96, border: 0, background: 'transparent', fontSize: 13, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
+              <input placeholder="New category" value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={blurOnEnter} onBlur={addCat} style={{ width: 118, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
               <button onClick={addCat} aria-label="Add category" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={12} sw={3} /></button>
             </div>
           </div>
@@ -153,7 +153,7 @@ export function AddSheet({ pocket }: { pocket?: string }) {
               return <button key={sname} onClick={() => { setCat([cat, sname]); setCatTouched(true); }} style={{ height: 30, padding: '0 11px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--color-accent-300)' : 'var(--color-neutral-300)'}`, background: on ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{sname}</button>;
             })}
             <div style={{ display: 'flex', alignItems: 'center', height: 30, borderRadius: 999, border: '1.5px dashed var(--color-neutral-300)', padding: '0 3px 0 10px' }}>
-              <input placeholder="Subcategory" value={newSub} onChange={e => setNewSub(e.target.value)} onKeyDown={blurOnEnter} onBlur={addSub} style={{ width: 80, border: 0, background: 'transparent', fontSize: 12, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
+              <input placeholder="Subcategory" value={newSub} onChange={e => setNewSub(e.target.value)} onKeyDown={blurOnEnter} onBlur={addSub} style={{ width: 104, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
               <button onClick={addSub} aria-label="Add subcategory" style={{ width: 22, height: 22, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={11} sw={3} /></button>
             </div>
           </div>
@@ -175,7 +175,7 @@ export function AddSheet({ pocket }: { pocket?: string }) {
             return <button key={t} onClick={() => setTagSel(s => (s.includes(t) ? s.filter(y => y !== t) : [...s, t]))} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? ink(tagHue(t)) : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>#{t}</button>;
           })}
           <div style={{ display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, background: '#fff', border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
-            <input placeholder="New tag" value={newTag} onChange={e => setNewTag(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }} style={{ width: 84, border: 0, background: 'transparent', fontSize: 13, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
+            <input placeholder="New tag" value={newTag} onChange={e => setNewTag(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }} style={{ width: 92, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
             <button onClick={addTag} aria-label="Add tag" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-accent-100)', color: 'var(--color-accent-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={13} sw={3} /></button>
           </div>
         </div>

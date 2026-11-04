@@ -25,7 +25,8 @@ export default function Investments() {
   const { data: d } = useApp();
   const [view, setView] = useState<'portfolio' | 'sim'>('portfolio');
   return (
-    <div className="page noscroll" style={{ position: 'absolute', inset: 0, zIndex: 25, background: '#f7f5f3', overflowY: 'auto', padding: 'var(--top) 18px calc(var(--tb) + 30px)' }}>
+    <div className="page noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 25, background: '#f7f5f3' }}>
+      <div className="scroll-body" style={{ padding: 'var(--top) 18px calc(var(--tb) + 30px)', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0 0' }}>
         <button onClick={() => setUI({ page: null })} aria-label="Back to accounts" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: '#fff', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
         <span style={{ flex: 1, fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em' }}>Investments</span>
@@ -33,6 +34,7 @@ export default function Investments() {
       </div>
       <Segmented items={[['portfolio', 'Portfolio'], ['sim', 'Returns simulator']]} value={view} onPick={setView} />
       <div style={{ marginTop: 14 }}>{view === 'portfolio' ? <Portfolio /> : <Simulator />}</div>
+      </div>
     </div>
   );
 }

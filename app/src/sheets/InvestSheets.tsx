@@ -93,7 +93,7 @@ export function TradeSheet({ ticker: t0, side: s0 }: { ticker?: string; side?: '
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
             <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Date</span>
-            <input type="date" value={date} max={todayISO()} onChange={e => setDate(e.target.value || todayISO())} style={{ ...textInput, fontWeight: 600, width: '100%', fontSize: 15 }} />
+            <input type="date" value={date} max={todayISO()} onChange={e => setDate(e.target.value || todayISO())} style={{ ...textInput, fontWeight: 600, width: '100%', fontSize: 16, minHeight: 52, WebkitAppearance: 'none', appearance: 'none' }} />
           </div>
         </div>
         <div style={{ margin: '14px 4px 0', fontSize: 13, color: tooMany ? RED : 'var(--color-neutral-700)' }}>
@@ -216,7 +216,7 @@ export function PriceSettingsSheet() {
           Live prices come from Finnhub. Create a free account at <a href="https://finnhub.io/register" target="_blank" rel="noreferrer">finnhub.io</a>, copy your API key from the dashboard and paste it here. It stays on this phone. US stocks and ETFs update during market hours; others you can price yourself.
         </span>
         <FieldLabel m="14px 4px 6px">Finnhub API key</FieldLabel>
-        <input value={key} onChange={e => setKey(e.target.value.trim())} placeholder="Paste your key" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{ ...textInput, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 14 }} />
+        <input value={key} onChange={e => setKey(e.target.value.trim())} placeholder="Paste your key" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{ ...textInput, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 16 }} />
         <PrimaryBtn onClick={saveKey} disabled={testing} mt={12} h={50} fs={15}>{testing ? 'Checking…' : 'Save key'}</PrimaryBtn>
 
         {d.settings.currency === 'COP' && <>
