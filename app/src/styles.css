@@ -43,8 +43,11 @@ html, body { position: fixed; inset: 0; overflow: hidden; overscroll-behavior: n
 /* Taps never trigger double-tap zoom; text boxes stay at 16px so iOS doesn't zoom in when typing. */
 button, a, input, label { touch-action: manipulation; }
 input, select, textarea { font-size: max(16px, 1em); }
+html, body {
+  /* Same as the app background, so the iPhone status bar area blends in. */
+  background: #f7f5f3;
+}
 body {
-  background: #ebe8e6;
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: 15px;
@@ -67,6 +70,7 @@ input::placeholder { color: var(--color-neutral-500); }
 }
 @media (min-width: 560px) and (min-height: 700px) {
   :root { --top: 40px; --tb: 30px; }
+  html, body { background: #ebe8e6; }
   .shell { height: min(874px, calc(100dvh - 80px)); width: 402px; margin: 40px auto; border-radius: 48px; box-shadow: 0 30px 80px rgba(45, 43, 43, .18), 0 0 0 1px rgba(45, 43, 43, .06); }
 }
 
