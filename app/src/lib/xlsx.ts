@@ -15,7 +15,8 @@ const S: Record<string, Style> = {
   note: { font: { sz: 10, color: { rgb: '605D5D' } } },
   zebra: { fill: { patternType: 'solid', fgColor: { rgb: 'FBF9F9' } } },
   over: { font: { bold: true, color: { rgb: 'AE1800' } } },
-  ok: { font: { color: { rgb: '2E7D4F' } } }
+  ok: { font: { color: { rgb: '2E7D4F' } } },
+  wrap: { font: { sz: 11, color: { rgb: '201E1D' } }, alignment: { wrapText: true, vertical: 'top' } }
 };
 const merge = (...xs: (Style | null | undefined)[]) => xs.filter(Boolean).reduce<Style>((a, b) => {
   const o = { ...a };
@@ -38,8 +39,10 @@ function sheet() {
     maxR = Math.max(maxR, r); maxC = Math.max(maxC, c);
   };
   const row = (r: number, vals: unknown[], o: PutOpts = {}) => vals.forEach((v, i) => { if (v !== undefined) put(r, i + (o.c0 || 0), v, o); });
-  const finish = (cols: number[]) => { ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: maxR, c: maxC } }); ws['!cols'] = cols.map(w => ({ wch: w })); return ws as XLSX.WorkSheet; };
-  return { put, row, finish };
+  const merges: XLSX.Range[] = [];
+  const mergeCells = (r: number, c0: number, c1: number) => merges.push({ s: { r, c: c0 }, e: { r, c: c1 } });
+  const finish = (cols: number[]) => { if (merges.length) ws['!merges'] = merges; ws['!ref'] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: maxR, c: maxC } }); ws['!cols'] = cols.map(w => ({ wch: w })); return ws as XLSX.WorkSheet; };
+  return { put, row, finish, mergeCells, ws };
 }
 
 export function downloadWorkbook(d: ExportPayload) {
@@ -47,6 +50,35 @@ export function downloadWorkbook(d: ExportPayload) {
   const wb = XLSX.utils.book_new();
   const det = d.details, nD = det.length, D0 = 6, D1 = D0 + Math.max(nD, 1) - 1;
   const rng = (col: string) => `Details!$${col}$${D0}:$${col}$${D1}`;
+
+  // ---------- For AI (first sheet) ----------
+  {
+    const ai = d.ai, sb = sheet(), W = 8;
+    sb.put(0, 0, ai.title, { s: S.title });
+    let r = 2;
+    ai.intro.forEach(t => {
+      sb.put(r, 0, t, { s: S.wrap }); sb.mergeCells(r, 0, W - 1);
+      sb.ws['!rows'] = sb.ws['!rows'] || [];
+      sb.ws['!rows'][r] = { hpt: 15 * Math.max(1, Math.ceil(t.length / 120)) };
+      r++;
+    });
+    ai.sections.forEach(sec => {
+      r++;
+      sb.put(r++, 0, sec.title, { s: S.section });
+      if (sec.note) { sb.put(r, 0, sec.note, { s: S.note }); sb.mergeCells(r, 0, W - 1); r++; }
+      sb.row(r++, sec.header, { s: S.head });
+      if (!sec.rows.length) { sb.put(r++, 0, 'None', { s: S.note }); return; }
+      sec.rows.forEach((row, i) => {
+        const z = i % 2 ? S.zebra : null;
+        row.forEach((cell, c) => {
+          if (cell !== null && typeof cell === 'object') sb.put(r, c, cell.v, { z: cell.fmt === 'money' ? MONEY : PCT, s: z });
+          else sb.put(r, c, cell, { s: z });
+        });
+        r++;
+      });
+    });
+    XLSX.utils.book_append_sheet(wb, sb.finish([34, 18, 18, 16, 16, 14, 16, 18]), 'For AI');
+  }
 
   // ---------- Summary ----------
   {

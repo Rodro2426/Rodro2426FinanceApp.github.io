@@ -93,7 +93,10 @@ export default function Budget() {
           </div>
         );
       })}
-      {d.goals.length === 0 && <div style={{ background: '#fff', borderRadius: 24, padding: 16, fontSize: 14, color: 'var(--color-neutral-700)' }}>No savings goals yet. Ask the Assistant to create one.</div>}
+      <button onClick={() => openSheet({ name: 'newGoal' })} className="hv-white" style={{ height: 50, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <I.Plus size={18} />
+        Add savings goal
+      </button>
     </div>
   );
 }

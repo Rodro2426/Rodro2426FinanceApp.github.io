@@ -1,6 +1,7 @@
 import type { Data } from './types';
 import { acctTxns, catOf, num } from './derive';
 import { fmtDay, monthLabel, todayISO } from './dates';
+import { buildAiSheet, type AiSheet } from './aiSheet';
 
 export interface ExportDetail { month: string; date: string; category: string; sub: string; merchant: string; amount: number; pocket: string; account: string; tags: string; id: string }
 export interface ExportPayload {
@@ -10,6 +11,7 @@ export interface ExportPayload {
   pockets: { name: string; planned: number; spent: number }[] | null;
   statement: { account: string; card: boolean; opening: number; closing: number; rows: { date: string; desc: string; category: string; amount: number; after: number }[] } | null;
   notes: string[];
+  ai: AiSheet;
   title: string; subtitle: string; filename: string; currency: string;
 }
 
@@ -61,7 +63,7 @@ export function exportData(d: Data, month: string, acctId: string): ExportPayloa
     'Totals on this sheet are live formulas over the Details sheet.'
   ].filter((x): x is string => !!x);
   return {
-    months, details, payments, pockets, statement, notes, currency: cur,
+    months, details, payments, pockets, statement, notes, currency: cur, ai: buildAiSheet(d, months, acctId),
     title: 'Expense summary · ' + label,
     subtitle: `${curName} · ${accLabel} · Calendar month of each transaction · Generated ${fmtDay(today, { month: 'short', day: 'numeric', year: 'numeric' })}`,
     filename: ('Pockets ' + label + (acctId === 'all' ? '' : ' - ' + accLabel)).replace(/[\\/:*?"<>|]+/g, '').trim()

@@ -5,13 +5,12 @@ import Home from './screens/Home';
 import Accounts from './screens/Accounts';
 import Budget from './screens/Budget';
 import Insights from './screens/Insights';
-import { AssistantChat, AssistantComposer } from './screens/Assistant';
 import { AddSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
-import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
+import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
 import * as I from './ui/icons';
 
 const TABS: [Tab, string, (p: { size?: number; sw?: number }) => ReactNode][] = [
-  ['home', 'Home', I.Home], ['accounts', 'Accounts', I.Card], ['budget', 'Budget', I.Wallet], ['insights', 'Insights', I.Chart], ['assistant', 'Assistant', I.Sparkle]
+  ['home', 'Home', I.Home], ['accounts', 'Accounts', I.Card], ['budget', 'Budget', I.Wallet], ['insights', 'Insights', I.Chart]
 ];
 
 function SheetRouter({ sheet }: { sheet: Sheet }) {
@@ -28,6 +27,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'addAcct': return <AddAcctSheet />;
     case 'pay': return <PaySheet id={sheet.id} />;
     case 'goal': return <GoalSheet id={sheet.id} />;
+    case 'newGoal': return <NewGoalSheet />;
     case 'settings': return <SettingsSheet />;
   }
 }
@@ -35,13 +35,8 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
 export default function App() {
   const { ui } = useApp();
   const scroll = useRef<HTMLDivElement>(null);
-  const isAI = ui.tab === 'assistant';
 
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); }, [ui.tab]);
-  useEffect(() => {
-    const el = scroll.current;
-    if (el && isAI) requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
-  }, [ui.chat, ui.thinking, isAI]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUI({ sheet: null }); };
     window.addEventListener('keydown', onKey);
@@ -50,15 +45,12 @@ export default function App() {
 
   return (
     <div className="shell">
-      <div ref={scroll} className="noscroll" style={{ flex: 1, overflowY: 'auto', padding: `var(--top) 18px calc(var(--tb) + ${isAI ? 170 : 100}px)`, scrollBehavior: 'smooth' }}>
+      <div ref={scroll} className="noscroll" style={{ flex: 1, overflowY: 'auto', padding: `var(--top) 18px calc(var(--tb) + 100px)`, scrollBehavior: 'smooth' }}>
         {ui.tab === 'home' && <Home />}
         {ui.tab === 'accounts' && <Accounts />}
         {ui.tab === 'budget' && <Budget />}
         {ui.tab === 'insights' && <Insights />}
-        {isAI && <AssistantChat />}
       </div>
-
-      {isAI && <AssistantComposer />}
 
       {ui.toast && (
         <div role="status" style={{ position: 'absolute', left: 18, right: 18, bottom: 'calc(var(--tb) + 82px)', zIndex: 30, background: 'var(--color-text)', color: '#fff', padding: '14px 18px', borderRadius: 999, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-lg)' }}>

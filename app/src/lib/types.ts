@@ -27,7 +27,7 @@ export interface Data {
   tags: string[];
 }
 
-export type Tab = 'home' | 'accounts' | 'budget' | 'insights' | 'assistant';
+export type Tab = 'home' | 'accounts' | 'budget' | 'insights';
 
 export type Sheet =
   | { name: 'search'; tag?: string | null }
@@ -42,16 +42,12 @@ export type Sheet =
   | { name: 'addAcct' }
   | { name: 'pay'; id: string }
   | { name: 'goal'; id: string }
+  | { name: 'newGoal' }
   | { name: 'settings' };
-
-export interface ChatCard { kicker: string; title: string; sub: string; amt: string; hue: number; initial: string }
-export interface ChatMsg { role: 'user' | 'assistant'; text: string; voice?: boolean; cards?: ChatCard[] }
 
 export interface UI {
   tab: Tab;
   sheet: Sheet | null;
   toast: string | null;
-  chat: ChatMsg[];
-  thinking: boolean;
   lastAdd: { pocket: string; acct: string };
 }

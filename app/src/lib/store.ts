@@ -9,7 +9,7 @@ export interface State { data: Data; ui: UI }
 
 let state: State = {
   data: sampleData(),
-  ui: { tab: 'home', sheet: null, toast: null, chat: [], thinking: false, lastAdd: { pocket: 'groc', acct: 'a1' } }
+  ui: { tab: 'home', sheet: null, toast: null, lastAdd: { pocket: 'groc', acct: 'a1' } }
 };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());

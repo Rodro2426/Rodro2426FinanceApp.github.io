@@ -25,7 +25,7 @@ export function ExportSheet({ acct }: { acct: string }) {
   x.details.forEach(r => { byCat[r.category] = (byCat[r.category] || 0) + r.amount; });
   const tot = x.details.reduce((a, r) => a + r.amount, 0);
   const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  const sheets = ['Summary', 'Details', 'Card payments'].concat(x.statement ? ['Statement'] : []);
+  const sheets = ['For AI', 'Summary', 'Details', 'Card payments'].concat(x.statement ? ['Statement'] : []);
   const chip = (on: boolean) => ({ background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT });
 
   const download = async () => {
@@ -289,7 +289,13 @@ export function GoalSheet({ id }: { id: string }) {
   const { data: d } = useApp();
   const g = d.goals.find(x => x.id === id);
   const [amt, setAmt] = useState('');
+  const [confirmDel, setConfirmDel] = useState(false);
   if (!g) return null;
+  const remove = () => {
+    if (!confirmDel) return setConfirmDel(true);
+    setData(x => ({ goals: x.goals.filter(y => y.id !== g.id) }));
+    closeSheet(); flash(`${g.name} deleted`);
+  };
   const v = num(amt), q = d.settings.currency === 'COP' ? [50000, 100000, 250000] : [25, 50, 100];
   const confirm = () => {
     if (!(v > 0)) return;
@@ -307,6 +313,7 @@ export function GoalSheet({ id }: { id: string }) {
         </div>
         <div style={{ margin: '14px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>{v > 0 ? `You'll be at ${Math.min(100, Math.round((g.saved + v) / g.target * 100))}% of your goal.` : 'How much are you setting aside?'}</div>
         <PrimaryBtn onClick={confirm} disabled={!(v > 0)}>Add to goal</PrimaryBtn>
+        <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : 'Delete goal'}</GhostDanger>
       </div>
     </SheetFrame>
   );
@@ -334,19 +341,56 @@ export function SettingsSheet() {
         <Segmented<Currency> mt={6} items={[['COP', 'COP'], ['$', '$'], ['€', '€'], ['£', '£']]} value={st.currency} onPick={c => setS({ currency: c })} />
         <FieldLabel m="14px 4px 0">Weeks per month</FieldLabel>
         <Segmented mt={6} items={[['4', '4 weeks'], ['5', '5 weeks']]} value={String(st.weeks) as '4' | '5'} onPick={w => setS({ weeks: Number(w) as 4 | 5 })} />
-        <FieldLabel m="14px 4px 0">Voice language</FieldLabel>
-        <Segmented mt={6} items={[['es-CO', 'Español'], ['en-US', 'English']]} value={st.voiceLang} onPick={v => setS({ voiceLang: v })} />
         <span style={{ margin: '14px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Your data is saved on this device only.</span>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 10 }}>
           <button onClick={() => {
             if (confirm !== 'sample') return setConfirm('sample');
-            replaceData({ ...sampleData(), settings: { ...st } }); setUI({ chat: [] }); closeSheet(); flash('Sample data loaded');
+            replaceData({ ...sampleData(), settings: { ...st } }); closeSheet(); flash('Sample data loaded');
           }} className="hv-n200" style={{ height: 48, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{confirm === 'sample' ? 'Tap to replace' : 'Load sample data'}</button>
           <button onClick={() => {
             if (confirm !== 'erase') return setConfirm('erase');
-            replaceData(emptyData(d)); setUI({ chat: [] }); closeSheet(); flash('All data erased');
+            replaceData(emptyData(d)); closeSheet(); flash('All data erased');
           }} className="hv-acc100" style={{ height: 48, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: 'inset 0 0 0 1.5px var(--color-accent-300)' }}>{confirm === 'erase' ? 'Tap again to erase' : 'Start fresh'}</button>
         </div>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- New savings goal ---------------- */
+export function NewGoalSheet() {
+  const [name, setName] = useState('');
+  const [target, setTarget] = useState('');
+  const [months, setMonths] = useState('6');
+  const [saved, setSaved] = useState('');
+  const t = num(target), m = Math.max(1, Math.round(num(months)) || 1), s0 = num(saved);
+  const cant = !name.trim() || !(t > 0);
+  const save = () => {
+    if (cant) return;
+    setData(x => ({ goals: [...x.goals, { id: uid('g'), name: name.trim(), saved: roundAmt(Math.max(0, s0)), target: roundAmt(t), months: m, hue: HUES[(x.goals.length + 3) % HUES.length] }] }));
+    closeSheet(); flash(`${name.trim()} created`);
+  };
+  return (
+    <SheetFrame title="New savings goal">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <FieldLabel m="6px 4px 6px">Name</FieldLabel>
+        <input value={name} placeholder="Trip to Cartagena" onChange={e => setName(e.target.value)} autoFocus style={textInput} />
+        <FieldLabel m="14px 4px 6px">Target amount</FieldLabel>
+        <SmallAmount value={target} onChange={setTarget} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8, marginTop: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Months to reach it</span>
+            <input type="number" inputMode="numeric" value={months} onChange={e => setMonths(e.target.value)} style={{ ...textInput, fontWeight: 600 }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Already saved</span>
+            <input type="number" inputMode="decimal" placeholder="0" value={saved} onChange={e => setSaved(e.target.value)} style={{ ...textInput, fontWeight: 600 }} />
+          </div>
+        </div>
+        <span style={{ margin: '10px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>
+          {t > 0 ? `Save ${fmt(Math.max(0, t - s0) / m)} a month to reach it in ${m === 1 ? '1 month' : m + ' months'}.` : 'How much do you want to save?'}
+        </span>
+        <PrimaryBtn onClick={save} disabled={cant} mt={18}>Create goal</PrimaryBtn>
       </div>
     </SheetFrame>
   );
