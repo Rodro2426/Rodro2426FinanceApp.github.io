@@ -204,10 +204,11 @@ export const NOTIF_TONE: Record<NotifKind, { bg: string; fg: string }> = {
   bill: { bg: 'var(--color-accent-100)', fg: 'var(--color-accent-700)' },
   income: { bg: 'oklch(0.95 0.045 155)', fg: 'oklch(0.42 0.09 155)' },
   budget: { bg: 'oklch(0.96 0.055 92)', fg: 'oklch(0.46 0.09 75)' },
-  card: { bg: 'oklch(0.94 0.04 250)', fg: 'oklch(0.42 0.1 250)' }
+  card: { bg: 'oklch(0.94 0.04 250)', fg: 'oklch(0.42 0.1 250)' },
+  backup: { bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-800)' }
 };
 export const NotifIcon = ({ kind, size = 18 }: { kind: NotifKind; size?: number }) =>
-  kind === 'income' ? <I.Plus size={size} /> : kind === 'budget' ? <I.Alert size={size} /> : kind === 'card' ? <I.Card size={size} /> : <I.Calendar size={size} />;
+  kind === 'income' ? <I.Plus size={size} /> : kind === 'budget' ? <I.Alert size={size} /> : kind === 'card' ? <I.Card size={size} /> : kind === 'backup' ? <I.Download size={size} /> : <I.Calendar size={size} />;
 
 export function NotificationsSheet() {
   const { data: d } = useApp();

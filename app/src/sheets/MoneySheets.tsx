@@ -5,6 +5,7 @@ import { acctTxns, fmt, initialOf, num, pctOf, plural, roundAmt, uid } from '../
 import { allMonths, downloadCSV, exportData } from '../lib/exportData';
 import { monthLabel, shortDate, todayISO } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
+import { makeBackup, pickBackupFile, readBackup, restoreBackup } from '../lib/backup';
 import { dailyRate, earnsInterest, perDay } from '../lib/interest';
 import { emptyData, sampleData } from '../lib/seed';
 import type { AcctType, Currency } from '../lib/types';
@@ -352,6 +353,7 @@ export function SettingsSheet() {
   const { data: d } = useApp();
   const st = d.settings;
   const [confirm, setConfirm] = useState<null | 'erase' | 'sample'>(null);
+  const [restore, setRestore] = useState<Awaited<ReturnType<typeof readBackup>> | null>(null);
   const setS = (patch: Partial<typeof st>) => setData(x => ({ settings: { ...x.settings, ...patch } }));
   return (
     <SheetFrame title="Profile">
@@ -369,7 +371,32 @@ export function SettingsSheet() {
         <Segmented<Currency> mt={6} items={[['COP', 'COP'], ['$', '$'], ['€', '€'], ['£', '£']]} value={st.currency} onPick={c => setS({ currency: c })} />
         <FieldLabel m="14px 4px 0">Weeks per month</FieldLabel>
         <Segmented mt={6} items={[['4', '4 weeks'], ['5', '5 weeks']]} value={String(st.weeks) as '4' | '5'} onPick={w => setS({ weeks: Number(w) as 4 | 5 })} />
-        <span style={{ margin: '14px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Your data is saved on this device only.</span>
+        <FieldLabel m="18px 4px 0">Backup</FieldLabel>
+        <div style={{ marginTop: 6, background: '#fff', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
+            Your data lives only on this phone. Save a backup file to iCloud Drive so you can get everything back if the app is deleted.
+            {st.lastBackup ? <> Last backup: <b style={{ color: TEXT }}>{shortDate(st.lastBackup)}</b>.</> : <> <b style={{ color: 'var(--color-accent-700)' }}>No backup yet.</b></>}
+          </span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8 }}>
+            <button onClick={async () => { const r = await makeBackup(); if (r === 'shared') flash('Backup saved'); else if (r === 'downloaded') flash('Backup downloaded to Files'); }} className="hv-acc600" style={{ height: 48, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><I.Download size={16} />Back up</button>
+            <button onClick={async () => {
+              const f = await pickBackupFile(); if (!f) return;
+              try { const r = await readBackup(f); setRestore(r); } catch (e) { flash((e as Error).message); }
+            }} className="hv-n200" style={{ height: 48, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Restore</button>
+          </div>
+          {restore && (
+            <div style={{ background: 'var(--color-accent-100)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-accent-900)' }}>
+                Backup{restore.summary.exportedAt ? ` from ${new Date(restore.summary.exportedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''} for {restore.summary.name}: {restore.summary.accounts} accounts, {restore.summary.expenses} expenses, {restore.summary.pockets} pockets, {restore.summary.scheduled} scheduled, {restore.summary.trades} trades. <b>Restoring replaces everything on this phone.</b>
+              </span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => { restoreBackup(restore.data); setRestore(null); closeSheet(); flash('Backup restored'); }} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Restore it</button>
+                <button onClick={() => setRestore(null)} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              </div>
+            </div>
+          )}
+        </div>
+        <span style={{ margin: '14px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Start over</span>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 10 }}>
           <button onClick={() => {
             if (confirm !== 'sample') return setConfirm('sample');

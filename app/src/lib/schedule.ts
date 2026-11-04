@@ -155,6 +155,12 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
     notify(`low:${c.weekStart}`, today, 'budget', 'Running low this week', `Only ${fmt(Math.max(0, left))} (${Math.round(Math.max(0, left) / budget * 100)}%) is safe to spend, with ${c.daysLeft} days to go.`);
   }
 
+  // 5. Remind to back up when the last backup is over 30 days old (or never), once a month.
+  const last = d.settings.lastBackup;
+  if ((d.expenses.length || d.accounts.length) && (!last || addDays(last, 30) <= today)) {
+    notify(`backup:${monthKey(today)}`, today, 'backup', 'Back up your data', `${last ? `Your last backup was on ${shortDate(last)}.` : "You haven't made a backup yet."} Open Profile → Back up to save it to iCloud Drive.`);
+  }
+
   // Keep the last ~2 months of notifications.
   const cutoff = prevMonthKey(prevMonthKey(monthKey(today))) + '-01';
   const kept = [...fresh, ...d.notifications].filter(n => n.date >= cutoff);
