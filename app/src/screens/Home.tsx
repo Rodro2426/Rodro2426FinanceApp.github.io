@@ -8,6 +8,13 @@ import * as I from '../ui/icons';
 
 const C = 100.53; // ring circumference (r=16)
 
+/** Light tones for the "Safe to spend" card: >50% left green, 30–50% yellow, under 30% red. */
+const SAFE_TONES = {
+  green: { bg: 'oklch(0.95 0.045 155)', label: 'oklch(0.42 0.09 155)', amount: 'oklch(0.3 0.07 155)', bar: 'oklch(0.68 0.13 155)' },
+  yellow: { bg: 'oklch(0.96 0.055 92)', label: 'oklch(0.46 0.09 75)', amount: 'oklch(0.33 0.07 70)', bar: 'oklch(0.8 0.14 82)' },
+  red: { bg: 'var(--color-accent-100)', label: 'var(--color-accent-800)', amount: 'var(--color-accent-900)', bar: 'var(--color-accent)' }
+};
+
 export default function Home() {
   const { data: d } = useApp();
   const c = ctxOf(d);
@@ -22,6 +29,9 @@ export default function Home() {
   const upcoming = billRows(d, c).filter(b => !b.paid).sort((a, b) => a.inDays - b.inDays).slice(0, 3);
   const recent = sortedExpenses(d).slice(0, 5).map(e => expView(d, e, c, stats));
   const photo = d.settings.profilePhoto;
+  // Card colour follows how much of the week's budget is still safe to spend.
+  const leftRatio = weekBudget > 0 ? weekLeft / weekBudget : 0;
+  const tone = leftRatio > 0.5 ? SAFE_TONES.green : leftRatio >= 0.3 ? SAFE_TONES.yellow : SAFE_TONES.red;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -40,12 +50,12 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ background: 'var(--color-accent-100)', borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 14, color: 'var(--color-accent-800)', fontWeight: 600 }}>Safe to spend this week</span>
-        <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: 'var(--color-accent-900)' }}>{fmt(weekLeft)}</span>
-        <span style={{ fontSize: 13, color: 'var(--color-accent-800)' }}>of {fmt(weekBudget)} · {c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left</span>
+      <div style={{ background: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background .4s ease' }}>
+        <span style={{ fontSize: 14, color: tone.label, fontWeight: 600 }}>Safe to spend this week</span>
+        <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: tone.amount }}>{fmt(weekLeft)}</span>
+        <span style={{ fontSize: 13, color: tone.label }}>of {fmt(weekBudget)} · {c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left</span>
         <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: '#fff', overflow: 'hidden' }}>
-          <div style={{ height: 10, borderRadius: 999, width: pctOf(weekSpent, weekBudget), background: 'var(--color-accent)', transition: 'width .5s ease' }} />
+          <div style={{ height: 10, borderRadius: 999, width: pctOf(weekSpent, weekBudget), background: tone.bar, transition: 'width .5s ease, background .4s ease' }} />
         </div>
       </div>
 
