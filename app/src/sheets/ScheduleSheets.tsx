@@ -4,16 +4,18 @@ import { HUES, TEXT, ink, tint } from '../lib/constants';
 import { fmt, num, roundAmt, uid } from '../lib/derive';
 import { relDay, todayISO } from '../lib/dates';
 import { ensureTrm, fmtUsd, latestRate, trmFor } from '../lib/trm';
-import { describeDay, ordinal } from '../lib/schedule';
+import { KIND_LABEL, describeDay, ordinal } from '../lib/schedule';
 import type { Bill, NotifKind, ScheduleKind } from '../lib/types';
 import { BillBadge, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
 import { pickPhoto } from '../lib/photo';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
 
-const KIND_ITEMS: [ScheduleKind, string][] = [['Income', 'Income'], ['Bill', 'Bill'], ['Subscription', 'Subscription']];
-const PLACEHOLDER = { Income: 'Salary', Bill: 'Rent', Subscription: 'Netflix' };
-const DEFAULT_CAT = { Income: '', Bill: 'Home', Subscription: 'Entertainment' };
+const KIND_ITEMS: [ScheduleKind, string][] = [['Income', 'Income'], ['Bill', 'Bill'], ['Subscription', 'Subscription'], ['CardPayment', 'Card payment']];
+const PLACEHOLDER: Record<ScheduleKind, string> = { Income: 'Salary', Bill: 'Rent', Subscription: 'Netflix', CardPayment: 'Card payment' };
+const DEFAULT_CAT: Record<ScheduleKind, string> = { Income: '', Bill: 'Home', Subscription: 'Entertainment', CardPayment: '' };
+/** "Nov 15" → 15 */
+const dayOf = (s?: string) => { const m = /(\d{1,2})\s*$/.exec(s || ''); return m ? Math.min(31, Math.max(1, Number(m[1]))) : null; };
 const chip = (on: boolean) => ({ background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT });
 
 /* ---------------- Add / edit scheduled income, bill or subscription ---------------- */
@@ -36,29 +38,38 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const [cat, setCat] = useState(base?.cat ?? DEFAULT_CAT[base?.kind ?? kind0 ?? 'Bill']);
   const [confirmDel, setConfirmDel] = useState(false);
   const [photo, setPhoto] = useState<string | null>(base?.photo ?? null);
+  const cards = d.accounts.filter(a => a.type === 'card');
+  const [toCard, setToCard] = useState(base?.toCard ?? cards[0]?.id ?? '');
+  const [payMode, setPayMode] = useState<'full' | 'fixed'>(base?.payMode ?? 'full');
 
-  const income = kind === 'Income';
-  const accounts = income ? d.accounts.filter(a => a.type !== 'card') : d.accounts;
+  const income = kind === 'Income', cardPay = kind === 'CardPayment';
+  const accounts = income || cardPay ? d.accounts.filter(a => a.type !== 'card') : d.accounts;
   const acctOk = accounts.some(a => a.id === acct);
-  const v = num(amt), cant = !name.trim() || !(v > 0) || (auto && !acctOk);
+  const card = cards.find(c => c.id === toCard);
+  const v = num(amt);
+  const cant = cardPay ? !card || !acctOk || (payMode === 'fixed' && !(v > 0)) : !name.trim() || !(v > 0) || (auto && !acctOk);
   const acctName = accounts.find(a => a.id === acct)?.name;
   const hue = base?.hue ?? (income ? 150 : HUES[d.bills.length % HUES.length]);
 
   const pickKind = (k: ScheduleKind) => {
     setKind(k);
     if (!base) setCat(DEFAULT_CAT[k]);
-    if (k === 'Income' && !d.accounts.some(a => a.id === acct && a.type !== 'card')) setAcct(d.accounts.find(a => a.type !== 'card')?.id ?? '');
+    if ((k === 'Income' || k === 'CardPayment') && !d.accounts.some(a => a.id === acct && a.type !== 'card')) setAcct(d.accounts.find(a => a.type !== 'card')?.id ?? '');
+    if (k === 'CardPayment' && !base && card) setDueDay(dayOf(card.due) ?? dueDay);
   };
 
   const save = () => {
     if (cant) return;
     const today = todayISO();
     // Only start moving money from today on, so nothing is charged retroactively.
-    const restart = !base || (auto && (!base.auto || base.acct !== acct));
+    const restart = !base || (auto && (!base.auto || base.acct !== acct || base.toCard !== toCard));
     const subs = d.cats.find(c => c.name === cat)?.subs || [];
-    const patch: Partial<Bill> = {
+    const patch: Partial<Bill> = cardPay ? {
+      name: `${card!.name} payment`, hue: card!.hue, kind, amt: payMode === 'fixed' ? roundAmt(v) : 0, currency: undefined, dueDay, photo: card!.photo ?? null, acct, toCard, payMode, auto,
+      pocket: undefined, cat: undefined, sub: undefined, start: restart ? today : base?.start
+    } : {
       name: name.trim(), kind, amt: usd ? Math.round(v * 100) / 100 : roundAmt(v), currency: usd ? 'USD' : undefined, dueDay, photo, acct: acctOk ? acct : undefined, auto: auto && acctOk,
-      pocket: income ? undefined : pocket || undefined, cat: income ? undefined : cat, sub: income ? undefined : base?.cat === cat ? base.sub : subs[0] || '',
+      pocket: income ? undefined : pocket || undefined, cat: income ? undefined : cat, sub: income ? undefined : base && base.cat === cat ? base.sub : subs[0] || '',
       start: restart ? today : base?.start
     };
     if (base) setData(x => ({ bills: x.bills.map(b => (b.id === base.id ? { ...b, ...patch } : b)) }));
@@ -72,9 +83,31 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   };
 
   return (
-    <SheetFrame title={base ? `Edit ${base.kind.toLowerCase()}` : 'New scheduled item'}>
+    <SheetFrame title={base ? `Edit ${KIND_LABEL[base.kind].toLowerCase()}` : 'New scheduled item'}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <Segmented items={KIND_ITEMS} value={kind} onPick={pickKind} mt={6} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 4, marginTop: 6, background: 'var(--color-neutral-200)', borderRadius: 22, padding: 4 }}>
+          {KIND_ITEMS.map(([k, label]) => (
+            <button key={k} onClick={() => pickKind(k)} style={{ height: 38, borderRadius: 18, border: 0, background: kind === k ? '#fff' : 'transparent', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: kind === k ? 'var(--shadow-sm)' : 'none', transition: 'all .15s' }}>{label}</button>
+          ))}
+        </div>
+        {cardPay ? <>
+          <FieldLabel m="14px 4px 6px">Card to pay</FieldLabel>
+          <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
+            {cards.map(c => (
+              <button key={c.id} onClick={() => { setToCard(c.id); if (!base) setDueDay(dayOf(c.due) ?? dueDay); }} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${c.id === toCard ? ink(c.hue) : '#fff'}`, background: c.id === toCard ? tint(c.hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+                <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{c.name}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(c.bal)} owed{c.due ? ` · due ${c.due}` : ''}</span>
+              </button>
+            ))}
+            {cards.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add a credit card first, in the Accounts tab.</span>}
+          </div>
+          <FieldLabel m="14px 4px 0">How much</FieldLabel>
+          <Segmented items={[['full', 'Full balance'], ['fixed', 'Fixed amount']]} value={payMode} onPick={setPayMode} mt={6} />
+          {payMode === 'fixed' && <div style={{ marginTop: 8 }}><SmallAmount value={amt} onChange={setAmt} /></div>}
+          <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
+            {payMode === 'full' ? `Pays whatever the card owes that day${card ? ` (now ${fmt(card.bal)})` : ''}.` : 'Never more than the card owes.'} If the account doesn't have enough, it pays what's there.
+          </span>
+        </> : <>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#fff', borderRadius: 22, padding: 12, marginTop: 12 }}>
           <BillBadge b={{ name: name || PLACEHOLDER[kind], hue, kind, photo }} size={56} radius={18} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
@@ -108,6 +141,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
             {todayTrm ? `Today's TRM is ${fmt(todayTrm)}` : `About ${fmt(rate)} per dollar`}{v > 0 ? `, so ${fmtUsd(v)} ≈ ${fmt(v * rate)}` : ''}. {auto ? 'On the day it runs, it uses that day\'s official TRM.' : ''}
           </span>
         )}
+        </>}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '14px 4px 6px' }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Day of the month</span>
@@ -135,13 +169,13 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 600 }}>{income ? 'Add to my balance automatically' : 'Pay automatically'}</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
-              {auto && acctName ? `${income ? '+' : '−'}${usd ? fmtUsd(v) + ' in pesos' : fmt(v)} ${income ? 'into' : 'from'} ${acctName} on the ${ordinal(dueDay)}` : "Just remind me, I'll tick it off myself"}
+              {auto && acctName ? (cardPay ? `${payMode === 'full' ? 'Full balance' : fmt(v)} from ${acctName} to ${card?.name || 'the card'} on the ${ordinal(dueDay)}` : `${income ? '+' : '−'}${usd ? fmtUsd(v) + ' in pesos' : fmt(v)} ${income ? 'into' : 'from'} ${acctName} on the ${ordinal(dueDay)}`) : "Just remind me, I'll tick it off myself"}
             </span>
           </div>
           <Toggle on={auto} onChange={setAuto} label="Automatic" />
         </div>
 
-        {!income && <>
+        {!income && !cardPay && <>
           <FieldLabel>Pocket (optional)</FieldLabel>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {[{ id: '', name: 'No pocket' }, ...d.pockets].map(p => (
@@ -157,8 +191,8 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           </div>
         </>}
 
-        <PrimaryBtn onClick={save} disabled={cant} mt={18}>{base ? 'Save changes' : `Schedule ${kind.toLowerCase()}`}</PrimaryBtn>
-        {base && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : `Delete ${base.kind.toLowerCase()}`}</GhostDanger>}
+        <PrimaryBtn onClick={save} disabled={cant} mt={18}>{base ? 'Save changes' : `Schedule ${KIND_LABEL[kind].toLowerCase()}`}</PrimaryBtn>
+        {base && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : `Delete ${KIND_LABEL[base.kind].toLowerCase()}`}</GhostDanger>}
         {base && <span style={{ margin: '4px 4px 0', fontSize: 12, color: 'var(--color-neutral-600)', textAlign: 'center' }}>{describeDay(base)}. Past transactions stay in your history.</span>}
       </div>
     </SheetFrame>

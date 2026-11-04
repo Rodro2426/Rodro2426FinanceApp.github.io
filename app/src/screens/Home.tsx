@@ -108,7 +108,7 @@ export default function Home() {
             <BillBadge b={b} />
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
-              <span style={{ fontSize: 12, color: b.dueColor }}>{b.dueLabel}</span>
+              <span style={{ fontSize: 12, color: b.dueColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.dueLabel}</span>
             </div>
             <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap' }}>{billAmount(b)}</span>
           </div>

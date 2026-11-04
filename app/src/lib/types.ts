@@ -14,8 +14,8 @@ export interface Expense { id: string; ts: number; p: string; a: string; amt: nu
 /** Money received into an account (from a scheduled income). */
 export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig }
 export interface Move { id: string; week: string; from: string; to: string; amt: number }
-export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string }
-export type ScheduleKind = 'Income' | 'Bill' | 'Subscription';
+export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string; ruleId?: string; ruleMonth?: string }
+export type ScheduleKind = 'Income' | 'Bill' | 'Subscription' | 'CardPayment';
 /**
  * Something that happens every month on `dueDay`: income, a bill or a subscription.
  * With `auto` and an account, it moves the money on the day; otherwise it is a reminder you tick off.
@@ -26,6 +26,9 @@ export interface Bill {
   acct?: string; auto?: boolean; start?: string; pocket?: string; cat?: string; sub?: string; skipMonths?: string[]; photo?: string | null;
   /** 'USD' = amount is in dollars and is converted with that day's TRM. */
   currency?: 'USD' | 'COP';
+  /** Card payments: the card to pay (`acct` is the account it's paid from) and how much. */
+  toCard?: string;
+  payMode?: 'full' | 'fixed';
 }
 export type NotifKind = 'bill' | 'income' | 'budget' | 'card';
 /** `id` is a stable key, so the same event never notifies twice. */

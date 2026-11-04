@@ -3,12 +3,12 @@ import { useApp, openSheet } from '../lib/store';
 import { LINE, TEXT, tint } from '../lib/constants';
 import { ctxOf, fmt } from '../lib/derive';
 import { daysInMonth, fmtDay, monthLabel, parse, prevMonthKey, relDay } from '../lib/dates';
-import { dueDate, eventsOn, ordinal } from '../lib/schedule';
+import { dueDate, eventsOn } from '../lib/schedule';
 import { BillBadge, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
 import { approxLocal, billAmount } from '../lib/schedule';
 
-const GREEN = 'oklch(0.62 0.12 160)', GREEN_TEXT = 'oklch(0.5 0.12 150)', BILL = 'var(--color-accent)', SPEND = 'var(--color-neutral-400)';
+const CARD = '#2a78d6', GREEN = 'oklch(0.62 0.12 160)', GREEN_TEXT = 'oklch(0.5 0.12 150)', BILL = 'var(--color-accent)', SPEND = 'var(--color-neutral-400)';
 const pad = (n: number) => String(n).padStart(2, '0');
 const nextMonth = (m: string) => { const [y, mo] = m.split('-').map(Number); return mo === 12 ? `${y + 1}-01` : `${y}-${pad(mo + 1)}`; };
 
@@ -27,7 +27,10 @@ export default function CalendarScreen() {
   const incomeOn = (date: string) => (d.incomes || []).filter(t => t.date === date);
   const scheduled = d.bills.filter(b => !b.start || dueDate(b, month) >= b.start);
   const incomeTotal = scheduled.filter(b => b.kind === 'Income').reduce((a, b) => a + approxLocal(d, b), 0);
-  const billTotal = scheduled.filter(b => b.kind !== 'Income').reduce((a, b) => a + approxLocal(d, b), 0);
+  const billTotal = scheduled.filter(b => b.kind === 'Bill' || b.kind === 'Subscription').reduce((a, b) => a + approxLocal(d, b), 0);
+  // Card payments: what was actually paid this month, otherwise what it would pay now.
+  const cardTotal = scheduled.filter(b => b.kind === 'CardPayment').reduce((a, b) => a + (d.payments.find(p => p.ruleId === b.id && p.ruleMonth === month)?.amt ?? approxLocal(d, b)), 0);
+  const amountText = (b: typeof d.bills[number]) => (b.kind === 'CardPayment' && b.payMode !== 'fixed' ? 'Full balance' : `${b.kind === 'Income' ? '+' : '−'}${billAmount(b)}`);
 
   const selEvents = eventsOn(d, sel);
   const selSpent = spentOn(sel).sort((x, y) => y.ts - x.ts).map(e => expView(d, e, c));
@@ -57,7 +60,8 @@ export default function CalendarScreen() {
             const ev = eventsOn(d, date), on = date === sel, isToday = date === c.today;
             const dots = [
               ...(ev.some(e => e.b.kind === 'Income') || incomeOn(date).length ? [GREEN] : []),
-              ...(ev.some(e => e.b.kind !== 'Income') ? [BILL] : []),
+              ...(ev.some(e => e.b.kind === 'Bill' || e.b.kind === 'Subscription') ? [BILL] : []),
+              ...(ev.some(e => e.b.kind === 'CardPayment') ? [CARD] : []),
               ...(spentOn(date).some(e => !e.ruleId) ? [SPEND] : [])
             ];
             return (
@@ -71,29 +75,30 @@ export default function CalendarScreen() {
           })}
         </div>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'var(--color-neutral-600)', paddingTop: 2 }}>
-          {[[GREEN, 'Income'], [BILL, 'Bills'], [SPEND, 'Spending']].map(([col, l]) => <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 7, height: 7, borderRadius: 999, background: col }} />{l}</span>)}
+          {[[GREEN, 'Income'], [BILL, 'Bills'], ...(cardTotal || d.bills.some(b => b.kind === 'CardPayment') ? [[CARD, 'Cards']] : []), [SPEND, 'Spending']].map(([col, l]) => <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 7, height: 7, borderRadius: 999, background: col }} />{l}</span>)}
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <span style={{ ...chipStyle, background: 'oklch(0.95 0.045 155)', color: 'oklch(0.42 0.09 155)' }}>Income +{fmt(incomeTotal)}</span>
         <span style={{ ...chipStyle, background: 'var(--color-accent-100)', color: 'var(--color-accent-800)' }}>Bills −{fmt(billTotal)}</span>
+        {d.bills.some(b => b.kind === 'CardPayment') && <span style={{ ...chipStyle, background: 'oklch(0.94 0.04 250)', color: 'oklch(0.38 0.1 250)' }}>Cards −{fmt(cardTotal)}</span>}
       </div>
 
       <SectionHead title={relDay(sel, c.today) === 'Today' ? 'Today' : fmtDay(sel, { weekday: 'long', month: 'short', day: 'numeric' })} right="Add here" onRight={() => openSheet({ name: 'schedule', id: null, day: selDay })} />
       <ListCard>
         {selEvents.map(({ b, paid, auto, past }, i) => {
           const inc = b.kind === 'Income';
-          const status = paid ? (inc ? 'Received' : 'Paid') : past ? (auto ? 'Skipped' : 'Not ticked off') : auto ? (inc ? 'Will be added automatically' : 'Will be paid automatically') : 'Reminder';
+          const status = paid ? (inc ? 'Received' : 'Paid') : past ? (auto ? 'Skipped' : 'Not ticked off') : auto ? 'Auto' : 'Reminder';
           const acct = d.accounts.find(a => a.id === b.acct)?.name;
           return (
             <div key={b.id} onClick={() => openSheet({ name: 'schedule', id: b.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selEvents.length - 1 && !selSpent.length && !selIncome.length ? 'transparent' : LINE}`, cursor: 'pointer' }}>
               <BillBadge b={b} />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
-                <span style={{ fontSize: 12, color: paid ? GREEN_TEXT : 'var(--color-neutral-700)' }}>{[b.kind, status, acct].filter(Boolean).join(' · ')}</span>
+                <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name}</span>
+                <span style={{ fontSize: 12, color: paid ? GREEN_TEXT : 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[status, acct].filter(Boolean).join(' · ')}</span>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{inc ? '+' : '−'}{billAmount(b)}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{amountText(b)}</span>
             </div>
           );
         })}
@@ -128,12 +133,12 @@ export default function CalendarScreen() {
             <div key={b.id} onClick={() => openSheet({ name: 'schedule', id: b.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === arr.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
               <BillBadge b={b} />
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
-                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  {`Every ${ordinal(b.dueDay)} · `}{b.auto && acct ? <><I.Repeat size={11} />{`Auto · ${acct}`}</> : 'Reminder'} · next {fmtDay(dueDate(b, dueDate(b, c.month) >= c.today ? c.month : nextMonth(c.month)), { month: 'short', day: 'numeric' })}
+                <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.name}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {[fmtDay(dueDate(b, dueDate(b, c.month) >= c.today ? c.month : nextMonth(c.month)), { month: 'short', day: 'numeric' }), acct].filter(Boolean).join(' · ')}
                 </span>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{inc ? '+' : '−'}{billAmount(b)}</span>
+              <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: inc ? GREEN_TEXT : TEXT }}>{amountText(b)}</span>
             </div>
           );
         })}

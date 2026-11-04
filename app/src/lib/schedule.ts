@@ -11,6 +11,7 @@ import { fmtUsd, isUsd, latestRate, trmFor } from './trm';
  * lookup failed, the newest known rate. Returns null while the TRM is still loading.
  */
 export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig?: FxOrig } | null {
+  if (isCardPay(b)) return { amt: Math.round(cardPayAmount(d, b)) };
   if (!isUsd(b)) return { amt: b.amt };
   const trm = trmFor(d, date);
   if (!trm && !d.fx?.tried[date]) return null;
@@ -18,15 +19,24 @@ export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig
   return { amt: Math.round(b.amt * rate), orig: { amt: b.amt, cur: 'USD', rate, official: !!trm } };
 }
 /** Text for a bill's amount: "$44.900" or "US$20,00". */
-export const billAmount = (b: Bill) => (isUsd(b) ? fmtUsd(b.amt) : fmt(b.amt));
+export const billAmount = (b: Bill) => (isCardPay(b) && b.payMode !== 'fixed' ? 'Full balance' : isUsd(b) ? fmtUsd(b.amt) : fmt(b.amt));
 /** Approximate local value for totals and previews. */
-export const approxLocal = (d: Data, b: Bill) => (isUsd(b) ? b.amt * latestRate(d) : b.amt);
+export const approxLocal = (d: Data, b: Bill) => (isCardPay(b) ? cardPayAmount(d, b) : isUsd(b) ? b.amt * latestRate(d) : b.amt);
 
 const pad = (n: number) => String(n).padStart(2, '0');
 /** Date of the item in month `m`; days past the month's end fall on its last day. */
 export const dueDate = (b: Bill, m: string) => `${m}-${pad(Math.min(b.dueDay, daysInMonth(m)))}`;
 export const isIncome = (b: Bill) => b.kind === 'Income';
-export const isAuto = (b: Bill, d: Data) => !!(b.auto && b.acct && d.accounts.some(a => a.id === b.acct));
+export const isCardPay = (b: Bill) => b.kind === 'CardPayment';
+export const KIND_LABEL: Record<Bill['kind'], string> = { Income: 'Income', Bill: 'Bill', Subscription: 'Subscription', CardPayment: 'Card payment' };
+export const isAuto = (b: Bill, d: Data) => !!(b.auto && b.acct && d.accounts.some(a => a.id === b.acct) && (!isCardPay(b) || d.accounts.some(a => a.id === b.toCard && a.type === 'card')));
+/** How much a card payment would pay right now: the full balance owed, or the fixed amount (never more than owed or than the account has). */
+export function cardPayAmount(d: Data, b: Bill) {
+  const card = d.accounts.find(a => a.id === b.toCard), from = d.accounts.find(a => a.id === b.acct);
+  if (!card) return 0;
+  const want = b.payMode === 'fixed' ? Math.min(b.amt, Math.max(0, card.bal)) : Math.max(0, card.bal);
+  return Math.max(0, Math.min(want, from ? Math.max(0, from.bal) : want));
+}
 const nextMonth = (m: string) => { const [y, mo] = m.split('-').map(Number); return mo === 12 ? `${y + 1}-01` : `${y}-${pad(mo + 1)}`; };
 
 /** Balance change for money in (+) or out (−) of an account; cards owe less when money comes in. */
@@ -40,6 +50,11 @@ export function applyOccurrence(d: Data, b: Bill, m: string, date: string): Part
   if (!isAuto(b, d)) return { bills: d.bills.map(markPaid) };
   const ts = Date.now();
   const { amt, orig } = localAmount(d, b, date) ?? { amt: Math.round(b.amt * (isUsd(b) ? latestRate(d) : 1)) };
+  if (isCardPay(b)) {
+    if (!(amt > 0)) return { bills: d.bills.map(markPaid) };
+    const pay = { id: uid('pay'), ts, from: b.acct!, to: b.toCard!, amt, date, ruleId: b.id, ruleMonth: m };
+    return { payments: [...d.payments, pay], accounts: d.accounts.map(a => (a.id === b.acct || a.id === b.toCard ? { ...a, bal: a.bal - amt } : a)), bills: d.bills.map(markPaid) };
+  }
   if (isIncome(b)) {
     const inc: Income = { id: uid('in'), ts, a: b.acct!, amt, note: b.name, date, ruleId: b.id, ruleMonth: m, orig };
     return { incomes: [inc, ...d.incomes], accounts: move(d.accounts, b.acct!, amt, true), bills: d.bills.map(markPaid) };
@@ -51,6 +66,8 @@ export function applyOccurrence(d: Data, b: Bill, m: string, date: string): Part
 /** Reverses a handled month: removes the money it moved and stops it from running again. */
 export function undoOccurrence(d: Data, b: Bill, m: string): Partial<Data> {
   const bills = d.bills.map(x => (x.id !== b.id ? x : { ...x, paidMonths: x.paidMonths.filter(y => y !== m), skipMonths: [...(x.skipMonths || []).filter(y => y !== m), m] }));
+  const pay = d.payments.find(t => t.ruleId === b.id && t.ruleMonth === m);
+  if (pay) return { bills, payments: d.payments.filter(t => t !== pay), accounts: d.accounts.map(a => (a.id === pay.from || a.id === pay.to ? { ...a, bal: a.bal + pay.amt } : a)) };
   const inc = d.incomes.find(t => t.ruleId === b.id && t.ruleMonth === m);
   if (inc) return { bills, incomes: d.incomes.filter(t => t !== inc), accounts: move(d.accounts, inc.a, inc.amt, false) };
   const exp = d.expenses.find(t => t.ruleId === b.id && t.ruleMonth === m);
@@ -95,7 +112,11 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
       if (!local) continue; // waiting for that day's TRM; runs again once it arrives
       apply(applyOccurrence(d, b, m, due));
       const how = local.orig ? ` (${fmtUsd(b.amt)} at ${local.orig.official ? 'TRM' : 'about'} ${fmt(local.orig.rate)})` : '';
-      if (isIncome(b)) notify(`ran:${b.id}:${m}`, due, 'income', `${b.name} received`, `+${fmt(local.amt)}${how} added to ${acctName(b.acct)}.`);
+      if (isCardPay(b)) {
+        const card = acctName(b.toCard);
+        if (local.amt > 0) notify(`ran:${b.id}:${m}`, due, 'card', `${card} paid`, `−${fmt(local.amt)} from ${acctName(b.acct)} to your card.`);
+        else notify(`ran:${b.id}:${m}`, due, 'card', `${card} payment skipped`, d.accounts.find(a => a.id === b.toCard)?.bal ? `${acctName(b.acct)} didn't have enough money.` : 'Nothing was owed on the card.');
+      } else if (isIncome(b)) notify(`ran:${b.id}:${m}`, due, 'income', `${b.name} received`, `+${fmt(local.amt)}${how} added to ${acctName(b.acct)}.`);
       else notify(`ran:${b.id}:${m}`, due, 'bill', `${b.name} paid`, `−${fmt(local.amt)}${how} from ${acctName(b.acct)}.`);
     }
   }
@@ -107,7 +128,8 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
     const tm = monthKey(tomorrow);
     if (dueDate(b, tm) === tomorrow && !handled(tm) && (!b.start || tomorrow >= b.start)) {
       const auto = isAuto(b, d);
-      if (isIncome(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'income', `${b.name} arrives tomorrow`, `+${billAmount(b)}${auto ? ` will be added to ${acctName(b.acct)}` : ''}.`);
+      if (isCardPay(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'card', `${acctName(b.toCard)} payment tomorrow`, `${b.payMode === 'fixed' ? fmt(b.amt) : `The full balance (now ${fmt(d.accounts.find(a => a.id === b.toCard)?.bal || 0)})`}${auto ? ` will be paid from ${acctName(b.acct)}` : ''}.`);
+      else if (isIncome(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'income', `${b.name} arrives tomorrow`, `+${billAmount(b)}${auto ? ` will be added to ${acctName(b.acct)}` : ''}.`);
       else notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}${isUsd(b) ? ' (converted with that day\'s TRM)' : ''}${auto ? ` will be paid automatically from ${acctName(b.acct)}` : '. Remember to pay it'}.`);
     }
     const m = monthKey(today);
@@ -138,7 +160,7 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
   const kept = [...fresh, ...d.notifications].filter(n => n.date >= cutoff);
   if (kept.length !== d.notifications.length) changed = true;
   if (!changed) return null;
-  return { incomes: d.incomes, expenses: d.expenses, accounts: d.accounts, bills: d.bills, notifications: kept.sort((x, y) => (y.date > x.date ? 1 : y.date < x.date ? -1 : y.ts - x.ts)) };
+  return { incomes: d.incomes, expenses: d.expenses, payments: d.payments, accounts: d.accounts, bills: d.bills, notifications: kept.sort((x, y) => (y.date > x.date ? 1 : y.date < x.date ? -1 : y.ts - x.ts)) };
 }
 
 /** What happens on a given day of a month, for the calendar. */
