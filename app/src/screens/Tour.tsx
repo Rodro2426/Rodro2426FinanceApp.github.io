@@ -127,7 +127,7 @@ export default function Tour() {
       <span style={{ fontSize: isSheet ? 16 : 19, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--color-text)' }}>{s.title}</span>
       <span style={{ fontSize: isSheet ? 13.5 : 14.5, lineHeight: 1.42, color: 'var(--color-neutral-800)' }}>{s.text}</span>
       {!s.done ? (
-        <button onClick={next} style={{ alignSelf: 'flex-end', marginTop: 2, height: 40, padding: '0 20px', borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{i === 0 ? 'Start' : 'Next'}</button>
+        <button onClick={next} style={{ alignSelf: 'flex-end', marginTop: 2, height: 40, padding: '0 20px', borderRadius: 999, border: 0, background: '#232e7a', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{i === 0 ? 'Start' : 'Next'}</button>
       ) : (
         <button onClick={next} style={{ alignSelf: 'flex-end', border: 0, background: 'transparent', color: 'var(--color-neutral-600)', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', padding: '2px 0' }}>Skip this step</button>
       )}
@@ -141,7 +141,7 @@ export default function Tour() {
     return (
       <div ref={root} role="dialog" aria-label="Tour finished" style={{ position: 'absolute', inset: 0, zIndex: 95, background: 'rgba(18,30,22,.55)', display: 'flex', alignItems: 'center', padding: 18 }}>
         <div className="tour-bubble" style={{ width: '100%', background: '#fff', borderRadius: 28, padding: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <img src="./pockets-mark.svg" alt="" width={52} height={60} style={{ alignSelf: 'center' }} />
+          <img src="./pockets-mark.svg" alt="" width={52} height={63} style={{ alignSelf: 'center' }} />
           <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', textAlign: 'center' }}>You’re ready!</span>
           <span style={{ fontSize: 14.5, lineHeight: 1.45, color: 'var(--color-neutral-800)', textAlign: 'center' }}>
             {first
@@ -149,9 +149,9 @@ export default function Tour() {
               : 'That was a practice copy. Your real accounts and transactions were never touched and come back now, exactly as you left them.'}
           </span>
           {first ? <>
-            {made.length > 0 && <button onClick={() => endTour('keep')} style={{ height: 52, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer', marginTop: 6 }}>Keep what I added</button>}
-            <button onClick={() => endTour('fresh')} style={{ height: 52, borderRadius: 999, border: 0, background: made.length ? 'var(--color-neutral-100)' : '#1d4a2e', color: made.length ? 'var(--color-text)' : '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer' }}>Start from scratch</button>
-          </> : <button onClick={() => { void endTour('restore').then(() => flash('Your data is back, nothing was changed')); }} style={{ height: 52, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer', marginTop: 6 }}>Back to my data</button>}
+            {made.length > 0 && <button onClick={() => endTour('keep')} style={{ height: 52, borderRadius: 999, border: 0, background: '#232e7a', color: '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer', marginTop: 6 }}>Keep what I added</button>}
+            <button onClick={() => endTour('fresh')} style={{ height: 52, borderRadius: 999, border: 0, background: made.length ? 'var(--color-neutral-100)' : '#232e7a', color: made.length ? 'var(--color-text)' : '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer' }}>Start from scratch</button>
+          </> : <button onClick={() => { void endTour('restore').then(() => flash('Your data is back, nothing was changed')); }} style={{ height: 52, borderRadius: 999, border: 0, background: '#232e7a', color: '#fff', fontSize: 15.5, fontWeight: 700, cursor: 'pointer', marginTop: 6 }}>Back to my data</button>}
           <span style={{ fontSize: 12, color: 'var(--color-neutral-600)', textAlign: 'center' }}>Replay this tour anytime from Profile → App tutorial.</span>
         </div>
       </div>

@@ -109,7 +109,7 @@ export default function App() {
   return (
     <div className="shell">
       <div ref={brand} className="brand-reveal" aria-hidden="true">
-        <img src="./pockets-mark.svg" alt="" width={50} height={57} />
+        <img src="./pockets-mark.svg" alt="" width={50} height={61} />
         <span>Pockets</span>
       </div>
       <div ref={scroll} onScroll={onScroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 1 }}>

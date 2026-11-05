@@ -1,17 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a6340"/><stop offset="1" stop-color="#143a24"/></linearGradient>
-    <linearGradient id="blush" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f7bcae"/><stop offset="1" stop-color="#e9958a"/></linearGradient>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfd5f7"/><stop offset="1" stop-color="#8eafe8"/></linearGradient>
-    <linearGradient id="mint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2faf3"/><stop offset="1" stop-color="#cbe7d1"/></linearGradient>
-    <linearGradient id="forest" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f7146"/><stop offset="1" stop-color="#16422a"/></linearGradient>
-    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="6" stdDeviation="7" flood-color="#0b2416" flood-opacity=".28"/></filter>
+    <linearGradient id="pk-bg" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#fbf9f3"/><stop offset="1" stop-color="#ebe4d3"/></linearGradient>
+    <linearGradient id="pk-note" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f2e7"/><stop offset="1" stop-color="#e4ddca"/></linearGradient>
+    <linearGradient id="pk-card" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b4bce9"/><stop offset="1" stop-color="#7884cc"/></linearGradient>
+    <linearGradient id="pk-pocket" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4553ad"/><stop offset="0.55" stop-color="#2d3a8c"/><stop offset="1" stop-color="#1f2a70"/></linearGradient>
+    <linearGradient id="pk-lip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8d98dc"/><stop offset="1" stop-color="#5664bd"/></linearGradient>
+    <radialGradient id="pk-sheen" cx="0.3" cy="0.45" r="0.35"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <filter id="pk-drop" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#1b2466" flood-opacity=".22"/></filter>
+    <filter id="pk-soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#1b2466" flood-opacity=".18"/></filter>
   </defs>
-  <rect width="512" height="512" rx="114" fill="url(#bg)"/>
-  <g filter="url(#soft)">
-    <rect x="170" y="118" width="172" height="118" rx="36" fill="url(#blush)"/>
-    <rect x="148" y="160" width="216" height="128" rx="40" fill="url(#sky)"/>
-    <path d="M136 258 Q256 312 376 258 L376 360 Q376 396 340 396 L172 396 Q136 396 136 360 Z" fill="url(#mint)"/>
+  <rect width="512" height="512" fill="url(#pk-bg)"/>
+  <rect x="1" y="1" width="510" height="510" rx="0" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2"/>
+  <g filter="url(#pk-drop)">
+    <!-- banknote -->
+    <g transform="rotate(-7 252 150)" filter="url(#pk-soft)">
+      <rect x="160" y="100" width="186" height="104" rx="9" fill="url(#pk-note)" stroke="#6c739c" stroke-width="2.5"/>
+      <rect x="171" y="110" width="164" height="84" rx="5" fill="none" stroke="#9aa0bf" stroke-width="1.5"/>
+      <circle cx="253" cy="150" r="17" fill="none" stroke="#6c739c" stroke-width="3"/>
+      <path d="M253 140 V161" stroke="#6c739c" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="183" cy="124" r="3.4" fill="#6c739c"/>
+      <circle cx="322" cy="124" r="3.4" fill="#6c739c"/>
+    </g>
+    <!-- card -->
+    <g filter="url(#pk-soft)">
+      <rect x="142" y="176" width="228" height="104" rx="22" fill="url(#pk-card)"/>
+      <path d="M162 181 H350" stroke="#fff" stroke-opacity=".7" stroke-width="2.5" stroke-linecap="round"/>
+      <rect x="166" y="198" width="42" height="32" rx="6" fill="#efe9d8"/>
+      <path d="M180 198 V230 M194 198 V230 M166 214 H208" stroke="#c9c0a6" stroke-width="2"/>
+      <path d="M167 248 H189 M199 248 H221 M231 248 H253" stroke="#e1e5f8" stroke-width="5" stroke-linecap="round"/>
+      <path d="M329 203 Q337 214 329 225 M338 198 Q349 214 338 230" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <!-- pocket -->
+    <path d="M131 256 Q256 290 381 256 V350 Q381 392 339 392 H173 Q131 392 131 350 Z" fill="url(#pk-pocket)"/>
+    <path d="M131 256 Q256 290 381 256 V350 Q381 392 339 392 H173 Q131 392 131 350 Z" fill="url(#pk-sheen)"/>
+    <path d="M131 256 Q256 290 381 256 L381 268 Q256 302 131 268 Z" fill="url(#pk-lip)"/>
+    <path d="M148 279 Q256 309 364 279 V344 Q364 375 333 375 H179 Q148 375 148 344 Z" fill="none" stroke="#f1eee6" stroke-width="3.6" stroke-dasharray="10 7" stroke-linecap="round"/>
   </g>
-  <path d="M136 258 Q256 312 376 258" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>
 </svg>

@@ -112,7 +112,7 @@ input::placeholder { color: var(--color-neutral-500); }
   display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none;
   opacity: 0; transform: translateY(-40px) scale(.86); transform-origin: 50% 0; will-change: opacity, transform;
 }
-.brand-reveal span { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: #1d4a2e; line-height: 1; }
+.brand-reveal span { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: #232e7a; line-height: 1; }
 
 /* Tour cards slide in. */
 @keyframes tour-in { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
