@@ -65,3 +65,19 @@ describe('balances and settling up', () => {
     expect(personTotals('me', items)).toEqual({ share: 75000 + 40000 + 20000, paid: 300000 });
   });
 });
+
+describe('trip spending summary', () => {
+  it('total, my share and everyone\'s shares add up; payments are not spending', async () => {
+    const { tripSpending, tripMonths } = await import('./settle');
+    const its = [exp('me', 300000, ['me', 'ana', 'juan']), exp('ana', 90000, ['ana', 'juan']), pay('juan', 'me', 50000)];
+    its[1].date = '2026-10-20';
+    const all = tripSpending(M, its, 'me', 'all');
+    expect(all.total).toBe(390000);
+    expect(all.mine).toBe(100000);
+    expect(all.people.reduce((a, p) => a + p.share, 0)).toBe(all.total);
+    expect(all.pct).toBeCloseTo(100000 / 390000, 6);
+    const nov = tripSpending(M, its, 'me', '2026-11');
+    expect([nov.total, nov.mine, nov.count]).toEqual([300000, 100000, 1]);
+    expect(tripMonths(its)).toEqual(['2026-10', '2026-11']);
+  });
+});

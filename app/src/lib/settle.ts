@@ -76,3 +76,19 @@ export function personTotals(id: string, items: TripItem[], scale = 1) {
   items.forEach(it => { if (it.kind !== 'expense') return; if (it.paidBy === id) paid += it.amount; share += sharesOf(it, scale)[id] ?? 0; });
   return { share, paid };
 }
+
+/** Months (YYYY-MM) that have expenses, oldest first. */
+export const tripMonths = (items: TripItem[]) => [...new Set(items.filter(i => i.kind === 'expense').map(i => i.date.slice(0, 7)))].sort();
+
+/** Spending in a trip for a period ('all' or 'YYYY-MM'): total, your share and everyone's share. Payments don't count as spending. */
+export function tripSpending(members: Member[], items: TripItem[], me: string, period: string, scale = 1) {
+  const exp = items.filter(i => i.kind === 'expense' && (period === 'all' || i.date.slice(0, 7) === period));
+  const total = exp.reduce((a, i) => a + i.amount, 0);
+  const people = members.map(m => {
+    let share = 0, paid = 0;
+    exp.forEach(i => { share += sharesOf(i, scale)[m.id] ?? 0; if (i.paidBy === m.id) paid += i.amount; });
+    return { id: m.id, name: m.name, share, paid };
+  });
+  const mine = people.find(p => p.id === me)?.share ?? 0;
+  return { total, mine, pct: total ? mine / total : 0, people: people.sort((a, b) => b.share - a.share), count: exp.length };
+}

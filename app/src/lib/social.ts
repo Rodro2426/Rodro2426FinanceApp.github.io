@@ -4,7 +4,7 @@
 //   friendships/{a_b}         { users: [a, b], from, status: 'pending' | 'accepted', names }
 //   trips/{tripId}            { name, emoji, owner, members: [uid], guests: [{id, name}], names }
 //   trips/{tripId}/items/{id} expenses and payments (see settle.ts)
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore/lite';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore/lite';
 import { auth, db } from './cloud';
 import type { Member, TripItem } from './settle';
 
@@ -17,8 +17,9 @@ export const pairId = (a: string, b: string) => [a, b].sort().join('_');
 const clean = (e: string) => e.trim().toLowerCase();
 
 /* ---------------- State shared with the screens ---------------- */
-interface SocialState { friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; loading: boolean; error: string | null; loadedAt: number }
-let state: SocialState = { friends: [], trips: [], items: {}, loading: false, error: null, loadedAt: 0 };
+export interface Message { id: string; uid: string; name: string; text: string; createdAt: number }
+interface SocialState { friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; messages: Record<string, Message[]>; latest: Record<string, number>; loading: boolean; error: string | null; loadedAt: number }
+let state: SocialState = { friends: [], trips: [], items: {}, messages: {}, latest: {}, loading: false, error: null, loadedAt: 0 };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 export const getSocial = () => state;
@@ -96,7 +97,7 @@ export async function refreshSocial() {
   try {
     await ensureProfile().catch(() => {});
     await Promise.all([loadFriends(), loadTrips()]);
-    await Promise.all(state.trips.map(t => loadItems(t.id)));
+    await Promise.all(state.trips.map(t => Promise.all([loadItems(t.id), loadLatest(t.id).catch(() => {})])));
     setS({ loading: false, loadedAt: Date.now() });
   } catch (e) { fail(e); }
 }
@@ -138,4 +139,51 @@ export async function deleteItem(tripId: string, id: string) {
 
 /** Everyone in a trip: members with accounts, then guests. */
 export const tripMembers = (t: Trip): Member[] => [...t.members.map(id => ({ id, name: t.names[id] ?? 'Friend' })), ...t.guests];
-export const myUid = () => me()?.uid ?? '';
+let testUid = '';
+export const myUid = () => testUid || me()?.uid || '';
+// Development builds only: lets screenshots fill in a sample trip without Firebase. Not in the live app.
+if (import.meta.env.DEV && typeof window !== 'undefined') (window as unknown as { __social: unknown }).__social = { set: (p: Partial<SocialState>, uid?: string) => { if (uid) testUid = uid; setS(p); } };
+
+/* ---------------- Trip chat ---------------- */
+//   trips/{tripId}/messages/{id}  { uid, name, text, createdAt }
+const MAX_LOAD = 150;
+/** When the newest message in a trip was sent (for the "new messages" dot). */
+export async function loadLatest(tripId: string) {
+  const snap = await getDocs(query(collection(db, 'trips', tripId, 'messages'), orderBy('createdAt', 'desc'), limit(1)));
+  const at = snap.docs[0]?.data().createdAt as number | undefined;
+  setS({ latest: { ...state.latest, [tripId]: at ?? 0 } });
+}
+/** Loads the last messages, or only the ones newer than what's already here. Cheap to call every few seconds. */
+export async function loadMessages(tripId: string) {
+  const have = state.messages[tripId] ?? [];
+  const after = have.length ? have[have.length - 1].createdAt : 0;
+  const q = after
+    ? query(collection(db, 'trips', tripId, 'messages'), where('createdAt', '>', after), orderBy('createdAt'))
+    : query(collection(db, 'trips', tripId, 'messages'), orderBy('createdAt', 'desc'), limit(MAX_LOAD));
+  const snap = await getDocs(q);
+  if (!snap.size && after) return;
+  const got = snap.docs.map(d => ({ ...(d.data() as Omit<Message, 'id'>), id: d.id }));
+  const all = [...have, ...got].filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i).sort((a, b) => a.createdAt - b.createdAt);
+  setS({ messages: { ...state.messages, [tripId]: all }, latest: { ...state.latest, [tripId]: all.length ? all[all.length - 1].createdAt : 0 } });
+}
+export async function sendMessage(tripId: string, text: string): Promise<string | null> {
+  const u = me(); const t = text.trim();
+  if (!u || !t) return null;
+  try {
+    await addDoc(collection(db, 'trips', tripId, 'messages'), { uid: u.uid, name: myName(), text: t.slice(0, 2000), createdAt: Date.now() });
+    await loadMessages(tripId); markRead(tripId);
+    return null;
+  } catch (e) { return fail(e); }
+}
+export async function deleteMessage(tripId: string, id: string) {
+  try { await deleteDoc(doc(db, 'trips', tripId, 'messages', id)); setS({ messages: { ...state.messages, [tripId]: (state.messages[tripId] ?? []).filter(m => m.id !== id) } }); return null; } catch (e) { return fail(e); }
+}
+/** Read markers live on this phone only. */
+const readKey = (tripId: string) => `pockets-read-${tripId}`;
+export function markRead(tripId: string) { try { localStorage.setItem(readKey(tripId), String(Date.now())); } catch { /* not saved */ } emit(); }
+export function hasUnread(tripId: string) {
+  const at = state.latest[tripId] ?? 0;
+  let read = 0; try { read = Number(localStorage.getItem(readKey(tripId)) || 0); } catch { /* none */ }
+  const mine = (state.messages[tripId] ?? []).filter(m => m.createdAt === at).every(m => m.uid === myUid());
+  return at > read && !(mine && (state.messages[tripId] ?? []).length > 0);
+}

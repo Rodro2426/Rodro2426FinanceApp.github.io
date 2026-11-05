@@ -6,7 +6,7 @@ import { shortDate } from '../lib/dates';
 import { auth, checkVerified, resendVerification } from '../lib/cloud';
 import { useSync } from '../sheets/CloudSheet';
 import {
-  acceptFriend, addFriendByEmail, deleteTrip, ensureProfile, getSocial, myUid, refreshSocial, removeFriend, saveItem, subscribeSocial, tripMembers, updateTrip,
+  acceptFriend, addFriendByEmail, deleteTrip, ensureProfile, getSocial, hasUnread, myUid, refreshSocial, removeFriend, saveItem, subscribeSocial, tripMembers, updateTrip,
   type Trip
 } from '../lib/social';
 import { balances, personTotals, settleUp, sharesOf } from '../lib/settle';
@@ -129,6 +129,7 @@ function TripList() {
             <span style={{ fontSize: 16, fontWeight: 700 }}>{t.name}</span>
             <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tripMembers(t).map(m => (m.id === myUid() ? 'You' : m.name)).join(', ')} · {fmt(total)} total</span>
             <span style={{ fontSize: 13, fontWeight: 700, color: mb.color }}>{mb.text}</span>
+            {hasUnread(t.id) && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-accent-700)' }}>● New messages</span>}
           </span>
           <I.Chevron size={16} color="var(--color-neutral-500)" />
         </button>
@@ -193,6 +194,16 @@ export function TripPage({ id }: { id: string }) {
           <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Friends with an account see the trip in their app. Guests are tracked by you and the other members.</span>
         </div>
       )}
+    </div>
+
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <button onClick={() => setUI({ page: `tripchat:${t.id}` })} className="pr98" style={{ ...card, border: 0, cursor: 'pointer', color: TEXT, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, position: 'relative' }}>
+        <span style={{ fontSize: 22 }}>💬</span><span style={{ fontSize: 15, fontWeight: 700 }}>Chat</span>
+        {hasUnread(t.id) && <span aria-label="New messages" style={{ position: 'absolute', top: 12, right: 12, width: 10, height: 10, borderRadius: 99, background: 'var(--color-accent)' }} />}
+      </button>
+      <button onClick={() => setUI({ page: `tripstats:${t.id}` })} className="pr98" style={{ ...card, border: 0, cursor: 'pointer', color: TEXT, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 }}>
+        <span style={{ fontSize: 22 }}>📊</span><span style={{ fontSize: 15, fontWeight: 700 }}>Spending</span>
+      </button>
     </div>
 
     <button onClick={() => openSheet({ name: 'tripItem', trip: t.id, id: null })} className="hv-acc600" style={{ height: 54, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><I.Plus size={18} sw={2.5} />Add an expense</button>

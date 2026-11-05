@@ -28,6 +28,7 @@ import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
 import ReportPage from './screens/Reports';
 import SocialPage, { TripPage } from './screens/Social';
+import { TripChatPage, TripStatsPage } from './screens/TripExtras';
 import { TripItemSheet, TripNewSheet } from './sheets/TripSheets';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
@@ -195,6 +196,8 @@ export default function App() {
       {ui.page?.startsWith('report:') && <ReportPage id={ui.page.slice(7)} />}
       {ui.page === 'social' && <SocialPage />}
       {ui.page?.startsWith('trip:') && <TripPage id={ui.page.slice(5)} />}
+      {ui.page?.startsWith('tripstats:') && <TripStatsPage id={ui.page.slice(10)} />}
+      {ui.page?.startsWith('tripchat:') && <TripChatPage id={ui.page.slice(9)} />}
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
       {ui.tour && <Tour />}
