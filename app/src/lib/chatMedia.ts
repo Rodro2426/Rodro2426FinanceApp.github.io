@@ -53,7 +53,7 @@ export async function prepGifFile(file: File): Promise<Shrunk> {
 
 /* ---------------- GIF search (GIPHY) ---------------- */
 // A GIPHY key is free (developers.giphy.com). Put one here to turn GIF search on for everyone, or add your own in the GIF panel.
-export const GIPHY_KEY = '';
+export const GIPHY_KEY = 'YKB5vhaKTY12ZG6MPGBdKd20uaGlmC6b';
 export interface GifHit { id: string; url: string; w: number; h: number; preview: string; pw: number; ph: number; big: string }
 
 export async function searchGifs(key: string, q: string): Promise<GifHit[]> {
