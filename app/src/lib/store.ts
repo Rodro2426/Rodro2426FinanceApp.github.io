@@ -17,8 +17,14 @@ const emit = () => listeners.forEach(l => l());
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 /** Off until the welcome choice is made, so nothing is saved before the person picks. */
 let persistOn = true;
+/** Called on every change that will be saved (the cloud sync listens to this). */
+const persistListeners = new Set<() => void>();
+export const onPersist = (l: () => void) => { persistListeners.add(l); return () => { persistListeners.delete(l); }; };
+/** False during the welcome screen and the practice tour: nothing is saved or synced then. */
+export const isPersisting = () => persistOn;
 function persist() {
   if (!persistOn) return;
+  persistListeners.forEach(l => l());
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => { if (persistOn) set(KEY, state.data).catch(err => console.warn('Could not save data', err)); }, 300);
 }

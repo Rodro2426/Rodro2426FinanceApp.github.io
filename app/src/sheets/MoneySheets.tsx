@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp, setData, openSheet, closeSheet, flash, replaceData, setUI, startTour } from '../lib/store';
+import { syncLabel, useSync } from './CloudSheet';
 import { ACCT_KIND, ACCT_TYPE_LABEL, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { acctTxns, fmt, initialOf, num, pctOf, plural, roundAmt, uid } from '../lib/derive';
 import { allMonths, downloadCSV, exportData } from '../lib/exportData';
@@ -355,6 +356,7 @@ export function SettingsSheet() {
   const [confirm, setConfirm] = useState<null | 'erase' | 'sample'>(null);
   const [restore, setRestore] = useState<Awaited<ReturnType<typeof readBackup>> | null>(null);
   const [askTour, setAskTour] = useState(false);
+  const sync = useSync();
   const logged = d.expenses.length + d.incomes.length;
   const hasData = logged + d.accounts.length + d.pockets.length + d.bills.length > 0;
   const setS = (patch: Partial<typeof st>) => setData(x => ({ settings: { ...x.settings, ...patch } }));
@@ -374,7 +376,16 @@ export function SettingsSheet() {
         <Segmented<Currency> mt={6} items={[['COP', 'COP'], ['$', '$'], ['€', '€'], ['£', '£']]} value={st.currency} onPick={c => setS({ currency: c })} />
         <FieldLabel m="14px 4px 0">Weeks per month</FieldLabel>
         <Segmented mt={6} items={[['4', '4 weeks'], ['5', '5 weeks']]} value={String(st.weeks) as '4' | '5'} onPick={w => setS({ weeks: Number(w) as 4 | 5 })} />
-        <FieldLabel m="18px 4px 0">Backup</FieldLabel>
+        <FieldLabel m="18px 4px 8px">Cloud backup</FieldLabel>
+        <button onClick={() => openSheet({ name: 'cloud' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: '#fff', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+          <span style={{ fontSize: 22 }}>☁️</span>
+          <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: 15, fontWeight: 700 }}>{sync.uid ? sync.email : 'Turn on cloud backup'}</span>
+            <span style={{ fontSize: 12.5, color: sync.uid ? 'var(--color-neutral-700)' : 'var(--color-accent-700)' }}>{sync.uid ? syncLabel(sync) : 'Sign in so your data is never lost'}</span>
+          </span>
+          <span aria-hidden="true" style={{ color: 'var(--color-neutral-500)', fontSize: 18 }}>›</span>
+        </button>
+        <FieldLabel m="18px 4px 0">Backup file</FieldLabel>
         <div style={{ marginTop: 6, background: '#fff', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
             Your data lives only on this phone. Save a backup file to iCloud Drive so you can get everything back if the app is deleted.

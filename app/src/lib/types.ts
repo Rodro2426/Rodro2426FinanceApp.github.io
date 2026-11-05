@@ -112,6 +112,7 @@ export type Sheet =
   | { name: 'cdt'; id?: string | null }
   | { name: 'cdtInfo'; id: string }
   | { name: 'reconcile' }
+  | { name: 'cloud' }
   | { name: 'group'; id: string | null }
   | { name: 'groupItem'; group: string; id: string | null }
   | { name: 'priceSettings' }

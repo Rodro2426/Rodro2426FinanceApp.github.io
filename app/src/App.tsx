@@ -1,5 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { useApp, setUI, openSheet, setData, getData } from './lib/store';
+import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
+import { markDirty, startCloud } from './lib/cloud';
+import { CloudSheet, ConflictChoice } from './sheets/CloudSheet';
 import { runSchedule, trmNeeded } from './lib/schedule';
 import { ensureTrm } from './lib/trm';
 import { runInterest } from './lib/interest';
@@ -63,6 +65,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'cdt': return <CdtSheet id={sheet.id ?? null} />;
     case 'cdtInfo': return <CdtInfoSheet id={sheet.id} />;
     case 'reconcile': return <ReconcileSheet />;
+    case 'cloud': return <CloudSheet />;
     case 'group': return <GroupSheet id={sheet.id} />;
     case 'groupItem': return <GroupItemSheet group={sheet.group} id={sheet.id} />;
     case 'priceSettings': return <PriceSettingsSheet />;
@@ -104,6 +107,8 @@ export default function App() {
 
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
   useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
+  // Cloud sync: every saved change is uploaded a few seconds later; other phones' changes come down on open.
+  useEffect(() => { startCloud({ getData, replace: d => replaceData(d), canSync: isPersisting }); return onPersist(markDirty); }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUI({ sheet: null }); };
     window.addEventListener('keydown', onKey);
@@ -125,6 +130,8 @@ export default function App() {
         {ui.tab === 'calendar' && <CalendarScreen />}
         </div>
       </div>
+
+      {!ui.sheet && !ui.tour && <div style={{ position: 'absolute', left: 14, right: 14, top: 'calc(var(--top) - 6px)', zIndex: 32 }}><ConflictChoice /></div>}
 
       {ui.toast && (
         <div role="status" style={{ position: 'absolute', left: 18, right: 18, bottom: 'calc(var(--tb) + 82px)', zIndex: 30, background: 'var(--color-text)', color: '#fff', padding: '14px 18px', borderRadius: 999, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-lg)' }}>

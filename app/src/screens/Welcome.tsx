@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { pullForWelcome, withoutMarking } from '../lib/cloud';
+import { SignInForm } from '../sheets/CloudSheet';
+import { normalize } from '../lib/store';
 import { finishWelcome, flash, startTour } from '../lib/store';
 import { emptyData, sampleData } from '../lib/seed';
 import { pickBackupFile, readBackup } from '../lib/backup';
@@ -9,6 +12,7 @@ import * as I from '../ui/icons';
 export default function Welcome() {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [cloud, setCloud] = useState(false);
   const who = name.trim();
 
   const scratch = () => {
@@ -37,6 +41,25 @@ export default function Welcome() {
     </button>
   );
 
+  const afterSignIn = async () => {
+    setBusy(true);
+    try {
+      const d = await pullForWelcome();
+      if (d) { withoutMarking(() => finishWelcome(normalize(d))); flash(`Welcome back, ${d.settings.name}`); }
+      else { scratch(); flash('Signed in · your new account is ready and backed up'); }
+    } catch (e) { flash((e as Error).message); }
+    setBusy(false);
+  };
+  if (cloud) return (
+    <div className="noscroll" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)', display: 'flex', flexDirection: 'column', padding: 'calc(var(--top) + 18px) 22px calc(var(--tb) + 20px)' }}>
+      <button onClick={() => setCloud(false)} style={{ alignSelf: 'flex-start', border: 0, background: 'transparent', color: '#232e7a', fontSize: 15, fontWeight: 700, cursor: 'pointer', padding: '6px 0' }}>‹ Back</button>
+      <img src="./pockets-mark.svg" alt="" width={56} height={68} style={{ alignSelf: 'center', marginTop: 6 }} />
+      <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', color: '#232e7a', textAlign: 'center', margin: '8px 0 4px' }}>Your Pockets account</span>
+      <span style={{ fontSize: 14, lineHeight: 1.4, color: '#3d4784', textAlign: 'center', marginBottom: 14 }}>{busy ? 'Bringing back your data…' : 'Sign in to bring back your data, or create an account to keep it safe in the cloud.'}</span>
+      <SignInForm onDone={afterSignIn} />
+    </div>
+  );
+
   return (
     <div className="noscroll" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)', display: 'flex', flexDirection: 'column', padding: 'calc(var(--top) + 28px) 22px calc(var(--tb) + 20px)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center' }}>
@@ -54,6 +77,7 @@ export default function Welcome() {
         {option('Start with a quick tour', 'Recommended. Try every feature on a practice copy, then keep it or start clean', tour, true)}
         {option('Start from scratch', 'Skip the tour and add your own accounts', scratch)}
         {option('Try it with sample data', 'Explore with made-up accounts and expenses', sample)}
+        {option('Sign in to my Pockets account', 'Bring back your data from the cloud', () => setCloud(true))}
         {option('Restore a backup', 'Bring back your data from a backup file', restore)}
       </div>
       <span style={{ marginTop: 14, fontSize: 12, color: '#3d4784', opacity: 0.75, textAlign: 'center' }}>Your data stays on this phone. You can replay the tour anytime from Profile.</span>
