@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Blocks } from '../ui/Blocks';
 import { useApp, openSheet, setData, flash } from '../lib/store';
 import { extraIncomes, findMismatches, markIncluded, monthSummary } from '../lib/plan';
 import { incomeMoves } from '../lib/derive';
@@ -47,6 +48,8 @@ export default function Budget() {
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{monthLabel(c.month)}</span>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Budget</span>
       </div>
+      <Blocks page="budget" title="Budget" blocks={[
+        { id: 'income', name: 'Income', desc: 'Your monthly income', node: <>
       <div data-tour="income" style={{ background: 'var(--surface)', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Monthly income</span>
         <div onFocus={() => { typedAtFocus.current = d.incomeStr; }} onBlur={onIncomeBlur} style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
@@ -91,7 +94,8 @@ export default function Budget() {
           </div>
         )}
       </div>
-
+      </> },
+        { id: 'pockets', name: 'Weekly pockets', desc: 'Your pockets and their budgets', node: <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0' }}>
         <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Weekly pockets</span>
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>per week</span>
@@ -121,7 +125,8 @@ export default function Budget() {
           Add pocket
         </button>
       </div>
-
+      </> },
+        { id: 'plan', name: 'Month plan', desc: 'Income vs plan and real shortfall', node: <>
       <div aria-label="Month plan" style={{ background: 'var(--surface)', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <Bar pct={pctOf(sum.plan, sum.income)} track="var(--color-neutral-200)" fill={sum.planGap < 0 ? 'var(--color-accent)' : 'oklch(0.62 0.12 160)'} ease=".3s" />
         {line('Month income', fmt(sum.income), sum.extra > 0 ? `${fmt(sum.base)} typed + ${fmt(sum.extra)} extra` : undefined)}
@@ -136,7 +141,8 @@ export default function Budget() {
           {issues ? `Review mismatches (${issues})` : 'Review mismatches'}
         </button>
       </div>
-
+      </> },
+        { id: 'goals', name: 'Savings goals', desc: 'Your goals and progress', node: <>
       <div style={{ padding: '10px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Savings goals</div>
       {d.goals.map(g => {
         const k = ink(g.hue), rem = Math.max(0, g.target - g.saved);
@@ -159,6 +165,8 @@ export default function Budget() {
         <I.Plus size={18} />
         Add savings goal
       </button>
+      </> }
+      ]} />
     </div>
   );
 }

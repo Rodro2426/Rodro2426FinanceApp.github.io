@@ -9,6 +9,7 @@ import { billRows } from '../lib/bills';
 import { BillBadge, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
 import { netWorth } from '../lib/networth';
+import { Blocks } from '../ui/Blocks';
 import { monthSummary } from '../lib/plan';
 import { billAmount } from '../lib/schedule';
 
@@ -79,6 +80,8 @@ export default function Home() {
         </div>
       </div>
 
+      <Blocks page="home" title="Home" blocks={[
+        { id: 'safe', name: 'Safe to spend', desc: 'Today, week and month cards', node: <>
       <Pager label="Safe to spend" names={['today', 'this week', 'this month']} initial={1} pages={[
         <SafeCard key="d" tone={todayTone} title="Safe to spend today" left={todayLeft} budget={todayBudget} spent={todaySpent}
           sub={todayActive.length ? `of ${fmt(todayBudget)} for ${todayActive.length === all.length ? 'all your pockets' : todayActive.length === 1 ? '1 pocket' : `${todayActive.length} pockets`} today` : 'No pocket has today as a spending day'} />,
@@ -86,6 +89,8 @@ export default function Home() {
         <SafeCard key="m" tone={monthTone} title={`Left to spend in ${monthName(c.month)}`} left={monthLeft} budget={monthBudget} spent={monthBudget - monthLeft} sub={`of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in the month`} />
       ]} />
 
+      </> },
+        { id: 'stats', name: 'Net worth and spending', desc: 'Net worth and spent this month', node: <>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 10 }}>
         <div onClick={() => setUI({ tab: 'accounts' })} className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Net worth</span>
@@ -99,6 +104,8 @@ export default function Home() {
         </div>
       </div>
 
+      </> },
+        { id: 'pockets', name: 'Pockets', desc: 'What is left in each pocket', node: <>
       <SectionHead title="Pockets" right={pocketPage === 0 ? 'Today' : pocketPage === 1 ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
       {all.length > 0 && <Pager label="Pockets" names={['today', 'this week', 'this month']} initial={1} onPage={setPocketPage} pages={[
         <PocketGrid key="d" view="day" items={all.map((p, i) => ({ p, left: days[i].left, budget: days[i].allowance, off: !days[i].active ? (days[i].spentToday > 0 ? `Spent ${fmt(days[i].spentToday)} today` : days[i].next ? `Not today · ${dayLabel(days[i].next!.date, c).slice(0, 3)} ${fmt(days[i].next!.amount)}` : 'Not today') : undefined }))} />,
@@ -107,6 +114,8 @@ export default function Home() {
       ]} />}
       {all.length === 0 && <EmptyHint text="No pockets yet. Create them in the Budget tab." onClick={() => setUI({ tab: 'budget' })} />}
 
+      </> },
+        { id: 'coming', name: 'Coming up', desc: 'Bills due soon', node: <>
       <SectionHead title="Coming up" right="All bills" onRight={() => setUI({ tab: 'insights' })} />
       <ListCard>
         {upcoming.map((b, i) => (
@@ -122,6 +131,8 @@ export default function Home() {
         {upcoming.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>All bills paid for {monthName(c.month)}.</div>}
       </ListCard>
 
+      </> },
+        { id: 'recent', name: 'Recent', desc: 'Latest expenses and income', node: <>
       <SectionHead title="Recent" right="Search" onRight={() => openSheet({ name: 'search' })} />
       <ListCard>
         {recent.map((r, i) => {
@@ -133,6 +144,8 @@ export default function Home() {
         })}
         {recent.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing yet. Tap + to add an expense or income.</div>}
       </ListCard>
+      </> }
+      ]} />
     </div>
   );
 }

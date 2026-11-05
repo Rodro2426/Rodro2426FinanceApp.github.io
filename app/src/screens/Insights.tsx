@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Blocks } from '../ui/Blocks';
 import { useApp, openSheet, setData } from '../lib/store';
 import { HUES, LINE, ink, mid, tint } from '../lib/constants';
 import { allStats, byDateDesc, catOf, ctxOf, fmt, monthExpenses, pctOf, plural } from '../lib/derive';
@@ -49,12 +50,16 @@ export default function Insights() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ padding: '4px 4px 0', fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Insights</div>
 
+      <Blocks page="insights" title="Insights" blocks={[
+        { id: 'categories', name: 'Spending by category', desc: 'The filterable category table', node: <>
       <CategoryTable />
-
+      </> },
+        { id: 'reports', name: 'Reports', desc: 'Your saved charts', node: <>
       <div style={{ padding: '10px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Reports</div>
       <ReportList />
+      </> },
+        ...(best && goal0 ? [{ id: 'tip', name: 'Savings tip', desc: 'Move leftovers to a goal', node: (
 
-      {best && goal0 && (
         <div style={{ background: 'oklch(0.95 0.04 160)', borderRadius: 26, padding: 18, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--surface)', color: 'oklch(0.42 0.09 160)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Bulb size={18} /></div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -62,8 +67,8 @@ export default function Insights() {
             <button onClick={() => openSheet({ name: 'move', id: best.id, to: goal0.id })} style={{ alignSelf: 'flex-start', height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'oklch(0.42 0.09 160)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Move to goal</button>
           </div>
         </div>
-      )}
-
+        ) }] : []),
+        { id: 'month', name: 'Spent this month', desc: 'Month total by pocket', node: <>
       <div style={{ ...card, gap: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Spent in {monthName(c.month)} so far</span>
@@ -83,7 +88,8 @@ export default function Insights() {
           ))}
         </div>
       </div>
-
+      </> },
+        { id: 'week', name: 'This week vs last week', desc: 'Weekly comparison', node: <>
       <div style={{ ...card, gap: 12 }}>
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>This week vs last week</span>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -94,7 +100,8 @@ export default function Insights() {
         </div>
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{weekSpent <= lastWeek ? `${fmt(lastWeek - weekSpent)} less than last week so far.` : `${fmt(weekSpent - lastWeek)} more than last week.`}</span>
       </div>
-
+      </> },
+        { id: 'tags', name: 'Spending by tag', desc: 'Totals for each tag', node: <>
       <div style={{ ...card, gap: 6 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Spending by tag</span>
@@ -112,7 +119,8 @@ export default function Insights() {
         ))}
         {tagTotals.length === 0 && <span style={{ fontSize: 14, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add tags to your expenses to see them here.</span>}
       </div>
-
+      </> },
+        { id: 'bills', name: 'Bills and subscriptions', desc: 'All your bills this month', node: <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0', gap: 8 }}>
         <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Bills and subscriptions</span>
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(bills.filter(b => !b.others).reduce((a, b) => a + approxLocal(d, b), 0))} / mo</span>
@@ -138,6 +146,8 @@ export default function Insights() {
           Add bill or subscription
         </button>
       </ListCard>
+      </> }
+      ]} />
     </div>
   );
 }

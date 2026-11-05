@@ -9,6 +9,7 @@ import * as I from '../ui/icons';
 import { setData } from '../lib/store';
 import { netWorth, investmentsValue, groupValue } from '../lib/networth';
 import { Toggle } from '../ui/bits';
+import { Blocks, FoldHead, useFolded } from '../ui/Blocks';
 import type { AssetGroup } from '../lib/types';
 import { shortDate } from '../lib/dates';
 
@@ -24,6 +25,7 @@ export default function Accounts() {
   ];
   const cash = d.accounts.filter(a => a.type !== 'card');
   const cards = d.accounts.filter(a => a.type === 'card');
+  const { isFolded, toggle } = useFolded();
   const pos = 'oklch(0.62 0.12 160)', neg = 'oklch(0.9 0.05 25)';
 
   return (
@@ -40,6 +42,17 @@ export default function Accounts() {
         </button>
         </div>
       </div>
+      <Blocks page="accounts" title="Accounts" footer={<>
+      <button data-tour="add-account" onClick={() => openSheet({ name: 'addAcct' })} className="hv-white" style={{ height: 54, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <I.Plus size={18} />
+        Add account or card
+      </button>
+      <button onClick={() => openSheet({ name: 'group', id: null })} className="hv-white" style={{ height: 54, marginTop: -4, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <I.Plus size={18} />
+        Create a group (home, car, other assets)
+      </button>
+      </>} blocks={[
+        { id: 'networth', name: 'Net worth', desc: 'Total you have and owe', node: <>
       <div style={{ background: 'var(--surface)', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Net worth</span>
         <span style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05 }}>{fmt(assets - debt)}</span>
@@ -63,9 +76,10 @@ export default function Accounts() {
           </div>
         )}
       </div>
-
-      <div style={{ padding: '10px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Debit and Cash</div>
-      <ListCard>
+      </> },
+        { id: 'cash', name: 'Debit and Cash', desc: 'Bank, savings and cash accounts', node: <>
+      <FoldHead title="Debit and Cash" open={!isFolded('cash')} onToggle={() => toggle('cash')} summary={`${plural(cash.length, 'account')} · ${fmt(cash.reduce((a, x) => a + x.bal, 0))}`} />
+      {!isFolded('cash') && <ListCard>
         {cash.map((a, i) => (
           <div key={a.id} onClick={() => openSheet({ name: 'acct', id: a.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', borderBottom: `1px solid ${i === cash.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
             <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={42} radius={14} bg={tint(a.hue)} color={ink(a.hue)} fs={16} />
@@ -81,18 +95,17 @@ export default function Accounts() {
           </div>
         ))}
         {cash.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No bank, savings or cash accounts yet.</div>}
-      </ListCard>
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0' }}>
-        <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Investments</span>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{nw.includeInvestments ? 'In net worth' : 'Not in net worth'}</span>
-      </div>
-      <InvestmentsCard inv={inv} />
-
-      {(d.groups ?? []).map(g => <GroupCard key={g.id} g={g} />)}
-
-      <div style={{ padding: '10px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Credit cards</div>
-      {cards.map(a => {
+      </ListCard>}
+      </> },
+        { id: 'investments', name: 'Investments', desc: 'Stocks and CDTs', node: <>
+      <FoldHead title="Investments" open={!isFolded('investments')} onToggle={() => toggle('investments')} summary={fmt(inv.total)}
+        right={<span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{nw.includeInvestments ? 'In net worth' : 'Not in net worth'}</span>} />
+      {!isFolded('investments') && <InvestmentsCard inv={inv} />}
+      </> },
+        ...(d.groups ?? []).map(g => ({ id: `group:${g.id}`, name: `${g.emoji} ${g.name}`, desc: 'Your custom group', node: <GroupCard g={g} /> })),
+        { id: 'cards', name: 'Credit cards', desc: 'Card balances and payments', node: <>
+      <FoldHead title="Credit cards" open={!isFolded('cards')} onToggle={() => toggle('cards')} summary={`${plural(cards.length, 'card')} · ${fmt(cards.reduce((a, x) => a + x.bal, 0))} owed`} />
+      {!isFolded('cards') && cards.map(a => {
         const k = ink(a.hue), lim = a.limit || 0;
         return (
           <div key={a.id} onClick={() => openSheet({ name: 'acct', id: a.id })} className="pr98" style={{ background: tint(a.hue), borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 4, cursor: 'pointer', transition: 'transform .15s' }}>
@@ -115,15 +128,8 @@ export default function Accounts() {
           </div>
         );
       })}
-
-      <button data-tour="add-account" onClick={() => openSheet({ name: 'addAcct' })} className="hv-white" style={{ height: 54, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-        <I.Plus size={18} />
-        Add account or card
-      </button>
-      <button onClick={() => openSheet({ name: 'group', id: null })} className="hv-white" style={{ height: 54, marginTop: -4, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: 'var(--color-text)', fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-        <I.Plus size={18} />
-        Create a group (home, car, other assets)
-      </button>
+      </> }
+      ]} />
     </div>
   );
 }
@@ -164,16 +170,14 @@ function InvestmentsCard({ inv }: { inv: ReturnType<typeof investmentsValue> }) 
 /** A custom group (Real estate, Vehicles…) with its items valued by hand. */
 function GroupCard({ g }: { g: AssetGroup }) {
   const total = groupValue(g);
+  const { isFolded, toggle } = useFolded(), key = `group:${g.id}`, open = !isFolded(key);
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 4px 0', gap: 10 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.emoji} {g.name}</span>
-        </span>
-        <button onClick={() => openSheet({ name: 'group', id: g.id })} aria-label={`Edit ${g.name}`} style={{ border: 0, background: 'transparent', color: 'var(--color-neutral-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0, whiteSpace: 'nowrap' }}>
+      <FoldHead title={`${g.emoji} ${g.name}`} open={open} onToggle={() => toggle(key)} summary={fmt(total)}
+        right={<button onClick={() => openSheet({ name: 'group', id: g.id })} aria-label={`Edit ${g.name}`} style={{ border: 0, background: 'transparent', color: 'var(--color-neutral-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0, whiteSpace: 'nowrap' }}>
           {g.inNetWorth ? '' : 'Not in net worth · '}Edit
-        </button>
-      </div>
+        </button>} />
+      {open && (
       <div style={{ background: tint(g.hue), borderRadius: 28, padding: '16px 18px 6px', display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 13, color: ink(g.hue) }}>Total value</span>
         <span style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: total < 0 ? 'var(--color-accent-700)' : ink(g.hue), marginBottom: 8 }}>{fmt(total)}</span>
@@ -194,6 +198,7 @@ function GroupCard({ g }: { g: AssetGroup }) {
           </button>
         </div>
       </div>
+      )}
     </>
   );
 }
