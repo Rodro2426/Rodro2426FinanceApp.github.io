@@ -211,3 +211,52 @@ export function heat(v: number, max: number) {
   const k = Math.min(VIZ.seq.length - 1, Math.floor((v / max) * (VIZ.seq.length - 1)));
   return { background: VIZ.seq[k], color: k >= 6 ? '#fff' : VIZ.ink };
 }
+
+/**
+ * Pie for part-to-whole. Slices keep their caller-given order and colors (color follows the category),
+ * a 2px surface gap separates them, and tapping a slice (or its legend row) reads it out.
+ */
+export function Pie({ slices, fmt }: { slices: { label: string; value: number; color: string }[]; fmt: (n: number) => string }) {
+  const total = slices.reduce((a, s) => a + Math.max(0, s.value), 0);
+  const [sel, setSel] = useState<number | null>(null);
+  const S = 220, R = 104, C = S / 2;
+  let a0 = -Math.PI / 2;
+  const arcs = slices.map((s, i) => {
+    const frac = total ? Math.max(0, s.value) / total : 0, a1 = a0 + frac * Math.PI * 2;
+    const mid = (a0 + a1) / 2, big = a1 - a0 > Math.PI ? 1 : 0;
+    const p = (a: number, r = R) => `${C + r * Math.cos(a)},${C + r * Math.sin(a)}`;
+    const d = frac >= 0.9999 ? `M${C - R},${C} A${R},${R} 0 1 1 ${C + R},${C} A${R},${R} 0 1 1 ${C - R},${C} Z` : `M${C},${C} L${p(a0)} A${R},${R} 0 ${big} 1 ${p(a1)} Z`;
+    const out = { ...s, i, d, frac, mid };
+    a0 = a1;
+    return out;
+  }).filter(a => a.frac > 0);
+  const cur = sel != null ? arcs.find(a => a.i === sel) : null;
+  const share = (f: number) => `${(f * 100).toLocaleString('es-CO', { maximumFractionDigits: f < 0.1 ? 1 : 0 })}%`;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div aria-live="polite" style={{ minHeight: 40, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontSize: 12, color: VIZ.muted, fontWeight: 600 }}>{cur ? cur.label : 'Tap a slice'}</span>
+        <span style={{ fontSize: 13 }}>{cur ? <><b style={{ color: VIZ.ink }}>{fmt(cur.value)}</b> <span style={{ color: VIZ.ink2 }}>· {share(cur.frac)} of {fmt(total)}</span></> : <b style={{ color: VIZ.ink }}>{fmt(total)}</b>}</span>
+      </div>
+      <svg width={S} height={S} viewBox={`0 0 ${S} ${S}`} role="img" aria-label={arcs.map(a => `${a.label} ${share(a.frac)}`).join(', ')} style={{ alignSelf: 'center', display: 'block', overflow: 'visible' }}>
+        {arcs.map(a => {
+          const lift = cur?.i === a.i ? 6 : 0;
+          return <path key={a.label} d={a.d} fill={a.color} stroke={VIZ.surface} strokeWidth={2} strokeLinejoin="round"
+            transform={`translate(${lift * Math.cos(a.mid)},${lift * Math.sin(a.mid)})`} opacity={cur && cur.i !== a.i ? 0.45 : 1}
+            onClick={() => setSel(s => (s === a.i ? null : a.i))} style={{ cursor: 'pointer', transition: 'transform .15s, opacity .15s' }} />;
+        })}
+      </svg>
+      <div role="list" style={{ display: 'flex', flexDirection: 'column' }}>
+        {arcs.map(a => (
+          <button key={a.label} role="listitem" onClick={() => setSel(s => (s === a.i ? null : a.i))} aria-pressed={cur?.i === a.i}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 2px', border: 0, background: cur?.i === a.i ? 'var(--color-neutral-100)' : 'transparent', borderRadius: 10, cursor: 'pointer', fontSize: 13.5, color: VIZ.ink, textAlign: 'left' }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: a.color, flex: 'none' }} />
+            <span style={{ flex: 1, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.label}</span>
+            <span style={{ color: VIZ.ink2, fontVariantNumeric: 'tabular-nums' }}>{share(a.frac)}</span>
+            <span style={{ width: 92, textAlign: 'right', fontWeight: 700, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{fmt(a.value)}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -5,9 +5,9 @@ import { ctxOf, fmt } from '../lib/derive';
 import { fmtDay, shortDate } from '../lib/dates';
 import {
   PERIODS, RANGES, allExpenseCats, allIncomeCats, balanceSeries, breakdown, budgetWeeks, cashflow, catOverTime, compareBudgets,
-  expenseCats, incomeCats, monthsIn, netWorthSeries, worthAt, type Period, type Range
+  expenseCats, incomeCats, monthsIn, netWorthSeries, pieSlices, worthAt, type Period, type Range
 } from '../lib/reports';
-import { Columns, DataTable, Lines, Meters, RankedBars, VIZ, compactNum, heat, type Series } from '../ui/charts';
+import { Columns, DataTable, Lines, Meters, Pie, RankedBars, VIZ, compactNum, heat, type Series } from '../ui/charts';
 import * as I from '../ui/icons';
 
 type Icon = 'pie' | 'bars' | 'table' | 'pulse';
@@ -98,6 +98,8 @@ export default function ReportPage({ id }: { id: string }) {
   const [acct, setAcct] = useState<string>(d.accounts[0]?.id ?? '');
   const [pocket, setPocket] = useState<string>('');
   const [scope, setScope] = useState<'week' | 'month'>('week');
+  const [view, setView] = useState<'bars' | 'pie'>(() => { try { return localStorage.getItem('pockets-cat-view') === 'pie' ? 'pie' : 'bars'; } catch { return 'bars'; } });
+  const pickView = (v: 'bars' | 'pie') => { setView(v); try { localStorage.setItem('pockets-cat-view', v); } catch { /* not saved */ } };
   const months = monthsIn(d, c, range), withYear = months.some(m => m.slice(0, 4) !== c.month.slice(0, 4));
   const labels = months.map(m => monthShort(m, withYear));
   const S = VIZ.series;
@@ -113,7 +115,10 @@ export default function ReportPage({ id }: { id: string }) {
       {periodChips}
       {card(<>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}><span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{id === 'cat-exp' ? 'Spent' : 'Received'}</span><span style={{ fontSize: 24, fontWeight: 700 }}>{fmt(total)}</span></div>
-        {rows.length ? <RankedBars rows={rows.map(r => ({ label: r.name, value: r.sum, note: pct(r.sum, total) }))} color={S[0]} fmt={fmt} /> : <Empty />}
+        {chipRow(<><Chip on={view === 'bars'} onClick={() => pickView('bars')}>Bars</Chip><Chip on={view === 'pie'} onClick={() => pickView('pie')}>Pie chart</Chip></>)}
+        {!rows.length ? <Empty /> : view === 'pie'
+          ? <Pie slices={pieSlices(d, rows, id === 'cat-exp' ? 'expense' : 'income', S, '#9b9797')} fmt={fmt} />
+          : <RankedBars rows={rows.map(r => ({ label: r.name, value: r.sum, note: pct(r.sum, total) }))} color={S[0]} fmt={fmt} />}
       </>, 'Chart')}
       {rows.length > 0 && card(<DataTable head={['Category', '#', 'Total', '%']} rows={rows.map(r => [r.name, r.n, fmt(r.sum), pct(r.sum, total)])} foot={['Total', rows.reduce((a, r) => a + r.n, 0), fmt(total), '100%']} />, 'Table')}
     </>;

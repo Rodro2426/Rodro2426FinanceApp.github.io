@@ -46,3 +46,17 @@ describe('reports', () => {
     expect(incCatOf(d, { id: 'in1', ts: 1, a: 'x', amt: 1, note: '', date: '2026-11-01', cat: 'Gift' })).toBe('Gift');
   });
 });
+
+describe('pie slices', () => {
+  it('add up to the total and keep each category\'s color across periods', async () => {
+    const { pieSlices, expenseCats } = await import('./reports');
+    const pal = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8'];
+    const all = pieSlices(d, expenseCats(d, c, 'all'), 'expense', pal, 'gray');
+    const month = pieSlices(d, expenseCats(d, c, 'month'), 'expense', pal, 'gray');
+    const sum = (xs: { value: number }[]) => xs.reduce((a, x) => a + x.value, 0);
+    expect(sum(all)).toBe(expenseCats(d, c, 'all').reduce((a, x) => a + x.sum, 0));
+    expect(sum(month)).toBe(expenseCats(d, c, 'month').reduce((a, x) => a + x.sum, 0));
+    month.filter(s => s.label !== 'Other').forEach(s => expect(s.color).toBe(all.find(x => x.label === s.label)!.color));
+    expect(new Set(all.map(s => s.color)).size).toBe(all.length); // never two slices with one color
+  });
+});

@@ -64,6 +64,18 @@ export function incomeCats(d: Data, c: Ctx, p: Period): CatTotal[] {
 export const allExpenseCats = (d: Data) => [...new Set([...d.cats.map(k => k.name), ...d.expenses.map(e => catOf(e)[0])])];
 export const allIncomeCats = (d: Data) => [...new Set([...INCOME_CATS, ...d.incomes.map(t => incCatOf(d, t))])];
 
+/**
+ * Stable colors for a pie: categories ranked by all-time money get slots 1–7 for good, so a category keeps
+ * its color when the period changes. The rest share one gray "Other" slice.
+ */
+export function pieSlices(d: Data, rows: CatTotal[], kind: 'expense' | 'income', palette: string[], other: string) {
+  const all = kind === 'expense' ? expenseCats(d, makeCtx(d.settings.weeks), 'all') : incomeCats(d, makeCtx(d.settings.weeks), 'all');
+  const slot = new Map(all.slice(0, 7).map((t, i) => [t.name, i]));
+  const named = rows.filter(r => slot.has(r.name) && r.sum > 0).sort((a, b) => slot.get(a.name)! - slot.get(b.name)!);
+  const rest = rows.filter(r => !slot.has(r.name)).reduce((a, r) => a + r.sum, 0);
+  return [...named.map(r => ({ label: r.name, value: r.sum, color: palette[slot.get(r.name)!] })), ...(rest > 0 ? [{ label: 'Other', value: rest, color: other }] : [])];
+}
+
 /** Monthly totals for one category (or all when `cat` is null). */
 export function catOverTime(d: Data, months: string[], kind: 'expense' | 'income', cat: string | null): number[] {
   return months.map(m => kind === 'expense'
