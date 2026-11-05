@@ -40,7 +40,7 @@ const TABS: [Tab, string, (p: { size?: number; sw?: number }) => ReactNode][] = 
 
 function SheetRouter({ sheet }: { sheet: Sheet }) {
   switch (sheet.name) {
-    case 'search': return <SearchSheet tag={sheet.tag} />;
+    case 'search': return <SearchSheet tag={sheet.tag} cat={sheet.cat} />;
     case 'add': return <AddSheet pocket={sheet.pocket} mode={sheet.mode} />;
     case 'pocket': return <PocketSheet id={sheet.id} view={sheet.view} />;
     case 'saved': return <SavedSheet id={sheet.id} />;

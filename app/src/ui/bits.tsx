@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { Data, Expense } from '../lib/types';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
-import { curSymbol, fmt, fxText, initialOf, pocketStats, type PocketStats } from '../lib/derive';
+import { catOf, curSymbol, fmt, fxText, initialOf, pocketStats, type PocketStats } from '../lib/derive';
 import { relDay, type Ctx } from '../lib/dates';
 import { MoneyInput } from './MoneyInput';
 
@@ -102,7 +102,7 @@ export function expView(d: Data, e: Expense, c: Ctx, stats?: Map<string, PocketS
   const p = stats?.get(e.p) || pocketStats(d, e.p, c), a = d.accounts.find(x => x.id === e.a);
   return {
     key: e.id, initial: p ? p.initial : initialOf(e.note), photoBg: p ? p.photoBg : 'none', tint: tint(p ? p.hue : 0), ink: ink(p ? p.hue : 0), note: e.note,
-    meta: [p ? p.name : e.ruleId ? 'Scheduled' : '', a && a.name, relDay(e.date, c.today), fxText(e.orig) || ''].filter(Boolean).join(' · '), amtFmt: '−' + fmt(e.amt),
+    meta: [catOf(e)[0], p ? p.name : e.ruleId ? 'Scheduled' : 'No pocket', a && a.name, relDay(e.date, c.today), fxText(e.orig) || ''].filter(Boolean).join(' · '), amtFmt: '−' + fmt(e.amt),
     tagLine: (e.tags || []).map(t => '#' + t).join('  ')
   };
 }
@@ -113,7 +113,7 @@ export function ExpRow({ v, last, size = 40, onClick }: { v: ExpView; last: bool
       <PocketDot st={v} size={size} fs={size > 38 ? 15 : 14} bg={v.tint} color={v.ink} />
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 15, fontWeight: 600 }}>{v.note}</span>
-        <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{v.meta}</span>
+        <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.meta}</span>
         {v.tagLine && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-accent-700)' }}>{v.tagLine}</span>}
       </div>
       <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', color: v.amtColor }}>{v.amtFmt}</span>

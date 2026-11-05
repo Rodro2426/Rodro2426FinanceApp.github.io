@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp, setData, setUI, flash } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
-import { chargeAccount, fmt, incomeMoves, num, roundAmt } from '../lib/derive';
+import { catOf, chargeAccount, fmt, incomeMoves, num, roundAmt } from '../lib/derive';
 import type { Sheet } from '../lib/types';
 import { BigAmount, FieldLabel, GhostDanger, PickChip, PrimaryBtn, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
@@ -23,7 +23,7 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
   const [date, setDate] = useState(t?.date ?? '');
   const [acct, setAcct] = useState(t?.a ?? '');
   const [pocket, setPocket] = useState(e?.p ?? '');
-  const [[cat, sub], setCat] = useState<[string, string]>([e?.cat || 'Other', e?.sub || '']);
+  const [[cat, sub], setCat] = useState<[string, string]>(e ? catOf(e) : ['Other', '']);
   const [tags, setTags] = useState<string[]>(e?.tags ?? []);
   const [confirmDel, setConfirmDel] = useState(false);
 
@@ -74,10 +74,27 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <BigAmount value={amt} onChange={setAmt} mt={6} />
         {t.orig && <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>Converted from US${t.orig.amt.toLocaleString('es-CO', { minimumFractionDigits: 2 })} at {fmt(t.orig.rate)}. Changing the amount drops the dollar note.</span>}
-        <FieldLabel m="14px 4px 6px">Description</FieldLabel>
-        <input value={note} onChange={x => setNote(x.target.value)} style={textInput} />
+        <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
+        <input value={note} onChange={x => setNote(x.target.value)} aria-label="Name of the transaction" style={textInput} />
         <FieldLabel m="14px 4px 6px">Date</FieldLabel>
         <input type="date" value={date} onChange={x => setDate(x.target.value)} style={{ ...textInput, fontWeight: 600, minHeight: 52, WebkitAppearance: 'none', appearance: 'none' }} />
+
+        {e && <>
+          <FieldLabel>Category</FieldLabel>
+          <div style={{ background: '#fff', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
+              {d.cats.map(k => <button key={k.name} onClick={() => setCat([k.name, k.subs[0] || ''])} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, ...chip(k.name === cat), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k.name}</button>)}
+            </div>
+            {(curCat?.subs.length ?? 0) > 0 && (
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 10, borderTop: '1px solid var(--color-neutral-200)' }}>
+                {curCat!.subs.map(sname => {
+                  const on = sname === sub;
+                  return <button key={sname} onClick={() => setCat([cat, sname])} style={{ height: 30, padding: '0 11px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--color-accent-300)' : 'var(--color-neutral-300)'}`, background: on ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{sname}</button>;
+                })}
+              </div>
+            )}
+          </div>
+        </>}
 
         {e && <>
           <FieldLabel>Pocket</FieldLabel>
@@ -98,20 +115,6 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
         </div>
 
         {e && <>
-          <FieldLabel>Category</FieldLabel>
-          <div style={{ background: '#fff', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
-              {d.cats.map(k => <button key={k.name} onClick={() => setCat([k.name, k.subs[0] || ''])} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, ...chip(k.name === cat), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k.name}</button>)}
-            </div>
-            {(curCat?.subs.length ?? 0) > 0 && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 10, borderTop: '1px solid var(--color-neutral-200)' }}>
-                {curCat!.subs.map(sname => {
-                  const on = sname === sub;
-                  return <button key={sname} onClick={() => setCat([cat, sname])} style={{ height: 30, padding: '0 11px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--color-accent-300)' : 'var(--color-neutral-300)'}`, background: on ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{sname}</button>;
-                })}
-              </div>
-            )}
-          </div>
           {d.tags.length > 0 && <>
             <FieldLabel>Tags</FieldLabel>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>

@@ -84,7 +84,7 @@ export type PocketView = 'day' | 'week' | 'month';
 export type Tab = 'home' | 'accounts' | 'budget' | 'insights' | 'calendar';
 
 export type Sheet =
-  | { name: 'search'; tag?: string | null }
+  | { name: 'search'; tag?: string | null; cat?: string | null }
   | { name: 'add'; pocket?: string; mode?: 'expense' | 'income' }
   | { name: 'pocket'; id: string; view?: PocketView }
   | { name: 'saved'; id: string }

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
-import { EMOJIS, HUES, LINE, POCKET_CAT, RED, TEXT, ink, tint } from '../lib/constants';
-import { DAY_LETTERS, DAY_NAMES, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
+import { EMOJIS, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
+import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
 import { monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { addExtraIncome, coverFirst, monthSummary, splitAmong, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
@@ -14,18 +14,13 @@ import * as I from '../ui/icons';
 
 const pill = (k: string) => ({ fontSize: 12, fontWeight: 600, color: k, background: 'rgba(255,255,255,.7)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }) as const;
 
-function defaultCat(d: Data, pocketId: string): [string, string] {
-  if (POCKET_CAT[pocketId]) return POCKET_CAT[pocketId];
-  const last = sortedExpenses(d).find(e => e.p === pocketId && e.cat);
-  return last ? [last.cat, last.sub] : ['Other', 'Other'];
-}
-
 /* ---------------- Search ---------------- */
-export function SearchSheet({ tag }: { tag?: string | null }) {
+export function SearchSheet({ tag, cat }: { tag?: string | null; cat?: string | null }) {
   const { data: d } = useApp();
   const c = ctxOf(d);
   const [q, setQ] = useState('');
   const [filterTag, setFilterTag] = useState<string | null>(tag ?? null);
+  const [filterCat, setFilterCat] = useState<string | null>(cat ?? null);
   const searchRef = useRef<HTMLInputElement>(null);
   // Focus after the sheet has slid in, without letting Safari scroll the page.
   useEffect(() => { const t = setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 300); return () => clearTimeout(t); }, []);
@@ -34,14 +29,17 @@ export function SearchSheet({ tag }: { tag?: string | null }) {
   const matches = sortedExpenses(d).filter(e => {
     const tg = e.tags || [];
     if (filterTag && !tg.includes(filterTag)) return false;
+    if (filterCat && catOf(e)[0] !== filterCat) return false;
     if (!qs) return true;
     const pn = (stats.get(e.p)?.name || '').toLowerCase(), an = (d.accounts.find(a => a.id === e.a)?.name || '').toLowerCase();
-    return e.note.toLowerCase().includes(qs) || pn.includes(qs) || an.includes(qs) || tg.some(t => t.includes(qs)) || (e.cat || '').toLowerCase().includes(qs);
+    return e.note.toLowerCase().includes(qs) || pn.includes(qs) || an.includes(qs) || tg.some(t => t.includes(qs)) || catOf(e).join(' ').toLowerCase().includes(qs);
   });
   const shown = matches.slice(0, 200).map(e => expView(d, e, c, stats));
   const tagHue = (t: string) => HUES[Math.max(0, d.tags.indexOf(t)) % HUES.length];
   const tagCount = (t: string) => d.expenses.filter(e => (e.tags || []).includes(t)).length;
-  const chips = [{ key: '', label: 'All', on: !filterTag, hue: null as number | null, pick: () => setFilterTag(null) },
+  const catCount = (k: string) => d.expenses.filter(e => catOf(e)[0] === k).length;
+  const catNames = [...new Set([...d.cats.map(k => k.name), ...d.expenses.map(e => catOf(e)[0])])].filter(catCount).sort((a, b) => catCount(b) - catCount(a));
+  const chips = [{ key: '', label: 'All tags', on: !filterTag, hue: null as number | null, pick: () => setFilterTag(null) },
     ...d.tags.filter(tagCount).map(t => ({ key: t, label: `#${t} · ${tagCount(t)}`, on: filterTag === t, hue: tagHue(t), pick: () => setFilterTag(f => (f === t ? null : t)) }))];
 
   return (
@@ -49,10 +47,16 @@ export function SearchSheet({ tag }: { tag?: string | null }) {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 560 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, background: '#fff', borderRadius: 999, padding: '0 16px', height: 50 }}>
           <I.Search size={18} color="var(--color-neutral-500)" />
-          <input placeholder="Search by name, pocket or #tag" value={q} onChange={e => setQ(e.target.value)} ref={searchRef} style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 16, color: TEXT, padding: 0, outline: 'none' }} />
+          <input placeholder="Search by name, category, pocket or #tag" value={q} onChange={e => setQ(e.target.value)} ref={searchRef} style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 16, color: TEXT, padding: 0, outline: 'none' }} />
           {q && <button onClick={() => setQ('')} aria-label="Clear" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.X size={12} sw={3} /></button>}
         </div>
-        <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '12px -20px 0', padding: '0 20px' }}>
+        <div className="noscroll" aria-label="Filter by category" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '12px -20px 0', padding: '0 20px' }}>
+          {[{ k: '', label: 'All categories' }, ...catNames.map(k => ({ k, label: `${k} · ${catCount(k)}` }))].map(g => {
+            const on = g.k ? filterCat === g.k : !filterCat;
+            return <button key={'c' + g.k} onClick={() => setFilterCat(g.k ? (filterCat === g.k ? null : g.k) : null)} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{g.label}</button>;
+          })}
+        </div>
+        <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '8px -20px 0', padding: '0 20px' }}>
           {chips.map(g => (
             <button key={g.key} onClick={g.pick} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: g.on ? (g.hue != null ? ink(g.hue) : TEXT) : '#fff', color: g.on ? '#fff' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>{g.label}</button>
           ))}
@@ -62,7 +66,7 @@ export function SearchSheet({ tag }: { tag?: string | null }) {
           <span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>−{fmt(matches.reduce((a, e) => a + e.amt, 0))}</span>
         </div>
         <div style={{ background: '#fff', borderRadius: 22, padding: '4px 16px' }}>
-          {shown.map((v, i) => <ExpRow key={v.key} v={v} size={38} last={i === shown.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key, back: { name: 'search', tag: filterTag } })} />)}
+          {shown.map((v, i) => <ExpRow key={v.key} v={v} size={38} last={i === shown.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key, back: { name: 'search', tag: filterTag, cat: filterCat } })} />)}
           {matches.length === 0 && <div style={{ padding: '18px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No transactions match.</div>}
           {matches.length > shown.length && <div style={{ padding: '14px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Showing the latest {shown.length}. Refine your search to see more.</div>}
         </div>
@@ -130,6 +134,8 @@ function IncomeForm() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       <BigAmount value={amt} onChange={setAmt} autoFocus mt={12} />
+      <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
+      <input placeholder="e.g. Freelance, gift, refund" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
       <FieldLabel>Goes into</FieldLabel>
       <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
         {accounts.map(x => (
@@ -140,7 +146,6 @@ function IncomeForm() {
         ))}
         {accounts.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add a bank or cash account first, in the Accounts tab.</span>}
       </div>
-      <input placeholder="What is it? Freelance, gift, refund…" value={note} onChange={e => setNote(e.target.value)} style={{ ...textInput, marginTop: 16 }} />
 
       <FieldLabel m="16px 4px 6px">How much goes to pockets?</FieldLabel>
       <div style={{ background: '#fff', borderRadius: 22, padding: '12px 12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -226,20 +231,22 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
   const [note, setNote] = useState('');
   const [tagSel, setTagSel] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
-  const [[cat, sub], setCat] = useState<[string, string]>(() => (first ? defaultCat(d, first) : ['Other', 'Other']));
-  const [catTouched, setCatTouched] = useState(false);
+  // Every expense needs a category: nothing is picked until you choose one.
+  const [[cat, sub], setCat] = useState<[string, string]>(['', '']);
   const [newCat, setNewCat] = useState('');
   const [newSub, setNewSub] = useState('');
 
   const all = allStats(d, c), addS = all.find(x => x.id === p), payA = d.accounts.find(x => x.id === a);
   const v = num(amt), after = addS ? addS.left - v : 0;
-  let preview = 'Enter an amount and pick a pocket.', previewColor = 'var(--color-neutral-700)';
+  let preview = 'Enter an amount, a category and a pocket.', previewColor = 'var(--color-neutral-700)';
+  if (!p && v > 0) preview = `Not in any pocket: it won't touch your weekly budgets, but it still counts in ${monthName(c.month)}'s spending and comes out of ${payA?.name ?? 'the account'}.`;
   if (addS && v > 0) {
     preview = after >= 0 ? `${fmt(after)} will be left in ${addS.name} this week.` : `This puts ${addS.name} ${fmt(-after)} over for the week.`;
     if (after < 0) previewColor = RED;
   }
   if (!d.accounts.length) preview = 'Add an account or card first, in the Accounts tab.';
-  const cant = !(v > 0 && addS && payA);
+  const cant = !(v > 0 && (addS || p === '') && payA && cat);
+  if (v > 0 && !cat) { preview = 'Pick a category to save it.'; previewColor = RED; }
   const tagHue = (t: string) => HUES[Math.max(0, d.tags.indexOf(t)) % HUES.length];
   const curCat = d.cats.find(x => x.name === cat);
 
@@ -253,12 +260,12 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
     const n = newCat.trim(); if (!n) return;
     const ex = d.cats.find(x => x.name.toLowerCase() === n.toLowerCase());
     if (!ex) setData(x => ({ cats: [...x.cats, { name: n, subs: ['General'] }] }));
-    setCat(ex ? [ex.name, ex.subs[0] || ''] : [n, 'General']); setNewCat(''); setCatTouched(true);
+    setCat(ex ? [ex.name, ex.subs[0] || ''] : [n, 'General']); setNewCat('');
   };
   const addSub = () => {
     const n = newSub.trim(); if (!n) return;
     setData(x => ({ cats: x.cats.map(k => (k.name === cat && !k.subs.includes(n) ? { ...k, subs: [...k.subs, n] } : k)) }));
-    setCat([cat, n]); setNewSub(''); setCatTouched(true);
+    setCat([cat, n]); setNewSub('');
   };
   const blurOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } };
 
@@ -266,45 +273,49 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
     if (cant) return;
     const val = roundAmt(v);
     setData(x => ({
-      expenses: [{ id: uid('e'), ts: Date.now(), p, a, amt: val, note: note.trim() || addS!.name, date: c.today, tags: tagSel, cat, sub }, ...x.expenses],
+      expenses: [{ id: uid('e'), ts: Date.now(), p, a, amt: val, note: note.trim() || (sub && sub !== 'General' ? sub : cat), date: c.today, tags: tagSel, cat, sub }, ...x.expenses],
       accounts: chargeAccount(x.accounts, a, val)
     }));
-    setUI({ sheet: { name: 'saved', id: p }, lastAdd: { pocket: p, acct: a } });
+    if (p) setUI({ sheet: { name: 'saved', id: p }, lastAdd: { pocket: p, acct: a } });
+    else { setUI(u => ({ sheet: null, lastAdd: { ...u.lastAdd, acct: a } })); flash(`−${fmt(val)} · ${cat}${sub ? ' › ' + sub : ''} · no pocket`); }
   };
 
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <BigAmount value={amt} onChange={setAmt} autoFocus mt={10} />
-        <FieldLabel m="18px 4px 8px">Pocket</FieldLabel>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {all.map(x => <PickChip key={x.id} st={x} on={x.id === p} hue={x.hue} onClick={() => { setP(x.id); if (!catTouched) setCat(defaultCat(d, x.id)); }} />)}
-        </div>
+        <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
+        <input placeholder="e.g. Lunch at Crepes & Waffles" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '16px 4px 8px', gap: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Category</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat + (sub ? ' › ' + sub : '')}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Category <span style={{ color: cat ? 'var(--color-neutral-500)' : RED, fontWeight: 700 }}>{cat ? '' : '· required'}</span></span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat ? cat + (sub ? ' › ' + sub : '') : 'Pick one'}</span>
         </div>
         <div style={{ background: '#fff', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
             {d.cats.map(k => {
               const on = k.name === cat;
-              return <button key={k.name} onClick={() => { setCat([k.name, k.subs[0] || '']); setCatTouched(true); }} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)', transition: 'all .15s' }}>{k.name}</button>;
+              return <button key={k.name} onClick={() => { setCat([k.name, k.subs[0] || '']); }} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)', transition: 'all .15s' }}>{k.name}</button>;
             })}
             <div style={{ flex: 'none', display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
               <input placeholder="New category" value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={blurOnEnter} onBlur={addCat} style={{ width: 118, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
               <button onClick={addCat} aria-label="Add category" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={12} sw={3} /></button>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 10, borderTop: '1px solid var(--color-neutral-200)' }}>
+          {cat && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 10, borderTop: '1px solid var(--color-neutral-200)' }}>
             {(curCat?.subs || []).map(sname => {
               const on = sname === sub;
-              return <button key={sname} onClick={() => { setCat([cat, sname]); setCatTouched(true); }} style={{ height: 30, padding: '0 11px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--color-accent-300)' : 'var(--color-neutral-300)'}`, background: on ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{sname}</button>;
+              return <button key={sname} onClick={() => { setCat([cat, sname]); }} style={{ height: 30, padding: '0 11px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--color-accent-300)' : 'var(--color-neutral-300)'}`, background: on ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{sname}</button>;
             })}
             <div style={{ display: 'flex', alignItems: 'center', height: 30, borderRadius: 999, border: '1.5px dashed var(--color-neutral-300)', padding: '0 3px 0 10px' }}>
               <input placeholder="Subcategory" value={newSub} onChange={e => setNewSub(e.target.value)} onKeyDown={blurOnEnter} onBlur={addSub} style={{ width: 104, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
               <button onClick={addSub} aria-label="Add subcategory" style={{ width: 22, height: 22, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={11} sw={3} /></button>
             </div>
-          </div>
+          </div>}
+        </div>
+        <FieldLabel>Pocket</FieldLabel>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {all.map(x => <PickChip key={x.id} st={x} on={x.id === p} hue={x.hue} onClick={() => setP(x.id)} />)}
+          <button onClick={() => setP('')} aria-pressed={p === ''} style={{ height: 44, padding: '0 14px', borderRadius: 999, border: p === '' ? `2px solid ${TEXT}` : '2px dashed var(--color-neutral-300)', background: p === '' ? TEXT : 'transparent', color: p === '' ? '#fff' : TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>No pocket</button>
         </div>
         <FieldLabel>Paid with</FieldLabel>
         <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
@@ -315,7 +326,6 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
             </button>
           ))}
         </div>
-        <input placeholder="What was it for?" value={note} onChange={e => setNote(e.target.value)} style={{ ...textInput, marginTop: 16 }} />
         <FieldLabel>Tags</FieldLabel>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           {d.tags.map(t => {
