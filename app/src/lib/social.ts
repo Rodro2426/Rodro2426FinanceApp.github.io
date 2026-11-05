@@ -187,3 +187,33 @@ export function hasUnread(tripId: string) {
   const mine = (state.messages[tripId] ?? []).filter(m => m.createdAt === at).every(m => m.uid === myUid());
   return at > read && !(mine && (state.messages[tripId] ?? []).length > 0);
 }
+
+/* ---------------- Activity for notifications ---------------- */
+export interface TripActivity { trip: Trip; items: TripItem[]; messages: Message[] }
+const seenKey = (tripId: string) => `pockets-seen-${tripId}`;
+/**
+ * What other people added to your trips since this phone last checked: expenses, payments and messages.
+ * A trip seen for the first time starts from now, so old history doesn't flood the notifications.
+ * Costs about one read per trip per kind when nothing is new.
+ */
+export async function checkTripActivity(): Promise<TripActivity[]> {
+  const u = me(); if (!u) return [];
+  await loadTrips();
+  const out: TripActivity[] = [];
+  await Promise.all(state.trips.map(async trip => {
+    let since = 0; try { since = Number(localStorage.getItem(seenKey(trip.id)) || 0); } catch { /* none */ }
+    const now = Date.now();
+    if (!since) { try { localStorage.setItem(seenKey(trip.id), String(now)); } catch { /* not saved */ } return; }
+    const [it, ms] = await Promise.all([
+      getDocs(query(collection(db, 'trips', trip.id, 'items'), where('createdAt', '>', since))),
+      getDocs(query(collection(db, 'trips', trip.id, 'messages'), where('createdAt', '>', since), orderBy('createdAt')))
+    ]);
+    const items = it.docs.map(d => ({ ...(d.data() as TripItem), id: d.id })).filter(x => x.createdBy !== u.uid);
+    const messages = ms.docs.map(d => ({ ...(d.data() as Omit<Message, 'id'>), id: d.id })).filter(m => m.uid !== u.uid);
+    const newest = Math.max(since, ...it.docs.map(d => d.data().createdAt as number), ...ms.docs.map(d => d.data().createdAt as number));
+    try { localStorage.setItem(seenKey(trip.id), String(newest)); } catch { /* not saved */ }
+    if (messages.length) setS({ latest: { ...state.latest, [trip.id]: Math.max(state.latest[trip.id] ?? 0, messages[messages.length - 1].createdAt) } });
+    if (items.length || messages.length) out.push({ trip, items, messages });
+  }));
+  return out;
+}

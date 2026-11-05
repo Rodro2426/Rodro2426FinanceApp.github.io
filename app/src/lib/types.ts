@@ -39,9 +39,9 @@ export interface Bill {
   /** Someone else pays it (e.g. a shared plan): listed for reference, but never charged, reminded or counted. */
   notMine?: boolean;
 }
-export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup';
+export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup' | 'trip';
 /** `id` is a stable key, so the same event never notifies twice. */
-export interface Notif { id: string; date: string; ts: number; kind: NotifKind; title: string; body: string; read: boolean; dismissed: boolean; bannered: boolean }
+export interface Notif { id: string; date: string; ts: number; kind: NotifKind; title: string; body: string; read: boolean; dismissed: boolean; bannered: boolean; /** Trip activity: tapping opens the chat or the expense. */ link?: { trip: string; chat?: boolean; item?: string } }
 export interface Goal { id: string; name: string; saved: number; target: number; months: number; hue: number }
 export interface Category { name: string; subs: string[] }
 

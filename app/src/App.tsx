@@ -1,6 +1,8 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud } from './lib/cloud';
+import { openTripLink, pollTrips } from './lib/tripNotify';
+import { useSync } from './sheets/CloudSheet';
 import { CloudSheet, ConflictChoice } from './sheets/CloudSheet';
 import { runSchedule, trmNeeded } from './lib/schedule';
 import { ensureTrm } from './lib/trm';
@@ -101,6 +103,18 @@ export default function App() {
     return () => { document.removeEventListener('visibilitychange', tick); clearInterval(t); };
   }, []);
 
+  // Shared trips: while signed in and the app is open, check for friends' expenses and messages every 90 seconds
+  // (and right away when you come back to the app). There is no push, so this only runs while Pockets is open.
+  const sync = useSync();
+  useEffect(() => {
+    if (!sync.uid) return;
+    const run = () => { if (document.visibilityState === 'visible') pollTrips(); };
+    run();
+    const t = setInterval(run, 90_000);
+    document.addEventListener('visibilitychange', run);
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', run); };
+  }, [sync.uid]);
+
   // Today's newest notification shows as a banner at the top until dismissed or it times out.
   const banner = data.notifications.find(n => n.date === todayISO() && !n.dismissed && !n.bannered);
   useEffect(() => {
@@ -162,7 +176,7 @@ export default function App() {
       )}
 
       {banner && !ui.sheet && !ui.tour && (
-        <div className="banner" role="alert" onClick={() => { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); }}
+        <div className="banner" role="alert" onClick={() => { if (banner.link) { patchNotif(banner.id, { bannered: true, dismissed: true }); openTripLink(banner.link); } else { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); } }}
           style={{ position: 'absolute', left: 12, right: 12, top: 'calc(var(--top) - 10px)', zIndex: 35, background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 22, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 10px 30px rgba(45,43,43,.18),0 0 0 1px rgba(45,43,43,.05)', cursor: 'pointer' }}>
           <div style={{ width: 38, height: 38, borderRadius: 999, background: NOTIF_TONE[banner.kind].bg, color: NOTIF_TONE[banner.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={banner.kind} /></div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>

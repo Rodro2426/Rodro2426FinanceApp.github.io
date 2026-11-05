@@ -117,4 +117,4 @@ export function flash(t: string) {
 export const openSheet = (sheet: UI['sheet']) => setUI({ sheet });
 export const closeSheet = () => setUI({ sheet: null });
 // Development builds only: lets screenshot scripts open a page directly. Not in the live app.
-if (import.meta.env.DEV && typeof window !== 'undefined') (window as unknown as { __setUI: typeof setUI }).__setUI = setUI;
+if (import.meta.env.DEV && typeof window !== 'undefined') Object.assign(window, { __setUI: setUI, __setData: setData });

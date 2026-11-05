@@ -28,13 +28,21 @@ export function TripStatsPage({ id }: { id: string }) {
   const S = VIZ.series[0];
   return (
     <div className="page noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 26, background: 'var(--page)' }}>
-      <div className="scroll-body" style={{ padding: 'var(--top) 18px calc(var(--tb) + 96px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div className="scroll-body" style={{ padding: 'var(--top) 18px calc(var(--tb) + 40px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingTop: 4 }}>
           {backBtn(() => setUI({ page: `trip:${id}` }))}
           <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.15 }}>{t.emoji} {t.name}</span>
             <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>{label}</span>
           </span>
+        </div>
+
+        {/* Period: all time, or one month at a time. Part of the page, so it scrolls away with it. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', borderRadius: 999, padding: 5 }}>
+          <button onClick={() => setPeriod('all')} style={{ height: 40, padding: '0 16px', borderRadius: 999, border: 0, background: period === 'all' ? TEXT : 'transparent', color: period === 'all' ? 'var(--on-text)' : TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>All time</button>
+          <button aria-label="Previous month" disabled={!months.length || mi === 0} onClick={() => setPeriod(mi < 0 ? months[months.length - 1] : months[Math.max(0, mi - 1)])} style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'transparent', color: TEXT, cursor: 'pointer', opacity: !months.length || mi === 0 ? 0.3 : 1 }}><I.ChevronLeft size={18} /></button>
+          <span style={{ flex: 1, textAlign: 'center', fontSize: 14, fontWeight: 700 }}>{period === 'all' ? (months.length ? 'Pick a month' : 'No expenses yet') : monthLabel(period)}</span>
+          <button aria-label="Next month" disabled={mi < 0 || mi === months.length - 1} onClick={() => setPeriod(months[Math.min(months.length - 1, mi + 1)])} style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'transparent', color: TEXT, cursor: 'pointer', opacity: mi < 0 || mi === months.length - 1 ? 0.3 : 1 }}><I.Chevron size={18} /></button>
         </div>
 
         <div style={{ background: 'var(--surface)', borderRadius: 28, padding: '22px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
@@ -80,13 +88,6 @@ export function TripStatsPage({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Period: all time, or one month at a time */}
-      <div style={{ position: 'absolute', left: 14, right: 14, bottom: 'calc(var(--tb) + 6px)', display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface)', borderRadius: 999, padding: 5, boxShadow: 'var(--shadow-md)' }}>
-        <button onClick={() => setPeriod('all')} style={{ height: 40, padding: '0 16px', borderRadius: 999, border: 0, background: period === 'all' ? TEXT : 'transparent', color: period === 'all' ? 'var(--on-text)' : TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>All time</button>
-        <button aria-label="Previous month" disabled={!months.length || mi === 0} onClick={() => setPeriod(mi < 0 ? months[months.length - 1] : months[Math.max(0, mi - 1)])} style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'transparent', color: TEXT, cursor: 'pointer', opacity: !months.length || mi === 0 ? 0.3 : 1 }}><I.ChevronLeft size={18} /></button>
-        <span style={{ flex: 1, textAlign: 'center', fontSize: 14, fontWeight: 700 }}>{period === 'all' ? (months.length ? 'Pick a month' : 'No expenses yet') : monthLabel(period)}</span>
-        <button aria-label="Next month" disabled={mi < 0 || mi === months.length - 1} onClick={() => setPeriod(months[Math.min(months.length - 1, mi + 1)])} style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'transparent', color: TEXT, cursor: 'pointer', opacity: mi < 0 || mi === months.length - 1 ? 0.3 : 1 }}><I.Chevron size={18} /></button>
-      </div>
     </div>
   );
 }
