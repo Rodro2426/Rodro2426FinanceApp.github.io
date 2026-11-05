@@ -60,3 +60,22 @@ describe('pie slices', () => {
     expect(new Set(all.map(s => s.color)).size).toBe(all.length); // never two slices with one color
   });
 });
+
+describe('net worth with investments and groups', () => {
+  it('matches the Accounts tab, and the switches work', async () => {
+    const { netWorth } = await import('./networth');
+    const g = { id: 'g1', name: 'Real estate', emoji: '🏠', hue: 30, inNetWorth: true, items: [{ id: 'a', name: 'Apartment', value: 300000000, updated: '2026-11-05' }, { id: 'm', name: 'Mortgage', value: 120000000, debt: true, updated: '2026-11-05' }] };
+    const base = sampleData();
+    const d2 = { ...base, groups: [g], investments: { ...base.investments, trades: [{ id: 't', ts: 1, ticker: 'VOO', name: 'VOO', currency: 'USD' as const, side: 'buy' as const, qty: 2, price: 500, fee: 0, date: '2026-10-01' }], quotes: {}, usdRate: 4000 } };
+    const accounts = base.accounts.reduce((a, x) => a + (x.type === 'card' ? -x.bal : x.bal), 0);
+    const nw = netWorth(d2);
+    expect(nw.investments).toBe(4000000);
+    expect(nw.total).toBe(accounts + 4000000 + 180000000);
+    expect(netWorthAt(d2, c.today)).toBeCloseTo(nw.total, 6);
+    const off = { ...d2, settings: { ...d2.settings, excludeInvestments: true } };
+    expect(netWorth(off).total).toBe(accounts + 180000000);
+    expect(netWorthAt(off, c.today)).toBeCloseTo(netWorth(off).total, 6);
+    const notCounted = { ...d2, groups: [{ ...g, inNetWorth: false }] };
+    expect(netWorth(notCounted).total).toBe(accounts + 4000000);
+  });
+});

@@ -28,6 +28,7 @@ import ReportPage from './screens/Reports';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
 import { ReconcileSheet } from './sheets/ReconcileSheet';
+import { GroupItemSheet, GroupSheet } from './sheets/GroupSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
 import { EditTxnSheet } from './sheets/EditTxn';
@@ -62,6 +63,8 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'cdt': return <CdtSheet id={sheet.id ?? null} />;
     case 'cdtInfo': return <CdtInfoSheet id={sheet.id} />;
     case 'reconcile': return <ReconcileSheet />;
+    case 'group': return <GroupSheet id={sheet.id} />;
+    case 'groupItem': return <GroupItemSheet group={sheet.group} id={sheet.id} />;
     case 'priceSettings': return <PriceSettingsSheet />;
     case 'txn': return <EditTxnSheet kind={sheet.kind} id={sheet.id} back={sheet.back} />;
   }

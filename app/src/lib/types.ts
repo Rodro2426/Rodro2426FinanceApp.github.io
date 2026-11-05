@@ -45,7 +45,12 @@ export interface Notif { id: string; date: string; ts: number; kind: NotifKind; 
 export interface Goal { id: string; name: string; saved: number; target: number; months: number; hue: number }
 export interface Category { name: string; subs: string[] }
 
-export interface Settings { name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean }
+/** Something you own (or owe) that isn't a bank account, valued by hand: an apartment, a car, a mortgage. */
+export interface AssetItem { id: string; name: string; value: number; debt?: boolean; note?: string; updated: string }
+/** A custom group in Accounts, like Real estate or Vehicles. */
+export interface AssetGroup { id: string; name: string; emoji: string; hue: number; inNetWorth: boolean; items: AssetItem[] }
+
+export interface Settings { name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean; /** Leave stocks and CDTs out of net worth. */ excludeInvestments?: boolean }
 
 /** One buy or sell of a stock/ETF. Prices are in the stock's own currency. */
 export interface Trade { id: string; ts: number; ticker: string; name: string; currency: 'USD' | 'COP'; side: 'buy' | 'sell'; qty: number; price: number; fee: number; date: string }
@@ -70,6 +75,8 @@ export interface Data {
   incomes: Income[];
   notifications: Notif[];
   investments: Investments;
+  /** Custom groups of assets and debts. */
+  groups?: AssetGroup[];
   /** TRM per date (COP per USD), and dates whose lookup failed. */
   fx: { trm: Record<string, number>; tried: Record<string, number> };
   moves: Move[];
@@ -105,6 +112,8 @@ export type Sheet =
   | { name: 'cdt'; id?: string | null }
   | { name: 'cdtInfo'; id: string }
   | { name: 'reconcile' }
+  | { name: 'group'; id: string | null }
+  | { name: 'groupItem'; group: string; id: string | null }
   | { name: 'priceSettings' }
   | { name: 'txn'; kind: 'expense' | 'income'; id: string; back?: Sheet };
 

@@ -8,7 +8,7 @@ import { fmtDay, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
 import { BillBadge, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
-import { cdtTotal } from '../lib/cdt';
+import { netWorth } from '../lib/networth';
 import { monthSummary } from '../lib/plan';
 import { billAmount } from '../lib/schedule';
 
@@ -30,8 +30,8 @@ export default function Home() {
   const weekLeft = all.reduce((a, x) => a + x.left, 0);
   const weekSpent = weekExpenses(d, c).filter(e => stats.has(e.p)).reduce((a, e) => a + e.amt, 0);
   // CDTs count as money you have: opening one moves money out of an account, not out of your net worth.
-  const assets = d.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0) + cdtTotal(d);
-  const debt = d.accounts.filter(a => a.type === 'card').reduce((x, a) => x + a.bal, 0);
+  const nw = netWorth(d), assets = nw.assets;
+  const debt = nw.debts;
   const spent = monthExpenses(d, c).reduce((a, e) => a + e.amt, 0), income = monthSummary(d, c).income;
   const upcoming = billRows(d, c).filter(b => !b.paid && !b.others).sort((a, b) => a.inDays - b.inDays).slice(0, 3);
   // Latest money in and out together (daily account interest is left out: it updates every day).
@@ -87,7 +87,7 @@ export default function Home() {
         <div onClick={() => setUI({ tab: 'accounts' })} className="hv-n100" style={{ background: '#fff', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Net worth</span>
           <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{fmt(assets - debt)}</span>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{d.accounts.length} accounts{cdtTotal(d) > 0 ? ' + CDTs' : ''}</span>
+          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{d.accounts.length} accounts{nw.includeInvestments && nw.investments ? ' + investments' : ''}{nw.groups.some(x => x.counted) ? ' + groups' : ''}</span>
         </div>
         <div onClick={() => setUI({ tab: 'insights' })} className="hv-n100" style={{ background: '#fff', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Spent in {monthName(c.month)}</span>

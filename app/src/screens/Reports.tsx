@@ -148,7 +148,7 @@ export default function ReportPage({ id }: { id: string }) {
       {rangeChips}
       {card(<Lines labels={labels} series={[{ name: 'Net worth', values, color: S[0] }]} fmt={fmt} />, 'Chart')}
       {card(<DataTable head={['Month end', 'Net worth', 'Change']} rows={months.map((m, i) => [monthShort(m, true), fmt(values[i]), i ? fmt(values[i] - values[i - 1], true) : '—']).reverse()} />, 'Table')}
-      <Note>Accounts minus card debt, plus open CDTs, at the end of each month (today for this month). Rebuilt from your transactions.</Note>
+      <Note>Accounts minus card debt{d.settings.excludeInvestments ? '' : ', plus stocks and open CDTs'}{(d.groups ?? []).some(g => g.inNetWorth) ? ', plus your groups at their current value' : ''}, at the end of each month (today for this month). Rebuilt from your transactions; past stock values use today's prices.</Note>
     </>;
   } else if (id === 'balance') {
     const a = d.accounts.find(x => x.id === acct) ?? d.accounts[0];

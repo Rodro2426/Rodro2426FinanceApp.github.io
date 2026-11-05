@@ -3,6 +3,8 @@ import type { Data, Income } from './types';
 import { addDays, daysInMonth, makeCtx, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
 import { acctTxns, catOf, ctxOf, num, pocketStats } from './derive';
 import { cdtView, cdtsOf } from './cdt';
+import { holdings } from './invest';
+import { groupValue } from './networth';
 
 /* ---------------- Income categories ---------------- */
 export const INCOME_CATS = ['Salary', 'Freelance', 'Business', 'Investments', 'Interest', 'Gift', 'Refund', 'Other income'];
@@ -101,7 +103,12 @@ export function balanceAt(d: Data, acctId: string, date: string): number {
 /** Signed: what the account adds to your net worth (cards subtract what you owe). */
 export const worthAt = (d: Data, acctId: string, date: string) => { const a = d.accounts.find(x => x.id === acctId); const b = balanceAt(d, acctId, date); return a?.type === 'card' ? -b : b; };
 export const cdtWorthAt = (d: Data, date: string) => cdtsOf(d).filter(c => c.start <= date && !(c.closed && c.closed.date <= date)).reduce((a, c) => a + cdtView(c, date).value, 0);
-export const netWorthAt = (d: Data, date: string) => d.accounts.reduce((a, x) => a + worthAt(d, x.id, date), 0) + cdtWorthAt(d, date);
+/** Stocks held on a date (trades up to then), valued at the latest known price. */
+export const stocksAt = (d: Data, date: string) => holdings({ ...d, investments: { ...d.investments, trades: d.investments.trades.filter(t => t.date <= date) } }).reduce((a, h) => a + h.valueLocal, 0);
+/** Net worth on a date, with the same rules as the Accounts tab: investments unless excluded, and counted groups at today's value. */
+export const netWorthAt = (d: Data, date: string) => d.accounts.reduce((a, x) => a + worthAt(d, x.id, date), 0)
+  + (d.settings.excludeInvestments ? 0 : cdtWorthAt(d, date) + stocksAt(d, date))
+  + (d.groups ?? []).filter(g => g.inNetWorth).reduce((a, g) => a + groupValue(g), 0);
 export const netWorthSeries = (d: Data, months: string[], c: Ctx) => months.map(m => netWorthAt(d, monthEnd(m, c)));
 export const balanceSeries = (d: Data, acctId: string, months: string[], c: Ctx) => months.map(m => worthAt(d, acctId, monthEnd(m, c)));
 
