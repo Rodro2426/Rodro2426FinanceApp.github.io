@@ -1,7 +1,7 @@
 // The month's money in one place: income, plan, the two gaps, extra income splits and fixing mismatches.
 import type { Data, Income, Move } from './types';
 import { monthKey, type Ctx } from './dates';
-import { incomeMoves, monthStats, moveMonth, num, uid, weeksLeft } from './derive';
+import { incomeMoves, monthStats, moveMonth, num, pocketStats, uid, weeksLeft } from './derive';
 import { largestRemainder, unitsFor } from './split';
 
 const scale = (d: Data) => unitsFor(d.settings.currency);
@@ -132,3 +132,25 @@ export function markIncluded(d: Data, incomeIds: string[], keepSplits: string[] 
   return { incomes: d.incomes.map(t => (ids.has(t.id) ? { ...t, inBase: true } : t)), moves: d.moves.filter(m => !drop.has(m.id)) };
 }
 export const markNotIncluded = (d: Data, incomeId: string): Partial<Data> => ({ incomes: d.incomes.map(t => (t.id === incomeId ? { ...t, inBase: undefined } : t)) });
+
+/* ---------------- Moving a pocket's leftover ---------------- */
+/**
+ * Moves money left in pocket `from` this week to other pockets and goals, `parts` per destination.
+ * Pocket to pocket is only a transfer for this week: it never touches the month income or the month plan,
+ * and the total of all pockets stays the same. Money sent to a goal leaves the pockets and is saved there.
+ * Returns null if the parts are invalid (negative, unknown destination, or more than the pocket has left).
+ */
+export function transferLeftover(d: Data, c: Ctx, from: string, parts: Record<string, number>): Partial<Data> | null {
+  const src = pocketStats(d, from, c);
+  if (!src) return null;
+  const entries = Object.entries(parts).map(([to, v]) => [to, whole(d, v)] as const).filter(([, v]) => v > 0);
+  const known = (id: string) => id !== from && (d.pockets.some(p => p.id === id) || d.goals.some(g => g.id === id));
+  const total = sum(entries.map(([, v]) => v));
+  if (!entries.length || entries.some(([to, v]) => !known(to) || v < 0) || total > Math.max(0, src.left) + 1e-9) return null;
+  const moves: Move[] = entries.map(([to, amt]) => ({ id: uid('m'), week: c.weekStart, from, to, amt }));
+  const toGoal = new Map(entries.filter(([to]) => d.goals.some(g => g.id === to)));
+  return {
+    moves: [...d.moves, ...moves],
+    goals: toGoal.size ? d.goals.map(g => (toGoal.has(g.id) ? { ...g, saved: g.saved + toGoal.get(g.id)! } : g)) : d.goals
+  };
+}

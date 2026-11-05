@@ -5,7 +5,7 @@ import { makeCtx } from './dates';
 import { emptyData, sampleData } from './seed';
 import { monthStats, pocketStats } from './derive';
 import { largestRemainder, weekShares } from './split';
-import { addExtraIncome, coverFirst, deleteIncome, editIncomeAmount, findMismatches, markIncluded, monthSummary, splitAmong, undoMoves, type ExtraIncome } from './plan';
+import { addExtraIncome, coverFirst, deleteIncome, editIncomeAmount, findMismatches, markIncluded, monthSummary, splitAmong, transferLeftover, undoMoves, type ExtraIncome } from './plan';
 
 /** November 2026, week 1 (Nov 2–8), today Wednesday Nov 4: 4 weeks in the month, 4 left. */
 const c = makeCtx(4, '2026-11-04');
@@ -146,5 +146,45 @@ describe('invariants', () => {
     expect(s.plan).toBe(488000);
     const keep = apply(d1, markIncluded(d1, ['insami0001'], ['insami0001']));
     expect(findMismatches(keep, c).included.reduce((a, m) => a + m.amt, 0)).toBe(33000);
+  });
+});
+
+describe('moving a pocket\'s leftover', () => {
+  const ids = ['lunch', 'wagon', 'salidas'];
+  const weekTotal = (d: Data) => ids.reduce((a, id) => a + pocketStats(d, id, c)!.budget, 0);
+  const withGoal = (): Data => ({ ...cleaned(), goals: [{ id: 'trip', name: 'Trip', saved: 100000, target: 500000, months: 6, hue: 30 }] });
+
+  it('splits Salidas\' leftover between pockets without creating money', () => {
+    const d0 = cleaned(), before = monthSummary(d0, c), wk = weekTotal(d0);
+    const p = transferLeftover(d0, c, 'salidas', { lunch: 20000, wagon: 15000 })!;
+    const d1 = apply(d0, p), after = monthSummary(d1, c);
+    expect(pocketStats(d1, 'salidas', c)!.left).toBe(64000 - 35000);
+    expect(pocketStats(d1, 'lunch', c)!.left).toBe(16000 + 20000);
+    expect(pocketStats(d1, 'wagon', c)!.left).toBe(18500 + 15000);
+    // Only a transfer: income, plan, both gaps, what's left to spend and the accounts are all unchanged.
+    expect(after).toEqual(before);
+    expect(weekTotal(d1)).toBe(wk);
+    expect(findMismatches(d1, c)).toEqual({ orphan: [], included: [] });
+  });
+  it('can\'t move more than the pocket has left this week, or to itself', () => {
+    const d0 = cleaned();
+    expect(transferLeftover(d0, c, 'salidas', { lunch: 64001 })).toBeNull();
+    expect(transferLeftover(d0, c, 'salidas', { lunch: 40000, wagon: 24001 })).toBeNull();
+    expect(transferLeftover(d0, c, 'salidas', { salidas: 1000 })).toBeNull();
+    expect(transferLeftover(d0, c, 'salidas', { nope: 1000 })).toBeNull();
+    expect(transferLeftover(d0, c, 'salidas', { lunch: 64000 })).not.toBeNull();
+  });
+  it('sending part to a goal saves it there; the plan and income stay the same', () => {
+    const d0 = withGoal(), before = monthSummary(d0, c);
+    const d1 = apply(d0, transferLeftover(d0, c, 'salidas', { lunch: 10000, trip: 30000 })!), after = monthSummary(d1, c);
+    expect(d1.goals[0].saved).toBe(130000);
+    expect([after.income, after.plan, after.planGap, after.balance]).toEqual([before.income, before.plan, before.planGap, before.balance]);
+    expect(after.toSpend).toBe(before.toSpend - 30000); // that money is no longer in a pocket to spend
+  });
+  it('the transfer is only for this week: next week each pocket starts from its own budget', () => {
+    const d1 = apply(cleaned(), transferLeftover(cleaned(), c, 'salidas', { lunch: 20000 })!);
+    const next = makeCtx(4, '2026-11-11');
+    expect(pocketStats(d1, 'lunch', next)!.budget).toBe(32000);
+    expect(pocketStats(d1, 'salidas', next)!.budget).toBe(65000);
   });
 });

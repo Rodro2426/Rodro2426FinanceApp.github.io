@@ -4,8 +4,8 @@ import { EMOJIS, HUES, LINE, POCKET_CAT, RED, TEXT, ink, tint } from '../lib/con
 import { DAY_LETTERS, DAY_NAMES, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
 import { monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
-import { addExtraIncome, coverFirst, monthSummary, splitAmong, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
-import { unitsFor, weekShares } from '../lib/split';
+import { addExtraIncome, coverFirst, monthSummary, splitAmong, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
+import { largestRemainder, unitsFor, weekShares } from '../lib/split';
 import type { Data, Move, PocketView } from '../lib/types';
 import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -561,42 +561,80 @@ export function SavedSheet({ id }: { id: string }) {
 }
 
 /* ---------------- Move leftover ---------------- */
+/** Split what's left in a pocket this week among other pockets and goals. Only a transfer: no new money. */
 export function MoveSheet({ id, to }: { id: string; to?: string }) {
   const { data: d } = useApp();
   const c = ctxOf(d);
   const all = allStats(d, c), s = all.find(x => x.id === id);
-  const [amt, setAmt] = useState(() => (s ? String(d.settings.currency === 'COP' ? Math.floor(Math.max(0, s.left)) : Math.floor(Math.max(0, s.left) * 100) / 100) : ''));
-  const [dest, setDest] = useState<string | undefined>(to || all.find(x => x.id !== id)?.id || d.goals[0]?.id);
+  const others = all.filter(x => x.id !== id);
+  const leftover = s ? Math.max(0, roundAmt(s.left)) : 0;
+  const [parts, setParts] = useState<Record<string, string>>(() => (to ? { [to]: String(d.settings.currency === 'COP' ? Math.floor(leftover) : leftover) } : {}));
   if (!s) return null;
-  const v = num(amt), tgtP = all.find(x => x.id === dest && x.id !== id), tgtG = d.goals.find(g => g.id === dest);
-  const tgtName = tgtP?.name || tgtG?.name || null;
-  const tooMuch = v > s.left + 0.004, cant = v <= 0 || tooMuch || !tgtName;
-  const hint = tooMuch ? `You can move up to ${fmt(Math.max(0, s.left))}.`
-    : tgtP && v > 0 ? `${tgtP.name} will have ${fmt(tgtP.left + v)} left this week.`
-    : tgtG && v > 0 ? `${tgtG.name} goes to ${fmt(tgtG.saved + v)} of ${fmt(tgtG.target)}.` : 'Choose where the money should go.';
-  const confirm = () => {
-    if (cant) return;
-    const val = roundAmt(v);
-    setData(x => ({ moves: [...x.moves, { id: uid('m'), week: c.weekStart, from: id, to: dest!, amt: val }], goals: tgtG ? x.goals.map(g => (g.id === tgtG.id ? { ...g, saved: g.saved + val } : g)) : x.goals }));
-    closeSheet(); flash(`Moved ${fmt(val)} to ${tgtName}`);
+  const nums = Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, roundAmt(num(v))]));
+  const total = Object.values(nums).reduce((a, n) => a + n, 0);
+  const remaining = roundAmt(leftover - total), tooMuch = remaining < -0.004;
+  const patch = !tooMuch && total > 0 ? transferLeftover(d, c, id, nums) : null;
+  const after = patch ? { ...d, ...patch } : d;
+  const sumB = monthSummary(d, c), sumA = monthSummary(after, c);
+  const weekLeftAfter = (pid: string) => pocketStats(after, pid, c)?.left ?? 0;
+  const k = ink(s.hue);
+  const fill = (how: 'even' | 'budget' | 'clear') => {
+    if (how === 'clear' || !others.length) return setParts({});
+    const shares = largestRemainder(leftover, others.map(o => (how === 'budget' ? o.weekly : 1)), unitsFor(d.settings.currency));
+    setParts(Object.fromEntries(others.map((o, i) => [o.id, shares[i] ? String(shares[i]) : ''])));
   };
+  const confirm = () => {
+    if (!patch) return;
+    setData(x => transferLeftover(x, ctxOf(x), id, nums) ?? {});
+    const n = Object.values(nums).filter(v => v > 0).length;
+    closeSheet(); flash(`Moved ${fmt(total)} from ${s.name} to ${n === 1 ? (d.pockets.find(p => nums[p.id] > 0)?.name ?? d.goals.find(g => nums[g.id] > 0)?.name) : `${n} places`} · just for this week`);
+  };
+  const destRow = (key: string, name: string, hue: number, sub: string, st?: { initial: string; photoBg: string }) => (
+    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: `1px solid ${LINE}` }}>
+      {st ? <PocketDot st={st} size={32} fs={15} bg={tint(hue)} color={ink(hue)} /> : <span style={{ width: 32, height: 32, borderRadius: 999, background: tint(hue), color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Target size={15} /></span>}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+        <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{sub}</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(hue), borderRadius: 14, padding: '8px 10px', width: 116, flex: 'none' }}>
+        <span style={{ fontSize: 14, color: ink(hue) }}>{curSymbol()}</span>
+        <MoneyInput value={parts[key] || ''} onChange={x => setParts(p0 => ({ ...p0, [key]: x }))} ariaLabel={`To ${name}`} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(hue), padding: 0, outline: 'none', textAlign: 'right' }} />
+      </div>
+    </div>
+  );
+
   return (
-    <SheetFrame title="Move money">
+    <SheetFrame title="Move leftover">
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ margin: '0 4px', fontSize: 13, color: 'var(--color-neutral-700)' }}>{fmt(s.left)} left in {s.name} this week</span>
-        <BigAmount value={amt} onChange={setAmt} />
-        <FieldLabel m="18px 4px 8px">To a pocket</FieldLabel>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {all.filter(x => x.id !== id).map(x => <PickChip key={x.id} st={x} on={x.id === dest} hue={x.hue} onClick={() => setDest(x.id)} />)}
+        <div style={{ background: tint(s.hue), borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: k }}>Left in {s.name} this week</span>
+          <span style={{ fontSize: 34, fontWeight: 700, letterSpacing: '-0.03em', color: k }}>{fmt(leftover)}</span>
+          <span style={{ fontSize: 13, color: tooMuch ? RED : k }}>{tooMuch ? `That's ${fmt(-remaining)} more than ${s.name} has left.` : total > 0 ? `${fmt(total)} moves · ${fmt(remaining)} stays in ${s.name}` : 'Type how much goes to each pocket below.'}</span>
         </div>
-        {d.goals.length > 0 && <>
-          <FieldLabel>Or save it</FieldLabel>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {d.goals.map(g => <PickChip key={g.id} st={g} on={g.id === dest} hue={g.hue} onClick={() => setDest(g.id)} icon={<I.Target size={13} />} />)}
+
+        <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '10px 12px 4px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingBottom: 8 }}>
+            {[['Evenly', () => fill('even')], ['By budget', () => fill('budget')], ['Clear', () => fill('clear')]].map(([l, f]) => (
+              <button key={l as string} onClick={f as () => void} disabled={!leftover || !others.length} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{l as string}</button>
+            ))}
           </div>
-        </>}
-        <div style={{ margin: '16px 4px 0', fontSize: 13, color: tooMuch ? RED : 'var(--color-neutral-700)' }}>{hint}</div>
-        <PrimaryBtn onClick={confirm} disabled={cant}>{tgtName ? `Move ${fmt(v)} to ${tgtName}` : 'Move'}</PrimaryBtn>
+          {others.map(o => destRow(o.id, o.name, o.hue, `Week: ${fmt(o.left)} → ${fmt(nums[o.id] ? weekLeftAfter(o.id) : o.left)} left`, o))}
+          {d.goals.map(g => destRow(g.id, g.name, g.hue, `Goal: ${fmt(g.saved)} → ${fmt(g.saved + (nums[g.id] || 0))} of ${fmt(g.target)}`))}
+          {others.length === 0 && d.goals.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '8px 0' }}>Create another pocket or a savings goal first.</span>}
+        </div>
+
+        <div aria-label="Move check" style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
+          <span style={{ fontWeight: 700 }}>Only a transfer for this week</span>
+          <span style={{ lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>No new money is created: what {s.name} gives, the others get. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</span>
+          {[['Month income', sumB.income, sumA.income], ['Month plan', sumB.plan, sumA.plan], ['All pockets this week', all.reduce((a, x) => a + x.budget, 0), allStats(after, c).reduce((a, x) => a + x.budget, 0)]].map(([l, b, a]) => (
+            <div key={l as string} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ color: 'var(--color-neutral-700)' }}>{l as string}</span>
+              <span style={{ whiteSpace: 'nowrap' }}>{fmt(b as number)} → <b>{fmt(a as number)}</b>{a === b ? ' ✓' : ''}</span>
+            </div>
+          ))}
+          {d.goals.some(g => (nums[g.id] || 0) > 0) && <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Money sent to a goal leaves the pockets and is saved there.</span>}
+        </div>
+        <PrimaryBtn onClick={confirm} disabled={!patch}>{total > 0 && !tooMuch ? `Move ${fmt(total)}` : 'Move'}</PrimaryBtn>
       </div>
     </SheetFrame>
   );
