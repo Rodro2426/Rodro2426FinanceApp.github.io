@@ -42,7 +42,7 @@ const STEPS: Step[] = [
   { title: 'Log it', target: SHEET, text: 'Type the amount and a name, pick a category (every expense needs one), then a pocket, or No pocket, and the account you paid with. Then tap Save expense.', done: (s, b) => s.data.expenses.length > b.expenses, needs: sheetIs('add') },
   { title: 'What’s left', target: SHEET, text: 'This shows how much is left in that pocket. Tap Done.', done: s => !s.ui.sheet },
   { title: 'Add income', target: '[data-tour="add"]', text: 'Got paid? Tap + again.', done: sheetIs('add'), at: { tab: 'home', closeSheet: true } },
-  { title: 'Register it', target: SHEET, text: 'Switch to Income at the top. Type the amount, pick the account, and choose "Keep it saved" or "Split into pockets". Then tap Save income.', done: (s, b) => s.data.incomes.length > b.incomes, needs: sheetIs('add') },
+  { title: 'Register it', target: SHEET, text: 'Switch to Income at the top. Type the amount and a name, pick a category, choose the account and how much goes to pockets (or none). Then tap Save income.', done: (s, b) => s.data.incomes.length > b.incomes, needs: sheetIs('add') },
   { title: 'Open a pocket', target: '[data-tour="pocket"]', text: 'Tap your pocket to see what you spent in it.', done: sheetIs('pocket'), at: { tab: 'home', closeSheet: true } },
   { title: 'Inside a pocket', target: SHEET, text: 'Here you can edit the pocket, add an expense to it, or move leftover money to another pocket or a savings goal. Tip: tap any transaction anywhere in the app to edit or delete it.' },
   { title: 'Every month', target: '[data-tour="tab-calendar"]', text: 'Tap Calendar.', done: tab('calendar'), at: { closeSheet: true } },

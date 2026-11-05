@@ -55,7 +55,7 @@ export function coverFirst(d: Data, c: Ctx, X: number) {
   return whole(d, X - keep);
 }
 
-export interface ExtraIncome { amt: number; acct: string; note: string; toPockets: number; mode: SplitMode; dist: SplitDist; manual?: Record<string, number>; id?: string; ts?: number }
+export interface ExtraIncome { amt: number; acct: string; note: string; toPockets: number; mode: SplitMode; dist: SplitDist; manual?: Record<string, number>; id?: string; ts?: number; cat?: string }
 
 /**
  * Registers income X: the account goes up by X, and A of it is split into pockets for this week or the
@@ -69,7 +69,7 @@ export function addExtraIncome(d: Data, c: Ctx, x: ExtraIncome): Partial<Data> {
   const moves: Move[] = Object.entries(parts).filter(([, v]) => v > 0)
     .map(([to, amt]) => ({ id: uid('m'), week: c.weekStart, from: '_income', to, amt, income: id, month: c.month, spread }));
   return {
-    incomes: [{ id, ts: x.ts ?? Date.now(), a: x.acct, amt: X, note: x.note.trim() || 'Income', date: c.today }, ...d.incomes],
+    incomes: [{ id, ts: x.ts ?? Date.now(), a: x.acct, amt: X, note: x.note.trim() || x.cat || 'Income', date: c.today, ...(x.cat ? { cat: x.cat } : {}) }, ...d.incomes],
     accounts: d.accounts.map(y => (y.id === x.acct ? { ...y, bal: y.type === 'card' ? y.bal - X : y.bal + X } : y)),
     moves: [...d.moves, ...moves]
   };

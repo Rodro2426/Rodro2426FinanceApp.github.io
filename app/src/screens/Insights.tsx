@@ -8,6 +8,7 @@ import { applyOccurrence, approxLocal, billAmount, undoOccurrence } from '../lib
 import { getData } from '../lib/store';
 import { Bar, BillBadge, ExpRow, ListCard, expView } from '../ui/bits';
 import * as I from '../ui/icons';
+import { ReportList } from './Reports';
 
 export default function Insights() {
   const { data: d } = useApp();
@@ -49,6 +50,9 @@ export default function Insights() {
       <div style={{ padding: '4px 4px 0', fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Insights</div>
 
       <CategoryTable />
+
+      <div style={{ padding: '10px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Reports</div>
+      <ReportList />
 
       {best && goal0 && (
         <div style={{ background: 'oklch(0.95 0.04 160)', borderRadius: 26, padding: 18, display: 'flex', gap: 12, alignItems: 'flex-start' }}>

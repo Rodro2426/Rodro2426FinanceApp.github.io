@@ -14,7 +14,7 @@ export interface FxOrig { amt: number; cur: 'USD'; rate: number; official: boole
 export interface Expense { id: string; ts: number; p: string; a: string; amt: number; note: string; date: string; tags: string[]; cat: string; sub: string; ruleId?: string; ruleMonth?: string; orig?: FxOrig }
 /** Money received into an account (from a scheduled income). */
 /** `inBase`: an extra income already counted in the typed monthly income, so it isn't added again. */
-export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig; inBase?: boolean }
+export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig; inBase?: boolean; /** Income category (Salary, Freelance…). */ cat?: string }
 /**
  * Money moved into or out of a pocket for one week (`week` = its Monday).
  * With `month`, it was income split for the whole month: it's spread evenly over `spread` weeks starting at `week`.
@@ -114,7 +114,7 @@ export interface UI {
   toast: string | null;
   lastAdd: { pocket: string; acct: string };
   /** A full-screen page shown over the tabs. */
-  page?: 'investments' | null;
+  page?: 'investments' | `report:${string}` | null;
   /** First open on this device: choose sample data, a fresh start or a backup. */
   welcome?: boolean;
   /** Home-screen install guide: shown in iPhone Safari, or opened from Profile. */

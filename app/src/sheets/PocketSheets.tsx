@@ -6,6 +6,7 @@ import { monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { addExtraIncome, coverFirst, monthSummary, splitAmong, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
+import { allIncomeCats } from '../lib/reports';
 import type { Data, Move, PocketView } from '../lib/types';
 import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -94,6 +95,7 @@ function IncomeForm() {
   const [amt, setAmt] = useState('');
   const [a, setA] = useState((accounts.find(x => x.type === 'bank') || accounts[0])?.id ?? '');
   const [note, setNote] = useState('');
+  const [incCat, setIncCat] = useState('');
   const [toP, setToP] = useState('0');
   const [mode, setMode] = useState<SplitMode>('month');
   const [dist, setDist] = useState<SplitDist>('budget');
@@ -103,10 +105,10 @@ function IncomeForm() {
   const manualNums = Object.fromEntries(d.pockets.map(p => [p.id, roundAmt(num(manual[p.id]))]));
   const A = dist === 'manual' ? Object.values(manualNums).reduce((s, n) => s + n, 0) : Math.min(X, roundAmt(num(toP)));
   const tooMuch = A > X + 0.004;
-  const cant = !(X > 0) || !accounts.some(x => x.id === a) || tooMuch;
+  const cant = !(X > 0) || !accounts.some(x => x.id === a) || tooMuch || !incCat;
 
   const before = monthSummary(d, c);
-  const input: ExtraIncome = { amt: X, acct: a, note, toPockets: A, mode, dist, manual: manualNums };
+  const input: ExtraIncome = { amt: X, acct: a, note, toPockets: A, mode, dist, manual: manualNums, cat: incCat };
   const preview = X > 0 && !tooMuch && accounts.some(x => x.id === a) ? { ...d, ...addExtraIncome(d, c, { ...input, id: 'preview' }) } : null;
   const after = preview ? monthSummary(preview, c) : null;
   const parts = A > 0 && !tooMuch ? splitAmong(d, A, dist, manualNums) : {};
@@ -136,6 +138,10 @@ function IncomeForm() {
       <BigAmount value={amt} onChange={setAmt} autoFocus mt={12} />
       <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
       <input placeholder="e.g. Freelance, gift, refund" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
+      <FieldLabel m="14px 4px 6px">Category {!incCat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</FieldLabel>
+      <div className="noscroll" aria-label="Income category" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
+        {allIncomeCats(d).map(k => <button key={k} onClick={() => setIncCat(k)} aria-pressed={incCat === k} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: incCat === k ? TEXT : '#fff', color: incCat === k ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k}</button>)}
+      </div>
       <FieldLabel>Goes into</FieldLabel>
       <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
         {accounts.map(x => (

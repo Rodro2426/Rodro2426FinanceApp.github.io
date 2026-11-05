@@ -24,6 +24,7 @@ import Welcome from './screens/Welcome';
 import Tour from './screens/Tour';
 import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
+import ReportPage from './screens/Reports';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
 import { ReconcileSheet } from './sheets/ReconcileSheet';
@@ -161,6 +162,7 @@ export default function App() {
       </div>
 
       {ui.page === 'investments' && <Investments />}
+      {ui.page?.startsWith('report:') && <ReportPage id={ui.page.slice(7)} />}
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
       {ui.tour && <Tour />}

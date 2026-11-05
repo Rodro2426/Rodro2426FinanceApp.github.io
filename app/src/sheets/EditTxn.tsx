@@ -6,6 +6,7 @@ import type { Sheet } from '../lib/types';
 import { BigAmount, FieldLabel, GhostDanger, PickChip, PrimaryBtn, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import { deleteIncome, editIncomeAmount } from '../lib/plan';
+import { allIncomeCats, incCatOf } from '../lib/reports';
 
 const chip = (on: boolean) => ({ background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT });
 const acctBtn = (on: boolean, hue: number) => ({ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${on ? ink(hue) : '#fff'}`, background: on ? tint(hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }) as const;
@@ -26,6 +27,7 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
   const [[cat, sub], setCat] = useState<[string, string]>(e ? catOf(e) : ['Other', '']);
   const [tags, setTags] = useState<string[]>(e?.tags ?? []);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [incCat, setIncCat] = useState(inc ? incCatOf(d, inc) : '');
 
   if (!t) return <SheetFrame title="Transaction"><span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>This transaction no longer exists.</span></SheetFrame>;
   if (inc?.interest) {
@@ -58,7 +60,7 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
       });
     } else if (inc) {
       // Same rules as everywhere else: the account follows the difference, and the split shrinks to fit if needed.
-      setData(x => editIncomeAmount(x, inc.id, val, acct, { note: note.trim() || inc.note, date }));
+      setData(x => editIncomeAmount(x, inc.id, val, acct, { note: note.trim() || inc.note, date, cat: incCat }));
     }
     flash('Transaction updated'); done();
   };
@@ -79,6 +81,12 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
         <FieldLabel m="14px 4px 6px">Date</FieldLabel>
         <input type="date" value={date} onChange={x => setDate(x.target.value)} style={{ ...textInput, fontWeight: 600, minHeight: 52, WebkitAppearance: 'none', appearance: 'none' }} />
 
+        {inc && <>
+          <FieldLabel>Category</FieldLabel>
+          <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
+            {allIncomeCats(d).map(k => <button key={k} onClick={() => setIncCat(k)} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, ...chip(k === incCat), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k}</button>)}
+          </div>
+        </>}
         {e && <>
           <FieldLabel>Category</FieldLabel>
           <div style={{ background: '#fff', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
