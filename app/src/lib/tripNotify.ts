@@ -9,8 +9,12 @@ import type { Notif } from './types';
 /** The notifications for one batch of activity. Messages are grouped: one notification per trip per day, updated as more arrive. */
 export function tripNotifs(acts: TripActivity[], uid: string, today: string, existing: Notif[], now = Date.now()): Notif[] {
   const out: Notif[] = [];
-  acts.forEach(({ trip, items, messages }) => {
+  acts.forEach(({ trip, items, messages, joined }) => {
     const title = `${trip.emoji} ${trip.name}`.trim();
+    if (joined) {
+      const n = trip.members.length + trip.guests.length;
+      out.push({ id: `trip:${trip.id}:joined`, date: today, ts: now, kind: 'trip', title, body: `You were added to this trip · ${n} people. Your share of new expenses shows up here.`, read: false, dismissed: false, bannered: false, link: { trip: trip.id } });
+    }
     const who = (id: string) => trip.names[id] ?? trip.guests.find(g => g.id === id)?.name ?? 'Someone';
     items.forEach(it => {
       let body: string;
@@ -42,7 +46,7 @@ export async function pollTrips() {
     const acts = await checkTripActivity();
     const page = getState().ui.page;
     // Messages in a chat you're looking at right now don't need a notification.
-    const shown = acts.map(a => (page === `tripchat:${a.trip.id}` ? { ...a, messages: [] } : a)).filter(a => a.items.length || a.messages.length);
+    const shown = acts.map(a => (page === `tripchat:${a.trip.id}` ? { ...a, messages: [] } : a)).filter(a => a.items.length || a.messages.length || a.joined);
     if (!shown.length) return;
     setData(x => {
       const fresh = tripNotifs(shown, myUid(), todayISO(), x.notifications);

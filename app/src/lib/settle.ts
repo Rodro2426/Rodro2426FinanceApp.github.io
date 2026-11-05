@@ -92,3 +92,26 @@ export function tripSpending(members: Member[], items: TripItem[], me: string, p
   const mine = people.find(p => p.id === me)?.share ?? 0;
   return { total, mine, pct: total ? mine / total : 0, people: people.sort((a, b) => b.share - a.share), count: exp.length };
 }
+
+/**
+ * Expenses split equally among everyone who was in the trip ("the whole group") — the ones that would naturally
+ * include people who join later. Splits by amount or percent, or among only some people, are left alone.
+ */
+export const groupWideItems = (items: TripItem[], people: string[]) =>
+  items.filter(it => it.kind === 'expense' && it.split?.mode === 'equal' && people.every(p => it.split!.among.includes(p)));
+
+/** The same expense split equally with more people too. */
+export const withMorePeople = (it: TripItem, add: string[]): TripItem =>
+  it.split ? { ...it, split: { ...it.split, among: [...it.split.among, ...add.filter(p => !it.split!.among.includes(p))] } } : it;
+
+/** A guest who now has an account: every mention of the guest id becomes their account id. */
+export function relinkPerson(it: TripItem, from: string, to: string): TripItem {
+  const sw = (x: string) => (x === from ? to : x);
+  const out: TripItem = { ...it, paidBy: sw(it.paidBy), createdBy: sw(it.createdBy) };
+  if (it.to) out.to = sw(it.to);
+  if (it.split) {
+    const values = it.split.values ? Object.fromEntries(Object.entries(it.split.values).map(([k, v]) => [sw(k), v])) : undefined;
+    out.split = { ...it.split, among: it.split.among.map(sw), ...(values ? { values } : {}) };
+  }
+  return out;
+}

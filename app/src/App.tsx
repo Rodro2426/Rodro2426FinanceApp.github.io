@@ -31,7 +31,7 @@ import Investments from './screens/Investments';
 import ReportPage from './screens/Reports';
 import SocialPage, { TripPage } from './screens/Social';
 import { TripChatPage, TripStatsPage } from './screens/TripExtras';
-import { TripItemSheet, TripNewSheet } from './sheets/TripSheets';
+import { TripItemSheet, TripNewSheet, TripPeopleSheet } from './sheets/TripSheets';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
 import { ReconcileSheet } from './sheets/ReconcileSheet';
@@ -72,6 +72,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'reconcile': return <ReconcileSheet />;
     case 'cloud': return <CloudSheet />;
     case 'tripNew': return <TripNewSheet />;
+    case 'tripPeople': return <TripPeopleSheet trip={sheet.trip} />;
     case 'tripItem': return <TripItemSheet trip={sheet.trip} id={sheet.id} payment={sheet.payment} />;
     case 'group': return <GroupSheet id={sheet.id} />;
     case 'groupItem': return <GroupItemSheet group={sheet.group} id={sheet.id} />;

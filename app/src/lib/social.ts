@@ -4,9 +4,9 @@
 //   friendships/{a_b}         { users: [a, b], from, status: 'pending' | 'accepted', names }
 //   trips/{tripId}            { name, emoji, owner, members: [uid], guests: [{id, name}], names }
 //   trips/{tripId}/items/{id} expenses and payments (see settle.ts)
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, setDoc, updateDoc, where } from 'firebase/firestore/lite';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore/lite';
 import { auth, db } from './cloud';
-import type { Member, TripItem } from './settle';
+import { groupWideItems, relinkPerson, withMorePeople, type Member, type TripItem } from './settle';
 
 export interface Friend { uid: string; name: string; email: string; status: 'pending' | 'accepted'; incoming: boolean; id: string }
 export interface Trip { id: string; name: string; emoji: string; owner: string; members: string[]; guests: Member[]; names: Record<string, string>; createdAt: number; updatedAt: number }
@@ -116,6 +116,37 @@ export async function createTrip(name: string, emoji: string, friendUids: string
 export async function updateTrip(id: string, patch: Partial<Omit<Trip, 'id'>>) {
   try { await updateDoc(doc(db, 'trips', id), { ...patch, updatedAt: Date.now() }); await loadTrips(); return null; } catch (e) { return fail(e); }
 }
+/**
+ * Adds friends and guests to a trip that already exists, and links guests to the friend's account when they join.
+ * splitPast: the trip's whole-group equal expenses are split with the new people too.
+ */
+export async function addPeople(t: Trip, add: { friends: string[]; guests: string[]; links: Record<string, string>; splitPast: boolean }): Promise<string | null> {
+  const fname = (id: string) => state.friends.find(f => f.uid === id)?.name ?? 'Friend';
+  const linkTo = Object.entries(add.links).filter(([g, f]) => f && t.guests.some(x => x.id === g) && !t.members.includes(f));
+  const friends = add.friends.filter(f => !t.members.includes(f) && !linkTo.some(([, x]) => x === f));
+  const newGuests = add.guests.map(n => n.trim()).filter(Boolean).map((n, i) => ({ id: `g:${Date.now().toString(36)}${i}`, name: n }));
+  const names = { ...t.names };
+  [...friends, ...linkTo.map(([, f]) => f)].forEach(f => { names[f] = fname(f); });
+  const before = tripMembers(t).map(m => m.id);
+  try {
+    const its = await getDocs(collection(db, 'trips', t.id, 'items'));
+    let items = its.docs.map(d => ({ ...(d.data() as TripItem), id: d.id }));
+    const orig = new Map(items.map(i => [i.id, JSON.stringify(i)]));
+    linkTo.forEach(([g, f]) => { items = items.map(i => relinkPerson(i, g, f)); });
+    const people = before.map(id => linkTo.find(([g]) => g === id)?.[1] ?? id);
+    const joining = [...friends, ...newGuests.map(g => g.id)];
+    if (add.splitPast && joining.length) { const wide = new Set(groupWideItems(items, people).map(i => i.id)); items = items.map(i => (wide.has(i.id) ? withMorePeople(i, joining) : i)); }
+    const batch = writeBatch(db);
+    batch.update(doc(db, 'trips', t.id), {
+      members: [...t.members, ...friends, ...linkTo.map(([, f]) => f)], names,
+      guests: [...t.guests.filter(g => !linkTo.some(([x]) => x === g.id)), ...newGuests], updatedAt: Date.now()
+    });
+    items.filter(i => orig.get(i.id) !== JSON.stringify(i)).forEach(({ id, ...rest }) => batch.set(doc(db, 'trips', t.id, 'items', id), rest));
+    await batch.commit();
+    await loadTrips(); await loadItems(t.id);
+    return null;
+  } catch (e) { return fail(e); }
+}
 export async function deleteTrip(id: string) {
   try {
     const its = await getDocs(collection(db, 'trips', id, 'items'));
@@ -189,7 +220,7 @@ export function hasUnread(tripId: string) {
 }
 
 /* ---------------- Activity for notifications ---------------- */
-export interface TripActivity { trip: Trip; items: TripItem[]; messages: Message[] }
+export interface TripActivity { trip: Trip; items: TripItem[]; messages: Message[]; /** Someone added you to this trip since the last check. */ joined?: boolean }
 const seenKey = (tripId: string) => `pockets-seen-${tripId}`;
 /**
  * What other people added to your trips since this phone last checked: expenses, payments and messages.
@@ -200,10 +231,16 @@ export async function checkTripActivity(): Promise<TripActivity[]> {
   const u = me(); if (!u) return [];
   await loadTrips();
   const out: TripActivity[] = [];
+  // The very first check on this phone only takes note of the trips you're in; after that, a new trip means you were added.
+  let first = false; try { first = !localStorage.getItem('pockets-seen-init'); localStorage.setItem('pockets-seen-init', '1'); } catch { /* none */ }
   await Promise.all(state.trips.map(async trip => {
     let since = 0; try { since = Number(localStorage.getItem(seenKey(trip.id)) || 0); } catch { /* none */ }
     const now = Date.now();
-    if (!since) { try { localStorage.setItem(seenKey(trip.id), String(now)); } catch { /* not saved */ } return; }
+    if (!since) {
+      try { localStorage.setItem(seenKey(trip.id), String(now)); } catch { /* not saved */ }
+      if (!first && trip.owner !== u.uid) out.push({ trip, items: [], messages: [], joined: true });
+      return;
+    }
     const [it, ms] = await Promise.all([
       getDocs(query(collection(db, 'trips', trip.id, 'items'), where('createdAt', '>', since))),
       getDocs(query(collection(db, 'trips', trip.id, 'messages'), where('createdAt', '>', since), orderBy('createdAt')))

@@ -3,8 +3,8 @@ import { useApp, setData, closeSheet, setUI, flash } from '../lib/store';
 import { RED, TEXT } from '../lib/constants';
 import { chargeAccount, fmt, num, roundAmt, uid as newId } from '../lib/derive';
 import { todayISO } from '../lib/dates';
-import { createTrip, deleteItem, getSocial, myUid, saveItem, tripMembers } from '../lib/social';
-import { sharesOf, splitProblem, type SplitMode, type TripItem } from '../lib/settle';
+import { addPeople, createTrip, deleteItem, getSocial, myUid, saveItem, tripMembers } from '../lib/social';
+import { groupWideItems, personTotals, relinkPerson, sharesOf, splitProblem, withMorePeople, type SplitMode, type TripItem } from '../lib/settle';
 import { BigAmount, FieldLabel, GhostDanger, PrimaryBtn, Segmented, Toggle, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { SheetFrame } from './Sheet';
@@ -47,6 +47,92 @@ export function TripNewSheet() {
         </div>
         {guests.length > 0 && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>{guests.map((g, i) => <button key={g + i} onClick={() => setGuests(x => x.filter((_, j) => j !== i))} style={chip(true)}>{g} ✕</button>)}</div>}
         <PrimaryBtn onClick={create} disabled={!name.trim() || busy} mt={18}>{busy ? 'Creating…' : 'Create trip'}</PrimaryBtn>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Add people to a trip that already exists ---------------- */
+export function TripPeopleSheet({ trip }: { trip: string }) {
+  const so = useSocial();
+  const t = so.trips.find(x => x.id === trip);
+  const [sel, setSel] = useState<string[]>([]);
+  const [guests, setGuests] = useState<string[]>([]);
+  const [guest, setGuest] = useState('');
+  const [links, setLinks] = useState<Record<string, string>>({});
+  const [splitPast, setSplitPast] = useState(false);
+  const [busy, setBusy] = useState(false);
+  if (!t) return <SheetFrame title="Add people"><span style={{ fontSize: 14 }}>This trip isn't available anymore.</span></SheetFrame>;
+  const me = myUid();
+  const friends = so.friends.filter(f => f.status === 'accepted' && !t.members.includes(f.uid));
+  const linkable = friends.filter(f => !sel.includes(f.uid));
+  const items = so.items[t.id] ?? [];
+  const people = tripMembers(t).map(m => m.id);
+  // Preview of what "split past expenses" would do, with the same rules the save uses.
+  const linked = Object.entries(links).filter(([, f]) => f);
+  const relinked = linked.reduce((its, [g, f]) => its.map(i => relinkPerson(i, g, f)), items);
+  const peopleNow = people.map(id => links[id] || id);
+  const joining = [...sel, ...guests.map((_, i) => `new:${i}`)];
+  const wide = groupWideItems(relinked, peopleNow);
+  const after = splitPast && joining.length ? relinked.map(i => (wide.includes(i) ? withMorePeople(i, joining) : i)) : relinked;
+  const shareNow = personTotals(me, items).share, shareAfter = personTotals(me, after).share;
+  const count = sel.length + guests.length + linked.length;
+  const exps = items.filter(i => i.kind === 'expense').length;
+  const save = async () => {
+    setBusy(true);
+    const e = await addPeople(t, { friends: sel, guests, links, splitPast });
+    setBusy(false);
+    if (e) { flash(e); return; }
+    closeSheet(); flash(count === 1 ? 'Added to the trip' : `${count} people added`);
+  };
+  return (
+    <SheetFrame title={`Add people to ${t.name}`}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <FieldLabel m="4px 4px 6px">Friends</FieldLabel>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {friends.filter(f => !Object.values(links).includes(f.uid)).map(f => { const on = sel.includes(f.uid); return <button key={f.uid} onClick={() => setSel(s => (on ? s.filter(x => x !== f.uid) : [...s, f.uid]))} aria-pressed={on} style={chip(on)}>{on ? '✓ ' : ''}{f.name}</button>; })}
+          {!friends.length && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', lineHeight: 1.4 }}>{so.friends.some(f => f.status === 'accepted') ? 'All your friends are already in this trip.' : 'No friends yet.'} To add someone new, add them as a friend by email first (Trips and friends → Friends), then come back here.</span>}
+        </div>
+
+        <FieldLabel>Guests without an account</FieldLabel>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value={guest} onChange={e => setGuest(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && guest.trim()) { setGuests(g => [...g, guest.trim()]); setGuest(''); } }} placeholder="Name" aria-label="Guest name" style={{ ...textInput, flex: 1 }} />
+          <button onClick={() => { if (guest.trim()) { setGuests(g => [...g, guest.trim()]); setGuest(''); } }} style={{ height: 52, padding: '0 16px', borderRadius: 18, border: 0, background: TEXT, color: 'var(--surface)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+        </div>
+        {guests.length > 0 && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>{guests.map((g, i) => <button key={g + i} onClick={() => setGuests(x => x.filter((_, j) => j !== i))} style={chip(true)}>{g} ✕</button>)}</div>}
+
+        {t.guests.length > 0 && (linkable.length > 0 || linked.length > 0) && <>
+          <FieldLabel>A guest joined Pockets?</FieldLabel>
+          <span style={{ margin: '-2px 4px 8px', fontSize: 12.5, color: 'var(--color-neutral-700)', lineHeight: 1.4 }}>Link the guest to their account: everything they paid and owe moves to them, and they see the trip in their app.</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {t.guests.map(g => (
+              <label key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', borderRadius: 16, padding: '8px 8px 8px 14px' }}>
+                <span style={{ flex: 1, fontSize: 14.5, fontWeight: 600 }}>{g.name}</span>
+                <select value={links[g.id] ?? ''} onChange={e => setLinks(l => ({ ...l, [g.id]: e.target.value }))} aria-label={`Link ${g.name} to a friend`}
+                  style={{ height: 38, borderRadius: 12, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 14, fontWeight: 600, padding: '0 10px', maxWidth: 180 }}>
+                  <option value="">Keep as guest</option>
+                  {friends.filter(f => !sel.includes(f.uid) && (links[g.id] === f.uid || !Object.values(links).includes(f.uid))).map(f => <option key={f.uid} value={f.uid}>Is {f.name}</option>)}
+                </select>
+              </label>
+            ))}
+          </div>
+        </>}
+
+        {joining.length > 0 && exps > 0 && (
+          <div style={{ marginTop: 16, background: 'var(--surface)', borderRadius: 20, padding: '14px 14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 15, fontWeight: 700 }}>Split past expenses with them too</span>
+                <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', lineHeight: 1.35 }}>{wide.length ? `${wide.length} of ${exps} expenses were split equally with the whole group; they'd include the new ${joining.length === 1 ? 'person' : 'people'} too.` : 'None of the past expenses were split equally with the whole group, so nothing would change.'}</span>
+              </span>
+              <Toggle on={splitPast} onChange={setSplitPast} label="Split past expenses with them too" />
+            </div>
+            {splitPast && wide.length > 0 && <span style={{ fontSize: 13, fontWeight: 600 }}>Your share: {fmt(shareNow)} → {fmt(shareAfter)}</span>}
+            <span style={{ fontSize: 12, color: 'var(--color-neutral-600)', lineHeight: 1.35 }}>Expenses split by amount, by percent, or among only some people stay as they are. New expenses include everyone by default.</span>
+          </div>
+        )}
+
+        <PrimaryBtn onClick={save} disabled={!count || busy} mt={18}>{busy ? 'Saving…' : count ? `Add ${count === 1 ? '1 person' : `${count} people`}` : 'Choose who to add'}</PrimaryBtn>
       </div>
     </SheetFrame>
   );

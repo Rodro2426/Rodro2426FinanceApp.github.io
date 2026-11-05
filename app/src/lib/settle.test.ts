@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { balances, personTotals, settleUp, sharesOf, splitProblem, type Member, type TripItem } from './settle';
+import { balances, groupWideItems, personTotals, relinkPerson, settleUp, sharesOf, splitProblem, withMorePeople, type Member, type TripItem } from './settle';
 
 const M: Member[] = [{ id: 'me', name: 'Santi' }, { id: 'ana', name: 'Ana' }, { id: 'juan', name: 'Juan' }, { id: 'g:caro', name: 'Caro' }];
 let n = 0;
@@ -79,5 +79,34 @@ describe('trip spending summary', () => {
     const nov = tripSpending(M, its, 'me', '2026-11');
     expect([nov.total, nov.mine, nov.count]).toEqual([300000, 100000, 1]);
     expect(tripMonths(its)).toEqual(['2026-10', '2026-11']);
+  });
+});
+
+describe('adding people to a trip', () => {
+  const base = { date: '2026-11-01', createdBy: 'a', createdAt: 1, desc: 'x' };
+  const items: TripItem[] = [
+    { ...base, id: '1', kind: 'expense', amount: 300, paidBy: 'a', split: { mode: 'equal', among: ['a', 'b', 'g:c'] } },
+    { ...base, id: '2', kind: 'expense', amount: 100, paidBy: 'b', split: { mode: 'equal', among: ['a', 'b'] } },
+    { ...base, id: '3', kind: 'expense', amount: 100, paidBy: 'g:c', split: { mode: 'amounts', among: ['a', 'b', 'g:c'], values: { a: 50, b: 25, 'g:c': 25 } } },
+    { ...base, id: '4', kind: 'payment', amount: 40, paidBy: 'g:c', to: 'a' }
+  ];
+  it('only whole-group equal splits get the new person', () => {
+    expect(groupWideItems(items, ['a', 'b', 'g:c']).map(i => i.id)).toEqual(['1']);
+    const w = withMorePeople(items[0], ['d']);
+    expect(w.split!.among).toEqual(['a', 'b', 'g:c', 'd']);
+    // Balances still add up to zero after widening.
+    const bal = balances([{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'g:c', name: 'C' }, { id: 'd', name: 'D' }], [w]);
+    expect(Object.values(bal).reduce((s, v) => s + v, 0)).toBe(0);
+    expect(bal.d).toBe(-75);
+  });
+  it('a guest linked to an account keeps all their history', () => {
+    const r = items.map(i => relinkPerson(i, 'g:c', 'c'));
+    expect(r[0].split!.among).toEqual(['a', 'b', 'c']);
+    expect(r[2].paidBy).toBe('c');
+    expect(r[2].split!.values).toEqual({ a: 50, b: 25, c: 25 });
+    expect(r[3]).toMatchObject({ paidBy: 'c', to: 'a' });
+    const before = balances([{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'g:c', name: 'C' }], items);
+    const after = balances([{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }], r);
+    expect(after.c).toBe(before['g:c']);
   });
 });

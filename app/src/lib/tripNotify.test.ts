@@ -24,3 +24,11 @@ describe('trip notifications', () => {
     expect(next[0].body).toBe('3 new messages · Ana: Dónde están?');
   });
 });
+
+describe('being added to a trip', () => {
+  it('says so and opens the trip', () => {
+    const n = tripNotifs([{ trip, items: [], messages: [], joined: true }], 'me', '2026-11-05', []);
+    expect(n[0].body).toMatch(/^You were added to this trip · 3 people/);
+    expect(n[0].link).toEqual({ trip: 't1' });
+  });
+});

@@ -145,15 +145,12 @@ export function TripPage({ id }: { id: string }) {
   const so = useSocial();
   const { data: d } = useApp();
   const t = so.trips.find(x => x.id === id);
-  const [adding, setAdding] = useState(false);
-  const [guest, setGuest] = useState('');
   if (!t) return page(<div style={card}>{so.loading ? 'Loading…' : 'This trip was deleted or you are no longer in it.'}</div>, 'Trip', () => setUI({ page: 'social' }));
   const items = so.items[t.id] ?? [], members = tripMembers(t), uid = myUid();
   const nameOf = (x: string) => (x === uid ? 'You' : members.find(m => m.id === x)?.name ?? 'Someone');
   const bal = balances(members, items), plan = settleUp(bal), mb = myBalance(t, items);
   const mine = personTotals(uid, items), total = items.filter(i => i.kind === 'expense').reduce((a, i) => a + i.amount, 0);
   const logged = new Set(d.tripLogged ?? []);
-  const notIn = so.friends.filter(f => f.status === 'accepted' && !t.members.includes(f.uid));
 
   return page(<>
     <div style={{ ...card, background: tint(hueOf(t.name)), gap: 4 }}>
@@ -184,16 +181,9 @@ export function TripPage({ id }: { id: string }) {
           <span style={{ fontSize: 14, fontWeight: 700, color: v > 0.004 ? GREEN : v < -0.004 ? RED : 'var(--color-neutral-600)' }}>{v > 0.004 ? `gets ${fmt(v)}` : v < -0.004 ? `owes ${fmt(-v)}` : 'even'}</span>
         </div>;
       })}
-      {!adding ? <button onClick={() => setAdding(true)} style={{ alignSelf: 'flex-start', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}>+ Add someone</button> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 6, borderTop: `1px solid ${LINE}` }}>
-          {notIn.length > 0 && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{notIn.map(f => <button key={f.uid} onClick={async () => { const e = await updateTrip(t.id, { members: [...t.members, f.uid], names: { ...t.names, [f.uid]: f.name } }); flash(e ?? `${f.name} added`); }} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>+ {f.name}</button>)}</div>}
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input value={guest} onChange={e => setGuest(e.target.value)} placeholder="Guest's name (no account)" aria-label="Guest name" style={{ ...textInput, flex: 1, background: 'var(--color-neutral-100)', padding: '11px 14px' }} />
-            <button onClick={async () => { if (!guest.trim()) return; const e = await updateTrip(t.id, { guests: [...t.guests, { id: `g:${Date.now().toString(36)}`, name: guest.trim() }] }); setGuest(''); flash(e ?? 'Guest added'); }} style={{ height: 46, padding: '0 14px', borderRadius: 14, border: 0, background: TEXT, color: 'var(--surface)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>Add</button>
-          </div>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Friends with an account see the trip in their app. Guests are tracked by you and the other members.</span>
-        </div>
-      )}
+      <button onClick={() => openSheet({ name: 'tripPeople', trip: t.id })} className="hv-n200" style={{ marginTop: 4, height: 42, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <I.Plus size={16} /> Add people{t.guests.length ? ' or link a guest' : ''}
+      </button>
     </div>
 
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>

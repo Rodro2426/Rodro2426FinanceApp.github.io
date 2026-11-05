@@ -116,6 +116,7 @@ export type Sheet =
   | { name: 'reconcile' }
   | { name: 'cloud' }
   | { name: 'tripNew' }
+  | { name: 'tripPeople'; trip: string }
   | { name: 'tripItem'; trip: string; id: string | null; payment?: { from: string; to: string; amount: number } }
   | { name: 'group'; id: string | null }
   | { name: 'groupItem'; group: string; id: string | null }
