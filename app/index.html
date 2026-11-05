@@ -4,9 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f7f5f3">
+  <!-- Which appearance the page uses. iOS colors the status bar (time, battery) from this, so it follows the
+       app's Light/Dark setting instead of the phone's. Updated by the app when the setting changes. -->
+  <meta name="color-scheme" content="light">
   <script>
-    // Apply light/dark before anything paints, so a dark-mode app never flashes white.
-    try { var t = localStorage.getItem('pockets-theme'); if (t === 'system' || !t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; document.documentElement.dataset.theme = t; } catch (e) {}
+    // Apply light/dark before anything paints, so a dark-mode app never flashes white and the status bar matches.
+    try {
+      var t = localStorage.getItem('pockets-theme'); if (t === 'system' || !t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = t;
+      document.querySelector('meta[name="color-scheme"]').setAttribute('content', t);
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', t === 'dark' ? '#0e0e0d' : '#f7f5f3');
+    } catch (e) {}
   </script>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">

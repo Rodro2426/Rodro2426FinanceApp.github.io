@@ -119,6 +119,8 @@ export default function App() {
       const t = theme === 'system' ? (mq.matches ? 'dark' : 'light') : theme;
       document.documentElement.dataset.theme = t;
       document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0e0e0d' : '#f7f5f3');
+      // iOS colors the status bar from the page's appearance, so it follows the app's setting, not the phone's.
+      document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', t);
       try { localStorage.setItem('pockets-theme', theme); } catch { /* not saved */ }
       setUI({});
     };
