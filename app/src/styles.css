@@ -182,3 +182,48 @@ input::placeholder { color: var(--color-neutral-500); }
 
 :root[data-theme="dark"] .frosted { background: rgba(38,37,36,.92) !important; }
 @media (min-width: 600px) { :root[data-theme="dark"] body, :root[data-theme="dark"] html { background: #050505; } }
+
+/* ---------------- Website (computer-sized windows) ---------------- */
+/* On phones the main area is just a pass-through; on a computer it sits next to the sidebar. */
+.main { display: contents; }
+.wordmark { color: #232e7a; }
+:root[data-theme="dark"] .wordmark { color: #c5cbf2; }
+@media (min-width: 1024px) and (min-height: 560px) {
+  :root { --top: 32px; --tb: 28px; }
+  html, body { background: var(--page); }
+  :root[data-theme="dark"] body, :root[data-theme="dark"] html { background: var(--page); }
+  .shell.desk { width: auto; max-width: none; height: 100dvh; margin: 0; border-radius: 0; box-shadow: none; flex-direction: row; }
+  .desk-side {
+    width: 264px; flex: none; height: 100%; overflow-y: auto; box-sizing: border-box; padding: 26px 16px 18px;
+    display: flex; flex-direction: column; background: var(--surface);
+    border-right: 1px solid var(--color-neutral-200);
+  }
+  .desk .main { display: flex; flex-direction: column; flex: 1; min-width: 0; position: relative; height: 100%; }
+  .desk .brand-reveal { display: none; }
+  /* Content column: wide, centred, with room to breathe. */
+  .desk .main > .scroller:not(.page) > .scroll-body { padding: 32px 40px 60px !important; max-width: 1240px; margin: 0 auto; }
+  .desk .page > .scroll-body { padding: 32px 40px 60px !important; max-width: 920px; margin: 0 auto; }
+  .desk .page { z-index: 5 !important; }
+  /* Blocks flow into two columns, like a dashboard. Edit mode stays one column so dragging is clear. */
+  .desk .blocks-grid { display: block !important; columns: 2 440px; column-gap: 22px; }
+  .desk .blocks-grid > * { break-inside: avoid; margin-bottom: 18px; }
+  .desk .blocks-grid > .span-all { column-span: all; }
+  .desk .blocks-edit { max-width: 640px; margin: 0 auto; width: 100%; }
+  /* Bottom sheets become centred dialogs. */
+  .desk [data-sheet] { justify-content: center !important; align-items: center; padding: 32px; }
+  .desk [data-sheet] > .sheet-panel {
+    width: min(560px, 100%); border-radius: 28px !important; max-height: min(86vh, 900px) !important;
+    padding: 10px 26px 26px !important; animation: dialog-in .22s cubic-bezier(.2, .8, .2, 1);
+  }
+  .desk [data-sheet] > .sheet-panel > .grabber { display: none !important; }
+  .desk [data-sheet] > .sheet-panel { padding-top: 22px !important; }
+  /* Notifications and messages appear at the top right. */
+  .desk .banner { left: auto !important; right: 28px !important; width: 400px; top: 24px !important; }
+  .desk > [role=status] { left: auto !important; right: 28px !important; bottom: 28px !important; width: auto; max-width: 420px; }
+  .desk .conflict-slot { left: auto !important; right: 28px !important; width: 420px; }
+  /* The Welcome and install screens use the whole window. */
+  .desk-hide { display: none !important; }
+  .desk .chatpage { padding: 0 max(24px, calc((100% - 860px) / 2)); z-index: 5 !important; }
+}
+@keyframes dialog-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .desk [data-sheet] > .sheet-panel { animation: none; } }

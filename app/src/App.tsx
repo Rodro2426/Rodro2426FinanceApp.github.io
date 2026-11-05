@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
-import { markDirty, startCloud } from './lib/cloud';
+import { markDirty, startCloud, syncNow } from './lib/cloud';
+import { Sidebar, useDesk } from './ui/Desk';
 import { openTripLink, pollTrips } from './lib/tripNotify';
 import { useSync } from './sheets/CloudSheet';
 import { CloudSheet, ConflictChoice } from './sheets/CloudSheet';
@@ -107,6 +108,13 @@ export default function App() {
   // Shared trips: while signed in and the app is open, check for friends' expenses and messages every 90 seconds
   // (and right away when you come back to the app). There is no push, so this only runs while Pockets is open.
   const sync = useSync();
+  const desk = useDesk();
+  // On a computer the window often stays open for hours: bring down changes made on the phone once a minute.
+  useEffect(() => {
+    if (!desk || !sync.uid) return;
+    const t = setInterval(() => { if (document.visibilityState === 'visible') syncNow(); }, 60_000);
+    return () => clearInterval(t);
+  }, [desk, sync.uid]);
   useEffect(() => {
     if (!sync.uid) return;
     const run = () => { if (document.visibilityState === 'visible') pollTrips(); };
@@ -152,7 +160,9 @@ export default function App() {
   }, []);
 
   return (
-    <div className="shell">
+    <div className={desk ? 'shell desk' : 'shell'}>
+      {desk && <Sidebar tabs={TABS} />}
+      <div className="main">
       <div ref={brand} className="brand-reveal" aria-hidden="true">
         <img src="./pockets-mark.svg" alt="" width={50} height={61} />
         <span>Pockets</span>
@@ -167,7 +177,15 @@ export default function App() {
         </div>
       </div>
 
-      {!ui.sheet && !ui.tour && <div style={{ position: 'absolute', left: 14, right: 14, top: 'calc(var(--top) - 6px)', zIndex: 32 }}><ConflictChoice /></div>}
+      {ui.page === 'investments' && <Investments />}
+      {ui.page?.startsWith('report:') && <ReportPage id={ui.page.slice(7)} />}
+      {ui.page === 'social' && <SocialPage />}
+      {ui.page?.startsWith('trip:') && <TripPage id={ui.page.slice(5)} />}
+      {ui.page?.startsWith('tripstats:') && <TripStatsPage id={ui.page.slice(10)} />}
+      {ui.page?.startsWith('tripchat:') && <TripChatPage id={ui.page.slice(9)} />}
+      </div>
+
+      {!ui.sheet && !ui.tour && <div className="conflict-slot" style={{ position: 'absolute', left: 14, right: 14, top: 'calc(var(--top) - 6px)', zIndex: 32 }}><ConflictChoice /></div>}
 
       {ui.toast && (
         <div role="status" style={{ position: 'absolute', left: 18, right: 18, bottom: 'calc(var(--tb) + 82px)', zIndex: 30, background: 'var(--color-text)', color: 'var(--on-text)', padding: '14px 18px', borderRadius: 999, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-lg)' }}>
@@ -189,7 +207,7 @@ export default function App() {
         </div>
       )}
 
-      <div className="tabbar" style={{ position: 'absolute', left: 14, right: 14, bottom: 'var(--tb)', zIndex: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
+      {!desk && <div className="tabbar" style={{ position: 'absolute', left: 14, right: 14, bottom: 'var(--tb)', zIndex: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
         <nav className="frosted" style={{ flex: 1, display: 'flex', background: 'rgba(255,255,255,.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 999, padding: 5, boxShadow: '0 8px 24px rgba(45,43,43,.12),0 0 0 1px rgba(45,43,43,.04)' }}>
           {TABS.map(([k, label, Icon]) => {
             const on = ui.tab === k;
@@ -205,14 +223,8 @@ export default function App() {
         <button data-tour="add" onClick={() => openSheet({ name: 'add' })} aria-label="Add expense" className="hv-acc600 pr92" style={{ width: 62, height: 62, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flex: 'none', boxShadow: '0 8px 20px color-mix(in srgb,var(--color-accent) 35%,transparent)', transition: 'transform .15s' }}>
           <I.Plus size={26} sw={2.5} />
         </button>
-      </div>
+      </div>}
 
-      {ui.page === 'investments' && <Investments />}
-      {ui.page?.startsWith('report:') && <ReportPage id={ui.page.slice(7)} />}
-      {ui.page === 'social' && <SocialPage />}
-      {ui.page?.startsWith('trip:') && <TripPage id={ui.page.slice(5)} />}
-      {ui.page?.startsWith('tripstats:') && <TripStatsPage id={ui.page.slice(10)} />}
-      {ui.page?.startsWith('tripchat:') && <TripChatPage id={ui.page.slice(9)} />}
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
       {ui.tour && <Tour />}

@@ -66,10 +66,10 @@ export function Blocks({ page, title, blocks, gap = 14, footer }: { page: string
   };
 
   if (!editing) return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap }}>
+    <div className="blocks-grid" style={{ display: 'flex', flexDirection: 'column', gap }}>
       {shown.map(id => <div key={id} style={{ display: 'flex', flexDirection: 'column', gap }}>{byId.get(id)!.node}</div>)}
-      {footer}
-      <button onClick={() => setEditing(true)} className="hv-n200" style={{ alignSelf: 'center', marginTop: 6, height: 40, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-neutral-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+      {footer && <div className="span-all" style={{ display: 'flex', flexDirection: 'column', gap }}>{footer}</div>}
+      <button onClick={() => setEditing(true)} className="hv-n200 span-all" style={{ alignSelf: 'center', marginTop: 6, height: 40, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-neutral-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
         Edit layout
       </button>
@@ -77,7 +77,7 @@ export function Blocks({ page, title, blocks, gap = 14, footer }: { page: string
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap }}>
+    <div className="blocks-edit" style={{ display: 'flex', flexDirection: 'column', gap }}>
       <div style={{ position: 'sticky', top: 'calc(var(--top) - 6px)', zIndex: 5, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 10px 10px 18px', borderRadius: 999, background: 'var(--color-text)', color: 'var(--on-text)', boxShadow: '0 8px 24px rgba(0,0,0,.18)' }}>
         <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>Edit {title}</span>

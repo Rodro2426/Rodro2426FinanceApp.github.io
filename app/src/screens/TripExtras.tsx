@@ -131,7 +131,7 @@ export function TripChatPage({ id }: { id: string }) {
   const send = async () => { if (!text.trim() || sending) return; setSending(true); const e = await sendMessage(id, text); setSending(false); if (e) flash(e); else setText(''); };
   let lastDay = '';
   return (
-    <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: vh ? `${vh}px` : '100%', zIndex: 26, background: 'var(--page)', display: 'flex', flexDirection: 'column' }}>
+    <div className="chatpage" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: vh ? `${vh}px` : '100%', zIndex: 26, background: 'var(--page)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'calc(var(--top) + 4px) 16px 10px', borderBottom: `1px solid ${LINE}`, background: 'var(--page)' }}>
         {backBtn(() => setUI({ page: `trip:${id}` }))}
         <span style={{ fontSize: 22 }}>{t.emoji}</span>

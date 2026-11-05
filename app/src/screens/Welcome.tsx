@@ -6,6 +6,7 @@ import { emptyData, sampleData } from '../lib/seed';
 import { pickBackupFile, readBackup } from '../lib/backup';
 import { TEXT } from '../lib/constants';
 import * as I from '../ui/icons';
+import { useDesk } from '../ui/Desk';
 
 const NAVY = '#232e7a', NAVY2 = '#3d4784';
 
@@ -17,6 +18,7 @@ export default function Welcome() {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const who = name.trim();
+  const desk = useDesk();
 
   const scratch = (n = who) => {
     const d = emptyData(sampleData());
@@ -50,6 +52,58 @@ export default function Welcome() {
       </span>
       <I.Chevron size={18} />
     </button>
+  );
+
+  const features: [string, string, string][] = [
+    ['👛', 'Weekly pockets', "Split your income into pockets and see what's safe to spend today, this week and this month."],
+    ['☁️', 'Same data everywhere', 'Sign in on your iPhone and here: every change backs up to the cloud and shows up on both.'],
+    ['🏖️', 'Trips with friends', 'Share expenses, see who owes what, settle up in the fewest payments and chat.'],
+    ['📈', 'Net worth and investments', 'Accounts, cards, stocks and CDTs in one place, with reports you can filter.']
+  ];
+  if (desk) return (
+    <div className="noscroll force-light" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(160deg, #fbf9f3 0%, #ebe3d2 100%)' }}>
+      <header style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 48px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <img src="./pockets-mark.svg" alt="" width={38} height={46} />
+        <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.035em', color: NAVY }}>Pockets</span>
+        <span style={{ flex: 1 }} />
+        <span style={{ fontSize: 13.5, fontWeight: 600, color: NAVY2 }}>On your computer and your iPhone</span>
+      </header>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 48px 56px', display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(380px, 460px)', gap: 64, alignItems: 'start' }}>
+        <section aria-label="About Pockets" style={{ display: 'flex', flexDirection: 'column', gap: 22, paddingTop: 12 }}>
+          <h1 style={{ margin: 0, fontSize: 54, lineHeight: 1.04, fontWeight: 800, letterSpacing: '-0.045em', color: NAVY, textWrap: 'balance' }}>Always know what's safe to spend.</h1>
+          <p style={{ margin: 0, fontSize: 19, lineHeight: 1.5, color: NAVY2, maxWidth: 540 }}>Pockets splits your income into weekly pockets, tracks every account and card, and keeps you and your friends even on shared trips.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14, marginTop: 10 }}>
+            {features.map(([icon, title, body]) => (
+              <div key={title} style={{ background: 'rgba(255,255,255,.6)', borderRadius: 24, padding: '18px 18px 20px', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.08)' }}>
+                <span aria-hidden="true" style={{ fontSize: 26 }}>{icon}</span>
+                <span style={{ fontSize: 16.5, fontWeight: 800, letterSpacing: '-0.01em', color: NAVY }}>{title}</span>
+                <span style={{ fontSize: 14, lineHeight: 1.45, color: NAVY2 }}>{body}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section aria-label="Your account" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ background: 'rgba(255,255,255,.75)', borderRadius: 30, padding: '22px 20px 20px', boxShadow: '0 24px 60px rgba(35,46,122,.12), inset 0 0 0 1px rgba(35,46,122,.08)' }}>
+            <span style={{ display: 'block', margin: '0 6px 12px', fontSize: 22, fontWeight: 800, letterSpacing: '-0.025em', color: NAVY }}>Sign in to Pockets</span>
+            {busy ? <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 15, fontWeight: 600, color: NAVY }}>{busy}</div>
+              : <SignInForm onDone={afterSignIn} askName dark />}
+          </div>
+          <span style={{ margin: '0 10px', fontSize: 12.5, lineHeight: 1.45, color: NAVY2, opacity: 0.85 }}>Use the same account as on your iPhone and your data comes right back. Only you can see it.</span>
+          <details style={{ marginTop: 6, background: 'rgba(255,255,255,.45)', borderRadius: 24, padding: '14px 16px' }}>
+            <summary style={{ cursor: 'pointer', fontSize: 15, fontWeight: 700, color: NAVY }}>Start without an account</summary>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="What should we call you?" autoComplete="given-name" aria-label="Name for starting without an account"
+                style={{ border: 0, borderRadius: 16, background: 'var(--surface)', fontSize: 15, color: TEXT, padding: '13px 16px', outline: 'none' }} />
+              {option('🧭', 'Quick tour', 'Try every feature on a practice copy', () => startTour('first', who || 'there'))}
+              {option('✨', 'Start from scratch', 'Data stays only in this browser', () => scratch())}
+              {option('🧪', 'Try it with sample data', 'Made-up accounts and expenses', sample)}
+              {option('📂', 'Restore a backup file', 'Bring back a Pockets backup', restore)}
+            </div>
+          </details>
+        </section>
+      </main>
+    </div>
   );
 
   return (
