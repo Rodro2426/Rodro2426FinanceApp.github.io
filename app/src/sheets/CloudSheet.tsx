@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { flash, closeSheet } from '../lib/store';
 import { TEXT } from '../lib/constants';
-import { getSync, logOut, resetPassword, resolveConflict, signIn, signInGoogle, signUp, subscribeSync, syncNow, type SyncState } from '../lib/cloud';
+import { currentName, getSync, logOut, resetPassword, resolveConflict, signIn, signInGoogle, signUp, subscribeSync, syncNow, type SyncState } from '../lib/cloud';
 import { FieldLabel, PrimaryBtn, Segmented, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 
@@ -10,26 +10,31 @@ const ago = (t: number) => { if (!t) return 'never'; const m = Math.round((Date.
 export const syncLabel = (s: SyncState) => !s.uid ? 'Off' : s.status === 'syncing' ? 'Syncing…' : s.status === 'conflict' ? 'Needs your choice' : s.status === 'offline' ? 'Offline · will sync later' : s.status === 'error' ? 'Couldn\'t sync' : s.dirty ? 'Changes waiting to upload' : `Synced ${ago(s.syncedAt)}`;
 
 /** Sign-in form; also used by the welcome screen. */
-export function SignInForm({ onDone }: { onDone?: () => void }) {
+export function SignInForm({ onDone, askName, dark }: { onDone?: (info: { created: boolean; name: string }) => void; askName?: boolean; dark?: boolean }) {
   const [mode, setMode] = useState<'in' | 'up'>('in');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const run = async (f: () => Promise<string | null>) => { setBusy(true); setErr(null); const e = await f(); setBusy(false); if (e) setErr(e); else onDone?.(); };
+  const run = async (f: () => Promise<string | null>, created: boolean) => { setBusy(true); setErr(null); const e = await f(); setBusy(false); if (e) setErr(e); else onDone?.({ created, name: name.trim() || currentName() }); };
   const cant = !email.includes('@') || pw.length < 6 || busy;
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       <Segmented items={[['in', 'Sign in'], ['up', 'Create account']]} value={mode} onPick={m => { setMode(m); setErr(null); }} mt={4} />
+      {askName && mode === 'up' && <>
+        <FieldLabel m="14px 4px 6px">What should we call you?</FieldLabel>
+        <input autoComplete="given-name" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" aria-label="Your name" style={textInput} />
+      </>}
       <FieldLabel m="14px 4px 6px">Email</FieldLabel>
       <input type="email" autoComplete="email" inputMode="email" autoCapitalize="off" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" aria-label="Email" style={textInput} />
       <FieldLabel m="14px 4px 6px">Password</FieldLabel>
       <input type="password" autoComplete={mode === 'up' ? 'new-password' : 'current-password'} value={pw} onChange={e => setPw(e.target.value)} placeholder={mode === 'up' ? 'At least 6 characters' : 'Your password'} aria-label="Password" style={textInput} />
       {err && <span role="alert" style={{ margin: '10px 4px 0', fontSize: 13, color: 'var(--color-accent-700)' }}>{err}</span>}
-      <PrimaryBtn onClick={() => run(() => (mode === 'up' ? signUp(email, pw) : signIn(email, pw)))} disabled={cant} mt={16}>{busy ? 'One moment…' : mode === 'up' ? 'Create account' : 'Sign in'}</PrimaryBtn>
+      <PrimaryBtn onClick={() => run(() => (mode === 'up' ? signUp(email, pw) : signIn(email, pw)), mode === 'up')} disabled={cant} mt={16} bg={dark ? '#232e7a' : undefined} hover={dark ? 'hv-n200' : undefined}>{busy ? 'One moment…' : mode === 'up' ? 'Create account' : 'Sign in'}</PrimaryBtn>
       {mode === 'in' && <button onClick={async () => { if (!email.includes('@')) { setErr('Type your email first, then tap this again.'); return; } const e = await resetPassword(email); if (e) setErr(e); else flash('Check your email for a link to reset your password'); }} style={{ marginTop: 10, border: 0, background: 'transparent', color: 'var(--color-neutral-700)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Forgot your password?</button>}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 4px 10px', color: 'var(--color-neutral-500)', fontSize: 12 }}><span style={{ flex: 1, height: 1, background: 'var(--color-neutral-200)' }} />or<span style={{ flex: 1, height: 1, background: 'var(--color-neutral-200)' }} /></div>
-      <button onClick={() => run(signInGoogle)} disabled={busy} style={{ height: 50, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>
+      <button onClick={() => run(signInGoogle, false)} disabled={busy} style={{ height: 50, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>
         <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
         Continue with Google
       </button>

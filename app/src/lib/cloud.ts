@@ -146,6 +146,8 @@ export async function signUp(email: string, password: string) { try { await crea
 export async function signIn(email: string, password: string) { try { await signInWithEmailAndPassword(auth, email.trim(), password); return null; } catch (e) { return friendly(e); } }
 export async function signInGoogle() { try { await signInWithPopup(auth, new GoogleAuthProvider()); return null; } catch (e) { return friendly(e); } }
 export async function resetPassword(email: string) { try { await sendPasswordResetEmail(auth, email.trim()); return null; } catch (e) { return friendly(e); } }
+/** The signed-in person's name, when the account has one (Google). */
+export const currentName = () => auth.currentUser?.displayName?.split(' ')[0] ?? '';
 /** Uploads anything pending, then signs out. This phone keeps its data. */
 export async function logOut() { clearTimeout(timer); if (state.dirty) await push(); await signOut(auth); }
 
