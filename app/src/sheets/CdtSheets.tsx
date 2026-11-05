@@ -20,7 +20,7 @@ export function CdtBadge({ bank, hue, size = 40 }: { bank: string; hue: number; 
   return <span style={{ width: size, height: size, borderRadius: size * 0.32, background: tint(hue), color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: size * 0.4, flex: 'none' }}>{bank.trim().charAt(0).toUpperCase() || 'C'}</span>;
 }
 
-const chip = (on: boolean) => ({ height: 36, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' as const, flex: 'none' as const });
+const chip = (on: boolean) => ({ height: 36, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' as const, flex: 'none' as const });
 const row = (l: string, v: string, col = TEXT, last = false) => (
   <div key={l} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '9px 0', borderBottom: `1px solid ${last ? 'transparent' : LINE}`, fontSize: 14 }}>
     <span style={{ color: 'var(--color-neutral-700)' }}>{l}</span><span style={{ fontWeight: 700, color: col, whiteSpace: 'nowrap', textAlign: 'right' }}>{v}</span>
@@ -73,7 +73,7 @@ export function CdtSheet({ id }: { id: string | null }) {
         {view === 'popular' ? (
           <>
             <span style={{ margin: '14px 4px 8px', fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Pick a bank and a term to fill in the details. Then type the amount and check the rate with the bank before you open it.</span>
-            <div style={{ background: '#fff', borderRadius: 22, padding: '2px 14px' }}>
+            <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '2px 14px' }}>
               {OFFERS.map((o, i) => (
                 <div key={o.bank} style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '12px 0', borderBottom: `1px solid ${i === OFFERS.length - 1 ? 'transparent' : LINE}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -135,7 +135,7 @@ export function CdtSheet({ id }: { id: string | null }) {
             <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
               {(Object.keys(PAYOUT_LABEL) as CdtPayout[]).map(k => <button key={k} onClick={() => setPayout(k)} style={chip(payout === k)}>{PAYOUT_LABEL[k]}</button>)}
             </div>
-            <div style={{ marginTop: 14, background: '#fff', borderRadius: 20, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ marginTop: 14, background: 'var(--surface)', borderRadius: 20, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <span style={{ fontSize: 14.5, fontWeight: 700 }}>Withhold 4% of the interest</span>
@@ -225,7 +225,7 @@ export function CdtInfoSheet({ id }: { id: string }) {
           </div>
         </div>
 
-        <div style={{ marginTop: 14, background: '#fff', borderRadius: 22, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ marginTop: 14, background: 'var(--surface)', borderRadius: 22, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700 }}>
             <span>{statusTxt}</span><span style={{ color: 'var(--color-neutral-700)' }}>{Math.round(Math.min(1, v.progress) * 100)}%</span>
           </div>
@@ -240,14 +240,14 @@ export function CdtInfoSheet({ id }: { id: string }) {
               <span style={{ fontSize: 13, lineHeight: 1.4, color: 'oklch(0.36 0.08 155)' }}>Cash it out once the bank pays you, or renew it if the bank rolled it over.</span>
               <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, fontWeight: 600 }}>
                 <span style={{ flex: 1 }}>Send the money to</span>
-                <select aria-label="Cash out to" value={to} onChange={e => setTo(e.target.value)} style={{ maxWidth: 160, height: 38, borderRadius: 12, border: 0, background: '#fff', fontWeight: 700, padding: '0 8px', color: TEXT, fontSize: 14 }}>
+                <select aria-label="Cash out to" value={to} onChange={e => setTo(e.target.value)} style={{ maxWidth: 160, height: 38, borderRadius: 12, border: 0, background: 'var(--surface)', fontWeight: 700, padding: '0 8px', color: TEXT, fontSize: 14 }}>
                   <option value="">Don't move money</option>
                   {banks.map(x => <option key={x.id} value={x.id}>{x.name}</option>)}
                 </select>
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
                 <button onClick={cashOut} className="hv-acc600" style={{ height: 48, borderRadius: 999, border: 0, background: 'oklch(0.5 0.12 150)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Cash out</button>
-                <button onClick={() => setRenew(true)} className="hv-n200" style={{ height: 48, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Renew</button>
+                <button onClick={() => setRenew(true)} className="hv-n200" style={{ height: 48, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Renew</button>
               </div>
             </> : <>
               <Segmented items={[['all', 'Reinvest interest'], ['capital', 'Interest to account']]} value={mode} onPick={setMode} mt={0} />
@@ -264,13 +264,13 @@ export function CdtInfoSheet({ id }: { id: string }) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 8 }}>
                 <button onClick={doRenew} style={{ height: 48, borderRadius: 999, border: 0, background: 'oklch(0.5 0.12 150)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Renew CDT</button>
-                <button onClick={() => setRenew(false)} style={{ height: 48, padding: '0 18px', borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Back</button>
+                <button onClick={() => setRenew(false)} style={{ height: 48, padding: '0 18px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Back</button>
               </div>
             </>}
           </div>
         )}
 
-        <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '2px 16px 4px' }}>
+        <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '2px 16px 4px' }}>
           {row('Amount invested', fmt(c.amount))}
           {row('Interest over the term', fmt(v.totalGross))}
           {c.withholding && row('Withholding (4%)', `−${fmt(v.withheld)}`, RED)}
@@ -282,7 +282,7 @@ export function CdtInfoSheet({ id }: { id: string }) {
 
         {ps.length > 1 && <>
           <FieldLabel>Interest payments</FieldLabel>
-          <div style={{ background: '#fff', borderRadius: 22, padding: '2px 16px' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '2px 16px' }}>
             {ps.map((p, i) => {
               const done = p.date <= today && (!p.final || v.status === 'closed');
               return (
@@ -297,7 +297,7 @@ export function CdtInfoSheet({ id }: { id: string }) {
           <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>{c.acct ? `Each payment is added to ${acctName} automatically on its day.` : 'Link an account to have each payment added automatically.'}</span>
         </>}
 
-        {v.status !== 'closed' && <button onClick={() => openSheet({ name: 'cdt', id })} className="hv-n200" style={{ marginTop: 14, height: 48, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Edit CDT</button>}
+        {v.status !== 'closed' && <button onClick={() => openSheet({ name: 'cdt', id })} className="hv-n200" style={{ marginTop: 14, height: 48, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Edit CDT</button>}
         <GhostDanger onClick={del}>{confirm ? 'Tap again to delete (undoes its account moves)' : 'Delete CDT'}</GhostDanger>
         {c.renewedFrom && <span style={{ margin: '4px', fontSize: 12, color: 'var(--color-neutral-600)', textAlign: 'center' }}>Renewed from an earlier CDT that matured on {longDate(c.start)}.</span>}
       </div>

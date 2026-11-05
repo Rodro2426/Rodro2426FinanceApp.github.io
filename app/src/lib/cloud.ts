@@ -2,8 +2,8 @@
 // (users/{uid}). The phone keeps the full copy; the cloud is a second copy that follows every change.
 import { initializeApp } from 'firebase/app';
 import {
-  createUserWithEmailAndPassword, GoogleAuthProvider, getAuth, onAuthStateChanged, sendPasswordResetEmail,
-  signInWithEmailAndPassword, signInWithPopup, signOut, type User
+  createUserWithEmailAndPassword, GoogleAuthProvider, getAuth, onAuthStateChanged, reload, sendEmailVerification, sendPasswordResetEmail,
+  signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, type User
 } from 'firebase/auth';
 import { doc, getDoc, getFirestore, writeBatch } from 'firebase/firestore/lite';
 import { get, set } from 'idb-keyval';
@@ -17,8 +17,8 @@ const app = initializeApp({
   messagingSenderId: '223677884702',
   appId: '1:223677884702:web:ec5dda45af414d2e3ec10f'
 });
-const auth = getAuth(app);
-const db = getFirestore(app);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 /** Firestore keeps each record under 1 MiB, so the data is stored in parts of this many characters. */
 export const CHUNK = 700_000;
@@ -142,7 +142,19 @@ const friendly = (e: unknown) => {
     : c.includes('too-many-requests') ? 'Too many tries. Wait a minute and try again.'
     : (e as Error).message;
 };
-export async function signUp(email: string, password: string) { try { await createUserWithEmailAndPassword(auth, email.trim(), password); return null; } catch (e) { return friendly(e); } }
+export async function signUp(email: string, password: string, name = '') {
+  try {
+    const c = await createUserWithEmailAndPassword(auth, email.trim(), password);
+    if (name) await updateProfile(c.user, { displayName: name }).catch(() => {});
+    // Friends find you by email, so the email has to be confirmed as yours.
+    await sendEmailVerification(c.user).catch(() => {});
+    return null;
+  } catch (e) { return friendly(e); }
+}
+/** Sends the confirmation email again. */
+export async function resendVerification() { try { if (auth.currentUser) await sendEmailVerification(auth.currentUser); return null; } catch (e) { return friendly(e); } }
+/** Reloads the account to see if the email was confirmed (after tapping the link). */
+export async function checkVerified() { if (!auth.currentUser) return false; await reload(auth.currentUser).catch(() => {}); await auth.currentUser.getIdToken(true).catch(() => {}); return !!auth.currentUser.emailVerified; }
 export async function signIn(email: string, password: string) { try { await signInWithEmailAndPassword(auth, email.trim(), password); return null; } catch (e) { return friendly(e); } }
 export async function signInGoogle() { try { await signInWithPopup(auth, new GoogleAuthProvider()); return null; } catch (e) { return friendly(e); } }
 export async function resetPassword(email: string) { try { await sendPasswordResetEmail(auth, email.trim()); return null; } catch (e) { return friendly(e); } }

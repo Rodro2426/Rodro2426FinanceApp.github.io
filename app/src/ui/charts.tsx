@@ -3,12 +3,24 @@
 // hairline grid, text in ink colors (never the series color), a legend for 2+ series, and tap/drag readouts.
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
+/** True while the app is in dark mode. */
+export const isDark = () => typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark';
+/**
+ * Chart colors. Dark mode uses its own validated steps of the same hues (checked against the dark surface),
+ * not an automatic flip.
+ */
 export const VIZ = {
-  surface: '#ffffff', ink: '#0b0b0b', ink2: '#52514e', muted: '#898781', grid: '#e1e0d9', axis: '#c3c2b7',
-  series: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'],
-  /** Sequential blue, light -> dark (for heat tables). */
-  seq: ['#cde2fb', '#b7d3f6', '#9ec5f4', '#86b6ef', '#6da7ec', '#5598e7', '#3987e5', '#2a78d6', '#256abf'],
-  neg: '#e34948', track: '#e8f0fb'
+  get surface() { return isDark() ? '#1d1c1b' : '#ffffff'; },
+  get ink() { return isDark() ? '#f0efec' : '#0b0b0b'; },
+  get ink2() { return isDark() ? '#c3c2b7' : '#52514e'; },
+  muted: '#898781',
+  get grid() { return isDark() ? '#2c2c2a' : '#e1e0d9'; },
+  get axis() { return isDark() ? '#383835' : '#c3c2b7'; },
+  get series() { return isDark() ? ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'] : ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948']; },
+  /** Sequential blue, faint -> strong (for heat tables). */
+  get seq() { return isDark() ? ['#0d2a4d', '#104281', '#184f95', '#1c5cab', '#256abf', '#2a78d6', '#3987e5', '#5598e7', '#6da7ec'] : ['#cde2fb', '#b7d3f6', '#9ec5f4', '#86b6ef', '#6da7ec', '#5598e7', '#3987e5', '#2a78d6', '#256abf']; },
+  get neg() { return isDark() ? '#e66767' : '#e34948'; },
+  get track() { return isDark() ? '#1c2a3d' : '#e8f0fb'; }
 };
 
 /** Clean axis numbers: 0 / 500K / 1M / 1,5M. */
@@ -197,9 +209,9 @@ export function DataTable({ head, rows, foot }: { head: ReactNode[]; rows: React
   return (
     <div className="noscroll" style={{ overflowX: 'auto', margin: '0 -4px' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, color: VIZ.ink }}>
-        <thead><tr>{head.map((h, i) => <th key={i} style={{ ...cell(i), fontSize: 11, color: VIZ.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.02em', borderBottom: `1px solid ${VIZ.grid}`, position: i ? undefined : 'sticky', left: 0, background: '#fff' }}>{h}</th>)}</tr></thead>
-        <tbody>{rows.map((r, ri) => <tr key={ri}>{r.map((v, i) => <td key={i} style={{ ...cell(i), borderBottom: `1px solid ${VIZ.grid}`, fontWeight: i ? 500 : 600, position: i ? undefined : 'sticky', left: 0, background: '#fff' }}>{v}</td>)}</tr>)}</tbody>
-        {foot && <tfoot><tr>{foot.map((v, i) => <td key={i} style={{ ...cell(i), fontWeight: 800, position: i ? undefined : 'sticky', left: 0, background: '#fff' }}>{v}</td>)}</tr></tfoot>}
+        <thead><tr>{head.map((h, i) => <th key={i} style={{ ...cell(i), fontSize: 11, color: VIZ.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.02em', borderBottom: `1px solid ${VIZ.grid}`, position: i ? undefined : 'sticky', left: 0, background: 'var(--surface)' }}>{h}</th>)}</tr></thead>
+        <tbody>{rows.map((r, ri) => <tr key={ri}>{r.map((v, i) => <td key={i} style={{ ...cell(i), borderBottom: `1px solid ${VIZ.grid}`, fontWeight: i ? 500 : 600, position: i ? undefined : 'sticky', left: 0, background: 'var(--surface)' }}>{v}</td>)}</tr>)}</tbody>
+        {foot && <tfoot><tr>{foot.map((v, i) => <td key={i} style={{ ...cell(i), fontWeight: 800, position: i ? undefined : 'sticky', left: 0, background: 'var(--surface)' }}>{v}</td>)}</tr></tfoot>}
       </table>
     </div>
   );
@@ -209,7 +221,7 @@ export function DataTable({ head, rows, foot }: { head: ReactNode[]; rows: React
 export function heat(v: number, max: number) {
   if (!(v > 0) || !(max > 0)) return { background: 'transparent', color: VIZ.ink };
   const k = Math.min(VIZ.seq.length - 1, Math.floor((v / max) * (VIZ.seq.length - 1)));
-  return { background: VIZ.seq[k], color: k >= 6 ? '#fff' : VIZ.ink };
+  return { background: VIZ.seq[k], color: isDark() ? (k >= 7 ? '#0b0b0b' : '#fff') : k >= 6 ? '#fff' : VIZ.ink };
 }
 
 /**

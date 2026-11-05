@@ -38,19 +38,19 @@ export function ReconcileSheet() {
           Pocket money that came from income ("New income") should be backed by an income you registered, and not already be part of your typed monthly income. Otherwise it's counted twice.
         </span>
 
-        <div style={{ background: '#fff', borderRadius: 22, padding: '12px 16px' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 16px' }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>No income behind it</span>
           <span style={{ display: 'block', fontSize: 12, color: 'var(--color-neutral-700)', marginTop: 2 }}>Usually from an income that was deleted before splits were linked to it.</span>
           {mm.orphan.length ? list(mm.orphan, 'no income') : <div style={{ padding: '10px 0 2px', fontSize: 13, color: 'oklch(0.45 0.11 150)', fontWeight: 600 }}>None found.</div>}
         </div>
 
-        <div style={{ background: '#fff', borderRadius: 22, padding: '12px 16px' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 16px' }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>Already in your typed income</span>
           <span style={{ display: 'block', fontSize: 12, color: 'var(--color-neutral-700)', marginTop: 2 }}>Splits of income you marked as already included below.</span>
           {mm.included.length ? list(mm.included, 'already included') : <div style={{ padding: '10px 0 2px', fontSize: 13, color: 'oklch(0.45 0.11 150)', fontWeight: 600 }}>None found.</div>}
         </div>
 
-        <div style={{ background: '#fff', borderRadius: 22, padding: '12px 16px' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 16px' }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>Extra income in {monthName(c.month)}</span>
           <span style={{ display: 'block', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)', marginTop: 2 }}>Turn on if you already added it to the monthly income you typed in Budget, so it isn't added again.</span>
           {extras.map((t, i) => {
@@ -73,7 +73,7 @@ export function ReconcileSheet() {
             {confirm ? `Tap again to undo all ${all.length} (${fmt(total)})` : `Undo all ${all.length} mismatches (${fmt(total)})`}
           </button>
         )}
-        <div style={{ background: '#fff', borderRadius: 22, padding: '12px 16px', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 16px', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--color-neutral-700)' }}>Plan vs income</span><b style={{ color: s.planGap < 0 ? RED : TEXT }}>{fmt(s.planGap, true)}</b></div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--color-neutral-700)' }}>Real shortfall</span><b style={{ color: s.real > 0 ? RED : TEXT }}>{fmt(Math.max(0, s.real))}</b></div>
         </div>

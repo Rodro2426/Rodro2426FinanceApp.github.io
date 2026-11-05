@@ -23,7 +23,7 @@ const STEPS: { title: string; body: string; img: string; w: number; h: number }[
 
 export default function InstallGuide({ onClose, fromProfile }: { onClose: () => void; fromProfile?: boolean }) {
   return (
-    <div className="noscroll" role="dialog" aria-label="Install Pockets" style={{ position: 'absolute', inset: 0, zIndex: 85, overflowY: 'auto', background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)', padding: 'calc(var(--top) + 18px) 20px calc(var(--tb) + 24px)' }}>
+    <div className="noscroll force-light" role="dialog" aria-label="Install Pockets" style={{ position: 'absolute', inset: 0, zIndex: 85, overflowY: 'auto', background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)', padding: 'calc(var(--top) + 18px) 20px calc(var(--tb) + 24px)' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center' }}>
         <img src="./icon-180.png" alt="" width={72} height={72} style={{ borderRadius: 18, boxShadow: '0 8px 20px rgba(27,36,102,.22)' }} />
         <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: '#232e7a' }}>Install Pockets</span>
@@ -32,7 +32,7 @@ export default function InstallGuide({ onClose, fromProfile }: { onClose: () => 
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 22 }}>
         {STEPS.map((s, i) => (
-          <div key={s.img} style={{ background: '#fff', borderRadius: 24, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div key={s.img} style={{ background: 'var(--surface)', borderRadius: 24, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <span style={{ width: 30, height: 30, borderRadius: 999, background: '#232e7a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, flex: 'none' }}>{i + 1}</span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -45,7 +45,7 @@ export default function InstallGuide({ onClose, fromProfile }: { onClose: () => 
           </div>
         ))}
         <div style={{ background: '#232e7a', color: '#fff', borderRadius: 24, padding: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ width: 30, height: 30, borderRadius: 999, background: '#fff', color: '#232e7a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, flex: 'none' }}>6</span>
+          <span style={{ width: 30, height: 30, borderRadius: 999, background: 'var(--surface)', color: '#232e7a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 15, flex: 'none' }}>6</span>
           <span style={{ fontSize: 15, lineHeight: 1.4 }}><b>Open Pockets from your home screen.</b> Start there, not from Safari, because Safari keeps its own separate copy of your data.</span>
         </div>
       </div>

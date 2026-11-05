@@ -28,12 +28,12 @@ export default function Investments() {
   const { data: d } = useApp();
   const [view, setView] = useState<'portfolio' | 'sim'>('portfolio');
   return (
-    <div className="page noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 25, background: '#f7f5f3' }}>
+    <div className="page noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 25, background: 'var(--page)' }}>
       <div className="scroll-body" style={{ padding: 'var(--top) 18px calc(var(--tb) + 30px)', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0 0' }}>
-        <button onClick={() => setUI({ page: null })} aria-label="Back to accounts" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: '#fff', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
+        <button onClick={() => setUI({ page: null })} aria-label="Back to accounts" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
         <span style={{ flex: 1, fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em' }}>Investments</span>
-        <button onClick={() => openSheet({ name: 'priceSettings' })} aria-label="Price settings" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{d.settings.finnhubKey ? 'Prices' : 'Connect'}</button>
+        <button onClick={() => openSheet({ name: 'priceSettings' })} aria-label="Price settings" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{d.settings.finnhubKey ? 'Prices' : 'Connect'}</button>
       </div>
       <Segmented items={[['portfolio', 'Portfolio'], ['sim', 'Returns simulator']]} value={view} onPick={setView} />
       <div style={{ marginTop: 14 }}>{view === 'portfolio' ? <Portfolio /> : <Simulator />}</div>
@@ -77,7 +77,7 @@ function Portfolio() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ background: '#fff', borderRadius: 28, padding: '20px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 28, padding: '20px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
         <Donut all={all} total={total} extra={cdtValue > 0 ? [{ key: '_cdt', v: cdtValue, color: CDT_COLOR }] : []} focus={focus} onFocus={setFocus}>
           {focused ? (
             <>
@@ -110,7 +110,7 @@ function Portfolio() {
 
       {!d.settings.finnhubKey && (
         <div onClick={() => openSheet({ name: 'priceSettings' })} style={{ background: 'oklch(0.94 0.04 250)', borderRadius: 22, padding: 16, display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer' }}>
-          <div style={{ width: 38, height: 38, borderRadius: 999, background: '#fff', color: 'oklch(0.42 0.1 250)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.TrendUp size={18} /></div>
+          <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--surface)', color: 'oklch(0.42 0.1 250)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.TrendUp size={18} /></div>
           <span style={{ flex: 1, fontSize: 14, lineHeight: 1.35, color: 'oklch(0.32 0.08 250)' }}>Connect live prices with a free Finnhub key. Until then, you can type prices in yourself.</span>
           <I.Chevron size={16} color="oklch(0.42 0.1 250)" />
         </div>
@@ -136,7 +136,7 @@ function Portfolio() {
         {cdts.map((v, i) => <CdtRow key={v.c.id} v={v} last={i === cdts.length - 1} />)}
         {cdts.length === 0 && <div style={{ padding: '16px 0', fontSize: 14, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>No CDTs yet. Add one you already have, or compare popular CDTs from Colombian banks and see what you'd earn.</div>}
       </ListCard>
-      <button onClick={() => openSheet({ name: 'cdt', id: null })} className="hv-n200" style={{ height: 54, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <button onClick={() => openSheet({ name: 'cdt', id: null })} className="hv-n200" style={{ height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <I.Plus size={18} sw={2.5} />Add CDT
       </button>
 
@@ -168,7 +168,7 @@ export function TickerLogo({ h, size = 40, color }: { h: { ticker: string; quote
   const [bad, setBad] = useState(false);
   const logo = h.quote?.logo;
   return (
-    <span style={{ position: 'relative', width: size, height: size, borderRadius: 999, background: '#fff', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flex: 'none', fontSize: size * 0.3, fontWeight: 700, color: TEXT }}>
+    <span style={{ position: 'relative', width: size, height: size, borderRadius: 999, background: 'var(--surface)', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flex: 'none', fontSize: size * 0.3, fontWeight: 700, color: TEXT }}>
       {logo && !bad ? <img src={logo} alt="" onError={() => setBad(true)} style={{ width: '70%', height: '70%', objectFit: 'contain' }} /> : h.ticker.replace(/\..*/, '').slice(0, 4)}
       <span style={{ position: 'absolute', right: 0, bottom: 0, width: size * 0.3, height: size * 0.3, borderRadius: 999, background: color, boxShadow: '0 0 0 2px #fff' }} />
     </span>
@@ -252,7 +252,7 @@ function Simulator() {
   let bal = amt, money = amt;
   for (let m = 1; m <= months; m++) { bal = bal * (1 + rm) + dep; money += dep; rows.push({ m, money, interest: bal - money, bal }); }
   const final = rows[rows.length - 1], max = Math.max(1, ...rows.map(r => r.bal)) * 1.04; // headroom for the 2px gap
-  const field = { background: '#fff', borderRadius: 18, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 } as const;
+  const field = { background: 'var(--surface)', borderRadius: 18, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 } as const;
   const inp = { border: 0, background: 'transparent', fontSize: 18, fontWeight: 700, color: TEXT, padding: 0, outline: 'none', minWidth: 0, width: '100%' } as const;
   const MONEY = '#2a78d6', INTEREST = '#1baf7a';
   const sel = tip != null ? rows[tip] : null;
@@ -277,7 +277,7 @@ function Simulator() {
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 8 }}>
         {[['Per day', compact(fmt(amt * rd))], ['Per month', compact(fmt(amt * rm))], ['Total interest', compact(fmt(final.interest))]].map(([l, v]) => (
-          <div key={l} style={{ background: '#fff', borderRadius: 16, padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+          <div key={l} style={{ background: 'var(--surface)', borderRadius: 16, padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
             <span style={{ fontSize: 11.5, color: 'var(--color-neutral-700)' }}>{l}</span>
             <span style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v}</span>
           </div>
@@ -285,7 +285,7 @@ function Simulator() {
       </div>
       <span style={{ margin: '0 4px', fontSize: 12, color: 'var(--color-neutral-700)' }}>"Per day" and "Per month" are what the starting amount earns at first. Interest is compounded daily, which equals {(rm * 100).toFixed(3).replace('.', ',')}% a month. No tax withholding is included.</span>
 
-      <div style={{ background: '#fff', borderRadius: 24, padding: '16px 14px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 24, padding: '16px 14px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>Balance by month</span>
           <span style={{ display: 'flex', gap: 10, fontSize: 11.5, fontWeight: 600, color: 'var(--color-neutral-700)' }}>

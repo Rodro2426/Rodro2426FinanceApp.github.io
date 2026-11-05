@@ -50,7 +50,7 @@ export function ReportList() {
       {groups.map(g => (
         <div key={g} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ padding: '6px 4px 0', fontSize: 15, fontWeight: 700, color: 'var(--color-neutral-700)' }}>{g}</span>
-          <div style={{ background: '#fff', borderRadius: 24, padding: '2px 0' }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 24, padding: '2px 0' }}>
             {REPORTS.filter(r => r.group === g).map((r, i, arr) => (
               <button key={r.id} onClick={() => setUI({ page: `report:${r.id}` })} className="hv-n100"
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', border: 0, background: 'transparent', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
@@ -69,11 +69,11 @@ export function ReportList() {
 const monthShort = (m: string, withYear: boolean) => fmtDay(m + '-15', withYear ? { month: 'short', year: '2-digit' } : { month: 'short' });
 const chipRow = (children: ReactNode) => <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -18px', padding: '0 18px' }}>{children}</div>;
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: ReactNode }) {
-  return <button onClick={onClick} aria-pressed={on} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: on ? 'none' : 'inset 0 0 0 1px var(--color-neutral-200)' }}>{children}</button>;
+  return <button onClick={onClick} aria-pressed={on} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: on ? 'none' : 'inset 0 0 0 1px var(--color-neutral-200)' }}>{children}</button>;
 }
 function Picker({ label, value, options, onChange }: { label: string; value: string; options: [string, string][]; onChange: (v: string) => void }) {
   return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#fff', borderRadius: 16, padding: '6px 6px 6px 14px' }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', borderRadius: 16, padding: '6px 6px 6px 14px' }}>
       <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>{label}</span>
       <select aria-label={label} value={value} onChange={e => onChange(e.target.value)} style={{ flex: 1, minWidth: 0, height: 36, borderRadius: 12, border: 0, background: 'var(--color-neutral-100)', fontSize: 15, fontWeight: 700, color: TEXT, padding: '0 8px' }}>
         {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -81,7 +81,7 @@ function Picker({ label, value, options, onChange }: { label: string; value: str
     </label>
   );
 }
-const card = (children: ReactNode, label?: string) => <div aria-label={label} style={{ background: '#fff', borderRadius: 24, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>;
+const card = (children: ReactNode, label?: string) => <div aria-label={label} style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>;
 /** Short money for wide month-by-month tables: $469K, $1,4M. */
 const short = (n: number) => (n < 0 ? '−$' : '$') + compactNum(Math.abs(n));
 const pct = (v: number, t: number) => (t ? `${Math.round((v / t) * 100)}%` : '—');
@@ -214,10 +214,10 @@ export default function ReportPage({ id }: { id: string }) {
   function monthEnd(m: string) { return m === c.month ? c.today : `${m}-${String(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 0).getDate()).padStart(2, '0')}`; }
 
   return (
-    <div className="page noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 25, background: '#f7f5f3' }}>
+    <div className="page noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 25, background: 'var(--page)' }}>
       <div className="scroll-body" style={{ padding: 'var(--top) 18px calc(var(--tb) + 30px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0 2px' }}>
-          <button onClick={() => setUI({ page: null })} aria-label="Back to insights" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: '#fff', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
+          <button onClick={() => setUI({ page: null })} aria-label="Back to insights" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
           <ReportIcon icon={def.icon} tone={def.tone} size={30} />
           <span style={{ flex: 1, fontSize: 21, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{def.title}</span>
         </div>

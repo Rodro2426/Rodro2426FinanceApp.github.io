@@ -1,0 +1,141 @@
+// Friends and shared trips, stored in Firestore so every member sees the same thing.
+//   profiles/{uid}            name + email (readable by signed-in people, by id only)
+//   emails/{email}            -> { uid, name }  lets someone find you by exact email (only verified emails)
+//   friendships/{a_b}         { users: [a, b], from, status: 'pending' | 'accepted', names }
+//   trips/{tripId}            { name, emoji, owner, members: [uid], guests: [{id, name}], names }
+//   trips/{tripId}/items/{id} expenses and payments (see settle.ts)
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore/lite';
+import { auth, db } from './cloud';
+import type { Member, TripItem } from './settle';
+
+export interface Friend { uid: string; name: string; email: string; status: 'pending' | 'accepted'; incoming: boolean; id: string }
+export interface Trip { id: string; name: string; emoji: string; owner: string; members: string[]; guests: Member[]; names: Record<string, string>; createdAt: number; updatedAt: number }
+
+const me = () => auth.currentUser;
+const myName = () => me()?.displayName?.trim() || me()?.email?.split('@')[0] || 'Me';
+export const pairId = (a: string, b: string) => [a, b].sort().join('_');
+const clean = (e: string) => e.trim().toLowerCase();
+
+/* ---------------- State shared with the screens ---------------- */
+interface SocialState { friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; loading: boolean; error: string | null; loadedAt: number }
+let state: SocialState = { friends: [], trips: [], items: {}, loading: false, error: null, loadedAt: 0 };
+const listeners = new Set<() => void>();
+const emit = () => listeners.forEach(l => l());
+export const getSocial = () => state;
+export const subscribeSocial = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
+const setS = (p: Partial<SocialState>) => { state = { ...state, ...p }; emit(); };
+const fail = (e: unknown) => {
+  const msg = (e as { code?: string }).code === 'permission-denied' ? 'Firebase refused this. Check that the new security rules were published.' : (e as Error).message;
+  setS({ loading: false, error: msg });
+  return msg;
+};
+
+/* ---------------- Profile ---------------- */
+/** Keeps your public profile up to date; your email becomes findable once it's confirmed. */
+export async function ensureProfile(name?: string) {
+  const u = me(); if (!u) return;
+  const n = name?.trim() || myName();
+  await setDoc(doc(db, 'profiles', u.uid), { name: n, email: clean(u.email ?? ''), updatedAt: Date.now() }, { merge: true });
+  if (u.emailVerified && u.email) await setDoc(doc(db, 'emails', clean(u.email)), { uid: u.uid, name: n });
+}
+
+/* ---------------- Friends ---------------- */
+export async function loadFriends() {
+  const u = me(); if (!u) return;
+  const snap = await getDocs(query(collection(db, 'friendships'), where('users', 'array-contains', u.uid)));
+  const friends: Friend[] = snap.docs.map(d => {
+    const f = d.data() as { users: string[]; from: string; status: 'pending' | 'accepted'; names: Record<string, string>; emails?: Record<string, string> };
+    const other = f.users.find(x => x !== u.uid) ?? '';
+    return { id: d.id, uid: other, name: f.names?.[other] ?? 'Friend', email: f.emails?.[other] ?? '', status: f.status, incoming: f.from !== u.uid };
+  }).sort((a, b) => a.name.localeCompare(b.name));
+  setS({ friends });
+}
+
+/** Sends a friend request to whoever confirmed this email. */
+export async function addFriendByEmail(email: string): Promise<string | null> {
+  const u = me(); if (!u) return 'Sign in first.';
+  const e = clean(email);
+  if (!e.includes('@')) return 'That email doesn\'t look right.';
+  if (e === clean(u.email ?? '')) return 'That\'s your own email.';
+  try {
+    const found = await getDoc(doc(db, 'emails', e));
+    if (!found.exists()) return 'Nobody with that email uses Pockets yet (or they haven\'t confirmed their email). Ask them to create an account and tap the link in their confirmation email.';
+    const { uid, name } = found.data() as { uid: string; name: string };
+    const id = pairId(u.uid, uid), ref = doc(db, 'friendships', id);
+    const existing = await getDoc(ref).catch(() => null);
+    if (existing?.exists()) {
+      const f = existing.data() as { status: string; from: string };
+      if (f.status === 'accepted') return `${name} is already your friend.`;
+      if (f.from === u.uid) return `You already sent ${name} a request.`;
+      await updateDoc(ref, { status: 'accepted' }); await loadFriends(); return null; // they had asked you: accept
+    }
+    await setDoc(ref, { users: [u.uid, uid], from: u.uid, status: 'pending', names: { [u.uid]: myName(), [uid]: name }, emails: { [u.uid]: clean(u.email ?? ''), [uid]: e }, createdAt: Date.now() });
+    await loadFriends();
+    return null;
+  } catch (err) { return fail(err); }
+}
+export async function acceptFriend(id: string) { try { await updateDoc(doc(db, 'friendships', id), { status: 'accepted' }); await loadFriends(); return null; } catch (e) { return fail(e); } }
+export async function removeFriend(id: string) { try { await deleteDoc(doc(db, 'friendships', id)); await loadFriends(); return null; } catch (e) { return fail(e); } }
+
+/* ---------------- Trips ---------------- */
+export async function loadTrips() {
+  const u = me(); if (!u) return;
+  const snap = await getDocs(query(collection(db, 'trips'), where('members', 'array-contains', u.uid)));
+  const trips = snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<Trip, 'id'>) })).sort((a, b) => b.updatedAt - a.updatedAt);
+  setS({ trips });
+}
+export async function loadItems(tripId: string) {
+  const snap = await getDocs(collection(db, 'trips', tripId, 'items'));
+  const items = snap.docs.map(d => ({ ...(d.data() as TripItem), id: d.id })).sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : b.createdAt - a.createdAt));
+  setS({ items: { ...state.items, [tripId]: items } });
+}
+/** Friends, trips and every trip's items. */
+export async function refreshSocial() {
+  if (!me()) return;
+  setS({ loading: true, error: null });
+  try {
+    await ensureProfile().catch(() => {});
+    await Promise.all([loadFriends(), loadTrips()]);
+    await Promise.all(state.trips.map(t => loadItems(t.id)));
+    setS({ loading: false, loadedAt: Date.now() });
+  } catch (e) { fail(e); }
+}
+
+export async function createTrip(name: string, emoji: string, friendUids: string[], guestNames: string[]): Promise<string | null> {
+  const u = me(); if (!u) return null;
+  const names: Record<string, string> = { [u.uid]: myName() };
+  friendUids.forEach(id => { names[id] = state.friends.find(f => f.uid === id)?.name ?? 'Friend'; });
+  const guests = guestNames.map(n => n.trim()).filter(Boolean).map((n, i) => ({ id: `g:${Date.now().toString(36)}${i}`, name: n }));
+  try {
+    const ref = await addDoc(collection(db, 'trips'), { name: name.trim(), emoji, owner: u.uid, members: [u.uid, ...friendUids], guests, names, createdAt: Date.now(), updatedAt: Date.now() });
+    await loadTrips(); setS({ items: { ...state.items, [ref.id]: [] } });
+    return ref.id;
+  } catch (e) { fail(e); return null; }
+}
+export async function updateTrip(id: string, patch: Partial<Omit<Trip, 'id'>>) {
+  try { await updateDoc(doc(db, 'trips', id), { ...patch, updatedAt: Date.now() }); await loadTrips(); return null; } catch (e) { return fail(e); }
+}
+export async function deleteTrip(id: string) {
+  try {
+    const its = await getDocs(collection(db, 'trips', id, 'items'));
+    await Promise.all(its.docs.map(d => deleteDoc(d.ref)));
+    await deleteDoc(doc(db, 'trips', id)); await loadTrips(); return null;
+  } catch (e) { return fail(e); }
+}
+export async function saveItem(tripId: string, item: Omit<TripItem, 'id'> & { id?: string }) {
+  try {
+    const { id, ...rest } = item;
+    const body = JSON.parse(JSON.stringify(rest)); // Firestore rejects undefined fields
+    if (id) await setDoc(doc(db, 'trips', tripId, 'items', id), body);
+    else await addDoc(collection(db, 'trips', tripId, 'items'), body);
+    await updateDoc(doc(db, 'trips', tripId), { updatedAt: Date.now() });
+    await loadItems(tripId); return null;
+  } catch (e) { return fail(e); }
+}
+export async function deleteItem(tripId: string, id: string) {
+  try { await deleteDoc(doc(db, 'trips', tripId, 'items', id)); await loadItems(tripId); return null; } catch (e) { return fail(e); }
+}
+
+/** Everyone in a trip: members with accounts, then guests. */
+export const tripMembers = (t: Trip): Member[] => [...t.members.map(id => ({ id, name: t.names[id] ?? 'Friend' })), ...t.guests];
+export const myUid = () => me()?.uid ?? '';

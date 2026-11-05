@@ -42,7 +42,7 @@ export default function Welcome() {
   };
 
   const option = (icon: string, title: string, sub: string, onClick: () => void) => (
-    <button onClick={onClick} disabled={!!busy} style={{ width: '100%', textAlign: 'left', border: 0, borderRadius: 22, padding: '14px 16px', background: '#fff', color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.12)' }}>
+    <button onClick={onClick} disabled={!!busy} style={{ width: '100%', textAlign: 'left', border: 0, borderRadius: 22, padding: '14px 16px', background: 'var(--surface)', color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.12)' }}>
       <span style={{ fontSize: 22, width: 30, textAlign: 'center' }}>{icon}</span>
       <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ fontSize: 16, fontWeight: 700 }}>{title}</span>
@@ -53,7 +53,7 @@ export default function Welcome() {
   );
 
   return (
-    <div className="noscroll" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)' }}>
+    <div className="noscroll force-light" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)' }}>
       {/* Screen 1: the account */}
       <section aria-label="Your account" style={{ minHeight: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', padding: 'calc(var(--top) + 18px) 22px 18px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
@@ -81,7 +81,7 @@ export default function Welcome() {
         <label style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
           <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: NAVY2 }}>What should we call you?</span>
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" autoComplete="given-name" aria-label="Name for starting without an account"
-            style={{ border: 0, borderRadius: 18, background: '#fff', fontSize: 16, color: TEXT, padding: '15px 18px', outline: 'none' }} />
+            style={{ border: 0, borderRadius: 18, background: 'var(--surface)', fontSize: 16, color: TEXT, padding: '15px 18px', outline: 'none' }} />
         </label>
         {option('🧭', 'Quick tour', 'Try every feature on a practice copy, then keep it or start clean', () => startTour('first', who || 'there'))}
         {option('✨', 'Start from scratch', 'Add your own accounts, pockets and income', () => scratch())}

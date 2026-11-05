@@ -8,8 +8,8 @@ import { SheetFrame } from './Sheet';
 import { deleteIncome, editIncomeAmount } from '../lib/plan';
 import { allIncomeCats, incCatOf } from '../lib/reports';
 
-const chip = (on: boolean) => ({ background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT });
-const acctBtn = (on: boolean, hue: number) => ({ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${on ? ink(hue) : '#fff'}`, background: on ? tint(hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }) as const;
+const chip = (on: boolean) => ({ background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT });
+const acctBtn = (on: boolean, hue: number) => ({ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${on ? ink(hue) : 'var(--surface)'}`, background: on ? tint(hue) : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }) as const;
 
 /** Edit or delete an expense or income after it was added; balances follow the changes. */
 export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; id: string; back?: Sheet }) {
@@ -89,7 +89,7 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
         </>}
         {e && <>
           <FieldLabel>Category</FieldLabel>
-          <div style={{ background: '#fff', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
               {d.cats.map(k => <button key={k.name} onClick={() => setCat([k.name, k.subs[0] || ''])} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, ...chip(k.name === cat), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k.name}</button>)}
             </div>
@@ -128,7 +128,7 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {d.tags.map(x => {
                 const on = tags.includes(x);
-                return <button key={x} onClick={() => setTags(s => (s.includes(x) ? s.filter(y => y !== x) : [...s, x]))} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? ink(tagHue(x)) : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>#{x}</button>;
+                return <button key={x} onClick={() => setTags(s => (s.includes(x) ? s.filter(y => y !== x) : [...s, x]))} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? ink(tagHue(x)) : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>#{x}</button>;
               })}
             </div>
           </>}

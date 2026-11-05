@@ -43,7 +43,7 @@ export default function Insights() {
     if (!b) return;
     setData(b.paidMonths.includes(c.month) ? undoOccurrence(x, b, c.month) : applyOccurrence(x, b, c.month, c.today));
   };
-  const card = { background: '#fff', borderRadius: 26, padding: 20, display: 'flex', flexDirection: 'column' } as const;
+  const card = { background: 'var(--surface)', borderRadius: 26, padding: 20, display: 'flex', flexDirection: 'column' } as const;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -56,7 +56,7 @@ export default function Insights() {
 
       {best && goal0 && (
         <div style={{ background: 'oklch(0.95 0.04 160)', borderRadius: 26, padding: 18, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <div style={{ width: 38, height: 38, borderRadius: 999, background: '#fff', color: 'oklch(0.42 0.09 160)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Bulb size={18} /></div>
+          <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--surface)', color: 'oklch(0.42 0.09 160)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Bulb size={18} /></div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
             <span style={{ fontSize: 14, lineHeight: 1.4, color: 'oklch(0.32 0.07 160)', textWrap: 'pretty' }}>{best.name} still has {fmt(best.left)} this week. Move some to {goal0.name}?</span>
             <button onClick={() => openSheet({ name: 'move', id: best.id, to: goal0.id })} style={{ alignSelf: 'flex-start', height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'oklch(0.42 0.09 160)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Move to goal</button>
@@ -174,21 +174,21 @@ function CategoryTable() {
   const chip = (on: boolean) => ({ flex: 'none' as const, height: 34, padding: '0 12px', borderRadius: 999, border: 0, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' as const });
 
   return (
-    <div aria-label="Spending by category" style={{ background: '#fff', borderRadius: 26, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div aria-label="Spending by category" style={{ background: 'var(--surface)', borderRadius: 26, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
         <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>By category</span>
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{label}</span>
       </div>
       <div style={{ display: 'flex', background: 'var(--color-neutral-100)', borderRadius: 999, padding: 3, gap: 2 }}>
         {([['week', 'Week'], ['month', monthName(c.month).slice(0, 3)], ['last', monthName(prevMonthKey(c.month)).slice(0, 3)], ['all', 'All']] as [Period, string][]).map(([k, l]) => (
-          <button key={k} onClick={() => setPeriod(k)} style={{ flex: 1, height: 32, borderRadius: 999, border: 0, background: period === k ? '#fff' : 'transparent', boxShadow: period === k ? 'var(--shadow-sm)' : 'none', color: 'var(--color-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{l}</button>
+          <button key={k} onClick={() => setPeriod(k)} style={{ flex: 1, height: 32, borderRadius: 999, border: 0, background: period === k ? 'var(--surface)' : 'transparent', boxShadow: period === k ? 'var(--shadow-sm)' : 'none', color: 'var(--color-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{l}</button>
         ))}
       </div>
       <div className="noscroll" aria-label="Filter categories" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -18px', padding: '0 18px' }}>
-        <button onClick={() => setSel([])} style={{ ...chip(!active.length), background: !active.length ? 'var(--color-text)' : 'var(--color-neutral-100)', color: !active.length ? '#fff' : 'var(--color-text)' }}>All</button>
+        <button onClick={() => setSel([])} style={{ ...chip(!active.length), background: !active.length ? 'var(--color-text)' : 'var(--color-neutral-100)', color: !active.length ? 'var(--on-text)' : 'var(--color-text)' }}>All</button>
         {rows.map(r => {
           const on = active.includes(r.k), h = hueOf(r.k);
-          return <button key={r.k} onClick={() => toggle(r.k)} aria-pressed={on} style={{ ...chip(on), background: on ? ink(h) : tint(h), color: on ? '#fff' : ink(h) }}>{r.k}</button>;
+          return <button key={r.k} onClick={() => toggle(r.k)} aria-pressed={on} style={{ ...chip(on), background: on ? ink(h) : tint(h), color: on ? 'var(--on-text)' : ink(h) }}>{r.k}</button>;
         })}
       </div>
 

@@ -119,7 +119,7 @@ export default function Tour() {
 
   const counter = `${i + 1} of ${STEPS.length}`;
   const card = (
-    <div className="tour-bubble" style={{ position: 'absolute', left: 14, right: 14, ...bubblePos, zIndex: 3, background: '#fff', borderRadius: 24, padding: isSheet ? '12px 14px' : '16px 16px 14px', boxShadow: '0 14px 40px rgba(20,40,28,.28)', display: 'flex', flexDirection: 'column', gap: isSheet ? 4 : 8, pointerEvents: 'auto' }}>
+    <div className="tour-bubble" style={{ position: 'absolute', left: 14, right: 14, ...bubblePos, zIndex: 3, background: 'var(--surface)', borderRadius: 24, padding: isSheet ? '12px 14px' : '16px 16px 14px', boxShadow: '0 14px 40px rgba(20,40,28,.28)', display: 'flex', flexDirection: 'column', gap: isSheet ? 4 : 8, pointerEvents: 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
         <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: '#2f7146' }}>{tour.mode === 'replay' ? 'Practice' : 'Tour'} · {counter}</span>
         {!last && <button onClick={exit} style={{ border: 0, background: 'transparent', color: 'var(--color-neutral-600)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>Exit tour</button>}
@@ -140,7 +140,7 @@ export default function Tour() {
     const made = [d.accounts.length && `${d.accounts.length} account${d.accounts.length > 1 ? 's' : ''}`, d.pockets.length && `${d.pockets.length} pocket${d.pockets.length > 1 ? 's' : ''}`, d.expenses.length && `${d.expenses.length} expense${d.expenses.length > 1 ? 's' : ''}`, (d.incomes.length || num(d.incomeStr) > 0) && 'your income', d.bills.length && `${d.bills.length} scheduled payment${d.bills.length > 1 ? 's' : ''}`].filter(Boolean) as string[];
     return (
       <div ref={root} role="dialog" aria-label="Tour finished" style={{ position: 'absolute', inset: 0, zIndex: 95, background: 'rgba(18,30,22,.55)', display: 'flex', alignItems: 'center', padding: 18 }}>
-        <div className="tour-bubble" style={{ width: '100%', background: '#fff', borderRadius: 28, padding: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="tour-bubble" style={{ width: '100%', background: 'var(--surface)', borderRadius: 28, padding: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <img src="./pockets-mark.svg" alt="" width={52} height={63} style={{ alignSelf: 'center' }} />
           <span style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.03em', textAlign: 'center' }}>You’re ready!</span>
           <span style={{ fontSize: 14.5, lineHeight: 1.45, color: 'var(--color-neutral-800)', textAlign: 'center' }}>

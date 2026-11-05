@@ -106,17 +106,17 @@ function Cropper({ req, done }: { req: Req; done: (url: string | null) => void }
       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button onClick={() => done(null)} style={{ border: 0, background: 'transparent', color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', padding: 8 }}>Cancel</button>
         <span style={{ fontSize: 17, fontWeight: 700 }}>Move and scale</span>
-        <button onClick={save} style={{ border: 0, background: '#fff', color: '#201e1d', fontSize: 15, fontWeight: 700, cursor: 'pointer', padding: '8px 16px', borderRadius: 999 }}>Done</button>
+        <button onClick={save} style={{ border: 0, background: 'var(--surface)', color: '#201e1d', fontSize: 15, fontWeight: 700, cursor: 'pointer', padding: '8px 16px', borderRadius: 999 }}>Done</button>
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div ref={frame} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
           onWheel={e => { const p = local(e); zoomAt(s * (e.deltaY < 0 ? 1.08 : 1 / 1.08), p.x, p.y); }}
-          style={{ position: 'relative', width: F, height: F, borderRadius: 64, overflow: 'hidden', background: bgCss, boxShadow: '0 0 0 2px rgba(255,255,255,.85)', cursor: 'grab', touchAction: 'none' }}>
+          style={{ position: 'relative', width: F, height: F, borderRadius: 64, overflow: 'hidden', background: bgCss, boxShadow: '0 0 0 2px var(--glass)', cursor: 'grab', touchAction: 'none' }}>
           <img src={req.src} alt="" draggable={false} style={{ position: 'absolute', left: pos.x, top: pos.y, width: img.width * s, height: img.height * s, maxWidth: 'none', userSelect: 'none', pointerEvents: 'none' }} />
           <div style={{ position: 'absolute', inset: 0, borderRadius: 999, boxShadow: 'inset 0 0 0 1px rgba(255,255,255,.55)', pointerEvents: 'none' }} />
         </div>
       </div>
-      <span style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', textAlign: 'center' }}>Drag to move, pinch to zoom. The circle shows how round icons will look.</span>
+      <span style={{ fontSize: 13, color: 'var(--glass)', textAlign: 'center' }}>Drag to move, pinch to zoom. The circle shows how round icons will look.</span>
       <div style={{ width: '100%', maxWidth: 320, display: 'flex', alignItems: 'center', gap: 10 }}>
         <I.Image size={14} />
         <input type="range" aria-label="Zoom" min={0} max={1000} value={Math.round(((Math.log(s) - Math.log(minS)) / (Math.log(maxS) - Math.log(minS))) * 1000)}
@@ -128,7 +128,7 @@ function Cropper({ req, done }: { req: Req; done: (url: string | null) => void }
         <button onClick={() => fit('fill')} style={pill(Math.abs(s - cover) < 1e-6)}>Fill</button>
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <span style={{ fontSize: 12, color: 'rgba(255,255,255,.7)' }}>Background</span>
+        <span style={{ fontSize: 12, color: 'var(--glass)' }}>Background</span>
         {(['white', 'black', 'none'] as Bg[]).map(b => <button key={b} onClick={() => setBg(b)} style={pill(bg === b)}>{b === 'none' ? 'Clear' : b === 'white' ? 'White' : 'Black'}</button>)}
       </div>
     </div>

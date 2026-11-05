@@ -50,7 +50,7 @@ export interface AssetItem { id: string; name: string; value: number; debt?: boo
 /** A custom group in Accounts, like Real estate or Vehicles. */
 export interface AssetGroup { id: string; name: string; emoji: string; hue: number; inNetWorth: boolean; items: AssetItem[] }
 
-export interface Settings { name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean; /** Leave stocks and CDTs out of net worth. */ excludeInvestments?: boolean }
+export interface Settings { name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean; /** Leave stocks and CDTs out of net worth. */ excludeInvestments?: boolean; /** Appearance: follow the iPhone, or always light/dark. */ theme?: 'system' | 'light' | 'dark' }
 
 /** One buy or sell of a stock/ETF. Prices are in the stock's own currency. */
 export interface Trade { id: string; ts: number; ticker: string; name: string; currency: 'USD' | 'COP'; side: 'buy' | 'sell'; qty: number; price: number; fee: number; date: string }
@@ -77,6 +77,8 @@ export interface Data {
   investments: Investments;
   /** Custom groups of assets and debts. */
   groups?: AssetGroup[];
+  /** Trip expenses already added to your budget ("tripId:itemId"). */
+  tripLogged?: string[];
   /** TRM per date (COP per USD), and dates whose lookup failed. */
   fx: { trm: Record<string, number>; tried: Record<string, number> };
   moves: Move[];
@@ -113,6 +115,8 @@ export type Sheet =
   | { name: 'cdtInfo'; id: string }
   | { name: 'reconcile' }
   | { name: 'cloud' }
+  | { name: 'tripNew' }
+  | { name: 'tripItem'; trip: string; id: string | null; payment?: { from: string; to: string; amount: number } }
   | { name: 'group'; id: string | null }
   | { name: 'groupItem'; group: string; id: string | null }
   | { name: 'priceSettings' }
@@ -124,7 +128,7 @@ export interface UI {
   toast: string | null;
   lastAdd: { pocket: string; acct: string };
   /** A full-screen page shown over the tabs. */
-  page?: 'investments' | `report:${string}` | null;
+  page?: 'investments' | 'social' | `report:${string}` | `trip:${string}` | null;
   /** First open on this device: choose sample data, a fresh start or a backup. */
   welcome?: boolean;
   /** Home-screen install guide: shown in iPhone Safari, or opened from Profile. */

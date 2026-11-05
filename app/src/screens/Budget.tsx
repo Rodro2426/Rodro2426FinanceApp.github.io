@@ -47,7 +47,7 @@ export default function Budget() {
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{monthLabel(c.month)}</span>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Budget</span>
       </div>
-      <div data-tour="income" style={{ background: '#fff', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div data-tour="income" style={{ background: 'var(--surface)', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Monthly income</span>
         <div onFocus={() => { typedAtFocus.current = d.incomeStr; }} onBlur={onIncomeBlur} style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
           <span style={{ fontSize: 34, fontWeight: 700, color: 'var(--color-neutral-500)' }}>{cur}</span>
@@ -66,7 +66,7 @@ export default function Budget() {
             <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'oklch(0.4 0.08 70)' }}>{extras.map(t => `${t.note} ${fmt(t.amt)}`).join(' · ')}</span>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => setAsk('pick')} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'oklch(0.33 0.07 70)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Yes, it's included</button>
-              <button onClick={() => { setAsk(null); flash(`Added on top: month income is ${fmt(sum.income)}`); }} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>No, add it on top</button>
+              <button onClick={() => { setAsk(null); flash(`Added on top: month income is ${fmt(sum.income)}`); }} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>No, add it on top</button>
             </div>
           </div>
         )}
@@ -86,7 +86,7 @@ export default function Budget() {
             <span style={{ fontSize: 12, color: 'oklch(0.4 0.08 70)' }}>Ticked = keep its pocket split. The rest is taken back out of the pockets.</span>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={confirmIncluded} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'oklch(0.33 0.07 70)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Confirm</button>
-              <button onClick={() => setAsk('q')} style={{ height: 42, padding: '0 16px', borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Back</button>
+              <button onClick={() => setAsk('q')} style={{ height: 42, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Back</button>
             </div>
           </div>
         )}
@@ -100,7 +100,7 @@ export default function Budget() {
         {all.map(s => {
           const p = d.pockets.find(x => x.id === s.id)!;
           return (
-            <div key={s.id} style={{ background: '#fff', borderRadius: 22, padding: '10px 10px 10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div key={s.id} style={{ background: 'var(--surface)', borderRadius: 22, padding: '10px 10px 10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
               <button onClick={() => openSheet({ name: 'editPocket', id: s.id })} aria-label="Edit pocket" style={{ width: 40, height: 40, borderRadius: 999, border: 0, padding: 0, cursor: 'pointer', backgroundColor: tint(s.hue), backgroundImage: s.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', color: ink(s.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flex: 'none' }}>{s.initial}</button>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <input value={p.name} onChange={e => setPocket(s.id, { name: e.target.value })} style={{ border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: 'var(--color-text)', padding: '1px 0', outline: 'none', minWidth: 0 }} />
@@ -122,7 +122,7 @@ export default function Budget() {
         </button>
       </div>
 
-      <div aria-label="Month plan" style={{ background: '#fff', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div aria-label="Month plan" style={{ background: 'var(--surface)', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <Bar pct={pctOf(sum.plan, sum.income)} track="var(--color-neutral-200)" fill={sum.planGap < 0 ? 'var(--color-accent)' : 'oklch(0.62 0.12 160)'} ease=".3s" />
         {line('Month income', fmt(sum.income), sum.extra > 0 ? `${fmt(sum.base)} typed + ${fmt(sum.extra)} extra` : undefined)}
         {line(`Planned for ${weeks} weeks`, fmt(sum.plan), splitFromExtra > 0 ? `includes ${fmt(splitFromExtra)} split from extra income` : undefined)}
@@ -147,10 +147,10 @@ export default function Budget() {
               <span style={{ fontSize: 13, fontWeight: 700, color: k }}>{Math.round(g.saved / g.target * 100)}%</span>
             </div>
             <span style={{ fontSize: 13, color: k }}>{fmt(g.saved)} of {fmt(g.target)}</span>
-            <div style={{ marginTop: 8 }}><Bar pct={pctOf(g.saved, g.target)} track="rgba(255,255,255,.8)" fill={k} /></div>
+            <div style={{ marginTop: 8 }}><Bar pct={pctOf(g.saved, g.target)} track="var(--glass)" fill={k} /></div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, gap: 10 }}>
               <span style={{ fontSize: 12, color: k }}>{rem <= 0 ? 'Goal reached' : `${fmt(rem / g.months)}/mo to finish in ${g.months} months`}</span>
-              <button onClick={() => openSheet({ name: 'goal', id: g.id })} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: '#fff', color: k, fontSize: 14, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Add money</button>
+              <button onClick={() => openSheet({ name: 'goal', id: g.id })} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: k, fontSize: 14, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Add money</button>
             </div>
           </div>
         );

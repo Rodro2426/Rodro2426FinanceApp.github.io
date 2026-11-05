@@ -17,7 +17,7 @@ const PLACEHOLDER: Record<ScheduleKind, string> = { Income: 'Salary', Bill: 'Ren
 const DEFAULT_CAT: Record<ScheduleKind, string> = { Income: '', Bill: 'Home', Subscription: 'Entertainment', CardPayment: '' };
 /** "Nov 15" → 15 */
 const dayOf = (s?: string) => { const m = /(\d{1,2})\s*$/.exec(s || ''); return m ? Math.min(31, Math.max(1, Number(m[1]))) : null; };
-const chip = (on: boolean) => ({ background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT });
+const chip = (on: boolean) => ({ background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT });
 
 /* ---------------- Add / edit scheduled income, bill or subscription ---------------- */
 export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day?: number; kind?: ScheduleKind }) {
@@ -90,14 +90,14 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 4, marginTop: 6, background: 'var(--color-neutral-200)', borderRadius: 22, padding: 4 }}>
           {KIND_ITEMS.map(([k, label]) => (
-            <button key={k} onClick={() => pickKind(k)} style={{ height: 38, borderRadius: 18, border: 0, background: kind === k ? '#fff' : 'transparent', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: kind === k ? 'var(--shadow-sm)' : 'none', transition: 'all .15s' }}>{label}</button>
+            <button key={k} onClick={() => pickKind(k)} style={{ height: 38, borderRadius: 18, border: 0, background: kind === k ? 'var(--surface)' : 'transparent', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: kind === k ? 'var(--shadow-sm)' : 'none', transition: 'all .15s' }}>{label}</button>
           ))}
         </div>
         {cardPay ? <>
           <FieldLabel m="14px 4px 6px">Card to pay</FieldLabel>
           <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
             {cards.map(c => (
-              <button key={c.id} onClick={() => { setToCard(c.id); if (!base) setDueDay(dayOf(c.due) ?? dueDay); }} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${c.id === toCard ? ink(c.hue) : '#fff'}`, background: c.id === toCard ? tint(c.hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+              <button key={c.id} onClick={() => { setToCard(c.id); if (!base) setDueDay(dayOf(c.due) ?? dueDay); }} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${c.id === toCard ? ink(c.hue) : 'var(--surface)'}`, background: c.id === toCard ? tint(c.hue) : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
                 <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{c.name}</span>
                 <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(c.bal)} owed{c.due ? ` · due ${c.due}` : ''}</span>
               </button>
@@ -111,7 +111,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
             {payMode === 'full' ? `Pays whatever the card owes that day${card ? ` (now ${fmt(card.bal)})` : ''}.` : 'Never more than the card owes.'} If the account doesn't have enough, it pays what's there.
           </span>
         </> : <>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#fff', borderRadius: 22, padding: 12, marginTop: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 12, marginTop: 12 }}>
           <BillBadge b={{ name: name || PLACEHOLDER[kind], hue, kind, photo }} size={56} radius={18} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
             <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -127,13 +127,13 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           {canUsd && (
             <div style={{ display: 'flex', gap: 2, background: 'var(--color-neutral-200)', borderRadius: 999, padding: 3 }}>
               {(['COP', 'USD'] as const).map(c => (
-                <button key={c} onClick={() => { if (c !== currency) { setCurrency(c); setAmt(''); } }} style={{ height: 28, padding: '0 12px', borderRadius: 999, border: 0, background: currency === c ? '#fff' : 'transparent', boxShadow: currency === c ? 'var(--shadow-sm)' : 'none', color: TEXT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{c === 'COP' ? 'Pesos' : 'Dollars'}</button>
+                <button key={c} onClick={() => { if (c !== currency) { setCurrency(c); setAmt(''); } }} style={{ height: 28, padding: '0 12px', borderRadius: 999, border: 0, background: currency === c ? 'var(--surface)' : 'transparent', boxShadow: currency === c ? 'var(--shadow-sm)' : 'none', color: TEXT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{c === 'COP' ? 'Pesos' : 'Dollars'}</button>
               ))}
             </div>
           )}
         </div>
         {usd ? (
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: '#fff', borderRadius: 18, padding: '13px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: 'var(--surface)', borderRadius: 18, padding: '13px 18px' }}>
             <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-neutral-400)' }}>US$</span>
             <input type="text" inputMode="decimal" placeholder="0,00" value={amt.replace('.', ',')} onChange={e => setAmt(e.target.value.replace(',', '.').replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1').replace(/(\.\d{2}).+/, '$1'))}
               style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 18, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />
@@ -150,15 +150,15 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Day of the month</span>
           <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-neutral-600)' }}>Every {ordinal(dueDay)}</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 4, background: '#fff', borderRadius: 22, padding: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 4, background: 'var(--surface)', borderRadius: 22, padding: 8 }}>
           {Array.from({ length: 31 }, (_, i) => i + 1).map(n => (
-            <button key={n} onClick={() => setDueDay(n)} style={{ height: 36, borderRadius: 12, border: 0, background: n === dueDay ? ink(hue) : 'transparent', color: n === dueDay ? '#fff' : TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: 0 }}>{n}</button>
+            <button key={n} onClick={() => setDueDay(n)} style={{ height: 36, borderRadius: 12, border: 0, background: n === dueDay ? ink(hue) : 'transparent', color: n === dueDay ? 'var(--on-text)' : TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: 0 }}>{n}</button>
           ))}
         </div>
         {dueDay > 28 && <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>In shorter months it happens on the last day.</span>}
 
         {!income && !cardPay && (
-          <div style={{ marginTop: 16, background: '#fff', borderRadius: 20, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ marginTop: 16, background: 'var(--surface)', borderRadius: 20, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>Not paid by me</span>
               <span style={{ fontSize: 12, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>{others ? 'Someone else pays it. It stays on your list and you still get reminders, but no money is taken and it isn’t counted in your totals.' : 'Turn on for things you use but someone else pays, like a shared family plan.'}</span>
@@ -171,7 +171,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
         <FieldLabel>{income ? 'Goes into' : 'Paid from'}</FieldLabel>
         <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
           {accounts.map(a => (
-            <button key={a.id} onClick={() => setAcct(a.id)} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${a.id === acct ? ink(a.hue) : '#fff'}`, background: a.id === acct ? tint(a.hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+            <button key={a.id} onClick={() => setAcct(a.id)} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${a.id === acct ? ink(a.hue) : 'var(--surface)'}`, background: a.id === acct ? tint(a.hue) : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
               <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{a.name}</span>
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{a.type === 'card' ? `${fmt((a.limit || 0) - a.bal)} available` : fmt(a.bal)}</span>
             </button>
@@ -179,7 +179,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           {accounts.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add {income ? 'a bank or cash account' : 'an account'} first, in the Accounts tab.</span>}
         </div>
 
-        <div style={{ marginTop: 12, background: '#fff', borderRadius: 20, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 20, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 600 }}>{income ? 'Add to my balance automatically' : 'Pay automatically'}</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
@@ -256,7 +256,7 @@ export function NotificationsSheet() {
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {list.map(n => (
-            <div key={n.id} style={{ background: '#fff', borderRadius: 20, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            <div key={n.id} style={{ background: 'var(--surface)', borderRadius: 20, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <div style={{ width: 38, height: 38, borderRadius: 999, background: NOTIF_TONE[n.kind].bg, color: NOTIF_TONE[n.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={n.kind} /></div>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 15, fontWeight: 700 }}>{n.title}</span>
@@ -268,7 +268,7 @@ export function NotificationsSheet() {
             </div>
           ))}
           {list.length === 0 && (
-            <div style={{ background: '#fff', borderRadius: 22, padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center' }}>
+            <div style={{ background: 'var(--surface)', borderRadius: 22, padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, textAlign: 'center' }}>
               <div style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--color-neutral-100)', color: 'var(--color-neutral-500)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><I.Bell size={20} /></div>
               <span style={{ fontSize: 15, fontWeight: 700 }}>You're all caught up</span>
               <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Bills due tomorrow, money that arrives or leaves automatically, and budget warnings show up here.</span>

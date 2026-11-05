@@ -1,5 +1,14 @@
 /* Tokens from the Modernist design system, with Pockets' rounded Apple font. */
 :root {
+  --surface: #fff;
+  --page: #f7f5f3;
+  --on-text: #fff;
+  --glass: rgba(255,255,255,.8);
+  --tint-l: 0.94; --tint-c: 0.04; --ink-l: 0.42; --ink-c: 0.1; --mid-l: 0.78;
+  /* Safe-to-spend card tones */
+  --safe-g-bg: oklch(0.95 0.045 155); --safe-g-label: oklch(0.42 0.09 155); --safe-g-amt: oklch(0.3 0.07 155); --safe-g-bar: oklch(0.68 0.13 155);
+  --safe-y-bg: oklch(0.96 0.055 92); --safe-y-label: oklch(0.46 0.09 75); --safe-y-amt: oklch(0.33 0.07 70); --safe-y-bar: oklch(0.8 0.14 82);
+  color-scheme: light;
   --color-bg: #f3f2f2;
   --color-surface: #eae9e9;
   --color-text: #201e1d;
@@ -45,7 +54,7 @@ button, a, input, label { touch-action: manipulation; }
 input, select, textarea { font-size: max(16px, 1em); }
 html, body {
   /* Same as the app background, so the iPhone status bar area blends in. */
-  background: #f7f5f3;
+  background: var(--page);
 }
 body {
   color: var(--color-text);
@@ -66,7 +75,7 @@ input::placeholder { color: var(--color-neutral-500); }
 /* The phone-sized app column. Full screen on phones; a framed phone on wide screens. */
 .shell {
   position: relative; height: var(--app-h, 100dvh); max-width: 440px; margin: 0 auto; overflow: hidden;
-  display: flex; flex-direction: column; background: #f7f5f3;
+  display: flex; flex-direction: column; background: var(--page);
 }
 @media (min-width: 560px) and (min-height: 700px) {
   :root { --top: 40px; --tb: 30px; }
@@ -79,8 +88,8 @@ input::placeholder { color: var(--color-neutral-500); }
   .hv-n100:hover { background: var(--color-neutral-100) !important; }
   .hv-n200:hover { background: var(--color-neutral-200) !important; }
   .hv-n300:hover { background: var(--color-neutral-300) !important; }
-  .hv-white:hover { background: #fff !important; }
-  .hv-w75:hover { background: rgba(255, 255, 255, .75) !important; }
+  .hv-white:hover { background: var(--surface) !important; }
+  .hv-w75:hover { background: var(--glass) !important; }
   .hv-acc600:hover { background: var(--color-accent-600) !important; }
   .hv-acc100:hover { background: var(--color-accent-100) !important; }
   .hv-acc100r:hover { background: var(--color-accent-100) !important; color: var(--color-accent-700) !important; }
@@ -127,3 +136,49 @@ input::placeholder { color: var(--color-neutral-500); }
 /* Leave room above an open sheet for the tour's instructions. */
 :has(> .tour-on-sheet) .sheet-panel { max-height: calc(100% - var(--top) - 150px) !important; }
 @media (prefers-reduced-motion: reduce) { .tour-ring { animation: none; box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(76, 175, 110, .9); } .tour-bubble { animation: none; } }
+
+/* ---------------- Dark mode ---------------- */
+/* Same tokens, dark values. Set by Profile > Appearance (System follows the iPhone setting). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1d1c1b;
+  --page: #0e0e0d;
+  --on-text: #141312;
+  --glass: rgba(255,255,255,.12);
+  --color-bg: #121211;
+  --color-surface: #262524;
+  --color-text: #f2efea;
+  --color-neutral-100: #262524;
+  --color-neutral-200: #302e2d;
+  --color-neutral-300: #403d3b;
+  --color-neutral-400: #58544f;
+  --color-neutral-500: #7b7671;
+  --color-neutral-600: #9c9791;
+  --color-neutral-700: #b8b3ad;
+  --color-neutral-800: #d4d0cb;
+  --color-neutral-900: #ece9e5;
+  --color-accent-100: #3b1711;
+  --color-accent-200: #4f1c12;
+  --color-accent-300: #7c2817;
+  --color-accent-700: #ff8f78;
+  --color-accent-800: #ffb4a4;
+  --color-accent-900: #ffd8cf;
+  --tint-l: 0.31; --tint-c: 0.055; --ink-l: 0.87; --ink-c: 0.09; --mid-l: 0.66;
+  --safe-g-bg: oklch(0.31 0.06 155); --safe-g-label: oklch(0.85 0.08 155); --safe-g-amt: oklch(0.95 0.05 155); --safe-g-bar: oklch(0.7 0.14 155);
+  --safe-y-bg: oklch(0.33 0.06 85); --safe-y-label: oklch(0.88 0.08 85); --safe-y-amt: oklch(0.96 0.05 90); --safe-y-bar: oklch(0.8 0.14 82);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
+  --shadow-md: 0 3px 10px rgba(0,0,0,.5);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,.6);
+}
+/* Brand screens (welcome, install guide) keep their cream look in both modes. */
+.force-light {
+  color-scheme: light;
+  --surface: #fff; --on-text: #fff; --color-text: #201e1d;
+  --color-neutral-100: #f8f4f4; --color-neutral-200: #eae7e7; --color-neutral-300: #d7d3d3; --color-neutral-500: #9b9797; --color-neutral-600: #7d7979; --color-neutral-700: #605d5d;
+  --color-accent-700: #ae1800;
+  color: var(--color-text);
+}
+:root[data-theme="dark"] .banner { background: #2a2826; }
+
+:root[data-theme="dark"] .frosted { background: rgba(38,37,36,.92) !important; }
+@media (min-width: 600px) { :root[data-theme="dark"] body, :root[data-theme="dark"] html { background: #050505; } }

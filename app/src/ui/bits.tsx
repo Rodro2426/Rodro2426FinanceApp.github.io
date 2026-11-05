@@ -19,14 +19,14 @@ export function SectionHead({ title, right, onRight, muted }: { title: string; r
 }
 
 export const ListCard = ({ children, pad = '6px 16px', radius = 24, style }: { children: ReactNode; pad?: string; radius?: number; style?: CSSProperties }) => (
-  <div style={{ background: '#fff', borderRadius: radius, padding: pad, ...style }}>{children}</div>
+  <div style={{ background: 'var(--surface)', borderRadius: radius, padding: pad, ...style }}>{children}</div>
 );
 
 export const FieldLabel = ({ children, m = '16px 4px 8px' }: { children: ReactNode; m?: string }) => (
   <span style={{ margin: m, fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>{children}</span>
 );
 
-export function Bar({ pct, h = 10, track = '#fff', fill, ease = '.5s' }: { pct: string; h?: number; track?: string; fill: string; ease?: string }) {
+export function Bar({ pct, h = 10, track = 'var(--surface)', fill, ease = '.5s' }: { pct: string; h?: number; track?: string; fill: string; ease?: string }) {
   return (
     <div style={{ height: h, borderRadius: 999, background: track, overflow: 'hidden' }}>
       <div style={{ height: h, borderRadius: 999, width: pct, background: fill, transition: `width ${ease} ease` }} />
@@ -50,7 +50,7 @@ export function GhostDanger({ children, onClick }: { children: ReactNode; onClic
 /** The big "$ 0" amount field used by add, move, pay and goal sheets. */
 export function BigAmount({ value, onChange, autoFocus, mt = 12 }: { value: string; onChange: (v: string) => void; autoFocus?: boolean; mt?: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: mt, background: '#fff', borderRadius: 24, padding: '16px 20px' }}>
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: mt, background: 'var(--surface)', borderRadius: 24, padding: '16px 20px' }}>
       <span style={{ fontSize: 40, fontWeight: 700, color: 'var(--color-neutral-400)' }}>{curSymbol()}</span>
       <MoneyInput value={value} onChange={onChange} autoFocus={autoFocus}
         style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 40, fontWeight: 700, letterSpacing: '-0.03em', color: TEXT, padding: 0, outline: 'none' }} />
@@ -60,7 +60,7 @@ export function BigAmount({ value, onChange, autoFocus, mt = 12 }: { value: stri
 
 export function SmallAmount({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: '#fff', borderRadius: 18, padding: '13px 18px' }}>
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: 'var(--surface)', borderRadius: 18, padding: '13px 18px' }}>
       <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-neutral-400)' }}>{curSymbol()}</span>
       <MoneyInput value={value} onChange={onChange}
         style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 18, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />
@@ -68,7 +68,7 @@ export function SmallAmount({ value, onChange }: { value: string; onChange: (v: 
   );
 }
 
-export const textInput: CSSProperties = { border: 0, borderRadius: 18, background: '#fff', fontSize: 16, color: TEXT, padding: '15px 18px', outline: 'none', minWidth: 0 };
+export const textInput: CSSProperties = { border: 0, borderRadius: 18, background: 'var(--surface)', fontSize: 16, color: TEXT, padding: '15px 18px', outline: 'none', minWidth: 0 };
 
 /** Circle with a pocket's emoji/initial, or its photo. */
 export function PocketDot({ st, size, fs, bg, color, radius = 999 }: { st: { initial: string; photoBg: string }; size: number; fs: number; bg: string; color: string; radius?: number }) {
@@ -80,8 +80,8 @@ export function PocketDot({ st, size, fs, bg, color, radius = 999 }: { st: { ini
 /** Rounded pill used to pick a pocket or goal. */
 export function PickChip({ st, on, hue, onClick, icon }: { st: { name: string; initial?: string; photoBg?: string }; on: boolean; hue: number; onClick: () => void; icon?: ReactNode }) {
   return (
-    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 8px', borderRadius: 999, border: `2px solid ${on ? ink(hue) : '#fff'}`, background: on ? ink(hue) : '#fff', color: on ? '#fff' : TEXT, cursor: 'pointer', transition: 'all .15s' }}>
-      <span style={{ width: 24, height: 24, borderRadius: 999, backgroundColor: on ? 'rgba(255,255,255,.25)' : tint(hue), backgroundImage: st.photoBg || 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: on ? '#fff' : ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{icon ?? st.initial}</span>
+    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 8px', borderRadius: 999, border: `2px solid ${on ? ink(hue) : 'var(--surface)'}`, background: on ? ink(hue) : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, cursor: 'pointer', transition: 'all .15s' }}>
+      <span style={{ width: 24, height: 24, borderRadius: 999, backgroundColor: on ? 'rgba(255,255,255,.25)' : tint(hue), backgroundImage: st.photoBg || 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: on ? 'var(--on-text)' : ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{icon ?? st.initial}</span>
       <span style={{ fontSize: 14, fontWeight: 600 }}>{st.name}</span>
     </button>
   );
@@ -91,7 +91,7 @@ export function Segmented<K extends string>({ items, value, onPick, h = 38, mt =
   return (
     <div style={{ display: 'flex', gap: 4, marginTop: mt, background: 'var(--color-neutral-200)', borderRadius: 999, padding: 4 }}>
       {items.map(([k, label]) => (
-        <button key={k} onClick={() => onPick(k)} style={{ flex: 1, height: h, borderRadius: 999, border: 0, background: value === k ? '#fff' : 'transparent', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: value === k ? 'var(--shadow-sm)' : 'none', transition: 'all .15s' }}>{label}</button>
+        <button key={k} onClick={() => onPick(k)} style={{ flex: 1, height: h, borderRadius: 999, border: 0, background: value === k ? 'var(--surface)' : 'transparent', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: value === k ? 'var(--shadow-sm)' : 'none', transition: 'all .15s' }}>{label}</button>
       ))}
     </div>
   );
@@ -134,7 +134,7 @@ export function AcctBadge({ photo, initial, size, radius, bg, color, fs }: { pho
 export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} style={{ width: 52, height: 32, borderRadius: 999, border: 0, padding: 3, background: on ? 'oklch(0.62 0.12 160)' : 'var(--color-neutral-300)', cursor: 'pointer', flex: 'none', transition: 'background .2s' }}>
-      <span style={{ display: 'block', width: 26, height: 26, borderRadius: 999, background: '#fff', boxShadow: 'var(--shadow-sm)', transform: on ? 'translateX(20px)' : 'none', transition: 'transform .2s' }} />
+      <span style={{ display: 'block', width: 26, height: 26, borderRadius: 999, background: 'var(--surface)', boxShadow: 'var(--shadow-sm)', transform: on ? 'translateX(20px)' : 'none', transition: 'transform .2s' }} />
     </button>
   );
 }
@@ -143,7 +143,7 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
 export function BillBadge({ b, size = 40, radius = 14 }: { b: { name: string; hue: number; kind: string; photo?: string | null }; size?: number; radius?: number }) {
   const hue = b.kind === 'Income' ? 150 : b.hue;
   return (
-    <div style={{ width: size, height: size, borderRadius: radius, background: b.photo ? '#fff' : `oklch(0.94 0.04 ${hue})`, backgroundImage: b.photo ? `url(${b.photo})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: b.photo ? 'inset 0 0 0 1px var(--color-neutral-200)' : 'none', color: `oklch(0.42 0.1 ${hue})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: size * 0.38, flex: 'none' }}>
+    <div style={{ width: size, height: size, borderRadius: radius, background: b.photo ? '#fff' : tint(hue), backgroundImage: b.photo ? `url(${b.photo})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: b.photo ? 'inset 0 0 0 1px var(--color-neutral-200)' : 'none', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: size * 0.38, flex: 'none' }}>
       {b.photo ? '' : b.name.trim().charAt(0).toUpperCase() || '·'}
     </div>
   );

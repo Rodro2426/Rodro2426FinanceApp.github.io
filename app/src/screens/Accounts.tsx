@@ -31,16 +31,16 @@ export default function Accounts() {
       <div style={{ padding: '4px 4px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Accounts</span>
         <div style={{ display: 'flex', gap: 8 }}>
-        <button data-tour="invest" onClick={() => setUI({ page: 'investments' })} aria-label="Investments" className="hv-n200" style={{ width: 38, height: 38, borderRadius: 999, border: 0, background: '#fff', color: GREEN_TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+        <button data-tour="invest" onClick={() => setUI({ page: 'investments' })} aria-label="Investments" className="hv-n200" style={{ width: 38, height: 38, borderRadius: 999, border: 0, background: 'var(--surface)', color: GREEN_TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
           <I.TrendUp size={17} />
         </button>
-        <button data-tour="excel" onClick={() => openSheet({ name: 'export', acct: 'all' })} className="hv-n200" style={{ height: 38, padding: '0 14px', borderRadius: 999, border: 0, background: '#fff', color: 'var(--color-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+        <button data-tour="excel" onClick={() => openSheet({ name: 'export', acct: 'all' })} className="hv-n200" style={{ height: 38, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-text)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
           <I.Download size={15} color="oklch(0.5 0.12 150)" />
           Excel
         </button>
         </div>
       </div>
-      <div style={{ background: '#fff', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Net worth</span>
         <span style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05 }}>{fmt(assets - debt)}</span>
         <div style={{ marginTop: 12, height: 10, borderRadius: 999, background: neg, overflow: 'hidden' }}>
@@ -98,19 +98,19 @@ export default function Accounts() {
           <div key={a.id} onClick={() => openSheet({ name: 'acct', id: a.id })} className="pr98" style={{ background: tint(a.hue), borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 4, cursor: 'pointer', transition: 'transform .15s' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, fontSize: 15, fontWeight: 700, color: k }}>
-                <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={34} radius={12} bg="rgba(255,255,255,.75)" color={k} fs={14} />
+                <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={34} radius={12} bg="var(--glass)" color={k} fs={14} />
                 <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
               </span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: k, background: 'rgba(255,255,255,.7)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Due {a.due || '—'}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: k, background: 'var(--glass)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Due {a.due || '—'}</span>
             </div>
             <span style={{ marginTop: 10, fontSize: 13, color: k }}>Balance owed</span>
             <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em', color: k }}>{fmt(a.bal)}</span>
-            <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: 'rgba(255,255,255,.8)', overflow: 'hidden' }}>
+            <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: 'var(--glass)', overflow: 'hidden' }}>
               <div style={{ height: 10, borderRadius: 999, width: pctOf(a.bal, lim), background: k, transition: 'width .5s ease' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, gap: 10 }}>
               <span style={{ fontSize: 12, color: k }}>{Math.round(lim ? a.bal / lim * 100 : 0)}% of {fmt(lim)} used</span>
-              <button onClick={e => { e.stopPropagation(); openSheet({ name: 'pay', id: a.id }); }} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: '#fff', color: k, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Pay</button>
+              <button onClick={e => { e.stopPropagation(); openSheet({ name: 'pay', id: a.id }); }} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: k, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Pay</button>
             </div>
           </div>
         );
@@ -177,7 +177,7 @@ function GroupCard({ g }: { g: AssetGroup }) {
       <div style={{ background: tint(g.hue), borderRadius: 28, padding: '16px 18px 6px', display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 13, color: ink(g.hue) }}>Total value</span>
         <span style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', color: total < 0 ? 'var(--color-accent-700)' : ink(g.hue), marginBottom: 8 }}>{fmt(total)}</span>
-        <div style={{ background: '#fff', borderRadius: 20, padding: '2px 14px', marginBottom: 10 }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 20, padding: '2px 14px', marginBottom: 10 }}>
           {g.items.map((x, i) => (
             <div key={x.id} onClick={() => openSheet({ name: 'groupItem', group: g.id, id: x.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === g.items.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
               <span style={{ width: 36, height: 36, borderRadius: 12, background: x.debt ? 'var(--color-accent-100)' : tint(g.hue), color: x.debt ? 'var(--color-accent-700)' : ink(g.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{x.debt ? '−' : initialOf(x.name)}</span>

@@ -39,20 +39,20 @@ export function GroupSheet({ id }: { id: string | null }) {
         {!base && <>
           <span style={{ margin: '0 4px 8px', fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Groups hold things you own, or owe, outside your bank accounts: an apartment, a car, a loan. You set their value by hand.</span>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {TEMPLATES.map(([n, e]) => <button key={n} onClick={() => { setName(n); setEmoji(e); }} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: name === n ? TEXT : '#fff', color: name === n ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{e} {n}</button>)}
+            {TEMPLATES.map(([n, e]) => <button key={n} onClick={() => { setName(n); setEmoji(e); }} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: name === n ? TEXT : 'var(--surface)', color: name === n ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{e} {n}</button>)}
           </div>
         </>}
         <FieldLabel m="14px 4px 6px">Name</FieldLabel>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Real estate" aria-label="Group name" style={textInput} />
         <FieldLabel m="14px 4px 6px">Icon</FieldLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,minmax(0,1fr))', gap: 4, background: '#fff', borderRadius: 20, padding: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,minmax(0,1fr))', gap: 4, background: 'var(--surface)', borderRadius: 20, padding: 8 }}>
           {EMOJI.map(e => <button key={e} onClick={() => setEmoji(e)} aria-label={e} style={{ aspectRatio: '1', borderRadius: 12, border: 0, background: emoji === e ? tint(hue) : 'transparent', fontSize: 22, cursor: 'pointer' }}>{e}</button>)}
         </div>
         <FieldLabel m="14px 4px 6px">Color</FieldLabel>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {HUES.map(h => <button key={h} onClick={() => setHue(h)} aria-label={`Color ${h}`} style={{ width: 36, height: 36, borderRadius: 999, border: hue === h ? `3px solid ${ink(h)}` : '3px solid transparent', background: tint(h), cursor: 'pointer' }} />)}
         </div>
-        <div style={{ marginTop: 14, background: '#fff', borderRadius: 20, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ marginTop: 14, background: 'var(--surface)', borderRadius: 20, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 600 }}>Count in net worth</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{inNW ? 'Its total adds to your net worth' : 'Shown here, but left out of your net worth'}</span>

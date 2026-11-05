@@ -27,6 +27,8 @@ import Tour from './screens/Tour';
 import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
 import ReportPage from './screens/Reports';
+import SocialPage, { TripPage } from './screens/Social';
+import { TripItemSheet, TripNewSheet } from './sheets/TripSheets';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
 import { ReconcileSheet } from './sheets/ReconcileSheet';
@@ -66,6 +68,8 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'cdtInfo': return <CdtInfoSheet id={sheet.id} />;
     case 'reconcile': return <ReconcileSheet />;
     case 'cloud': return <CloudSheet />;
+    case 'tripNew': return <TripNewSheet />;
+    case 'tripItem': return <TripItemSheet trip={sheet.trip} id={sheet.id} payment={sheet.payment} />;
     case 'group': return <GroupSheet id={sheet.id} />;
     case 'groupItem': return <GroupItemSheet group={sheet.group} id={sheet.id} />;
     case 'priceSettings': return <PriceSettingsSheet />;
@@ -107,6 +111,20 @@ export default function App() {
 
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
   useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
+  // Light/dark: follow the setting, or the iPhone when it's "System".
+  const theme = data.settings.theme ?? 'system';
+  useEffect(() => {
+    const mq = matchMedia('(prefers-color-scheme: dark)');
+    const apply = () => {
+      const t = theme === 'system' ? (mq.matches ? 'dark' : 'light') : theme;
+      document.documentElement.dataset.theme = t;
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0e0e0d' : '#f7f5f3');
+      try { localStorage.setItem('pockets-theme', theme); } catch { /* not saved */ }
+      setUI({});
+    };
+    apply(); mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, [theme]);
   // Cloud sync: every saved change is uploaded a few seconds later; other phones' changes come down on open.
   useEffect(() => { startCloud({ getData, replace: d => replaceData(d), canSync: isPersisting }); return onPersist(markDirty); }, []);
   useEffect(() => {
@@ -134,7 +152,7 @@ export default function App() {
       {!ui.sheet && !ui.tour && <div style={{ position: 'absolute', left: 14, right: 14, top: 'calc(var(--top) - 6px)', zIndex: 32 }}><ConflictChoice /></div>}
 
       {ui.toast && (
-        <div role="status" style={{ position: 'absolute', left: 18, right: 18, bottom: 'calc(var(--tb) + 82px)', zIndex: 30, background: 'var(--color-text)', color: '#fff', padding: '14px 18px', borderRadius: 999, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-lg)' }}>
+        <div role="status" style={{ position: 'absolute', left: 18, right: 18, bottom: 'calc(var(--tb) + 82px)', zIndex: 30, background: 'var(--color-text)', color: 'var(--on-text)', padding: '14px 18px', borderRadius: 999, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-lg)' }}>
           <I.Check size={16} sw={2.5} />
           <span>{ui.toast}</span>
         </div>
@@ -142,7 +160,7 @@ export default function App() {
 
       {banner && !ui.sheet && !ui.tour && (
         <div className="banner" role="alert" onClick={() => { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); }}
-          style={{ position: 'absolute', left: 12, right: 12, top: 'calc(var(--top) - 10px)', zIndex: 35, background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 22, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 10px 30px rgba(45,43,43,.18),0 0 0 1px rgba(45,43,43,.05)', cursor: 'pointer' }}>
+          style={{ position: 'absolute', left: 12, right: 12, top: 'calc(var(--top) - 10px)', zIndex: 35, background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 22, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 10px 30px rgba(45,43,43,.18),0 0 0 1px rgba(45,43,43,.05)', cursor: 'pointer' }}>
           <div style={{ width: 38, height: 38, borderRadius: 999, background: NOTIF_TONE[banner.kind].bg, color: NOTIF_TONE[banner.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={banner.kind} /></div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 14, fontWeight: 700 }}>{banner.title}</span>
@@ -154,7 +172,7 @@ export default function App() {
       )}
 
       <div className="tabbar" style={{ position: 'absolute', left: 14, right: 14, bottom: 'var(--tb)', zIndex: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
-        <nav style={{ flex: 1, display: 'flex', background: 'rgba(255,255,255,.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 999, padding: 5, boxShadow: '0 8px 24px rgba(45,43,43,.12),0 0 0 1px rgba(45,43,43,.04)' }}>
+        <nav className="frosted" style={{ flex: 1, display: 'flex', background: 'rgba(255,255,255,.92)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 999, padding: 5, boxShadow: '0 8px 24px rgba(45,43,43,.12),0 0 0 1px rgba(45,43,43,.04)' }}>
           {TABS.map(([k, label, Icon]) => {
             const on = ui.tab === k;
             return (
@@ -173,6 +191,8 @@ export default function App() {
 
       {ui.page === 'investments' && <Investments />}
       {ui.page?.startsWith('report:') && <ReportPage id={ui.page.slice(7)} />}
+      {ui.page === 'social' && <SocialPage />}
+      {ui.page?.startsWith('trip:') && <TripPage id={ui.page.slice(5)} />}
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
       {ui.tour && <Tour />}

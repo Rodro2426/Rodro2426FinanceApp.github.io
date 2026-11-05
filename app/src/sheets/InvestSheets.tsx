@@ -60,7 +60,7 @@ export function TradeSheet({ ticker: t0, side: s0 }: { ticker?: string; side?: '
         <FieldLabel m="14px 4px 6px">Ticker</FieldLabel>
         <input value={ticker} placeholder="AAPL, VOO, ECOPETROL…" autoCapitalize="characters" onChange={e => setTicker(e.target.value.toUpperCase().replace(/\s/g, ''))} disabled={!!t0} style={{ ...textInput, fontWeight: 700, letterSpacing: '.02em' }} />
         {matches.length > 0 && !matches.some(m => m.symbol === T) && (
-          <div style={{ marginTop: 6, background: '#fff', borderRadius: 18, padding: '2px 14px' }}>
+          <div style={{ marginTop: 6, background: 'var(--surface)', borderRadius: 18, padding: '2px 14px' }}>
             {matches.map((m, i) => (
               <button key={m.symbol} onClick={() => { setTicker(m.symbol); setName(m.description); setCurrency(m.symbol.endsWith('.CO') ? 'COP' : 'USD'); setMatches([]); }}
                 style={{ width: '100%', display: 'flex', justifyContent: 'space-between', gap: 10, padding: '10px 0', border: 0, borderBottom: `1px solid ${i === matches.length - 1 ? 'transparent' : LINE}`, background: 'transparent', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
@@ -152,7 +152,7 @@ export function HoldingSheet({ ticker }: { ticker: string }) {
           </div>
         </div>
         {h && (
-          <div style={{ marginTop: 14, background: '#fff', borderRadius: 22, padding: '2px 16px 6px' }}>
+          <div style={{ marginTop: 14, background: 'var(--surface)', borderRadius: 22, padding: '2px 16px 6px' }}>
             {stat('Market value', fmt(h.valueLocal))}
             {stat('Shares', fmtQty(h.qty))}
             {stat('Average cost', fmtNative(h.avgCost, cur))}
@@ -163,7 +163,7 @@ export function HoldingSheet({ ticker }: { ticker: string }) {
         )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 12 }}>
           <button onClick={() => openSheet({ name: 'trade', ticker, side: 'buy' })} className="hv-acc600" style={{ height: 50, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Buy more</button>
-          <button onClick={() => openSheet({ name: 'trade', ticker, side: 'sell' })} disabled={!h} className="hv-n200" style={{ height: 50, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: h ? 1 : 0.45 }}>Sell</button>
+          <button onClick={() => openSheet({ name: 'trade', ticker, side: 'sell' })} disabled={!h} className="hv-n200" style={{ height: 50, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: h ? 1 : 0.45 }}>Sell</button>
         </div>
 
         <FieldLabel m="16px 4px 6px">Set the price yourself</FieldLabel>
@@ -171,14 +171,14 @@ export function HoldingSheet({ ticker }: { ticker: string }) {
           {cur === 'USD'
             ? <input type="text" inputMode="decimal" placeholder={q ? String(q.price) : '0.00'} value={manual} onChange={e => setManual(decInput(e.target.value))} style={{ ...textInput, flex: 1, fontWeight: 600 }} />
             : <MoneyInput value={manual} onChange={setManual} style={{ ...textInput, flex: 1, fontWeight: 600 }} />}
-          <button onClick={setPrice} disabled={!(num(manual) > 0)} style={{ height: 52, padding: '0 18px', borderRadius: 18, border: 0, background: TEXT, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: num(manual) > 0 ? 1 : 0.45 }}>Set</button>
+          <button onClick={setPrice} disabled={!(num(manual) > 0)} style={{ height: 52, padding: '0 18px', borderRadius: 18, border: 0, background: TEXT, color: 'var(--on-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: num(manual) > 0 ? 1 : 0.45 }}>Set</button>
         </div>
         <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
           Useful for Colombian stocks or funds without a live price. {q?.manual && d.settings.finnhubKey && <button onClick={useLive} style={{ border: 0, padding: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Use live price again</button>}
         </span>
 
         <FieldLabel>Trades</FieldLabel>
-        <div style={{ background: '#fff', borderRadius: 22, padding: '2px 16px' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '2px 16px' }}>
           {trades.map((t, i) => (
             <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', borderBottom: `1px solid ${i === trades.length - 1 ? 'transparent' : LINE}` }}>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -223,7 +223,7 @@ export function PriceSettingsSheet() {
           <FieldLabel m="20px 4px 6px">Dollar rate (1 USD in COP)</FieldLabel>
           <div style={{ display: 'flex', gap: 8 }}>
             <MoneyInput value={rate} onChange={setRate} style={{ ...textInput, flex: 1, fontWeight: 600 }} />
-            <button onClick={() => { const r = num(rate); if (r > 0) { setData(x => ({ investments: { ...x.investments, usdRate: r, usdManual: true, usdRateAt: Date.now() } })); flash('Dollar rate set'); } }} style={{ height: 52, padding: '0 18px', borderRadius: 18, border: 0, background: TEXT, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Set</button>
+            <button onClick={() => { const r = num(rate); if (r > 0) { setData(x => ({ investments: { ...x.investments, usdRate: r, usdManual: true, usdRateAt: Date.now() } })); flash('Dollar rate set'); } }} style={{ height: 52, padding: '0 18px', borderRadius: 18, border: 0, background: TEXT, color: 'var(--on-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Set</button>
           </div>
           <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
             {inv.usdManual ? 'Using your rate. ' : 'Updated automatically a few times a day. '}

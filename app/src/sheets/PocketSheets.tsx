@@ -13,7 +13,7 @@ import { MoneyInput } from '../ui/MoneyInput';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
 
-const pill = (k: string) => ({ fontSize: 12, fontWeight: 600, color: k, background: 'rgba(255,255,255,.7)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }) as const;
+const pill = (k: string) => ({ fontSize: 12, fontWeight: 600, color: k, background: 'var(--glass)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }) as const;
 
 /* ---------------- Search ---------------- */
 export function SearchSheet({ tag, cat }: { tag?: string | null; cat?: string | null }) {
@@ -46,7 +46,7 @@ export function SearchSheet({ tag, cat }: { tag?: string | null; cat?: string | 
   return (
     <SheetFrame title="Transactions" topOnFocus>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 560 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, background: '#fff', borderRadius: 999, padding: '0 16px', height: 50 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, background: 'var(--surface)', borderRadius: 999, padding: '0 16px', height: 50 }}>
           <I.Search size={18} color="var(--color-neutral-500)" />
           <input placeholder="Search by name, category, pocket or #tag" value={q} onChange={e => setQ(e.target.value)} ref={searchRef} style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 16, color: TEXT, padding: 0, outline: 'none' }} />
           {q && <button onClick={() => setQ('')} aria-label="Clear" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.X size={12} sw={3} /></button>}
@@ -54,19 +54,19 @@ export function SearchSheet({ tag, cat }: { tag?: string | null; cat?: string | 
         <div className="noscroll" aria-label="Filter by category" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '12px -20px 0', padding: '0 20px' }}>
           {[{ k: '', label: 'All categories' }, ...catNames.map(k => ({ k, label: `${k} · ${catCount(k)}` }))].map(g => {
             const on = g.k ? filterCat === g.k : !filterCat;
-            return <button key={'c' + g.k} onClick={() => setFilterCat(g.k ? (filterCat === g.k ? null : g.k) : null)} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{g.label}</button>;
+            return <button key={'c' + g.k} onClick={() => setFilterCat(g.k ? (filterCat === g.k ? null : g.k) : null)} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{g.label}</button>;
           })}
         </div>
         <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '8px -20px 0', padding: '0 20px' }}>
           {chips.map(g => (
-            <button key={g.key} onClick={g.pick} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: g.on ? (g.hue != null ? ink(g.hue) : TEXT) : '#fff', color: g.on ? '#fff' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>{g.label}</button>
+            <button key={g.key} onClick={g.pick} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: g.on ? (g.hue != null ? ink(g.hue) : TEXT) : 'var(--surface)', color: g.on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>{g.label}</button>
           ))}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', margin: '16px 4px 8px', fontSize: 13 }}>
           <span style={{ color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{matches.length === 1 ? '1 transaction' : `${matches.length} transactions`}</span>
           <span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>−{fmt(matches.reduce((a, e) => a + e.amt, 0))}</span>
         </div>
-        <div style={{ background: '#fff', borderRadius: 22, padding: '4px 16px' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '4px 16px' }}>
           {shown.map((v, i) => <ExpRow key={v.key} v={v} size={38} last={i === shown.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key, back: { name: 'search', tag: filterTag, cat: filterCat } })} />)}
           {matches.length === 0 && <div style={{ padding: '18px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No transactions match.</div>}
           {matches.length > shown.length && <div style={{ padding: '14px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Showing the latest {shown.length}. Refine your search to see more.</div>}
@@ -124,7 +124,7 @@ function IncomeForm() {
     flash(`+${fmt(X)} to ${acctName}${A > 0 ? ` · ${fmt(A)} to pockets` : ' · all saved'}${warn}`);
   };
   const chipBtn = (label: string, on: boolean, f: () => void, key?: string) => (
-    <button key={key ?? label} onClick={f} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--color-neutral-100)', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{label}</button>
+    <button key={key ?? label} onClick={f} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--color-neutral-100)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{label}</button>
   );
   const row = (label: string, b: number, x: number | undefined, sign = false) => (
     <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13, padding: '3px 0' }}>
@@ -140,12 +140,12 @@ function IncomeForm() {
       <input placeholder="e.g. Freelance, gift, refund" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
       <FieldLabel m="14px 4px 6px">Category {!incCat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</FieldLabel>
       <div className="noscroll" aria-label="Income category" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
-        {allIncomeCats(d).map(k => <button key={k} onClick={() => setIncCat(k)} aria-pressed={incCat === k} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: incCat === k ? TEXT : '#fff', color: incCat === k ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k}</button>)}
+        {allIncomeCats(d).map(k => <button key={k} onClick={() => setIncCat(k)} aria-pressed={incCat === k} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: incCat === k ? TEXT : 'var(--surface)', color: incCat === k ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k}</button>)}
       </div>
       <FieldLabel>Goes into</FieldLabel>
       <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
         {accounts.map(x => (
-          <button key={x.id} onClick={() => setA(x.id)} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${x.id === a ? ink(x.hue) : '#fff'}`, background: x.id === a ? tint(x.hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+          <button key={x.id} onClick={() => setA(x.id)} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${x.id === a ? ink(x.hue) : 'var(--surface)'}`, background: x.id === a ? tint(x.hue) : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
             <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{x.name}</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(x.bal)}</span>
           </button>
@@ -154,7 +154,7 @@ function IncomeForm() {
       </div>
 
       <FieldLabel m="16px 4px 6px">How much goes to pockets?</FieldLabel>
-      <div style={{ background: '#fff', borderRadius: 22, padding: '12px 12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: 'var(--color-neutral-100)', borderRadius: 16, padding: '10px 14px', opacity: dist === 'manual' ? 0.6 : 1 }}>
           <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-neutral-500)' }}>{curSymbol()}</span>
           {dist === 'manual'
@@ -174,7 +174,7 @@ function IncomeForm() {
       </div>
 
       {(A > 0 || dist === 'manual') && (
-        <div style={{ marginTop: 10, background: '#fff', borderRadius: 22, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ marginTop: 10, background: 'var(--surface)', borderRadius: 22, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           <Segmented items={[['week', 'This week'], ['month', `Rest of ${monthName(c.month)}`]]} value={mode} onPick={setMode} mt={0} h={36} />
           <span style={{ margin: '0 2px', fontSize: 12, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>
             {mode === 'week' ? 'All of it goes to this week. On Monday the pockets start over.' : nWeeks > 1 ? `Shared equally over the ${nWeeks} weeks left in ${monthName(c.month)}, this one included.` : `This is the last week of ${monthName(c.month)}, so it all goes to this week.`}
@@ -209,7 +209,7 @@ function IncomeForm() {
         </div>
       )}
 
-      <div aria-label="Preview" style={{ marginTop: 10, background: '#fff', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
+      <div aria-label="Preview" style={{ marginTop: 10, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Before → after</span>
         {row('Month income', before.income, after?.income)}
         {row('Month plan', before.plan, after?.plan)}
@@ -296,11 +296,11 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Category <span style={{ color: cat ? 'var(--color-neutral-500)' : RED, fontWeight: 700 }}>{cat ? '' : '· required'}</span></span>
           <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat ? cat + (sub ? ' › ' + sub : '') : 'Pick one'}</span>
         </div>
-        <div style={{ background: '#fff', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
             {d.cats.map(k => {
               const on = k.name === cat;
-              return <button key={k.name} onClick={() => { setCat([k.name, k.subs[0] || '']); }} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)', transition: 'all .15s' }}>{k.name}</button>;
+              return <button key={k.name} onClick={() => { setCat([k.name, k.subs[0] || '']); }} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)', transition: 'all .15s' }}>{k.name}</button>;
             })}
             <div style={{ flex: 'none', display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
               <input placeholder="New category" value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={blurOnEnter} onBlur={addCat} style={{ width: 118, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
@@ -321,12 +321,12 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
         <FieldLabel>Pocket</FieldLabel>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {all.map(x => <PickChip key={x.id} st={x} on={x.id === p} hue={x.hue} onClick={() => setP(x.id)} />)}
-          <button onClick={() => setP('')} aria-pressed={p === ''} style={{ height: 44, padding: '0 14px', borderRadius: 999, border: p === '' ? `2px solid ${TEXT}` : '2px dashed var(--color-neutral-300)', background: p === '' ? TEXT : 'transparent', color: p === '' ? '#fff' : TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>No pocket</button>
+          <button onClick={() => setP('')} aria-pressed={p === ''} style={{ height: 44, padding: '0 14px', borderRadius: 999, border: p === '' ? `2px solid ${TEXT}` : '2px dashed var(--color-neutral-300)', background: p === '' ? TEXT : 'transparent', color: p === '' ? 'var(--on-text)' : TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>No pocket</button>
         </div>
         <FieldLabel>Paid with</FieldLabel>
         <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
           {d.accounts.map(x => (
-            <button key={x.id} onClick={() => setA(x.id)} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${x.id === a ? ink(x.hue) : '#fff'}`, background: x.id === a ? tint(x.hue) : '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+            <button key={x.id} onClick={() => setA(x.id)} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${x.id === a ? ink(x.hue) : 'var(--surface)'}`, background: x.id === a ? tint(x.hue) : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
               <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{x.name}</span>
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{x.type === 'card' ? `${fmt((x.limit || 0) - x.bal)} available` : fmt(x.bal)}</span>
             </button>
@@ -336,9 +336,9 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           {d.tags.map(t => {
             const on = tagSel.includes(t);
-            return <button key={t} onClick={() => setTagSel(s => (s.includes(t) ? s.filter(y => y !== t) : [...s, t]))} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? ink(tagHue(t)) : '#fff', color: on ? '#fff' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>#{t}</button>;
+            return <button key={t} onClick={() => setTagSel(s => (s.includes(t) ? s.filter(y => y !== t) : [...s, t]))} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? ink(tagHue(t)) : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>#{t}</button>;
           })}
-          <div style={{ display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, background: '#fff', border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, background: 'var(--surface)', border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
             <input placeholder="New tag" value={newTag} onChange={e => setNewTag(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }} style={{ width: 92, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
             <button onClick={addTag} aria-label="Add tag" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-accent-100)', color: 'var(--color-accent-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={13} sw={3} /></button>
           </div>
@@ -376,7 +376,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
           {view === 'day' ? (
             ds.active ? <>
               {big(ds.left < 0 ? 'Over today’s amount by' : 'You can spend today', ds.left)}
-              <div style={{ marginTop: 12 }}><Bar pct={pctOf(ds.spentToday, ds.allowance)} track="rgba(255,255,255,.8)" fill={k} /></div>
+              <div style={{ marginTop: 12 }}><Bar pct={pctOf(ds.spentToday, ds.allowance)} track="var(--glass)" fill={k} /></div>
               <span style={{ marginTop: 8, fontSize: 13, lineHeight: 1.4, color: k }}>
                 {fmt(ds.allowance)} for today: {fmt(s.left + ds.spentToday)} left this week ÷ {ds.week.filter(x => x.active && !x.past).length} spending day{ds.week.filter(x => x.active && !x.past).length === 1 ? '' : 's'} left (today included).{ds.spentToday > 0 ? ` Spent ${fmt(ds.spentToday)} so far.` : ''}
               </span>
@@ -390,7 +390,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
             </>
           ) : view === 'week' ? <>
             {big(s.left < 0 ? 'Over budget this week' : 'Left this week', s.left)}
-            <div style={{ marginTop: 12 }}><Bar pct={pctOf(s.spent, s.budget)} track="rgba(255,255,255,.8)" fill={k} /></div>
+            <div style={{ marginTop: 12 }}><Bar pct={pctOf(s.spent, s.budget)} track="var(--glass)" fill={k} /></div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
               <span style={pill(k)}>Planned {fmt(s.weekly)}</span>
               <span style={pill(k)}>Spent {fmt(s.spent)}</span>
@@ -398,7 +398,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
             </div>
           </> : <>
             {big(ms.left < 0 ? `Over budget in ${monthName(c.month)}` : `Left in ${monthName(c.month)}`, ms.left)}
-            <div style={{ marginTop: 12 }}><Bar pct={pctOf(ms.spent, ms.budget)} track="rgba(255,255,255,.8)" fill={k} /></div>
+            <div style={{ marginTop: 12 }}><Bar pct={pctOf(ms.spent, ms.budget)} track="var(--glass)" fill={k} /></div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
               <span style={pill(k)}>Planned {fmt(s.weekly * c.weeks)}</span>
               <span style={pill(k)}>Spent {fmt(ms.spent)}</span>
@@ -411,7 +411,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
         {view === 'day' && <DayPlanner id={id} hue={s.hue} ds={ds} />}
         {view !== 'day' && <MovesCard id={id} />}
 
-        <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '4px 16px' }}>
+        <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '4px 16px' }}>
           {items.map((e, i) => (
             <div key={e.key} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: e.key, back: { name: 'pocket', id, view } })} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === items.length - 1 ? 'transparent' : LINE}`, fontSize: 14, cursor: 'pointer' }}>
               <span style={{ display: 'flex', flexDirection: 'column' }}>
@@ -428,7 +428,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
           <I.Pencil size={15} />Edit pocket
         </button>
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-          <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <I.Swap size={17} />Move leftover
           </button>
           <button onClick={() => openSheet({ name: 'add', pocket: id })} className="hv-acc600" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Add expense</button>
@@ -470,7 +470,7 @@ function MovesCard({ id }: { id: string }) {
     setConfirmAll(false); flash(`${list.length === 1 ? '1 move' : `${list.length} moves`} undone`);
   };
   return (
-    <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '12px 16px 8px' }}>
+    <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '12px 16px 8px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
         <span style={{ fontSize: 15, fontWeight: 700 }}>Moves this month</span>
         <span style={{ fontSize: 13, fontWeight: 700, color: net < 0 ? RED : 'oklch(0.45 0.11 150)' }}>{fmt(net, true)}</span>
@@ -496,7 +496,7 @@ function MovesCard({ id }: { id: string }) {
                     <span style={{ fontWeight: 700, color: 'var(--color-neutral-500)' }}>{curSymbol()}</span>
                     <MoneyInput value={amt} onChange={setAmt} style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />
                   </div>
-                  <button onClick={() => save(m)} style={{ height: 46, padding: '0 16px', borderRadius: 16, border: 0, background: TEXT, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Save</button>
+                  <button onClick={() => save(m)} style={{ height: 46, padding: '0 16px', borderRadius: 16, border: 0, background: TEXT, color: 'var(--on-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Save</button>
                 </div>
                 <button onClick={() => undo(m)} style={{ height: 42, borderRadius: 999, border: 0, background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Undo this move</button>
                 <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
@@ -529,7 +529,7 @@ function DayPlanner({ id, hue, ds }: { id: string; hue: number; ds: DayStats }) 
   };
   const k = ink(hue);
   return (
-    <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '14px 12px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '14px 12px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, padding: '0 4px' }}>
         <span style={{ fontSize: 15, fontWeight: 700 }}>Spending days</span>
         <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Tap a day to turn it on or off</span>
@@ -564,12 +564,12 @@ export function SavedSheet({ id }: { id: string }) {
         <div style={{ marginTop: 10, background: tint(s.hue), borderRadius: 28, padding: 22, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: k }}>{s.name} · {s.left < 0 ? 'Over budget this week' : 'Left this week'}</span>
           <span style={{ fontSize: 42, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: s.left < 0 ? RED : k }}>{fmt(Math.abs(s.left))}</span>
-          <div style={{ marginTop: 12 }}><Bar pct={pctOf(s.spent, s.budget)} track="rgba(255,255,255,.8)" fill={k} /></div>
+          <div style={{ marginTop: 12 }}><Bar pct={pctOf(s.spent, s.budget)} track="var(--glass)" fill={k} /></div>
           <span style={{ marginTop: 8, fontSize: 13, color: k }}>{fmt(s.spent)} spent of {fmt(s.budget)}</span>
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-          <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1 }}>Move leftover</button>
-          <button onClick={closeSheet} style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: TEXT, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Done</button>
+          <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1 }}>Move leftover</button>
+          <button onClick={closeSheet} style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: TEXT, color: 'var(--on-text)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Done</button>
         </div>
       </div>
     </SheetFrame>
@@ -628,7 +628,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
           <span style={{ fontSize: 13, color: tooMuch ? RED : k }}>{tooMuch ? `That's ${fmt(-remaining)} more than ${s.name} has left.` : total > 0 ? `${fmt(total)} moves · ${fmt(remaining)} stays in ${s.name}` : 'Type how much goes to each pocket below.'}</span>
         </div>
 
-        <div style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '10px 12px 4px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '10px 12px 4px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingBottom: 8 }}>
             {[['Evenly', () => fill('even')], ['By budget', () => fill('budget')], ['Clear', () => fill('clear')]].map(([l, f]) => (
               <button key={l as string} onClick={f as () => void} disabled={!leftover || !others.length} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{l as string}</button>
@@ -639,7 +639,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
           {others.length === 0 && d.goals.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '8px 0' }}>Create another pocket or a savings goal first.</span>}
         </div>
 
-        <div aria-label="Move check" style={{ marginTop: 12, background: '#fff', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
+        <div aria-label="Move check" style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
           <span style={{ fontWeight: 700 }}>Only a transfer for this week</span>
           <span style={{ lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>No new money is created: what {s.name} gives, the others get. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</span>
           {[['Month income', sumB.income, sumA.income], ['Month plan', sumB.plan, sumA.plan], ['All pockets this week', all.reduce((a, x) => a + x.budget, 0), allStats(after, c).reduce((a, x) => a + x.budget, 0)]].map(([l, b, a]) => (
@@ -687,7 +687,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   return (
     <SheetFrame title={isNew ? 'New pocket' : 'Edit pocket'}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#fff', borderRadius: 22, padding: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14 }}>
           <div style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: tint(hue), backgroundImage: photo ? `url(${photo})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 32, flex: 'none' }}>{icon}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
             <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -697,7 +697,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
           </div>
         </div>
         <FieldLabel m="14px 4px 6px">Emoji</FieldLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,minmax(0,1fr))', gap: 4, background: '#fff', borderRadius: 22, padding: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,minmax(0,1fr))', gap: 4, background: 'var(--surface)', borderRadius: 22, padding: 8 }}>
           {EMOJIS.map(m => <button key={m} onClick={() => { setEmoji(m); setPhoto(null); }} style={{ aspectRatio: '1', borderRadius: 12, border: 0, background: !photo && emoji === m ? tint(hue) : 'transparent', fontSize: 20, cursor: 'pointer', padding: 0, transition: 'background .15s' }}>{m}</button>)}
         </div>
         <FieldLabel m="14px 4px 6px">Name</FieldLabel>
@@ -710,7 +710,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
           {DAY_LETTERS.map((l, wd) => {
             const on = days.includes(wd);
             return <button key={wd} aria-pressed={on} aria-label={DAY_NAMES[wd]} onClick={() => setDays(on ? (days.length > 1 ? days.filter(x => x !== wd) : days) : [...days, wd])}
-              style={{ height: 42, borderRadius: 14, border: 0, background: on ? tint(hue) : '#fff', color: on ? ink(hue) : 'var(--color-neutral-500)', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>{l}</button>;
+              style={{ height: 42, borderRadius: 14, border: 0, background: on ? tint(hue) : 'var(--surface)', color: on ? ink(hue) : 'var(--color-neutral-500)', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>{l}</button>;
           })}
         </div>
         <span style={{ margin: '8px 4px 0', fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>

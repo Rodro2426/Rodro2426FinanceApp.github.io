@@ -1,9 +1,11 @@
 import type { Category } from './types';
 
 export const HUES = [25, 150, 250, 300, 80, 195];
-export const tint = (h: number) => `oklch(0.94 0.04 ${h})`;
-export const mid = (h: number) => `oklch(0.78 0.1 ${h})`;
-export const ink = (h: number) => `oklch(0.42 0.1 ${h})`;
+/** Soft background for a hue; follows light/dark mode (see --tint-* in styles.css). */
+export const tint = (h: number) => `oklch(var(--tint-l) var(--tint-c) ${h})`;
+export const mid = (h: number) => `oklch(var(--mid-l) 0.1 ${h})`;
+/** Text/icon color for a hue on its tint; follows light/dark mode. */
+export const ink = (h: number) => `oklch(var(--ink-l) var(--ink-c) ${h})`;
 
 export const RED = 'var(--color-accent-700)';
 export const TEXT = 'var(--color-text)';

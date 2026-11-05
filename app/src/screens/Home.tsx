@@ -16,8 +16,8 @@ const C = 100.53; // ring circumference (r=16)
 
 /** Light tones for the "Safe to spend" card: >50% left green, 30–50% yellow, under 30% red. */
 const SAFE_TONES = {
-  green: { bg: 'oklch(0.95 0.045 155)', label: 'oklch(0.42 0.09 155)', amount: 'oklch(0.3 0.07 155)', bar: 'oklch(0.68 0.13 155)' },
-  yellow: { bg: 'oklch(0.96 0.055 92)', label: 'oklch(0.46 0.09 75)', amount: 'oklch(0.33 0.07 70)', bar: 'oklch(0.8 0.14 82)' },
+  green: { bg: 'var(--safe-g-bg)', label: 'var(--safe-g-label)', amount: 'var(--safe-g-amt)', bar: 'var(--safe-g-bar)' },
+  yellow: { bg: 'var(--safe-y-bg)', label: 'var(--safe-y-label)', amount: 'var(--safe-y-amt)', bar: 'var(--safe-y-bar)' },
   red: { bg: 'var(--color-accent-100)', label: 'var(--color-accent-800)', amount: 'var(--color-accent-900)', bar: 'var(--color-accent)' }
 };
 
@@ -63,11 +63,14 @@ export default function Home() {
           <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>Hi, {d.settings.name}</span>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button data-tour="bell" onClick={() => openSheet({ name: 'notifications' })} aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'} className="hv-n200" style={{ position: 'relative', width: 44, height: 44, borderRadius: 999, background: '#fff', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+          <button onClick={() => setUI({ page: 'social' })} aria-label="Trips and friends" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--surface)', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><circle cx="17" cy="9" r="2.6" /><path d="M16.5 14.6c2.6.2 4.5 1.9 5 4.9" /></svg>
+          </button>
+          <button data-tour="bell" onClick={() => openSheet({ name: 'notifications' })} aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'} className="hv-n200" style={{ position: 'relative', width: 44, height: 44, borderRadius: 999, background: 'var(--surface)', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
             <I.Bell size={19} />
             {unread > 0 && <span style={{ position: 'absolute', top: 6, right: 6, minWidth: 18, height: 18, padding: '0 5px', borderRadius: 999, background: 'var(--color-accent)', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 2px #fff' }}>{unread > 9 ? '9+' : unread}</span>}
           </button>
-          <button data-tour="search" onClick={() => openSheet({ name: 'search' })} aria-label="Search transactions" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: '#fff', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+          <button data-tour="search" onClick={() => openSheet({ name: 'search' })} aria-label="Search transactions" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--surface)', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
             <I.Search size={19} />
           </button>
           <button data-tour="profile" onClick={() => openSheet({ name: 'settings' })} aria-label="Profile and settings" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, border: 0, padding: 0, cursor: 'pointer', overflow: 'hidden' }}>
@@ -84,12 +87,12 @@ export default function Home() {
       ]} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 10 }}>
-        <div onClick={() => setUI({ tab: 'accounts' })} className="hv-n100" style={{ background: '#fff', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div onClick={() => setUI({ tab: 'accounts' })} className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Net worth</span>
           <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{fmt(assets - debt)}</span>
           <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{d.accounts.length} accounts{nw.includeInvestments && nw.investments ? ' + investments' : ''}{nw.groups.some(x => x.counted) ? ' + groups' : ''}</span>
         </div>
-        <div onClick={() => setUI({ tab: 'insights' })} className="hv-n100" style={{ background: '#fff', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <div onClick={() => setUI({ tab: 'insights' })} className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Spent in {monthName(c.month)}</span>
           <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{fmt(spent)}</span>
           <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{income > 0 ? Math.round(spent / income * 100) + '%' : '—'} of income</span>
@@ -167,7 +170,7 @@ function SafeCard({ tone, title, left, budget, spent, sub, tour }: { tone: typeo
       <span style={{ fontSize: 14, color: tone.label, fontWeight: 600 }}>{title}</span>
       <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: tone.amount }}>{fmt(left)}</span>
       <span style={{ fontSize: 13, color: tone.label }}>{sub}</span>
-      <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: '#fff', overflow: 'hidden' }}>
+      <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: 'var(--surface)', overflow: 'hidden' }}>
         <div style={{ height: 10, borderRadius: 999, width: pctOf(spent, budget), background: tone.bar, transition: 'width .5s ease, background .4s ease' }} />
       </div>
     </div>
@@ -181,11 +184,11 @@ function PocketGrid({ items, tour, view }: { items: { p: PocketStats; left: numb
         <div key={p.id} data-tour={tour ? 'pocket' : undefined} onClick={() => openSheet({ name: 'pocket', id: p.id, view })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-              <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.85)', backgroundImage: p.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{p.initial}</span>
+              <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'var(--glass)', backgroundImage: p.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{p.initial}</span>
               <span style={{ fontSize: 14, fontWeight: 600, color: ink(p.hue), lineHeight: 1.25 }}>{p.name}</span>
             </span>
             <svg width="34" height="34" viewBox="0 0 40 40" style={{ flex: 'none', transform: 'rotate(-90deg)' }}>
-              <circle cx="20" cy="20" r="16" style={{ fill: 'none', stroke: 'rgba(255,255,255,.85)', strokeWidth: 6 }} />
+              <circle cx="20" cy="20" r="16" style={{ fill: 'none', stroke: 'var(--glass)', strokeWidth: 6 }} />
               <circle cx="20" cy="20" r="16" style={{ fill: 'none', stroke: ink(p.hue), strokeWidth: 6, strokeLinecap: 'round', strokeDasharray: `${(budget > 0 ? Math.max(0, left) / budget : 0) * C} ${C}`, transition: 'stroke-dasharray .5s ease' }} />
             </svg>
           </div>
@@ -205,5 +208,5 @@ function PocketGrid({ items, tour, view }: { items: { p: PocketStats; left: numb
 }
 
 function EmptyHint({ text, onClick }: { text: string; onClick: () => void }) {
-  return <div onClick={onClick} style={{ background: '#fff', borderRadius: 24, padding: 16, fontSize: 14, color: 'var(--color-neutral-700)', cursor: 'pointer' }}>{text}</div>;
+  return <div onClick={onClick} style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, fontSize: 14, color: 'var(--color-neutral-700)', cursor: 'pointer' }}>{text}</div>;
 }

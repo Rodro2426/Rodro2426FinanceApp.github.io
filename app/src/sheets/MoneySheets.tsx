@@ -30,7 +30,7 @@ export function ExportSheet({ acct }: { acct: string }) {
   const tot = x.details.reduce((a, r) => a + r.amount, 0);
   const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const sheets = ['For AI', 'Summary', 'Details', 'Card payments'].concat(x.statement ? ['Statement'] : []);
-  const chip = (on: boolean) => ({ background: on ? TEXT : '#fff', color: on ? '#fff' : TEXT });
+  const chip = (on: boolean) => ({ background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT });
 
   const download = async () => {
     if (busy) return;
@@ -62,7 +62,7 @@ export function ExportSheet({ acct }: { acct: string }) {
             <button key={a.id} onClick={() => setAcctId(a.id)} style={{ flex: 'none', height: 36, padding: '0 14px', borderRadius: 999, border: 0, ...chip(a.id === acctId), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>{a.name}</button>
           ))}
         </div>
-        <div style={{ marginTop: 16, background: '#fff', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ marginTop: 16, background: 'var(--surface)', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
             <span style={{ fontSize: 14, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{plural(x.details.length, 'expense')}</span>
             <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>{fmt(tot)}</span>
@@ -104,7 +104,7 @@ export function AcctSheet({ id }: { id: string }) {
         <div style={{ background: tint(a.hue), borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} aria-label="Change photo" style={{ border: 0, padding: 0, cursor: 'pointer', background: 'transparent', borderRadius: 18 }}>
-              <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={56} radius={18} bg="rgba(255,255,255,.8)" color={k} fs={20} />
+              <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={56} radius={18} bg="var(--glass)" color={k} fs={20} />
             </button>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: k }}>{a.kind}</span>
@@ -114,19 +114,19 @@ export function AcctSheet({ id }: { id: string }) {
           <span style={{ marginTop: 10, fontSize: 38, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: k }}>{fmt(a.bal)}</span>
           {earnsInterest(a) && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: GREEN_TEXT, background: 'rgba(255,255,255,.8)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>+{fmt(a.earned || 0)} earned</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: k, background: 'rgba(255,255,255,.7)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>{String(a.rate).replace('.', ',')}% E.A. · +{fmt(perDay(a))} a day</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: GREEN_TEXT, background: 'var(--glass)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>+{fmt(a.earned || 0)} earned</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: k, background: 'var(--glass)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>{String(a.rate).replace('.', ',')}% E.A. · +{fmt(perDay(a))} a day</span>
             </div>
           )}
           {card && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
-              <Bar pct={pctOf(a.bal, lim)} track="rgba(255,255,255,.8)" fill={k} ease="0s" />
+              <Bar pct={pctOf(a.bal, lim)} track="var(--glass)" fill={k} ease="0s" />
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12, color: k }}><span style={{ whiteSpace: 'nowrap' }}>Limit {fmt(lim)}</span><span style={{ whiteSpace: 'nowrap' }}>{fmt(lim - a.bal)} available · due {a.due || '—'}</span></div>
             </div>
           )}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 12 }}>
-          <button onClick={() => openSheet({ name: 'editAcct', id })} className="hv-n200" style={{ height: 50, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <button onClick={() => openSheet({ name: 'editAcct', id })} className="hv-n200" style={{ height: 50, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <I.Pencil size={16} />Edit
           </button>
           <button onClick={() => openSheet({ name: 'export', acct: id })} className="hv-green2" style={{ height: 50, borderRadius: 999, border: 0, background: 'oklch(0.94 0.05 150)', color: 'oklch(0.38 0.1 150)', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
@@ -138,7 +138,7 @@ export function AcctSheet({ id }: { id: string }) {
           <span style={{ fontSize: 17, fontWeight: 700 }}>History</span>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{plural(list.length, 'transaction')}</span>
         </div>
-        <div style={{ background: '#fff', borderRadius: 22, padding: '4px 16px' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '4px 16px' }}>
           {shown.map((t, i) => {
             const mk = t.date.slice(0, 7), header = i === 0 || shown[i - 1].date.slice(0, 7) !== mk;
             return (
@@ -192,7 +192,7 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
   const namePh = { bank: 'Davivienda', savings: 'Emergency savings', cash: 'Wallet', card: 'Visa Platinum' }[f.type];
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#fff', borderRadius: 22, padding: 14, marginTop: isNew ? 10 : 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14, marginTop: isNew ? 10 : 0 }}>
         <AcctBadge photo={f.photo} initial={initialOf(f.name)} size={64} radius={20} bg={tint(f.hue)} color={ink(f.hue)} fs={24} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
           <button onClick={() => pickPhoto().then(p => p && setF(x => ({ ...x, photo: p })))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{f.photo ? 'Change photo' : 'Add photo'}</button>
@@ -219,7 +219,7 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
       {(f.type === 'bank' || f.type === 'savings') && (
         <>
           <FieldLabel m="14px 4px 6px">Annual return (% E.A.)</FieldLabel>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: '#fff', borderRadius: 18, padding: '13px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: 'var(--surface)', borderRadius: 18, padding: '13px 18px' }}>
             <input type="text" inputMode="decimal" placeholder="0" value={f.rate} onChange={e => set('rate')(e.target.value.replace(/[^\d.,]/g, ''))}
               style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 18, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />
             <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-neutral-400)' }}>% E.A.</span>
@@ -300,7 +300,7 @@ export function PaySheet({ id }: { id: string }) {
         <FieldLabel m="18px 4px 8px">Pay from</FieldLabel>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {sources.map(a => (
-            <button key={a.id} onClick={() => setFrom(a.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px 10px 10px', borderRadius: 20, border: `2px solid ${a.id === from ? ink(a.hue) : '#fff'}`, background: '#fff', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+            <button key={a.id} onClick={() => setFrom(a.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px 10px 10px', borderRadius: 20, border: `2px solid ${a.id === from ? ink(a.hue) : 'var(--surface)'}`, background: 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
               <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={36} radius={12} bg={tint(a.hue)} color={ink(a.hue)} fs={15} />
               <span style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>{a.name}</span>
               <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>{fmt(a.bal)}</span>
@@ -363,7 +363,7 @@ export function SettingsSheet() {
   return (
     <SheetFrame title="Profile">
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#fff', borderRadius: 22, padding: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14 }}>
           <AcctBadge photo={st.profilePhoto} initial={initialOf(st.name)} size={64} radius={999} bg="var(--color-accent-200)" color="var(--color-accent-800)" fs={24} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
             <button onClick={() => pickPhoto().then(p => p && setS({ profilePhoto: p }))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{st.profilePhoto ? 'Change photo' : 'Add photo'}</button>
@@ -376,8 +376,11 @@ export function SettingsSheet() {
         <Segmented<Currency> mt={6} items={[['COP', 'COP'], ['$', '$'], ['€', '€'], ['£', '£']]} value={st.currency} onPick={c => setS({ currency: c })} />
         <FieldLabel m="14px 4px 0">Weeks per month</FieldLabel>
         <Segmented mt={6} items={[['4', '4 weeks'], ['5', '5 weeks']]} value={String(st.weeks) as '4' | '5'} onPick={w => setS({ weeks: Number(w) as 4 | 5 })} />
+        <FieldLabel m="18px 4px 0">Appearance</FieldLabel>
+        <Segmented items={[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]} value={st.theme ?? 'system'} onPick={v => setS({ theme: v as 'system' | 'light' | 'dark' })} mt={8} />
+        <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>System follows your iPhone's light or dark mode.</span>
         <FieldLabel m="18px 4px 8px">Cloud backup</FieldLabel>
-        <button onClick={() => openSheet({ name: 'cloud' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: '#fff', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+        <button onClick={() => openSheet({ name: 'cloud' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
           <span style={{ fontSize: 22 }}>☁️</span>
           <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 700 }}>{sync.uid ? sync.email : 'Turn on cloud backup'}</span>
@@ -386,7 +389,7 @@ export function SettingsSheet() {
           <span aria-hidden="true" style={{ color: 'var(--color-neutral-500)', fontSize: 18 }}>›</span>
         </button>
         <FieldLabel m="18px 4px 0">Backup file</FieldLabel>
-        <div style={{ marginTop: 6, background: '#fff', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ marginTop: 6, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
             Your data lives only on this phone. Save a backup file to iCloud Drive so you can get everything back if the app is deleted.
             {st.lastBackup ? <> Last backup: <b style={{ color: TEXT }}>{shortDate(st.lastBackup)}</b>.</> : <> <b style={{ color: 'var(--color-accent-700)' }}>No backup yet.</b></>}
@@ -418,7 +421,7 @@ export function SettingsSheet() {
               </span>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => { restoreBackup(restore.data); setRestore(null); closeSheet(); flash('Backup restored'); }} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Restore it</button>
-                <button onClick={() => setRestore(null)} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => setRestore(null)} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               </div>
             </div>
           )}
@@ -431,17 +434,17 @@ export function SettingsSheet() {
             <span style={{ fontSize: 13, lineHeight: 1.4, color: '#2f5a3e' }}>The tutorial uses a separate practice copy. Your accounts, pockets and transactions stay saved, nothing you do in the tutorial touches them, and they come back as soon as you finish or exit.</span>
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => { setAskTour(false); startTour('replay'); }} style={{ flex: 1, height: 44, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Yes, use a practice copy</button>
-              <button onClick={() => setAskTour(false)} style={{ flex: 'none', padding: '0 18px', height: 44, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={() => setAskTour(false)} style={{ flex: 'none', padding: '0 18px', height: 44, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         ) : <button onClick={() => (hasData ? setAskTour(true) : startTour('replay'))} className="hv-n200" style={{ marginTop: 18, height: 46, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>App tutorial</button>}
-        <button onClick={() => setUI({ sheet: null, install: 'profile' })} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>How to install Pockets on iPhone</button>
+        <button onClick={() => setUI({ sheet: null, install: 'profile' })} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>How to install Pockets on iPhone</button>
         <span style={{ margin: '14px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Start over</span>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 10 }}>
           <button onClick={() => {
             if (confirm !== 'sample') return setConfirm('sample');
             replaceData({ ...sampleData(), settings: { ...st } }); closeSheet(); flash('Sample data loaded');
-          }} className="hv-n200" style={{ height: 48, borderRadius: 999, border: 0, background: '#fff', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{confirm === 'sample' ? 'Tap to replace' : 'Load sample data'}</button>
+          }} className="hv-n200" style={{ height: 48, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{confirm === 'sample' ? 'Tap to replace' : 'Load sample data'}</button>
           <button onClick={() => {
             if (confirm !== 'erase') return setConfirm('erase');
             replaceData(emptyData(d)); closeSheet(); flash('All data erased');

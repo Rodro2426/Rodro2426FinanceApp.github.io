@@ -47,7 +47,7 @@ export default function CalendarScreen() {
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Calendar</span>
       </div>
 
-      <div style={{ background: '#fff', borderRadius: 28, padding: '16px 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ background: 'var(--surface)', borderRadius: 28, padding: '16px 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <button onClick={() => go(prevMonthKey(month))} aria-label="Previous month" className="hv-n200" style={{ width: 36, height: 36, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.ChevronLeft size={18} /></button>
           <span onClick={() => go(c.month)} style={{ fontSize: 17, fontWeight: 700, cursor: 'pointer' }}>{monthLabel(month)}</span>
@@ -67,7 +67,7 @@ export default function CalendarScreen() {
             return (
               <button key={date} onClick={() => setSel(date)} aria-label={fmtDay(date, { weekday: 'long', month: 'long', day: 'numeric' })}
                 style={{ height: 46, borderRadius: 14, border: 0, padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  background: on ? TEXT : isToday ? 'var(--color-accent-100)' : 'transparent', color: on ? '#fff' : isToday ? 'var(--color-accent-700)' : date < c.today ? 'var(--color-neutral-600)' : TEXT, transition: 'background .15s' }}>
+                  background: on ? TEXT : isToday ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--on-text)' : isToday ? 'var(--color-accent-700)' : date < c.today ? 'var(--color-neutral-600)' : TEXT, transition: 'background .15s' }}>
                 <span style={{ fontSize: 15, fontWeight: isToday || on ? 700 : 600, lineHeight: 1 }}>{Number(date.slice(8))}</span>
                 <span style={{ display: 'flex', gap: 3, height: 5 }}>{dots.map((col, j) => <span key={j} style={{ width: 5, height: 5, borderRadius: 999, background: on && col === SPEND ? 'rgba(255,255,255,.6)' : col }} />)}</span>
               </button>
