@@ -32,3 +32,13 @@ describe('being added to a trip', () => {
     expect(n[0].link).toEqual({ trip: 't1' });
   });
 });
+
+describe('photo and GIF messages', () => {
+  it('says what was sent', () => {
+    const photo = { id: 'p', uid: 'ana', name: 'Ana', text: '', createdAt: 5, img: { thumb: 'x', w: 1, h: 1 } };
+    const gif = { id: 'g', uid: 'ana', name: 'Ana', text: '', createdAt: 6, gif: { url: 'u', w: 1, h: 1 } };
+    expect(tripNotifs([{ trip, items: [], messages: [photo] }], 'me', '2026-11-05', [])[0].body).toBe('Ana sent a photo');
+    expect(tripNotifs([{ trip, items: [], messages: [gif] }], 'me', '2026-11-05', [])[0].body).toBe('Ana sent a GIF');
+    expect(tripNotifs([{ trip, items: [], messages: [{ ...photo, text: 'La playa!' }] }], 'me', '2026-11-05', [])[0].body).toBe('Ana: 📷 La playa!');
+  });
+});

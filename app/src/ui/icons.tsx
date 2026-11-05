@@ -24,6 +24,7 @@ export const Pencil = mk(<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.1
 export const Swap = mk(<><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></>);
 export const Target = mk(<><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="5" /></>, 2.5);
 export const Image = mk(<><rect width="18" height="18" x="3" y="3" rx="2" /><circle cx="9" cy="9" r="2" /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></>);
+export const Trash = mk(<><path d="M3 6h18" /><path d="M8 6V4h8v2" /><path d="M19 6l-1 14H6L5 6" /></>);
 export const Calendar = mk(<><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M16 2v4" /><path d="M8 2v4" /><path d="M3 10h18" /></>, 2);
 export const Bell = mk(<><path d="M10.268 21a2 2 0 0 0 3.464 0" /><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" /></>);
 export const ChevronLeft = mk(<path d="m15 18-6-6 6-6" />);

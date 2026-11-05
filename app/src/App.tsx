@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud, syncNow } from './lib/cloud';
 import { Sidebar, useDesk } from './ui/Desk';
+import { applyBg } from './lib/bg';
 import { openTripLink, pollTrips } from './lib/tripNotify';
 import { useSync } from './sheets/CloudSheet';
 import { CloudSheet, ConflictChoice } from './sheets/CloudSheet';
@@ -137,12 +138,14 @@ export default function App() {
   useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
   // Light/dark: follow the setting, or the iPhone when it's "System".
   const theme = data.settings.theme ?? 'system';
+  const bgKey = JSON.stringify(data.settings.bg ?? {});
   useEffect(() => {
     const mq = matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
       const t = theme === 'system' ? (mq.matches ? 'dark' : 'light') : theme;
       document.documentElement.dataset.theme = t;
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t === 'dark' ? '#0e0e0d' : '#f7f5f3');
+      // The page background (and the status bar) take the user's own color for this mode, if they picked one.
+      applyBg(getData().settings.bg, t);
       // iOS colors the status bar from the page's appearance, so it follows the app's setting, not the phone's.
       document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', t);
       try { localStorage.setItem('pockets-theme', theme); } catch { /* not saved */ }
@@ -150,7 +153,7 @@ export default function App() {
     };
     apply(); mq.addEventListener('change', apply);
     return () => mq.removeEventListener('change', apply);
-  }, [theme]);
+  }, [theme, bgKey]);
   // Cloud sync: every saved change is uploaded a few seconds later; other phones' changes come down on open.
   useEffect(() => { startCloud({ getData, replace: d => replaceData(d), canSync: isPersisting }); return onPersist(markDirty); }, []);
   useEffect(() => {

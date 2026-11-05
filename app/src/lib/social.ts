@@ -17,7 +17,13 @@ export const pairId = (a: string, b: string) => [a, b].sort().join('_');
 const clean = (e: string) => e.trim().toLowerCase();
 
 /* ---------------- State shared with the screens ---------------- */
-export interface Message { id: string; uid: string; name: string; text: string; createdAt: number }
+export interface Message {
+  id: string; uid: string; name: string; text: string; createdAt: number;
+  /** A photo: the small preview is here; the full photo is in trips/{id}/media/{media}. */
+  img?: { thumb: string; w: number; h: number; media?: string; gif?: boolean };
+  /** A GIF from GIPHY. */
+  gif?: { url: string; w: number; h: number; big?: string };
+}
 interface SocialState { friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; messages: Record<string, Message[]>; latest: Record<string, number>; loading: boolean; error: string | null; loadedAt: number }
 let state: SocialState = { friends: [], trips: [], items: {}, messages: {}, latest: {}, loading: false, error: null, loadedAt: 0 };
 const listeners = new Set<() => void>();
@@ -197,17 +203,41 @@ export async function loadMessages(tripId: string) {
   const all = [...have, ...got].filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i).sort((a, b) => a.createdAt - b.createdAt);
   setS({ messages: { ...state.messages, [tripId]: all }, latest: { ...state.latest, [tripId]: all.length ? all[all.length - 1].createdAt : 0 } });
 }
-export async function sendMessage(tripId: string, text: string): Promise<string | null> {
+export interface Attachment { img?: { thumb: string; w: number; h: number; gif?: boolean }; full?: string; gif?: Message['gif'] }
+/** Sends a message, optionally with a photo (the full photo is saved first, then the message points to it) or a GIF. */
+export async function sendMessage(tripId: string, text: string, att?: Attachment): Promise<string | null> {
   const u = me(); const t = text.trim();
-  if (!u || !t) return null;
+  if (!u || (!t && !att)) return null;
   try {
-    await addDoc(collection(db, 'trips', tripId, 'messages'), { uid: u.uid, name: myName(), text: t.slice(0, 2000), createdAt: Date.now() });
+    const msg: Omit<Message, 'id'> = { uid: u.uid, name: myName(), text: t.slice(0, 2000), createdAt: Date.now() };
+    if (att?.img) {
+      msg.img = { ...att.img };
+      if (att.full) { const m = await addDoc(collection(db, 'trips', tripId, 'media'), { uid: u.uid, data: att.full, createdAt: Date.now() }); msg.img.media = m.id; media.set(m.id, att.full); }
+      if (!msg.img.gif) delete msg.img.gif;
+    }
+    if (att?.gif) msg.gif = att.gif;
+    await addDoc(collection(db, 'trips', tripId, 'messages'), msg);
     await loadMessages(tripId); markRead(tripId);
     return null;
   } catch (e) { return fail(e); }
 }
+/** Full-size photos already downloaded during this visit. */
+const media = new Map<string, string>();
+export async function loadMedia(tripId: string, id: string): Promise<string | null> {
+  if (media.has(id)) return media.get(id)!;
+  const snap = await getDoc(doc(db, 'trips', tripId, 'media', id));
+  const data = snap.exists() ? (snap.data().data as string) : null;
+  if (data) media.set(id, data);
+  return data;
+}
 export async function deleteMessage(tripId: string, id: string) {
-  try { await deleteDoc(doc(db, 'trips', tripId, 'messages', id)); setS({ messages: { ...state.messages, [tripId]: (state.messages[tripId] ?? []).filter(m => m.id !== id) } }); return null; } catch (e) { return fail(e); }
+  try {
+    const m = (state.messages[tripId] ?? []).find(x => x.id === id);
+    await deleteDoc(doc(db, 'trips', tripId, 'messages', id));
+    if (m?.img?.media) await deleteDoc(doc(db, 'trips', tripId, 'media', m.img.media)).catch(() => {});
+    setS({ messages: { ...state.messages, [tripId]: (state.messages[tripId] ?? []).filter(x => x.id !== id) } });
+    return null;
+  } catch (e) { return fail(e); }
 }
 /** Read markers live on this phone only. */
 const readKey = (tripId: string) => `pockets-read-${tripId}`;

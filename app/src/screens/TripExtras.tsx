@@ -3,7 +3,9 @@ import { setUI, flash } from '../lib/store';
 import { LINE, TEXT } from '../lib/constants';
 import { fmt } from '../lib/derive';
 import { fmtDay, monthLabel, shortDate } from '../lib/dates';
-import { deleteMessage, loadItems, loadMessages, markRead, myUid, sendMessage, tripMembers, type Message } from '../lib/social';
+import { deleteMessage, loadItems, loadMessages, markRead, myUid, sendMessage, tripMembers, type Attachment, type Message } from '../lib/social';
+import { prepGifFile, prepPhoto, type GifHit } from '../lib/chatMedia';
+import { AttachPreview, BubbleMedia, GifPanel, MediaViewer } from './ChatMedia';
 import { tripMonths, tripSpending, type TripItem } from '../lib/settle';
 import { VIZ } from '../ui/charts';
 import * as I from '../ui/icons';
@@ -112,6 +114,11 @@ export function TripChatPage({ id }: { id: string }) {
   const t = so.trips.find(x => x.id === id);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  // A photo or GIF waiting to be sent (the message box is its caption), the GIF panel, and the photo being viewed.
+  const [att, setAtt] = useState<{ preview: string; label: string; busy: boolean; payload?: Attachment } | null>(null);
+  const [gifs, setGifs] = useState(false);
+  const [view, setView] = useState<Message | null>(null);
+  const photoIn = useRef<HTMLInputElement>(null), gifIn = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const vh = useViewportHeight();
   const me = myUid();
@@ -128,7 +135,28 @@ export function TripChatPage({ id }: { id: string }) {
   useLayoutEffect(() => { list.current?.scrollTo({ top: list.current.scrollHeight }); }, [rows.length]);
   if (!t) return null;
   const members = tripMembers(t), nameOf = (x: string) => (x === me ? 'You' : members.find(m => m.id === x)?.name ?? 'Someone');
-  const send = async () => { if (!text.trim() || sending) return; setSending(true); const e = await sendMessage(id, text); setSending(false); if (e) flash(e); else setText(''); };
+  const canSend = !sending && !att?.busy && (!!text.trim() || !!att?.payload);
+  const send = async () => {
+    if (!canSend) return;
+    setSending(true); const e = await sendMessage(id, text, att?.payload); setSending(false);
+    if (e) flash(e); else { setText(''); setAtt(null); }
+  };
+  /** A file from the phone: GIFs stay animated (if small), everything else is shrunk as a photo. */
+  const attachFile = async (f: File | undefined) => {
+    if (!f) return;
+    const local = URL.createObjectURL(f);
+    const isGif = f.type === 'image/gif';
+    setGifs(false); setAtt({ preview: local, label: isGif ? 'GIF' : 'Photo', busy: true });
+    try {
+      if (isGif) { const g = await prepGifFile(f); setAtt({ preview: local, label: 'GIF', busy: false, payload: { img: { thumb: g.data, w: g.w, h: g.h, gif: true } } }); }
+      else { const p = await prepPhoto(f); setAtt({ preview: p.thumb.data, label: 'Photo', busy: false, payload: { img: { thumb: p.thumb.data, w: p.full.w, h: p.full.h }, full: p.full.data } }); }
+    } catch (e) { setAtt(null); flash((e as Error).message || "Couldn't read that image"); }
+  };
+  const sendGif = async (g: GifHit) => {
+    setGifs(false); setSending(true);
+    const e = await sendMessage(id, '', { gif: { url: g.url, w: g.w, h: g.h, big: g.big } });
+    setSending(false); if (e) flash(e);
+  };
   let lastDay = '';
   return (
     <div className="chatpage" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: vh ? `${vh}px` : '100%', zIndex: 26, background: 'var(--page)', display: 'flex', flexDirection: 'column' }}>
@@ -156,24 +184,32 @@ export function TripChatPage({ id }: { id: string }) {
               {sep}
               <div style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '80%', display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start' }}>
                 {showName && <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--color-neutral-600)', margin: '4px 10px 2px' }}>{m.name}</span>}
-                <div onClick={() => { if (mine && confirm('Delete this message for everyone?')) deleteMessage(id, m.id); }}
+                {(m.img || m.gif) && <div style={{ marginBottom: m.text ? 3 : 0 }}><BubbleMedia m={m} onOpen={() => setView(m)} /></div>}
+                {m.text && <div onClick={() => { if (mine && confirm('Delete this message for everyone?')) deleteMessage(id, m.id); }}
                   style={{ background: mine ? TEXT : 'var(--surface)', color: mine ? 'var(--on-text)' : TEXT, borderRadius: 20, borderBottomRightRadius: mine ? 6 : 20, borderBottomLeftRadius: mine ? 20 : 6, padding: '9px 13px', fontSize: 15, lineHeight: 1.35, whiteSpace: 'pre-wrap', wordBreak: 'break-word', cursor: mine ? 'pointer' : 'default' }}>
                   {m.text}
-                </div>
+                </div>}
                 <span style={{ fontSize: 10.5, color: 'var(--color-neutral-500)', margin: '2px 8px 0' }}>{new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
               </div>
             </div>
           );
         })}
       </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, padding: `8px 12px ${vh && vh < window.innerHeight - 100 ? '8px' : 'calc(var(--tb) + 6px)'}`, borderTop: `1px solid ${LINE}`, background: 'var(--page)' }}>
-        <textarea value={text} onChange={e => setText(e.target.value)} rows={1} placeholder="Message" aria-label="Message"
+      {gifs && <GifPanel onPick={sendGif} onClose={() => setGifs(false)} onFile={() => gifIn.current?.click()} />}
+      {att && <AttachPreview src={att.preview} label={att.label} busy={att.busy} onRemove={() => setAtt(null)} />}
+      <input ref={photoIn} type="file" accept="image/*" hidden onChange={e => { attachFile(e.target.files?.[0]); e.target.value = ''; }} />
+      <input ref={gifIn} type="file" accept="image/gif" hidden onChange={e => { attachFile(e.target.files?.[0]); e.target.value = ''; }} />
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, padding: `8px 12px ${vh && vh < window.innerHeight - 100 ? '8px' : 'calc(var(--tb) + 6px)'}`, borderTop: att || gifs ? 0 : `1px solid ${LINE}`, background: 'var(--page)' }}>
+        <button onClick={() => photoIn.current?.click()} aria-label="Send a photo" style={{ width: 40, height: 44, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-neutral-700)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flex: 'none', padding: 0 }}><I.Image size={22} /></button>
+        <button onClick={() => setGifs(g => !g)} aria-label="Send a GIF" aria-pressed={gifs} style={{ width: 40, height: 44, borderRadius: 999, border: 0, background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flex: 'none', padding: 0, fontSize: 12, fontWeight: 800, letterSpacing: '0.02em', color: gifs ? 'var(--color-accent-700)' : 'var(--color-neutral-700)' }}><span style={{ border: '2px solid currentColor', borderRadius: 6, padding: '1px 4px', lineHeight: 1.1 }}>GIF</span></button>
+        <textarea value={text} onChange={e => setText(e.target.value)} rows={1} placeholder={att ? 'Add a caption' : 'Message'} aria-label="Message"
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
           style={{ flex: 1, resize: 'none', maxHeight: 120, border: 0, borderRadius: 22, background: 'var(--surface)', color: TEXT, fontSize: 16, padding: '11px 16px', outline: 'none', fontFamily: 'inherit', lineHeight: 1.35 }} />
-        <button onClick={send} disabled={!text.trim() || sending} aria-label="Send" style={{ width: 44, height: 44, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: !text.trim() || sending ? 0.4 : 1, flex: 'none' }}>
+        <button onClick={send} disabled={!canSend} aria-label="Send" style={{ marginLeft: 4, width: 44, height: 44, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: canSend ? 1 : 0.4, flex: 'none' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
         </button>
       </div>
+      {view && <MediaViewer tripId={id} m={view} mine={view.uid === me} onClose={() => setView(null)} onDelete={async () => { if (!confirm('Delete this for everyone?')) return; await deleteMessage(id, view.id); setView(null); }} />}
     </div>
   );
 }
