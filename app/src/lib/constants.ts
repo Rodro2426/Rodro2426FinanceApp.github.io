@@ -1,11 +1,28 @@
 import type { Category } from './types';
 
 export const HUES = [25, 150, 250, 300, 80, 195];
-/** Soft background for a hue; follows light/dark mode (see --tint-* in styles.css). */
-export const tint = (h: number) => `oklch(var(--tint-l) var(--tint-c) ${h})`;
-export const mid = (h: number) => `oklch(var(--mid-l) 0.1 ${h})`;
-/** Text/icon color for a hue on its tint; follows light/dark mode. */
-export const ink = (h: number) => `oklch(var(--ink-l) var(--ink-c) ${h})`;
+/*
+ * Colors of pockets, accounts and goals are stored as a number:
+ *  - 0–359: a hue. The app makes a soft background and a readable text color from it, adapted to light/dark mode.
+ *  - 1,000,000 + 0xRRGGBB: an exact color the user picked from the palette or typed as a code. It's used as is in
+ *    both modes, with white or dark text, whichever reads better on it.
+ */
+const CUSTOM = 1_000_000;
+export const isCustomColor = (h: number) => h >= CUSTOM;
+export const colorFromHex = (hex: string) => CUSTOM + parseInt(hex.replace('#', ''), 16);
+export const hexOfColor = (h: number) => '#' + Math.max(0, Math.min(0xffffff, h - CUSTOM)).toString(16).padStart(6, '0');
+/** White or near-black, whichever has more contrast on this color. */
+export function textOn(hex: string) {
+  const n = parseInt(hex.slice(1), 16);
+  const l = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(c => { const x = c / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+  const L = 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2];
+  return (1.05 / (L + 0.05)) >= ((L + 0.05) / 0.05) ? '#ffffff' : '#1b1a19';
+}
+/** Soft background for a hue; follows light/dark mode (see --tint-* in styles.css). A custom color is used as is. */
+export const tint = (h: number) => (h >= CUSTOM ? hexOfColor(h) : `oklch(var(--tint-l) var(--tint-c) ${h})`);
+export const mid = (h: number) => (h >= CUSTOM ? hexOfColor(h) : `oklch(var(--mid-l) 0.1 ${h})`);
+/** Text/icon color for a hue on its tint; follows light/dark mode. On a custom color: white or dark, for contrast. */
+export const ink = (h: number) => (h >= CUSTOM ? textOn(hexOfColor(h)) : `oklch(var(--ink-l) var(--ink-c) ${h})`);
 
 export const RED = 'var(--color-accent-700)';
 export const TEXT = 'var(--color-text)';

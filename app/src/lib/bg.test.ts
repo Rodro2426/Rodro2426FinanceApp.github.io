@@ -20,3 +20,20 @@ describe('background color', () => {
     expect(readable('#1d2a6b', 'light')).toBe(false);
   });
 });
+
+import { colorFromHex, hexOfColor, ink, isCustomColor, textOn, tint } from './constants';
+describe('custom pocket colors', () => {
+  it('round-trips a hex code through the stored number', () => {
+    const h = colorFromHex('#ff5a5f');
+    expect(isCustomColor(h)).toBe(true);
+    expect(hexOfColor(h)).toBe('#ff5a5f');
+    expect(tint(h)).toBe('#ff5a5f');
+    expect(isCustomColor(250)).toBe(false);
+  });
+  it('picks readable text on the color', () => {
+    expect(textOn('#ffffff')).toBe('#1b1a19');
+    expect(textOn('#1d2a6b')).toBe('#ffffff');
+    expect(textOn('#ffd84d')).toBe('#1b1a19');
+    expect(ink(colorFromHex('#232e7a'))).toBe('#ffffff');
+  });
+});
