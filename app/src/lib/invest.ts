@@ -51,7 +51,7 @@ async function fh<T>(path: string, key: string): Promise<T> {
 }
 
 /** Finnhub key built into the app so live prices work for everyone. Someone's own key (Prices) takes priority. */
-export const FINNHUB_KEY = '';
+export const FINNHUB_KEY: string = 'dblbfj1r01qqt93ev3o0dblbfj1r01qqt93ev3og';
 export const finnhubKey = (d: { settings: { finnhubKey?: string } }) => d.settings.finnhubKey || FINNHUB_KEY;
 
 export interface SymbolMatch { symbol: string; description: string; type: string }
