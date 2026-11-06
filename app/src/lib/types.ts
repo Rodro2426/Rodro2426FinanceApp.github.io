@@ -11,7 +11,7 @@ export interface Account { id: string; name: string; kind: string; type: AcctTyp
 /** `p` is '' for expenses that don't belong to a weekly pocket (e.g. a scheduled bill). */
 /** `orig` keeps the dollar amount and the TRM used when a USD subscription was converted. */
 export interface FxOrig { amt: number; cur: 'USD'; rate: number; official: boolean }
-export interface Expense { id: string; ts: number; p: string; a: string; amt: number; note: string; date: string; tags: string[]; cat: string; sub: string; ruleId?: string; ruleMonth?: string; orig?: FxOrig }
+export interface Expense { id: string; ts: number; p: string; a: string; amt: number; note: string; date: string; tags: string[]; cat: string; sub: string; ruleId?: string; ruleMonth?: string; orig?: FxOrig; /** One purchase split across categories: every part shares this id. */ split?: string }
 /** Money received into an account (from a scheduled income). */
 /** `inBase`: an extra income already counted in the typed monthly income, so it isn't added again. */
 export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig; inBase?: boolean; /** Income category (Salary, Freelance…). */ cat?: string }

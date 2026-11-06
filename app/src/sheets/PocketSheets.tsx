@@ -12,6 +12,7 @@ import type { Data, Move, PocketView } from '../lib/types';
 import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { HuePicker } from '../ui/HuePicker';
+import { CategoryPicker, type CatPick } from '../ui/CategoryPicker';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
 
@@ -241,8 +242,9 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
   const [newTag, setNewTag] = useState('');
   // Every expense needs a category: nothing is picked until you choose one.
   const [[cat, sub], setCat] = useState<[string, string]>(['', '']);
-  const [newCat, setNewCat] = useState('');
-  const [newSub, setNewSub] = useState('');
+  // Split: one purchase shared between categories (each part is saved as its own transaction, linked together).
+  const [split, setSplit] = useState(false);
+  const [parts, setParts] = useState<{ id: string; cat: CatPick; amt: string }[]>([]);
 
   const all = allStats(d, c), addS = all.find(x => x.id === p), payA = d.accounts.find(x => x.id === a);
   const v = num(amt), after = addS ? addS.left - v : 0;
@@ -253,10 +255,17 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
     if (after < 0) previewColor = RED;
   }
   if (!d.accounts.length) preview = 'Add an account or card first, in the Accounts tab.';
-  const cant = !(v > 0 && (addS || p === '') && payA && cat);
-  if (v > 0 && !cat) { preview = 'Pick a category to save it.'; previewColor = RED; }
+  const partNums = parts.map(x => roundAmt(num(x.amt)));
+  const assigned = partNums.reduce((s0, n) => s0 + n, 0), rest = roundAmt(v - assigned);
+  const splitOk = split && parts.length >= 2 && parts.every((x, i) => x.cat[0] && partNums[i] > 0) && Math.abs(rest) < 0.005;
+  const cant = !(v > 0 && (addS || p === '') && payA && (split ? splitOk : cat));
+  if (v > 0 && !split && !cat) { preview = 'Pick a category to save it.'; previewColor = RED; }
+  if (v > 0 && split && !splitOk) { preview = Math.abs(rest) >= 0.005 ? (rest > 0 ? `${fmt(rest)} still needs a category.` : `The parts add up to ${fmt(-rest)} more than the total.`) : 'Pick a category for each part.'; previewColor = RED; }
+  const startSplit = () => {
+    setSplit(true);
+    setParts([{ id: uid('pt'), cat: cat ? [cat, sub] : ['', ''], amt: v > 0 ? String(roundAmt(v)) : '' }, { id: uid('pt'), cat: ['', ''], amt: '' }]);
+  };
   const tagHue = (t: string) => HUES[Math.max(0, d.tags.indexOf(t)) % HUES.length];
-  const curCat = d.cats.find(x => x.name === cat);
 
   const addTag = () => {
     const t = newTag.trim().toLowerCase().replace(/^#+/, '');
@@ -264,28 +273,20 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
     if (!d.tags.includes(t)) setData(x => ({ tags: [...x.tags, t] }));
     setTagSel(s => (s.includes(t) ? s : [...s, t])); setNewTag('');
   };
-  const addCat = () => {
-    const n = newCat.trim(); if (!n) return;
-    const ex = d.cats.find(x => x.name.toLowerCase() === n.toLowerCase());
-    if (!ex) setData(x => ({ cats: [...x.cats, { name: n, subs: ['General'] }] }));
-    setCat(ex ? [ex.name, ex.subs[0] || ''] : [n, 'General']); setNewCat('');
-  };
-  const addSub = () => {
-    const n = newSub.trim(); if (!n) return;
-    setData(x => ({ cats: x.cats.map(k => (k.name === cat && !k.subs.includes(n) ? { ...k, subs: [...k.subs, n] } : k)) }));
-    setCat([cat, n]); setNewSub('');
-  };
-  const blurOnEnter = (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } };
 
   const save = () => {
     if (cant) return;
-    const val = roundAmt(v);
-    setData(x => ({
-      expenses: [{ id: uid('e'), ts: Date.now(), p, a, amt: val, note: note.trim() || (sub && sub !== 'General' ? sub : cat), date: c.today, tags: tagSel, cat, sub }, ...x.expenses],
+    const val = roundAmt(v), ts = Date.now();
+    if (split) {
+      const group = uid('split'), name = note.trim() || parts.map(x => x.cat[0]).join(' + ');
+      const rows = parts.map((x, i) => ({ id: uid('e') + i, ts: ts + i, p, a, amt: partNums[i], note: name, date: c.today, tags: tagSel, cat: x.cat[0], sub: x.cat[1], split: group }));
+      setData(x => ({ expenses: [...rows, ...x.expenses], accounts: chargeAccount(x.accounts, a, val) }));
+    } else setData(x => ({
+      expenses: [{ id: uid('e'), ts, p, a, amt: val, note: note.trim() || (sub && sub !== 'General' ? sub : cat), date: c.today, tags: tagSel, cat, sub }, ...x.expenses],
       accounts: chargeAccount(x.accounts, a, val)
     }));
     if (p) setUI({ sheet: { name: 'saved', id: p }, lastAdd: { pocket: p, acct: a } });
-    else { setUI(u => ({ sheet: null, lastAdd: { ...u.lastAdd, acct: a } })); flash(`−${fmt(val)} · ${cat}${sub ? ' › ' + sub : ''} · no pocket`); }
+    else { setUI(u => ({ sheet: null, lastAdd: { ...u.lastAdd, acct: a } })); flash(`−${fmt(val)} · ${split ? `split in ${parts.length} categories` : cat + (sub ? ' › ' + sub : '')} · no pocket`); }
   };
 
   return (
@@ -294,32 +295,30 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
         <BigAmount value={amt} onChange={setAmt} autoFocus mt={10} />
         <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
         <input placeholder="e.g. Lunch at Crepes & Waffles" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '16px 4px 8px', gap: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Category <span style={{ color: cat ? 'var(--color-neutral-500)' : RED, fontWeight: 700 }}>{cat ? '' : '· required'}</span></span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat ? cat + (sub ? ' › ' + sub : '') : 'Pick one'}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 4px 8px', gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>{split ? 'Categories' : 'Category'} {!split && !cat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</span>
+          <button onClick={() => (split ? (setSplit(false), setCat(parts[0]?.cat[0] ? parts[0].cat : [cat, sub])) : startSplit())} style={{ border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{split ? 'Use one category' : 'Split into categories'}</button>
         </div>
-        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
-            {d.cats.map(k => {
-              const on = k.name === cat;
-              return <button key={k.name} onClick={() => { setCat([k.name, k.subs[0] || '']); }} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)', transition: 'all .15s' }}>{k.name}</button>;
-            })}
-            <div style={{ flex: 'none', display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
-              <input placeholder="New category" value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={blurOnEnter} onBlur={addCat} style={{ width: 118, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
-              <button onClick={addCat} aria-label="Add category" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={12} sw={3} /></button>
-            </div>
+        {!split ? <CategoryPicker value={[cat, sub]} onChange={setCat} /> : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {parts.map((x, i) => (
+              <div key={x.id} style={{ background: 'var(--color-neutral-100)', borderRadius: 20, padding: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-neutral-700)', padding: '0 4px', whiteSpace: 'nowrap', flex: 'none' }}>Part {i + 1}</span>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'baseline', gap: 2, background: 'var(--surface)', borderRadius: 12, padding: '8px 12px' }}>
+                    <span style={{ fontSize: 15, color: 'var(--color-neutral-500)', fontWeight: 700 }}>{curSymbol()}</span>
+                    <MoneyInput value={x.amt} onChange={val => setParts(ps => ps.map(y => (y.id === x.id ? { ...y, amt: val } : y)))} ariaLabel={`Part ${i + 1} amount`} style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 17, fontWeight: 700, color: TEXT, padding: 0, outline: 'none' }} />
+                  </div>
+                  {rest > 0.004 && <button onClick={() => setParts(ps => ps.map(y => (y.id === x.id ? { ...y, amt: String(roundAmt(num(y.amt) + rest)) } : y)))} style={{ height: 34, padding: '0 10px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>+ rest</button>}
+                  {parts.length > 2 && <button onClick={() => setParts(ps => ps.filter(y => y.id !== x.id))} aria-label={`Remove part ${i + 1}`} style={{ width: 32, height: 32, borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.X size={14} /></button>}
+                </div>
+                <CategoryPicker compact value={x.cat} onChange={cv => setParts(ps => ps.map(y => (y.id === x.id ? { ...y, cat: cv } : y)))} />
+              </div>
+            ))}
+            <button onClick={() => setParts(ps => [...ps, { id: uid('pt'), cat: ['', ''], amt: rest > 0 ? String(rest) : '' }])} style={{ height: 44, borderRadius: 999, border: '2px dashed var(--color-neutral-300)', background: 'transparent', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><I.Plus size={15} sw={2.5} />Add another category</button>
+            <span style={{ margin: '0 4px', fontSize: 12.5, fontWeight: 600, color: Math.abs(rest) < 0.005 ? 'oklch(0.5 0.12 150)' : RED }}>{Math.abs(rest) < 0.005 ? `✓ All ${fmt(v)} has a category` : rest > 0 ? `${fmt(rest)} left to assign` : `${fmt(-rest)} more than the total`}</span>
           </div>
-          {cat && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 10, borderTop: '1px solid var(--color-neutral-200)' }}>
-            {(curCat?.subs || []).map(sname => {
-              const on = sname === sub;
-              return <button key={sname} onClick={() => { setCat([cat, sname]); }} style={{ height: 30, padding: '0 11px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--color-accent-300)' : 'var(--color-neutral-300)'}`, background: on ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{sname}</button>;
-            })}
-            <div style={{ display: 'flex', alignItems: 'center', height: 30, borderRadius: 999, border: '1.5px dashed var(--color-neutral-300)', padding: '0 3px 0 10px' }}>
-              <input placeholder="Subcategory" value={newSub} onChange={e => setNewSub(e.target.value)} onKeyDown={blurOnEnter} onBlur={addSub} style={{ width: 104, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />
-              <button onClick={addSub} aria-label="Add subcategory" style={{ width: 22, height: 22, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Plus size={11} sw={3} /></button>
-            </div>
-          </div>}
-        </div>
+        )}
         <FieldLabel>Pocket</FieldLabel>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {all.map(x => <PickChip key={x.id} st={x} on={x.id === p} hue={x.hue} onClick={() => setP(x.id)} />)}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CategoryPicker } from '../ui/CategoryPicker';
 import { useApp, setData, setUI, flash } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
 import { catOf, chargeAccount, fmt, incomeMoves, num, roundAmt } from '../lib/derive';
@@ -46,7 +47,6 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
   const splitNames = linked.map(m => d.pockets.find(p => p.id === m.to)?.name).filter(Boolean).join(', ');
   const v = num(amt);
   const cant = !(v > 0) || !date || !d.accounts.some(a => a.id === acct);
-  const curCat = d.cats.find(c => c.name === cat);
   const tagHue = (x: string) => HUES[Math.max(0, d.tags.indexOf(x)) % HUES.length];
 
   const save = () => {
@@ -89,19 +89,8 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
         </>}
         {e && <>
           <FieldLabel>Category</FieldLabel>
-          <div style={{ background: 'var(--surface)', borderRadius: 22, padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
-              {d.cats.map(k => <button key={k.name} onClick={() => setCat([k.name, k.subs[0] || ''])} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, ...chip(k.name === cat), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k.name}</button>)}
-            </div>
-            {(curCat?.subs.length ?? 0) > 0 && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 10, borderTop: '1px solid var(--color-neutral-200)' }}>
-                {curCat!.subs.map(sname => {
-                  const on = sname === sub;
-                  return <button key={sname} onClick={() => setCat([cat, sname])} style={{ height: 30, padding: '0 11px', borderRadius: 999, border: `1.5px solid ${on ? 'var(--color-accent-300)' : 'var(--color-neutral-300)'}`, background: on ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--color-accent-800)' : 'var(--color-neutral-700)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{sname}</button>;
-                })}
-              </div>
-            )}
-          </div>
+          <CategoryPicker value={[cat, sub]} onChange={setCat} />
+          {e.split && <span style={{ margin: '6px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Part of a purchase split across {d.expenses.filter(x => x.split === e.split).length} categories. Changes here only affect this part.</span>}
         </>}
 
         {e && <>

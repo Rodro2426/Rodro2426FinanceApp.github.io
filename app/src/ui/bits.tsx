@@ -102,7 +102,7 @@ export function expView(d: Data, e: Expense, c: Ctx, stats?: Map<string, PocketS
   const p = stats?.get(e.p) || pocketStats(d, e.p, c), a = d.accounts.find(x => x.id === e.a);
   return {
     key: e.id, initial: p ? p.initial : initialOf(e.note), photoBg: p ? p.photoBg : 'none', tint: tint(p ? p.hue : 0), ink: ink(p ? p.hue : 0), note: e.note,
-    meta: [catOf(e)[0], p ? p.name : e.ruleId ? 'Scheduled' : 'No pocket', a && a.name, relDay(e.date, c.today), fxText(e.orig) || ''].filter(Boolean).join(' · '), amtFmt: '−' + fmt(e.amt),
+    meta: [e.split ? `${catOf(e)[0]} (split)` : catOf(e)[0], p ? p.name : e.ruleId ? 'Scheduled' : 'No pocket', a && a.name, relDay(e.date, c.today), fxText(e.orig) || ''].filter(Boolean).join(' · '), amtFmt: '−' + fmt(e.amt),
     tagLine: (e.tags || []).map(t => '#' + t).join('  ')
   };
 }
