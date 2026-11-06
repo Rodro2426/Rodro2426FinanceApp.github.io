@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LockSetting } from '../ui/LockSetting';
 import { logOutAndClear } from '../lib/session';
 import { PushToggle } from '../ui/PushToggle';
 import { CardFace } from '../ui/CardFace';
@@ -422,6 +423,8 @@ export function SettingsSheet() {
         <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>System follows your iPhone's light or dark mode.</span>
         <BgPicker />
         <PushToggle />
+        <FieldLabel m="18px 4px 0">Privacy</FieldLabel>
+        <LockSetting />
         <FieldLabel m="18px 4px 8px">Cloud backup</FieldLabel>
         <button onClick={() => openSheet({ name: 'cloud' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
           <span style={{ fontSize: 22 }}>☁️</span>

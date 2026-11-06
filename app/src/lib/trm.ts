@@ -1,3 +1,4 @@
+import { STARS, moneyHidden } from './privacy';
 // Colombia's official dollar rate (TRM) from the government's open-data portal,
 // cached per day. Weekends and holidays use the TRM in force that day.
 import type { Bill, Data } from './types';
@@ -45,4 +46,4 @@ export async function ensureTrm(dates: string[]) {
 }
 
 /** "US$20,00" */
-export const fmtUsd = (n: number) => 'US$' + n.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const fmtUsd = (n: number) => moneyHidden() ? 'US$' + STARS : 'US$' + n.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

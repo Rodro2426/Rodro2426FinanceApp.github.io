@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { EyeToggle } from '../ui/EyeToggle';
 import { useApp, setUI, openSheet, setData, flash } from '../lib/store';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
 import { fmt, num } from '../lib/derive';
@@ -7,6 +8,7 @@ import { OTHER, colorOf, finnhubKey, holdings, refreshQuotes, refreshUsdRate, ty
 import { MoneyInput } from '../ui/MoneyInput';
 import { cdtView, cdtsOf, type CdtView } from '../lib/cdt';
 import { CdtBadge } from '../sheets/CdtSheets';
+import { STARS, moneyHidden } from '../lib/privacy';
 import { KIND_LABEL, RISK_LABEL, fundView, fundsOf, localValue, type FundView } from '../lib/funds';
 import { fmtDay } from '../lib/dates';
 import { ListCard, Segmented } from '../ui/bits';
@@ -34,6 +36,7 @@ export default function Investments() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0 0' }}>
         <button onClick={() => setUI({ page: null })} aria-label="Back to accounts" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
         <span style={{ flex: 1, fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em' }}>Investments</span>
+        <EyeToggle size={40} />
         <button onClick={() => openSheet({ name: 'priceSettings' })} aria-label="Price settings" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{finnhubKey(d) ? 'Prices' : 'Connect'}</button>
       </div>
       <Segmented items={[['portfolio', 'Portfolio'], ['sim', 'Returns simulator']]} value={view} onPick={setView} />
@@ -179,7 +182,7 @@ function Portfolio() {
 }
 
 export const fmtQty = (q: number) => q.toLocaleString('es-CO', { maximumFractionDigits: 6 });
-export const fmtNative = (n: number, cur: 'USD' | 'COP') => cur === 'USD'
+export const fmtNative = (n: number, cur: 'USD' | 'COP') => moneyHidden() ? (cur === 'USD' ? 'US$' : '$') + STARS : cur === 'USD'
   ? 'US$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   : '$' + Math.round(n).toLocaleString('es-CO');
 

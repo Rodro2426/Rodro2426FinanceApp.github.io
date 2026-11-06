@@ -1,6 +1,7 @@
 // Small SVG charts for the reports. Light surface only (the app has no dark mode).
 // Specs: bars <= 24px with a 4px rounded data end, 2px lines, >= 8px end dots with a 2px surface ring,
 // hairline grid, text in ink colors (never the series color), a legend for 2+ series, and tap/drag readouts.
+import { moneyHidden } from '../lib/privacy';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
 /** True while the app is in dark mode. */
@@ -26,6 +27,7 @@ export const VIZ = {
 /** Clean axis numbers: 0 / 500K / 1M / 1,5M. */
 export function compactNum(n: number) {
   const a = Math.abs(n), s = n < 0 ? '−' : '';
+  if (moneyHidden() && n !== 0) return s + '***';
   if (a >= 1e9) return s + (a / 1e9).toLocaleString('es-CO', { maximumFractionDigits: 1 }) + 'B';
   if (a >= 1e6) return s + (a / 1e6).toLocaleString('es-CO', { maximumFractionDigits: 1 }) + 'M';
   if (a >= 1e3) return s + Math.round(a / 1e3).toLocaleString('es-CO') + 'K';

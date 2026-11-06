@@ -2,6 +2,7 @@ import type { Account, Data, Expense, Income, Move } from './types';
 import { POCKET_CAT } from './constants';
 import { addDays, daysBetween, fmtDay, inRange, makeCtx, monthKey, parse, type Ctx } from './dates';
 import { getData } from './store';
+import { STARS, moneyHidden } from './privacy';
 import { unitsFor, weekShares } from './split';
 
 export const num = (s: unknown) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
@@ -9,6 +10,7 @@ const isCOP = () => getData().settings.currency === 'COP';
 export const curSymbol = () => (isCOP() ? '$' : getData().settings.currency);
 export function fmt(n: number, sign?: boolean) {
   const cop = isCOP();
+  if (moneyHidden()) return (n < 0 ? '−' : sign && n > 0 ? '+' : '') + curSymbol() + STARS;
   const s = curSymbol() + Math.abs(n).toLocaleString(cop ? 'es-CO' : 'en-US', { minimumFractionDigits: cop ? 0 : 2, maximumFractionDigits: cop ? 0 : 2 });
   return n < 0 ? '−' + s : sign && n > 0 ? '+' + s : s;
 }
@@ -17,7 +19,7 @@ export const pctOf = (a: number, b: number) => (b > 0 ? Math.max(0, Math.min(100
 export const uid = (p: string) => p + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
 
 /** "US$20,00 at TRM $4.123" for converted dollar amounts. */
-export const fxText = (o?: { amt: number; rate: number; official: boolean }) => (o ? `US$${o.amt.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} at ${o.official ? 'TRM ' : '≈'}${fmt(o.rate)}` : undefined);
+export const fxText = (o?: { amt: number; rate: number; official: boolean }) => (o ? moneyHidden() ? `US$${STARS}` : `US$${o.amt.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} at ${o.official ? 'TRM ' : '≈'}${fmt(o.rate)}` : undefined);
 export const ctxOf = (d: Data) => makeCtx(d.settings.weeks);
 export const catOf = (e: Expense): [string, string] => (e.cat ? [e.cat, e.sub || ''] : POCKET_CAT[e.p] || ['Other', 'Other']);
 export const byDateDesc = (x: { date: string; ts: number }, y: { date: string; ts: number }) => (y.date > x.date ? 1 : y.date < x.date ? -1 : y.ts - x.ts);

@@ -4,6 +4,7 @@ import { markDirty, startCloud, syncNow } from './lib/cloud';
 import { Sidebar, useDesk } from './ui/Desk';
 import { applyBg } from './lib/bg';
 import { registerSW, syncReminders } from './lib/push';
+import { LockGate } from './ui/LockScreen';
 import { openTripLink, pollTrips } from './lib/tripNotify';
 import { publishPhoto } from './lib/social';
 import { useSync } from './sheets/CloudSheet';
@@ -277,6 +278,7 @@ export default function App() {
       {ui.welcome && <Welcome />}
       {ui.install && <InstallGuide fromProfile={ui.install === 'profile'} onClose={() => setUI({ install: false })} />}
       <CropperHost />
+      <LockGate />
     </div>
   );
 }

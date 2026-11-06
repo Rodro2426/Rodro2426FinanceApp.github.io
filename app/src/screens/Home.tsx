@@ -1,4 +1,5 @@
 import { useApp, openSheet, setUI } from '../lib/store';
+import { EyeToggle } from '../ui/EyeToggle';
 import { LINE, RED, ink, tint } from '../lib/constants';
 import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthExpenses, monthStats, pctOf, weekExpenses, type PocketStats } from '../lib/derive';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
@@ -180,7 +181,10 @@ function Pager({ pages, label, names, initial = 0, onPage }: { pages: ReactNode[
 function SafeCard({ tone, title, left, budget, spent, sub, tour }: { tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string; tour?: boolean }) {
   return (
     <div data-tour={tour ? 'safe' : undefined} style={{ flex: 1, background: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background .4s ease' }}>
-      <span style={{ fontSize: 14, color: tone.label, fontWeight: 600 }}>{title}</span>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 14, color: tone.label, fontWeight: 600 }}>{title}</span>
+        <EyeToggle size={34} tone={tone.label} />
+      </span>
       <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: tone.amount }}>{fmt(left)}</span>
       <span style={{ fontSize: 13, color: tone.label }}>{sub}</span>
       <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: 'var(--surface)', overflow: 'hidden' }}>

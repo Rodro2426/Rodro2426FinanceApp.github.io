@@ -1,4 +1,6 @@
 // The website: on a computer-sized screen the same app gets a sidebar with the Pockets brand and a wide main area.
+import { moneyHidden, setMoneyHidden } from '../lib/privacy';
+import { EyeIcon } from './EyeToggle';
 import { useSyncExternalStore, type ReactNode } from 'react';
 import { openSheet, setUI, useApp } from '../lib/store';
 import { syncLabel, useSync } from '../sheets/CloudSheet';
@@ -53,6 +55,7 @@ export function Sidebar({ tabs }: { tabs: [Tab, string, (p: { size?: number; sw?
         {item('inv', 'Investments', <I.TrendUp size={19} />, onPage('investments'), () => setUI({ page: 'investments' }))}
         {item('social', 'Trips and friends', <People />, onPage('social'), () => setUI({ page: 'social' }), chat ? <span aria-label="New messages" style={{ width: 8, height: 8, borderRadius: 99, background: 'var(--color-accent)' }} /> : null)}
         {item('search', 'Search', <I.Search size={19} />, false, () => openSheet({ name: 'search' }))}
+        {item('eye', moneyHidden() ? 'Show amounts' : 'Hide amounts', <EyeIcon off={moneyHidden()} />, false, () => setMoneyHidden(!moneyHidden()))}
         {item('notif', 'Notifications', <I.Bell size={19} />, false, () => openSheet({ name: 'notifications' }), unread ? <span style={{ minWidth: 20, height: 20, padding: '0 6px', borderRadius: 99, background: 'var(--color-accent)', color: '#fff', fontSize: 11.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unread > 9 ? '9+' : unread}</span> : null)}
       </nav>
 

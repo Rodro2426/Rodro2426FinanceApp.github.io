@@ -9,6 +9,7 @@ import type { Fund, FundKind, FundMove, FundRisk } from '../lib/types';
 import { FieldLabel, GhostDanger, PrimaryBtn, Segmented, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { SheetFrame } from './Sheet';
+import { STARS, moneyHidden } from '../lib/privacy';
 
 const UP = 'oklch(0.5 0.12 150)', DOWN = 'var(--color-accent-700)';
 const pct = (n: number) => n.toLocaleString('es-CO', { maximumFractionDigits: 2 }) + '%';
@@ -16,7 +17,7 @@ const chip = (on: boolean) => ({ height: 34, padding: '0 12px', borderRadius: 99
 const half = { display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8 } as const;
 const small = (label: string) => <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>{label}</span>;
 const curOf = (d: { settings: { currency: string } }, f: { currency: 'COP' | 'USD' }) => (f.currency === 'USD' ? 'US$' : d.settings.currency === 'COP' ? '$' : d.settings.currency);
-const money = (sym: string, n: number) => (sym === 'US$' ? `US$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}` : fmt(n));
+const money = (sym: string, n: number) => (moneyHidden() ? (sym === 'US$' ? 'US$' : '$') + STARS : sym === 'US$' ? `US$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}` : fmt(n));
 
 function Money({ value, onChange, sym, label }: { value: string; onChange: (v: string) => void; sym: string; label: string }) {
   return (

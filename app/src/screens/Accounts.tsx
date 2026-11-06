@@ -1,4 +1,5 @@
 import { useApp, openSheet, setUI } from '../lib/store';
+import { EyeToggle } from '../ui/EyeToggle';
 import { earnsInterest } from '../lib/interest';
 
 const GREEN_TEXT = 'oklch(0.5 0.12 150)';
@@ -34,6 +35,7 @@ export default function Accounts() {
       <div style={{ padding: '4px 4px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Accounts</span>
         <div style={{ display: 'flex', gap: 8 }}>
+        <EyeToggle size={38} />
         <button data-tour="invest" onClick={() => setUI({ page: 'investments' })} aria-label="Investments" className="hv-n200" style={{ width: 38, height: 38, borderRadius: 999, border: 0, background: 'var(--surface)', color: GREEN_TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
           <I.TrendUp size={17} />
         </button>

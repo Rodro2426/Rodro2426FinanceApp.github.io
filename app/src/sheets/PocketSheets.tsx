@@ -1,3 +1,4 @@
+import { moneyHidden } from '../lib/privacy';
 import { useEffect, useRef, useState } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { EMOJIS, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
@@ -551,7 +552,7 @@ function DayPlanner({ id, hue, ds }: { id: string; hue: number; ds: DayStats }) 
   );
 }
 /** 18.000 → 18k, 1.250.000 → 1,3M, for the small day tiles. */
-const compactAmt = (n: number) => { const a = Math.abs(n); return a >= 1e6 ? `${(n / 1e6).toLocaleString('es-CO', { maximumFractionDigits: 1 })}M` : a >= 1e3 ? `${Math.round(n / 1e3)}k` : String(Math.round(n)); };
+const compactAmt = (n: number) => { const a = Math.abs(n); if (moneyHidden() && n) return '***'; return a >= 1e6 ? `${(n / 1e6).toLocaleString('es-CO', { maximumFractionDigits: 1 })}M` : a >= 1e3 ? `${Math.round(n / 1e3)}k` : String(Math.round(n)); };
 
 /* ---------------- Saved confirmation ---------------- */
 export function SavedSheet({ id }: { id: string }) {
