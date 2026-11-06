@@ -7,14 +7,14 @@
 //                   delivers the notification through Apple/Google/Mozilla push services.
 //   POST /schedule  A phone saves its upcoming reminders (bills due tomorrow, monthly backup) so they can arrive even
 //                   when Pockets is closed. Needs the KV binding SCHED.
-//   cron            Every 30 minutes: sends the reminders that are due.
+//   cron            Every few minutes: sends the reminders that are due.
 //
 // Settings (Worker > Settings > Variables and Secrets):
 //   VAPID_JWK         secret: the private key (JSON) given during setup. Never put it in the app or on GitHub.
 //   VAPID_SUBJECT     mailto:you@example.com (push services contact this if something goes wrong)
 //   FIREBASE_PROJECT  pockets-rodar
 //   ALLOWED_ORIGIN    https://rodro2426.github.io
-// Bindings: KV namespace as SCHED (for reminders). Triggers: cron "*/30 * * * *".
+// Bindings: KV namespace as SCHED (for reminders). Triggers: cron "*/5 * * * *" (reminders arrive within 5 minutes).
 
 export default {
   async fetch(req, env) {

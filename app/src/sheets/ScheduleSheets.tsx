@@ -6,6 +6,7 @@ import { fmt, num, roundAmt, uid } from '../lib/derive';
 import { relDay, todayISO } from '../lib/dates';
 import { ensureTrm, fmtUsd, latestRate, trmFor } from '../lib/trm';
 import { KIND_LABEL, describeDay, ordinal } from '../lib/schedule';
+import { DEFAULT_BEFORE, DEFAULT_DAY, notifyTime } from '../lib/reminders';
 import type { Bill, NotifKind, ScheduleKind } from '../lib/types';
 import { BillBadge, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
 import { pickPhoto } from '../lib/photo';
@@ -44,6 +45,9 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const cards = d.accounts.filter(a => a.type === 'card');
   const [toCard, setToCard] = useState(base?.toCard ?? cards[0]?.id ?? '');
   const [payMode, setPayMode] = useState<'full' | 'fixed'>(base?.payMode ?? 'full');
+  // Lock-screen notifications for this event: the day before and on the day, each at its own time (or off).
+  const [before, setBefore] = useState<string | null>(base ? notifyTime(base, 'before') : DEFAULT_BEFORE);
+  const [onDay, setOnDay] = useState<string | null>(base ? notifyTime(base, 'day') : DEFAULT_DAY);
 
   const income = kind === 'Income', cardPay = kind === 'CardPayment';
   const accounts = income || cardPay ? d.accounts.filter(a => a.type !== 'card') : d.accounts;
@@ -76,10 +80,21 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
       pocket: income || notMineOn ? undefined : pocket || undefined, cat: income ? undefined : cat, sub: income ? undefined : base && base.cat === cat ? base.sub : subs[0] || '',
       start: restart ? today : base?.start
     };
+    patch.notify = before === DEFAULT_BEFORE && onDay === DEFAULT_DAY ? undefined : { before, day: onDay };
     if (base) setData(x => ({ bills: x.bills.map(b => (b.id === base.id ? { ...b, ...patch } : b)) }));
     else setData(x => ({ bills: [...x.bills, { id: uid('b'), hue, paidMonths: [], ...patch } as Bill] }));
     closeSheet(); flash(base ? `${patch.name} updated` : `${patch.name} scheduled`);
   };
+  const notifRow = (label: string, sub: string, v: string | null, set: (x: string | null) => void, def: string) => (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0' }}>
+              <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 15, fontWeight: 600 }}>{label}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{v ? sub : 'Off'}</span>
+              </span>
+              {v && <input type="time" value={v} onChange={e => set(e.target.value || def)} aria-label={`${label}: time`} style={{ height: 40, borderRadius: 12, border: 0, background: 'var(--color-neutral-100)', color: TEXT, padding: '0 10px', fontSize: 16, fontWeight: 700, fontFamily: 'inherit' }} />}
+              <Toggle on={!!v} onChange={on => set(on ? def : null)} label={label} />
+            </div>
+          );
   const remove = () => {
     if (!confirmDel) return setConfirmDel(true);
     setData(x => ({ bills: x.bills.filter(b => b.id !== base!.id) }));
@@ -207,6 +222,13 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           </div>
         </>}
 
+        <FieldLabel m="18px 4px 6px">Notifications</FieldLabel>
+        <div style={{ background: 'var(--surface)', borderRadius: 20, padding: '2px 14px' }}>
+          {notifRow('The day before', income ? 'A reminder that it arrives tomorrow' : 'A reminder that it\'s due tomorrow', before, setBefore, DEFAULT_BEFORE)}
+          <div style={{ height: 1, background: 'var(--color-neutral-200)' }} />
+          {notifRow('On the day', income ? 'When it arrives' : auto && !notMineOn ? 'When it\'s charged' : 'When it\'s due', onDay, setOnDay, DEFAULT_DAY)}
+        </div>
+        <span style={{ margin: '6px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Lock-screen notifications (turn them on in Profile). They arrive within a few minutes of the time you pick.</span>
         <PrimaryBtn onClick={save} disabled={cant} mt={18}>{base ? 'Save changes' : `Schedule ${KIND_LABEL[kind].toLowerCase()}`}</PrimaryBtn>
         {base && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : `Delete ${KIND_LABEL[base.kind].toLowerCase()}`}</GhostDanger>}
         {base && <span style={{ margin: '4px 4px 0', fontSize: 12, color: 'var(--color-neutral-600)', textAlign: 'center' }}>{describeDay(base)}. Past transactions stay in your history.</span>}

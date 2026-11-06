@@ -38,6 +38,8 @@ export interface Bill {
   payMode?: 'full' | 'fixed';
   /** Someone else pays it (e.g. a shared plan): listed for reference, but never charged, reminded or counted. */
   notMine?: boolean;
+  /** Lock-screen notifications for this event: a time ("HH:MM") the day before and on the day; null = off. Missing = 09:00 the day before and 08:00 on the day. */
+  notify?: { before?: string | null; day?: string | null };
 }
 export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup' | 'trip' | 'dm';
 /** `id` is a stable key, so the same event never notifies twice. */

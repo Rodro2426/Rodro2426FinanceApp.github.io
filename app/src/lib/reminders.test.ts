@@ -45,4 +45,11 @@ describe('reminders for lock-screen notifications', () => {
     const t = new Date(by('nf').at);
     expect([t.getDate(), t.getHours()]).toEqual([20, 8]);
   });
+  it('each event can pick its own times, or turn one off', () => {
+    const d = base(); d.bills[0].notify = { before: '20:30', day: null };
+    const r = upcomingReminders(d, '2026-11-06').filter(x => x.tag.includes(':nf:'));
+    expect(r.map(x => x.tag.split(':')[0])).toEqual(['soon']);
+    const t = new Date(r[0].at);
+    expect([t.getDate(), t.getHours(), t.getMinutes()]).toEqual([19, 20, 30]);
+  });
 });
