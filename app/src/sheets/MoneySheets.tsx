@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logOutAndClear } from '../lib/session';
 import { PushToggle } from '../ui/PushToggle';
 import { CardFace } from '../ui/CardFace';
 import { requestCrop } from '../ui/Cropper';
@@ -372,6 +373,24 @@ export function GoalSheet({ id }: { id: string }) {
 }
 
 /* ---------------- Profile and settings ---------------- */
+/** Log out of your account on this device, so another account can sign in. */
+function LogOutBlock({ email }: { email: string }) {
+  const [step, setStep] = useState<'idle' | 'ask' | 'busy' | 'unsynced'>('idle');
+  const go = async (anyway = false) => { setStep('busy'); const r = await logOutAndClear(anyway); if (r === 'unsynced') setStep('unsynced'); };
+  return (
+    <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {step === 'ask' && <span style={{ margin: '0 4px', fontSize: 13, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Your data stays safe in your account and comes back when you sign in again. This {'ontouchstart' in window ? 'phone' : 'device'} will be cleared so you can sign in with another account.</span>}
+      {step === 'unsynced' && <span role="alert" style={{ margin: '0 4px', fontSize: 13, lineHeight: 1.45, color: 'var(--color-accent-700)' }}>Some changes on this device haven't been backed up yet (no internet, or a conflict to choose in Cloud backup). If you log out now, they'll be lost.</span>}
+      <button onClick={() => (step === 'idle' ? setStep('ask') : step === 'ask' ? go() : step === 'unsynced' ? go(true) : undefined)} disabled={step === 'busy'} className="hv-acc100"
+        style={{ height: 50, borderRadius: 999, border: 0, background: step === 'idle' ? 'var(--surface)' : 'var(--color-accent)', color: step === 'idle' ? 'var(--color-accent-700)' : '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+        {step === 'busy' ? 'Logging out…' : step === 'ask' ? 'Tap again to log out' : step === 'unsynced' ? 'Log out anyway' : 'Log out'}
+      </button>
+      {step !== 'idle' && step !== 'busy' && <button onClick={() => setStep('idle')} style={{ height: 40, border: 0, background: 'transparent', color: 'var(--color-neutral-700)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>}
+      <span style={{ textAlign: 'center', fontSize: 12, color: 'var(--color-neutral-600)' }}>Signed in as {email}</span>
+    </div>
+  );
+}
+
 export function SettingsSheet() {
   const { data: d } = useApp();
   const st = d.settings;
@@ -474,6 +493,7 @@ export function SettingsSheet() {
             replaceData(emptyData(d)); closeSheet(); flash('All data erased');
           }} className="hv-acc100" style={{ height: 48, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: 'inset 0 0 0 1.5px var(--color-accent-300)' }}>{confirm === 'erase' ? 'Tap again to erase' : 'Start fresh'}</button>
         </div>
+        {sync.uid && <LogOutBlock email={sync.email ?? ''} />}
       </div>
     </SheetFrame>
   );

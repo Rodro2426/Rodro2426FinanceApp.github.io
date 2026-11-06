@@ -163,6 +163,12 @@ export async function resetPassword(email: string) { try { await sendPasswordRes
 /** The signed-in person's name, when the account has one (Google). */
 export const currentName = () => auth.currentUser?.displayName?.split(' ')[0] ?? '';
 /** Uploads anything pending, then signs out. This phone keeps its data. */
+/** Uploads anything not backed up yet. True when the cloud has everything this device has. */
+export async function flushNow(): Promise<boolean> {
+  clearTimeout(timer);
+  if (state.uid && state.dirty) await push();
+  return !state.dirty && state.status !== 'conflict';
+}
 export async function logOut() { clearTimeout(timer); if (state.dirty) await push(); await signOut(auth); }
 
 /** For the welcome screen: after signing in, bring back the cloud copy (null if this account has none yet). */

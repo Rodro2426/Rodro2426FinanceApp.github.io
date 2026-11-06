@@ -1,7 +1,8 @@
 import { useState, useSyncExternalStore } from 'react';
-import { flash, closeSheet } from '../lib/store';
+import { logOutAndClear } from '../lib/session';
+import { flash } from '../lib/store';
 import { TEXT } from '../lib/constants';
-import { currentName, getSync, logOut, resetPassword, resolveConflict, signIn, signInGoogle, signUp, subscribeSync, syncNow, type SyncState } from '../lib/cloud';
+import { currentName, getSync, resetPassword, resolveConflict, signIn, signInGoogle, signUp, subscribeSync, syncNow, type SyncState } from '../lib/cloud';
 import { FieldLabel, PrimaryBtn, Segmented, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 
@@ -85,7 +86,7 @@ export function CloudSheet() {
           <ConflictChoice />
           <button onClick={async () => { setBusy(true); await syncNow(); setBusy(false); }} disabled={busy} style={{ height: 48, borderRadius: 999, border: 0, background: TEXT, color: 'var(--on-text)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>{busy ? 'Syncing…' : 'Sync now'}</button>
           <span style={{ margin: '0 4px', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Your data stays on this phone too, so the app works without internet and uploads when you're back online. Backup files in Profile still work as an extra copy.</span>
-          <button onClick={async () => { await logOut(); closeSheet(); flash('Signed out · your data stays on this phone'); }} style={{ height: 44, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Sign out</button>
+          <button onClick={async () => { if (!confirm('Log out? Your data stays safe in your account and this device is cleared, so you can sign in with another account.')) return; const r = await logOutAndClear(); if (r === 'unsynced' && confirm('Some changes on this device haven\'t been backed up yet. Log out anyway and lose them?')) await logOutAndClear(true); }} style={{ height: 44, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Log out</button>
         </div>
       )}
     </SheetFrame>
