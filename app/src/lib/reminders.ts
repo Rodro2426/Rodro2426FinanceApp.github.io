@@ -6,8 +6,9 @@ import { billAmount, dueDate, isAuto, isCardPay, isIncome, notMine, parseShortDa
 import { fmt } from './derive';
 
 export interface Reminder { at: number; title: string; body: string; url: string; tag: string }
-/** 9:00 in the morning, local time, on this day. */
-const nineAm = (iso: string) => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d, 9, 0, 0).getTime(); };
+/** A time of day (local) on this date. */
+const at = (iso: string, h: number) => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d, h, 0, 0).getTime(); };
+const nineAm = (iso: string) => at(iso, 9);
 
 export function upcomingReminders(d: Data, today = todayISO(), days = 35): Reminder[] {
   const out: Reminder[] = [];
@@ -28,6 +29,25 @@ export function upcomingReminders(d: Data, today = todayISO(), days = 35): Remin
     for (const a of d.accounts) {
       if (a.type !== 'card' || a.bal <= 0 || parseShortDate(a.due, due) !== due) continue;
       out.push({ at: remind, title: `${a.name} payment is due tomorrow`, body: `You owe ${fmt(a.bal)}.`, url: '#accounts', tag: `card:${a.id}:${due}` });
+    }
+  }
+  // On the day itself, at 8:00: every scheduled event in the calendar (what arrives, what's charged, what to pay).
+  for (let k = 0; k <= days; k++) {
+    const day = addDays(today, k), when = at(day, 8), m = monthKey(day);
+    if (when < now) continue;
+    for (const b of d.bills) {
+      if (dueDate(b, m) !== day || b.paidMonths.includes(m) || (b.skipMonths || []).includes(m) || (b.start && day < b.start)) continue;
+      const auto = isAuto(b, d);
+      const r = isCardPay(b) ? { title: `${acct(b.toCard)} payment is today`, body: b.payMode === 'fixed' ? `${fmt(b.amt)}${auto ? ` from ${acct(b.acct)}` : '. Remember to pay it'}.` : `The full balance${auto ? `, from ${acct(b.acct)}` : '. Remember to pay it'}.` }
+        : isIncome(b) ? { title: `💰 ${b.name} arrives today`, body: `+${billAmount(b)}${b.acct ? ` to ${acct(b.acct)}` : ''}.` }
+        : notMine(b) ? { title: `${b.name} is due today`, body: `${billAmount(b)}, paid by someone else.` }
+        : auto ? { title: `${b.name} is charged today`, body: `−${billAmount(b)} from ${acct(b.acct)}.` }
+        : { title: `${b.name} is due today`, body: `${billAmount(b)}. Remember to pay it.` };
+      out.push({ at: when, ...r, url: '#calendar', tag: `day:${b.id}:${day}` });
+    }
+    for (const a of d.accounts) {
+      if (a.type !== 'card' || a.bal <= 0 || parseShortDate(a.due, day) !== day) continue;
+      out.push({ at: when, title: `${a.name} payment is due today`, body: `You owe ${fmt(a.bal)}.`, url: '#accounts', tag: `card0:${a.id}:${day}` });
     }
   }
   // Monthly backup reminder on the chosen day, at 9:00 (only when there's something to back up).

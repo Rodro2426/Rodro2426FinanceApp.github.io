@@ -30,4 +30,19 @@ describe('reminders for lock-screen notifications', () => {
     expect(r.find(x => x.tag === 'card:v:2026-11-25')?.title).toBe('Visa payment is due tomorrow');
     expect(r.some(x => x.tag.startsWith('backup:'))).toBe(true);
   });
+  it('on the day, at 8:00: charged, arriving, paid by someone else, card payments', () => {
+    const d = base();
+    d.accounts.push({ id: 'rc', name: 'RappiCard', kind: 'Credit', type: 'card', bal: 200000, limit: 1e6, hue: 25 });
+    d.bills.push({ id: 'sal', name: 'Salary', kind: 'Income', amt: 1100000, dueDay: 2, hue: 150, paidMonths: [], acct: 'bank', auto: true },
+      { id: 'rp', name: 'Rappi pro', kind: 'Subscription', amt: 25000, dueDay: 4, hue: 50, paidMonths: [], notMine: true },
+      { id: 'cp', name: 'Card', kind: 'CardPayment', amt: 0, dueDay: 15, hue: 0, paidMonths: [], acct: 'bank', toCard: 'rc', auto: true } as Data['bills'][number]);
+    const r = upcomingReminders(d, '2026-11-06', 35).filter(x => x.tag.startsWith('day:'));
+    const by = (id: string) => r.find(x => x.tag.startsWith(`day:${id}:`))!;
+    expect(by('nf')).toMatchObject({ title: 'Netflix is charged today', body: '−$44.900 from Bancolombia.' });
+    expect(by('sal')).toMatchObject({ title: '💰 Salary arrives today', body: '+$1.100.000 to Bancolombia.' });
+    expect(by('rp')).toMatchObject({ title: 'Rappi pro is due today', body: '$25.000, paid by someone else.' });
+    expect(by('cp')).toMatchObject({ title: 'RappiCard payment is today', body: 'The full balance, from Bancolombia.' });
+    const t = new Date(by('nf').at);
+    expect([t.getDate(), t.getHours()]).toEqual([20, 8]);
+  });
 });
