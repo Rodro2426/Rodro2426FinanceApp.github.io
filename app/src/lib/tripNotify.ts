@@ -31,8 +31,8 @@ export function tripNotifs(acts: TripActivity[], uid: string, today: string, exi
       const count = messages.length + (before ? Number(before.body.match(/^(\d+) new messages/)?.[1] ?? 1) : 0);
       const last = messages[messages.length - 1];
       const words = last.text.length > 80 ? last.text.slice(0, 79) + '…' : last.text;
-      const text = last.gif || last.img?.gif ? 'sent a GIF' : last.img ? (words ? `📷 ${words}` : 'sent a photo') : words;
-      out.push({ id, date: today, ts: now, kind: 'trip', title, body: (count > 1 ? `${count} new messages · ` : '') + (text.startsWith('sent a ') ? `${last.name} ${text}` : `${last.name}: ${text}`), read: false, dismissed: false, bannered: false, link: { trip: trip.id, chat: true } });
+      const text = last.gif || last.img?.gif ? (words ? `GIF · ${words}` : 'GIF') : last.img ? (words ? `📷 ${words}` : '📷 Photo') : words;
+      out.push({ id, date: today, ts: now, kind: 'trip', title, body: (count > 1 ? `${count} new messages · ` : '') + `${last.name}: ${text}`, read: false, dismissed: false, bannered: false, link: { trip: trip.id, chat: true } });
     }
   });
   return out;
@@ -46,7 +46,7 @@ export function dmNotifs(acts: DmActivity[], today: string, existing: Notif[], n
     const count = messages.length + (before ? Number(before.body.match(/^(\d+) new messages/)?.[1] ?? 1) : 0);
     const last = messages[messages.length - 1];
     const words = last.text.length > 80 ? last.text.slice(0, 79) + '…' : last.text;
-    const text = last.gif || last.img?.gif ? 'Sent a GIF' : last.img ? (words ? `📷 ${words}` : 'Sent a photo') : words;
+    const text = last.gif || last.img?.gif ? (words ? `GIF · ${words}` : 'GIF') : last.img ? (words ? `📷 ${words}` : '📷 Photo') : words;
     return { id, date: today, ts: now, kind: 'dm' as const, title: dm.name, body: (count > 1 ? `${count} new messages · ` : '') + text, read: false, dismissed: false, bannered: false, link: { dm: dm.other } };
   });
 }

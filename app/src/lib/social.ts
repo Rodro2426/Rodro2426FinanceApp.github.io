@@ -7,13 +7,18 @@
 import { addDoc, collection, deleteDoc, deleteField, doc, getDoc, getDocs, limit, orderBy, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore/lite';
 import { auth, db } from './cloud';
 import { notifyThread } from './push';
+import { getData } from './store';
 import { groupWideItems, relinkPerson, withMorePeople, type Member, type TripItem } from './settle';
 
 export interface Friend { uid: string; name: string; email: string; status: 'pending' | 'accepted'; incoming: boolean; id: string }
 export interface Trip { id: string; name: string; emoji: string; owner: string; members: string[]; guests: Member[]; names: Record<string, string>; createdAt: number; updatedAt: number }
 
 const me = () => auth.currentUser;
-const myName = () => me()?.displayName?.trim() || me()?.email?.split('@')[0] || 'Me';
+/** Your name as friends see it: the name in your Profile, then your account's name, then your email's first part. */
+const myName = () => {
+  const own = getData().settings.name?.trim();
+  return (own && own.toLowerCase() !== 'there' ? own : '') || me()?.displayName?.trim() || me()?.email?.split('@')[0] || 'Me';
+};
 export const pairId = (a: string, b: string) => [a, b].sort().join('_');
 const clean = (e: string) => e.trim().toLowerCase();
 
@@ -274,9 +279,9 @@ export async function sendMessage(tripId: string, text: string, att?: Attachment
     if (att?.gif) msg.gif = att.gif;
     await addDoc(collection(db, ...threadPath(tripId), 'messages'), msg);
     await loadMessages(tripId); markRead(tripId);
-    const said = msg.gif || msg.img?.gif ? 'sent a GIF' : msg.img ? (msg.text ? `📷 ${msg.text}` : 'sent a photo') : msg.text;
-    if (tripId.startsWith('dm:')) notifyThread(tripId, { title: msg.name, body: said.startsWith('sent a ') ? `${msg.name} ${said}` : said, url: `#dm:${u.uid}`, tag: tripId });
-    else { const t = state.trips.find(x => x.id === tripId); notifyThread(tripId, { title: `${t?.emoji ?? ''} ${t?.name ?? 'Trip'}`.trim(), body: said.startsWith('sent a ') ? `${msg.name} ${said}` : `${msg.name}: ${said}`, url: `#tripchat:${tripId}`, tag: `chat:${tripId}` }); }
+    const shown = msg.gif || msg.img?.gif ? (msg.text ? `GIF · ${msg.text}` : 'GIF') : msg.img ? (msg.text ? `📷 ${msg.text}` : '📷 Photo') : msg.text;
+    if (tripId.startsWith('dm:')) notifyThread(tripId, { title: msg.name, body: shown, url: `#dm:${u.uid}`, tag: tripId });
+    else { const t = state.trips.find(x => x.id === tripId); notifyThread(tripId, { title: `${t?.emoji ?? ''} ${t?.name ?? 'Trip'}`.trim(), body: `${msg.name}: ${shown}`, url: `#tripchat:${tripId}`, tag: `chat:${tripId}` }); }
     return null;
   } catch (e) { return fail(e); }
 }

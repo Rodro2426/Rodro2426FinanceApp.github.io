@@ -37,8 +37,8 @@ describe('photo and GIF messages', () => {
   it('says what was sent', () => {
     const photo = { id: 'p', uid: 'ana', name: 'Ana', text: '', createdAt: 5, img: { thumb: 'x', w: 1, h: 1 } };
     const gif = { id: 'g', uid: 'ana', name: 'Ana', text: '', createdAt: 6, gif: { url: 'u', w: 1, h: 1 } };
-    expect(tripNotifs([{ trip, items: [], messages: [photo] }], 'me', '2026-11-05', [])[0].body).toBe('Ana sent a photo');
-    expect(tripNotifs([{ trip, items: [], messages: [gif] }], 'me', '2026-11-05', [])[0].body).toBe('Ana sent a GIF');
+    expect(tripNotifs([{ trip, items: [], messages: [photo] }], 'me', '2026-11-05', [])[0].body).toBe('Ana: 📷 Photo');
+    expect(tripNotifs([{ trip, items: [], messages: [gif] }], 'me', '2026-11-05', [])[0].body).toBe('Ana: GIF');
     expect(tripNotifs([{ trip, items: [], messages: [{ ...photo, text: 'La playa!' }] }], 'me', '2026-11-05', [])[0].body).toBe('Ana: 📷 La playa!');
   });
 });
@@ -50,6 +50,6 @@ describe('direct message notifications', () => {
     const first = dmNotifs([{ dm, messages: [{ id: 'a', uid: 'ana', name: 'Ana', text: 'Hola!', createdAt: 1 }] }], '2026-11-06', []);
     expect(first[0]).toMatchObject({ id: 'dm:ana:2026-11-06', kind: 'dm', title: 'Ana', body: 'Hola!', link: { dm: 'ana' } });
     const next = dmNotifs([{ dm, messages: [{ id: 'b', uid: 'ana', name: 'Ana', text: '', createdAt: 2, img: { thumb: 'x', w: 1, h: 1 } }] }], '2026-11-06', first);
-    expect(next[0].body).toBe('2 new messages · Sent a photo');
+    expect(next[0].body).toBe('2 new messages · 📷 Photo');
   });
 });
