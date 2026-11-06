@@ -16,9 +16,14 @@ import * as I from '../ui/icons';
 export const useSocial = () => useSyncExternalStore(subscribeSocial, getSocial);
 const GREEN = 'oklch(0.45 0.11 150)';
 const hueOf = (s: string) => [20, 60, 150, 220, 280, 320, 100, 190][[...s].reduce((a, ch) => a + ch.charCodeAt(0), 0) % 8];
-export function Avatar({ name, size = 34 }: { name: string; size?: number }) {
+/** A person's round picture: their profile photo if they shared one, otherwise their initial on a color. */
+export function Avatar({ name, size = 34, uid }: { name: string; size?: number; uid?: string }) {
+  const so = useSocial();
+  const { data: d } = useApp();
+  const photo = uid ? (uid === myUid() ? d.settings.profilePhoto : so.photos[uid]) : null;
   const h = hueOf(name);
-  return <span style={{ width: size, height: size, borderRadius: 999, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: size * 0.42, flex: 'none' }}>{name.trim().charAt(0).toUpperCase() || '?'}</span>;
+  if (photo) return <span role="img" aria-label={name} style={{ display: 'inline-block', width: size, height: size, borderRadius: 999, flex: 'none', backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: tint(h) }} />;
+  return <span aria-hidden="true" style={{ width: size, height: size, borderRadius: 999, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: size * 0.42, flex: 'none' }}>{name.trim().charAt(0).toUpperCase() || '?'}</span>;
 }
 const page = (children: React.ReactNode, title: string, back: () => void, right?: React.ReactNode) => (
   <div className="page noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 25, background: 'var(--page)' }}>
@@ -79,9 +84,10 @@ function FriendList() {
   const [msg, setMsg] = useState<string | null>(null);
   const incoming = so.friends.filter(f => f.status === 'pending' && f.incoming), outgoing = so.friends.filter(f => f.status === 'pending' && !f.incoming), friends = so.friends.filter(f => f.status === 'accepted');
   const add = async () => { setBusy(true); setMsg(null); const e = await addFriendByEmail(email); setBusy(false); if (e) setMsg(e); else { flash('Friend request sent'); setEmail(''); } };
+  const uidOf = new Map(so.friends.map(f => [f.id, f.uid]));
   const row = (key: string, name: string, sub: string, actions: React.ReactNode, last: boolean) => (
     <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: `1px solid ${last ? 'transparent' : LINE}` }}>
-      <Avatar name={name} />
+      <Avatar name={name} uid={uidOf.get(key)} />
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 15, fontWeight: 600 }}>{name}</span>
         <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</span>
@@ -176,7 +182,7 @@ export function TripPage({ id }: { id: string }) {
       {members.map(m => {
         const v = bal[m.id] ?? 0;
         return <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Avatar name={m.name} size={30} />
+          <Avatar name={m.name} size={30} uid={m.id} />
           <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>{m.id === uid ? 'You' : m.name}{m.id.startsWith('g:') && <span style={{ fontWeight: 500, color: 'var(--color-neutral-600)' }}> · guest</span>}</span>
           <span style={{ fontSize: 14, fontWeight: 700, color: v > 0.004 ? GREEN : v < -0.004 ? RED : 'var(--color-neutral-600)' }}>{v > 0.004 ? `gets ${fmt(v)}` : v < -0.004 ? `owes ${fmt(-v)}` : 'even'}</span>
         </div>;

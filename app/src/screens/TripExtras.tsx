@@ -3,7 +3,7 @@ import { setUI, flash } from '../lib/store';
 import { LINE, TEXT } from '../lib/constants';
 import { fmt } from '../lib/derive';
 import { fmtDay, monthLabel, shortDate } from '../lib/dates';
-import { deleteMessage, loadItems, loadMessages, markRead, myUid, sendMessage, tripMembers, type Attachment, type Message } from '../lib/social';
+import { deleteMessage, loadItems, loadMessages, loadPhotos, markRead, myUid, sendMessage, tripMembers, type Attachment, type Message } from '../lib/social';
 import { prepGifFile, prepPhoto, type GifHit } from '../lib/chatMedia';
 import { AttachPreview, BubbleMedia, GifPanel, MediaViewer } from './ChatMedia';
 import { tripMonths, tripSpending, type TripItem } from '../lib/settle';
@@ -77,7 +77,7 @@ export function TripStatsPage({ id }: { id: string }) {
           {s.people.map(p => (
             <div key={p.id} style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Avatar name={p.name} size={28} />
+                <Avatar name={p.name} size={28} uid={p.id} />
                 <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>{p.id === me ? 'You' : p.name}</span>
                 <span style={{ fontSize: 14, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{fmt(p.share)}</span>
               </div>
@@ -129,6 +129,8 @@ export function TripChatPage({ id }: { id: string }) {
     tick(); const h = setInterval(tick, 3000);
     return () => clearInterval(h);
   }, [id]);
+  const memberKey = (so.trips.find(x => x.id === id)?.members ?? []).join(',');
+  useEffect(() => { if (memberKey) loadPhotos(memberKey.split(',')).catch(() => {}); }, [memberKey]);
   const msgs = so.messages[id] ?? [], items = so.items[id] ?? [];
   const rows: Row[] = [...msgs.map(m => ({ kind: 'msg' as const, m })), ...items.map(it => ({ kind: 'event' as const, it, at: it.createdAt }))]
     .sort((a, b) => (a.kind === 'msg' ? a.m.createdAt : a.at) - (b.kind === 'msg' ? b.m.createdAt : b.at));
@@ -182,7 +184,9 @@ export function TripChatPage({ id }: { id: string }) {
           return (
             <div key={m.id} style={{ display: 'contents' }}>
               {sep}
-              <div style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '80%', display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start' }}>
+              <div style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '86%', display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+              {!mine && <span style={{ width: 28, flex: 'none', alignSelf: 'flex-start', marginTop: showName ? 22 : 0, visibility: showName ? 'visible' : 'hidden' }}><Avatar name={m.name} size={28} uid={m.uid} /></span>}
+              <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start' }}>
                 {showName && <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--color-neutral-600)', margin: '4px 10px 2px' }}>{m.name}</span>}
                 {(m.img || m.gif) && <div style={{ marginBottom: m.text ? 3 : 0 }}><BubbleMedia m={m} onOpen={() => setView(m)} /></div>}
                 {m.text && <div onClick={() => { if (mine && confirm('Delete this message for everyone?')) deleteMessage(id, m.id); }}
@@ -190,6 +194,7 @@ export function TripChatPage({ id }: { id: string }) {
                   {m.text}
                 </div>}
                 <span style={{ fontSize: 10.5, color: 'var(--color-neutral-500)', margin: '2px 8px 0' }}>{new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+              </div>
               </div>
             </div>
           );

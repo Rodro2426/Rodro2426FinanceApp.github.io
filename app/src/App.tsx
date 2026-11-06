@@ -4,6 +4,7 @@ import { markDirty, startCloud, syncNow } from './lib/cloud';
 import { Sidebar, useDesk } from './ui/Desk';
 import { applyBg } from './lib/bg';
 import { openTripLink, pollTrips } from './lib/tripNotify';
+import { publishPhoto } from './lib/social';
 import { useSync } from './sheets/CloudSheet';
 import { CloudSheet, ConflictChoice } from './sheets/CloudSheet';
 import { runSchedule, trmNeeded } from './lib/schedule';
@@ -124,6 +125,16 @@ export default function App() {
     document.addEventListener('visibilitychange', run);
     return () => { clearInterval(t); document.removeEventListener('visibilitychange', run); };
   }, [sync.uid]);
+
+  // Your profile picture: a small copy goes to your public profile so friends see it (only when it changes).
+  const photo = data.settings.profilePhoto;
+  useEffect(() => {
+    if (!sync.uid || ui.tour) return;
+    const mark = photo ? `${sync.uid}:${photo.length}:${photo.slice(-40)}` : `${sync.uid}:none`;
+    let last = ''; try { last = localStorage.getItem('pockets-photo-pub') ?? ''; } catch { /* none */ }
+    if (last === mark) return;
+    publishPhoto(photo).then(() => { try { localStorage.setItem('pockets-photo-pub', mark); } catch { /* not saved */ } }).catch(() => {});
+  }, [sync.uid, photo, ui.tour]);
 
   // Today's newest notification shows as a banner at the top until dismissed or it times out.
   const banner = data.notifications.find(n => n.date === todayISO() && !n.dismissed && !n.bannered);

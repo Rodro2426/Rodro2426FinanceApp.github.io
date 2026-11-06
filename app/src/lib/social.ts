@@ -24,8 +24,8 @@ export interface Message {
   /** A GIF from GIPHY. */
   gif?: { url: string; w: number; h: number; big?: string };
 }
-interface SocialState { friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; messages: Record<string, Message[]>; latest: Record<string, number>; loading: boolean; error: string | null; loadedAt: number }
-let state: SocialState = { friends: [], trips: [], items: {}, messages: {}, latest: {}, loading: false, error: null, loadedAt: 0 };
+interface SocialState { /** Friends' profile pictures (small), by account id; null = no picture. */ photos: Record<string, string | null>; friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; messages: Record<string, Message[]>; latest: Record<string, number>; loading: boolean; error: string | null; loadedAt: number }
+let state: SocialState = { photos: {}, friends: [], trips: [], items: {}, messages: {}, latest: {}, loading: false, error: null, loadedAt: 0 };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 export const getSocial = () => state;
@@ -44,6 +44,32 @@ export async function ensureProfile(name?: string) {
   const n = name?.trim() || myName();
   await setDoc(doc(db, 'profiles', u.uid), { name: n, email: clean(u.email ?? ''), updatedAt: Date.now() }, { merge: true });
   if (u.emailVerified && u.email) await setDoc(doc(db, 'emails', clean(u.email)), { uid: u.uid, name: n });
+}
+
+/* ---------------- Profile pictures ---------------- */
+// Your picture is copied to your public profile as a small 160px image (about 10 KB) so friends can see it.
+// Friends' pictures are fetched once per visit and kept in memory.
+export async function publishPhoto(photo: string | null) {
+  const u = me(); if (!u) return;
+  let small: string | null = null;
+  if (photo) {
+    const { shrink } = await import('./chatMedia');
+    const blob = await (await fetch(photo)).blob();
+    small = (await shrink(blob, 160, 30_000)).data;
+  }
+  await setDoc(doc(db, 'profiles', u.uid), { photo: small, updatedAt: Date.now() }, { merge: true });
+  setS({ photos: { ...state.photos, [u.uid]: small } });
+}
+const asked = new Set<string>();
+/** Loads the pictures of these people (once per visit each). */
+export async function loadPhotos(uids: string[]) {
+  const want = [...new Set(uids)].filter(id => id && !id.startsWith('g:') && !asked.has(id));
+  if (!want.length) return;
+  want.forEach(id => asked.add(id));
+  // A failed fetch (offline) keeps what's already here and is tried again next time.
+  const got = await Promise.all(want.map(id => getDoc(doc(db, 'profiles', id)).then(d => [id, (d.exists() && (d.data().photo as string | null)) || null] as const).catch(() => { asked.delete(id); return null; })));
+  const ok = got.filter((x): x is readonly [string, string | null] => !!x);
+  if (ok.length) setS({ photos: { ...state.photos, ...Object.fromEntries(ok) } });
 }
 
 /* ---------------- Friends ---------------- */
@@ -105,6 +131,7 @@ export async function refreshSocial() {
     await Promise.all([loadFriends(), loadTrips()]);
     await Promise.all(state.trips.map(t => Promise.all([loadItems(t.id), loadLatest(t.id).catch(() => {})])));
     setS({ loading: false, loadedAt: Date.now() });
+    loadPhotos([...state.friends.map(f => f.uid), ...state.trips.flatMap(t => t.members)]).catch(() => {});
   } catch (e) { fail(e); }
 }
 
