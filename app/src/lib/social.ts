@@ -260,18 +260,18 @@ export async function sendMessage(tripId: string, text: string, att?: Attachment
   if (!u || (!t && !att)) return null;
   try {
     const msg: Omit<Message, 'id'> = { uid: u.uid, name: myName(), text: t.slice(0, 2000), createdAt: Date.now() };
+    if (tripId.startsWith('dm:')) {
+      const other = tripId.slice(3).split('_').find(x => x !== u.uid) ?? '';
+      const f = state.friends.find(x => x.uid === other);
+      const preview = att?.gif || att?.img?.gif ? 'GIF' : att?.img ? (msg.text ? `📷 ${msg.text}` : '📷 Photo') : msg.text;
+      await setDoc(doc(db, 'dms', tripId.slice(3)), { users: [u.uid, other].sort(), names: { [u.uid]: myName(), [other]: f?.name ?? 'Friend' }, updatedAt: msg.createdAt, last: { uid: u.uid, name: msg.name, text: preview.slice(0, 120), at: msg.createdAt } }, { merge: true });
+    }
     if (att?.img) {
       msg.img = { ...att.img };
       if (att.full) { const m = await addDoc(collection(db, ...threadPath(tripId), 'media'), { uid: u.uid, data: att.full, createdAt: Date.now() }); msg.img.media = m.id; media.set(m.id, att.full); }
       if (!msg.img.gif) delete msg.img.gif;
     }
     if (att?.gif) msg.gif = att.gif;
-    if (tripId.startsWith('dm:')) {
-      const other = tripId.slice(3).split('_').find(x => x !== u.uid) ?? '';
-      const f = state.friends.find(x => x.uid === other);
-      const preview = msg.gif || msg.img?.gif ? 'GIF' : msg.img ? (msg.text ? `📷 ${msg.text}` : '📷 Photo') : msg.text;
-      await setDoc(doc(db, 'dms', tripId.slice(3)), { users: [u.uid, other].sort(), names: { [u.uid]: myName(), [other]: f?.name ?? 'Friend' }, updatedAt: msg.createdAt, last: { uid: u.uid, name: msg.name, text: preview.slice(0, 120), at: msg.createdAt } }, { merge: true });
-    }
     await addDoc(collection(db, ...threadPath(tripId), 'messages'), msg);
     await loadMessages(tripId); markRead(tripId);
     const said = msg.gif || msg.img?.gif ? 'sent a GIF' : msg.img ? (msg.text ? `📷 ${msg.text}` : 'sent a photo') : msg.text;
