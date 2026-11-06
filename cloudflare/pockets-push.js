@@ -8,6 +8,8 @@
 //   POST /schedule  A phone saves its upcoming reminders (bills due tomorrow, monthly backup) so they can arrive even
 //                   when Pockets is closed. Needs the KV binding SCHED.
 //   cron            Every few minutes: sends the reminders that are due.
+//   POST /status    What the server has saved for this phone (to check reminders from the app).
+//   POST /test      Sends this phone a test notification right away.
 //
 // Settings (Worker > Settings > Variables and Secrets):
 //   VAPID_JWK         secret: the private key (JSON) given during setup. Never put it in the app or on GitHub.
@@ -30,6 +32,8 @@ export default {
       const body = await req.json().catch(() => ({}));
       if (url.pathname === '/notify') return json(await notify(env, token, uid, body), 200, cors);
       if (url.pathname === '/schedule') return json(await schedule(env, uid, body), 200, cors);
+      if (url.pathname === '/status') return json(await status(env, uid, body), 200, cors);
+      if (url.pathname === '/test') return json(await testPush(env, body), 200, cors);
       return json({ error: 'not found' }, 404, cors);
     } catch (e) {
       return json({ error: String(e && e.message || e) }, 500, cors);
@@ -95,6 +99,26 @@ async function schedule(env, uid, body) {
 function nextAt(items, sent) {
   const left = items.filter(i => !sent.includes(i.tag + i.at)).map(i => i.at);
   return left.length ? Math.min(...left) : -1;
+}
+
+/** What the server has for this phone: how many reminders, the next one, and any that should have gone out already. */
+async function status(env, uid, body) {
+  if (!env.SCHED) return { kv: false };
+  const device = clip(body.device, 40).replace(/[^\w-]/g, '');
+  const v = JSON.parse((await env.SCHED.get(`s:${uid}:${device}`)) || 'null');
+  if (!v) return { kv: true, saved: false };
+  const now = Date.now();
+  const left = v.items.filter(i => !v.sent.includes(i.tag + i.at));
+  // A reminder more than 10 minutes late means the cron trigger isn't running.
+  const overdue = left.filter(i => i.at < now - 10 * 60e3).length;
+  return { kv: true, saved: true, items: left.length, next: nextAt(v.items, v.sent), sent: v.sent.length, overdue };
+}
+
+/** Sends a notification to this phone right now, to check the whole delivery chain. */
+async function testPush(env, body) {
+  if (!body.sub || !body.sub.endpoint) return { ok: false, error: 'missing subscription' };
+  const r = await sendPush(env, body.sub, { title: 'Pockets', body: 'Notifications are working ✓', url: '', tag: 'test' });
+  return { ok: r.ok, status: r.status, gone: r.gone, error: r.error };
 }
 
 async function sendDueReminders(env) {

@@ -88,3 +88,26 @@ export async function syncReminders(d: Data, force = false) {
   const r = await post('/schedule', { device: deviceId(), sub: sub.toJSON(), items }).catch(() => null);
   if (r?.saved) ls.set(SCHED, sig);
 }
+
+/* ---------------- Check panel (Profile) ---------------- */
+export interface PushStatus { kv?: boolean; saved?: boolean; items?: number; next?: number; sent?: number; overdue?: number; error?: string }
+/** What the server has saved for this phone. null = couldn't reach it. */
+export async function pushStatus(): Promise<PushStatus | null> {
+  return post('/status', { device: deviceId() }).catch(() => null);
+}
+/** Sends this phone a test notification right away (checks the whole chain: server, Apple, the phone). */
+export async function sendTestPush(): Promise<{ ok: boolean; status?: number; gone?: boolean; error?: string } | null> {
+  const sub = await subscription(false).catch(() => null);
+  if (!sub) return { ok: false, error: 'This phone has no notification address. Turn the switch off and on again.' };
+  return post('/test', { sub: sub.toJSON() }).catch(() => null);
+}
+/** Sends the reminders now, even if nothing changed. Returns how many the server saved. */
+export async function syncRemindersNow(d: Data): Promise<{ saved: boolean; items: number; error?: string }> {
+  if (!PUSH_URL || !pushOn() || !auth.currentUser) return { saved: false, items: 0, error: 'Notifications are off on this phone.' };
+  const sub = await subscription(false).catch(() => null);
+  if (!sub) return { saved: false, items: 0, error: 'This phone has no notification address. Turn the switch off and on again.' };
+  const items = upcomingReminders(d);
+  const r = await post('/schedule', { device: deviceId(), sub: sub.toJSON(), items }).catch(() => null);
+  if (r?.saved) ls.set(SCHED, JSON.stringify(items.map(i => [i.at, i.tag, i.body])));
+  return r ? { saved: !!r.saved, items: r.items ?? items.length, error: r.error } : { saved: false, items: 0, error: 'Couldn\'t reach the notification server.' };
+}

@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { emptyData, sampleData } from './seed';
 import { upcomingReminders } from './reminders';
 import type { Data } from './types';
@@ -51,5 +51,18 @@ describe('reminders for lock-screen notifications', () => {
     expect(r.map(x => x.tag.split(':')[0])).toEqual(['soon']);
     const t = new Date(r[0].at);
     expect([t.getDate(), t.getHours(), t.getMinutes()]).toEqual([19, 20, 30]);
+  });
+  afterEach(() => { vi.useRealTimers(); });
+  it('a bill due today with a time a few minutes from now is sent (manual and automatic)', () => {
+    vi.useFakeTimers(); vi.setSystemTime(new Date(2026, 10, 6, 15, 40));
+    const d = base();
+    d.bills.push({ id: 't1', name: 'Test', kind: 'Bill', amt: 1000, dueDay: 6, hue: 0, paidMonths: [], notify: { before: null, day: '15:42' } },
+      { id: 't2', name: 'Test auto', kind: 'Bill', amt: 1000, dueDay: 6, hue: 0, paidMonths: [], acct: 'bank', auto: true, notify: { before: null, day: '15:42' } });
+    const r = upcomingReminders(d, '2026-11-06');
+    expect(r.find(x => x.tag === 'day:t1:2026-11-06')?.title).toBe('Test is due today');
+    expect(new Date(r.find(x => x.tag === 'day:t1:2026-11-06')!.at).getMinutes()).toBe(42);
+    // An automatic bill due today is charged as soon as it's saved, so its month counts as paid: no reminder then.
+    d.bills[2].paidMonths = ['2026-11'];
+    expect(upcomingReminders(d, '2026-11-06').some(x => x.tag === 'day:t2:2026-11-06')).toBe(false);
   });
 });
