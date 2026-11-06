@@ -10,6 +10,7 @@ import { setData } from '../lib/store';
 import { netWorth, investmentsValue, groupValue } from '../lib/networth';
 import { Toggle } from '../ui/bits';
 import { Blocks, FoldHead, useFolded } from '../ui/Blocks';
+import { CardFace, cardInk } from '../ui/CardFace';
 import type { AssetGroup } from '../lib/types';
 import { shortDate } from '../lib/dates';
 
@@ -106,27 +107,9 @@ export default function Accounts() {
         { id: 'cards', name: 'Credit cards', desc: 'Card balances and payments', node: <>
       <FoldHead title="Credit cards" open={!isFolded('cards')} onToggle={() => toggle('cards')} summary={`${plural(cards.length, 'card')} · ${fmt(cards.reduce((a, x) => a + x.bal, 0))} owed`} />
       {!isFolded('cards') && cards.map(a => {
-        const k = ink(a.hue), lim = a.limit || 0;
-        return (
-          <div key={a.id} onClick={() => openSheet({ name: 'acct', id: a.id })} className="pr98" style={{ background: tint(a.hue), borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 4, cursor: 'pointer', transition: 'transform .15s' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, fontSize: 15, fontWeight: 700, color: k }}>
-                <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={34} radius={12} bg="var(--glass)" color={k} fs={14} />
-                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: k, background: 'var(--glass)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>Due {a.due || '—'}</span>
-            </div>
-            <span style={{ marginTop: 10, fontSize: 13, color: k }}>Balance owed</span>
-            <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em', color: k }}>{fmt(a.bal)}</span>
-            <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: 'var(--glass)', overflow: 'hidden' }}>
-              <div style={{ height: 10, borderRadius: 999, width: pctOf(a.bal, lim), background: k, transition: 'width .5s ease' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, gap: 10 }}>
-              <span style={{ fontSize: 12, color: k }}>{Math.round(lim ? a.bal / lim * 100 : 0)}% of {fmt(lim)} used</span>
-              <button onClick={e => { e.stopPropagation(); openSheet({ name: 'pay', id: a.id }); }} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: k, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Pay</button>
-            </div>
-          </div>
-        );
+        const { k } = cardInk(a);
+        return <CardFace key={a.id} a={a} onClick={() => openSheet({ name: 'acct', id: a.id })}
+          action={<button onClick={e => { e.stopPropagation(); openSheet({ name: 'pay', id: a.id }); }} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: a.cardImg ? '#141414' : k, fontSize: 14, fontWeight: 700, cursor: 'pointer', textShadow: 'none' }}>Pay</button>} />;
       })}
       </> }
       ]} />

@@ -10,6 +10,7 @@ import { allIncomeCats } from '../lib/reports';
 import type { Data, Move, PocketView } from '../lib/types';
 import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
+import { HuePicker } from '../ui/HuePicker';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
 
@@ -730,14 +731,14 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const [photo, setPhoto] = useState<string | null>(base?.photo ?? null);
   const [confirmDel, setConfirmDel] = useState(false);
   const [days, setDays] = useState<number[]>(base?.days?.length ? base.days : [0, 1, 2, 3, 4, 5, 6]);
-  const hue = base ? base.hue : HUES[d.pockets.length % HUES.length];
+  const [hue, setHue] = useState(base ? base.hue : HUES[d.pockets.length % HUES.length]);
   const w = num(weekly), cant = !name.trim();
   const icon = photo ? '' : emoji || name.trim().charAt(0).toUpperCase() || '·';
 
   const save = () => {
     if (cant) return;
-    const patch = { name: name.trim(), weeklyStr: String(w), emoji, photo, days: days.length === 7 ? undefined : [...days].sort() };
-    if (isNew) { setData(x => ({ pockets: [...x.pockets, { id: uid('p'), hue: HUES[x.pockets.length % HUES.length], ...patch }] })); closeSheet(); }
+    const patch = { name: name.trim(), weeklyStr: String(w), emoji, photo, hue, days: days.length === 7 ? undefined : [...days].sort() };
+    if (isNew) { setData(x => ({ pockets: [...x.pockets, { id: uid('p'), ...patch }] })); closeSheet(); }
     else { setData(x => ({ pockets: x.pockets.map(p => (p.id === id ? { ...p, ...patch } : p)) })); openSheet({ name: 'pocket', id: id! }); }
     flash(isNew ? `${patch.name} created` : 'Pocket updated');
   };
@@ -759,6 +760,8 @@ export function EditPocketSheet({ id }: { id: string | null }) {
             {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Use emoji instead</button>}
           </div>
         </div>
+        <FieldLabel m="14px 4px 6px">Color</FieldLabel>
+        <HuePicker value={hue} onChange={setHue} label="Pocket color" />
         <FieldLabel m="14px 4px 6px">Emoji</FieldLabel>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,minmax(0,1fr))', gap: 4, background: 'var(--surface)', borderRadius: 22, padding: 8 }}>
           {EMOJIS.map(m => <button key={m} onClick={() => { setEmoji(m); setPhoto(null); }} style={{ aspectRatio: '1', borderRadius: 12, border: 0, background: !photo && emoji === m ? tint(hue) : 'transparent', fontSize: 20, cursor: 'pointer', padding: 0, transition: 'background .15s' }}>{m}</button>)}

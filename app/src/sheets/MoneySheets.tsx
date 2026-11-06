@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { CardFace } from '../ui/CardFace';
+import { requestCrop } from '../ui/Cropper';
+import { HuePicker } from '../ui/HuePicker';
 import { BgPicker } from '../ui/BgPicker';
 import { useApp, setData, openSheet, closeSheet, flash, replaceData, setUI, startTour } from '../lib/store';
 import { syncLabel, useSync } from './CloudSheet';
@@ -182,7 +185,7 @@ function rateFields(prev: { rate?: number; accruedTo?: string; earned?: number }
 }
 
 function AcctForm({ initial, isNew, onSave, onDelete }: {
-  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; photo: string | null; hue: number; rate: string };
+  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; photo: string | null; hue: number; rate: string; cardImg?: string | null; cardText?: 'light' | 'dark' };
   isNew: boolean; onSave: (v: typeof initial) => void; onDelete?: () => void;
 }) {
   const [f, setF] = useState(initial);
@@ -201,6 +204,8 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
         </div>
       </div>
       <Segmented items={TYPES} value={f.type} onPick={t => setF(x => ({ ...x, type: t }))} h={isNew ? 40 : 38} />
+      <FieldLabel m="14px 4px 6px">Color</FieldLabel>
+      <HuePicker value={f.hue} onChange={h => setF(x => ({ ...x, hue: h }))} label="Account color" />
       <FieldLabel m="14px 4px 6px">Name</FieldLabel>
       <input value={f.name} placeholder={namePh} onChange={e => set('name')(e.target.value)} style={textInput} />
       <FieldLabel m="14px 4px 6px">{isCard ? 'Balance owed' : 'Current balance'}</FieldLabel>
@@ -216,6 +221,21 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
             <input placeholder="Nov 25" value={f.due} onChange={e => set('due')(e.target.value)} style={{ ...textInput, fontWeight: 600 }} />
           </div>
         </div>
+      )}
+      {isCard && (
+        <>
+          <FieldLabel m="16px 4px 6px">Card design</FieldLabel>
+          <CardFace a={{ name: f.name || namePh, hue: f.hue, photo: f.photo, cardImg: f.cardImg, cardText: f.cardText, bal: num(f.bal), limit: num(f.limit), due: f.due }} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+            <button onClick={() => pickPhoto({ card: true }).then(p => p && setF(x => ({ ...x, cardImg: p })))} className="hv-n300" style={{ height: 38, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><I.Image size={15} />{f.cardImg ? 'New photo' : 'Upload card photo'}</button>
+            {f.cardImg && <button onClick={() => requestCrop(f.cardImg!, { card: true }).then(p => p && setF(x => ({ ...x, cardImg: p })))} className="hv-n300" style={{ height: 38, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>Adjust</button>}
+            {f.cardImg && <button onClick={() => setF(x => ({ ...x, cardImg: null }))} style={{ height: 38, padding: '0 10px', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>Remove</button>}
+          </div>
+          {f.cardImg ? <>
+            <span style={{ margin: '12px 4px 6px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Text on the card</span>
+            <Segmented items={[['light', 'White'], ['dark', 'Dark']]} value={f.cardText ?? 'light'} onPick={v => setF(x => ({ ...x, cardText: v as 'light' | 'dark' }))} mt={0} />
+          </> : <span style={{ margin: '8px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Take a photo of the front of your card (or use a picture of its design) and it becomes the card's background. Without one, the card uses its color.</span>}
+        </>
       )}
       {(f.type === 'bank' || f.type === 'savings') && (
         <>
@@ -243,10 +263,10 @@ export function EditAcctSheet({ id }: { id: string }) {
   return (
     <SheetFrame title="Edit account">
       <AcctForm isNew={false}
-        initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '' }}
+        initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '', cardImg: a.cardImg ?? null, cardText: a.cardText }}
         onSave={f => {
           const card = f.type === 'card';
-          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: Math.abs(num(f.bal) - y.bal) < 1 ? y.bal : roundAmt(num(f.bal)), limit: card ? num(f.limit) : undefined, due: card ? f.due.trim() || 'Nov 25' : undefined, photo: f.photo, ...rateFields(y, f) } : y)) }));
+          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: Math.abs(num(f.bal) - y.bal) < 1 ? y.bal : roundAmt(num(f.bal)), limit: card ? num(f.limit) : undefined, due: card ? f.due.trim() || 'Nov 25' : undefined, photo: f.photo, hue: f.hue, cardImg: card ? f.cardImg : undefined, cardText: card && f.cardImg ? f.cardText : undefined, ...rateFields(y, f) } : y)) }));
           openSheet({ name: 'acct', id }); flash('Account updated');
         }}
         onDelete={() => {
@@ -265,7 +285,7 @@ export function AddAcctSheet() {
       <AcctForm isNew initial={{ name: '', type: 'bank', bal: '', limit: '', due: '', photo: null, hue: HUES[d.accounts.length % HUES.length], rate: '' }}
         onSave={f => {
           const card = f.type === 'card';
-          const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card ? { limit: num(f.limit), due: f.due.trim() || 'Nov 25' } : {}), ...rateFields(null, f) };
+          const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card && f.cardImg ? { cardImg: f.cardImg, cardText: f.cardText } : {}), ...(card ? { limit: num(f.limit), due: f.due.trim() || 'Nov 25' } : {}), ...rateFields(null, f) };
           setData(x => ({ accounts: [...x.accounts, a] }));
           setUI({ sheet: null, tab: 'accounts' }); flash(`${a.name} added`);
         }} />

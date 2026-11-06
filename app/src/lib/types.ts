@@ -7,7 +7,7 @@ export interface Pocket { id: string; name: string; emoji?: string; photo?: stri
  * `rate` is an annual return (% E.A.) for bank/savings accounts, like Nu's Cajitas.
  * Interest is added daily (compound) up to `accruedTo`; `earned` is the total so far.
  */
-export interface Account { id: string; name: string; kind: string; type: AcctType; bal: number; limit?: number; due?: string; hue: number; photo?: string | null; rate?: number; accruedTo?: string; earned?: number }
+export interface Account { id: string; name: string; kind: string; type: AcctType; bal: number; limit?: number; due?: string; hue: number; photo?: string | null; rate?: number; accruedTo?: string; earned?: number; /** Credit card: a photo of the card's design, used as its background (card-shaped). */ cardImg?: string | null; /** Text on the card design: white or dark. */ cardText?: 'light' | 'dark' }
 /** `p` is '' for expenses that don't belong to a weekly pocket (e.g. a scheduled bill). */
 /** `orig` keeps the dollar amount and the TRM used when a USD subscription was converted. */
 export interface FxOrig { amt: number; cur: 'USD'; rate: number; official: boolean }

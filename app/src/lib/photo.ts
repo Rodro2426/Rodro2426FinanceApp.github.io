@@ -1,10 +1,10 @@
-import { requestCrop } from '../ui/Cropper';
+import { requestCrop, type CropOpts } from '../ui/Cropper';
 
 /**
  * Opens the file picker, then the move-and-scale editor. Resolves to the edited
  * 400×400 image as a data URL, or null if cancelled.
  */
-export function pickPhoto(): Promise<string | null> {
+export function pickPhoto(opts: CropOpts = {}): Promise<string | null> {
   return new Promise(resolve => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -24,7 +24,7 @@ export function pickPhoto(): Promise<string | null> {
             c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
             src = c.toDataURL(f.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.92);
           }
-          requestCrop(src).then(resolve);
+          requestCrop(src, opts).then(resolve);
         };
         img.onerror = () => resolve(null);
         img.src = String(rd.result);

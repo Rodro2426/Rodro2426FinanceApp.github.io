@@ -227,3 +227,9 @@ input::placeholder { color: var(--color-neutral-500); }
 }
 @keyframes dialog-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .desk [data-sheet] > .sheet-panel { animation: none; } }
+
+/* Color slider: a rainbow track for picking any pocket color. */
+.hue-range { -webkit-appearance: none; appearance: none; height: 14px; border-radius: 99px; outline: none;
+  background: linear-gradient(90deg, oklch(0.75 0.13 0), oklch(0.75 0.13 60), oklch(0.75 0.13 120), oklch(0.75 0.13 180), oklch(0.75 0.13 240), oklch(0.75 0.13 300), oklch(0.75 0.13 359)); }
+.hue-range::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; border-radius: 99px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); cursor: pointer; }
+.hue-range::-moz-range-thumb { width: 26px; height: 26px; border: 0; border-radius: 99px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); cursor: pointer; }
