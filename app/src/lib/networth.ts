@@ -1,4 +1,5 @@
 // Net worth in one place: accounts, cards, investments (stocks + CDTs) and custom groups.
+import { fundsOf, fundsTotal } from './funds';
 import type { AssetGroup, Data } from './types';
 import { holdings } from './invest';
 import { cdtTotal, cdtsOf } from './cdt';
@@ -11,7 +12,8 @@ export function investmentsValue(d: Data) {
   const hs = holdings(d);
   const stocks = hs.reduce((a, h) => a + h.valueLocal, 0), stocksIn = hs.reduce((a, h) => a + h.investedLocal, 0);
   const cdts = cdtTotal(d), openCdts = cdtsOf(d).filter(c => !c.closed).length;
-  return { stocks, stocksGain: stocks - stocksIn, stocksCount: hs.length, cdts, cdtCount: openCdts, total: stocks + cdts };
+  const funds = fundsTotal(d), fundCount = fundsOf(d).filter(f => !f.closed).length;
+  return { stocks, stocksGain: stocks - stocksIn, stocksCount: hs.length, cdts, cdtCount: openCdts, funds, fundCount, total: stocks + cdts + funds };
 }
 
 export interface NetWorth {

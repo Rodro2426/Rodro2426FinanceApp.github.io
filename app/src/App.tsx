@@ -38,6 +38,7 @@ import { DmPage, TripChatPage, TripStatsPage } from './screens/TripExtras';
 import { TripItemSheet, TripNewSheet, TripPeopleSheet } from './sheets/TripSheets';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
+import { FundInfoSheet, FundMoveSheet, FundSheet } from './sheets/FundSheets';
 import { ReconcileSheet } from './sheets/ReconcileSheet';
 import { GroupItemSheet, GroupSheet } from './sheets/GroupSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
@@ -59,6 +60,9 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'saved': return <SavedSheet id={sheet.id} />;
     case 'move': return <MoveSheet id={sheet.id} to={sheet.to} />;
     case 'cover': return <CoverSheet />;
+    case 'fund': return <FundSheet id={sheet.id} />;
+    case 'fundInfo': return <FundInfoSheet id={sheet.id} />;
+    case 'fundMove': return <FundMoveSheet id={sheet.id} kind={sheet.kind} />;
     case 'editPocket': return <EditPocketSheet id={sheet.id} />;
     case 'export': return <ExportSheet acct={sheet.acct} />;
     case 'acct': return <AcctSheet id={sheet.id} />;

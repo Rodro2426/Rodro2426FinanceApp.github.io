@@ -195,6 +195,14 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
           show: out ? -p.amt : p.amt, effect: (out ? -p.amt : p.amt) * (card ? -1 : 1), after: 0
         };
       }
+      if (p.fund) {
+        const name = d.investments.funds?.find(f => f.id === p.fund)?.name ?? 'fund';
+        return {
+          kind: 'payment' as const, id: p.id, icon: null, photoBg: 'none', ts: p.ts, date: p.date,
+          note: out ? `Added to ${name}` : `Withdrawn from ${name}`, pocket: 'Investment fund', hue: 230, tags: [], category: 'Investment fund',
+          show: out ? -p.amt : p.amt, effect: (out ? -p.amt : p.amt) * (card ? -1 : 1), after: 0
+        };
+      }
       return {
         kind: 'payment' as const, id: p.id, icon: null, photoBg: 'none', ts: p.ts, date: p.date,
         note: out ? `Payment to ${other ? other.name : 'card'}` : `Payment from ${other ? other.name : 'account'}`,

@@ -21,7 +21,7 @@ export interface Income { id: string; ts: number; a: string; amt: number; note: 
  */
 export interface Move { id: string; week: string; from: string; to: string; amt: number; month?: string; spread?: number; /** The income it was split from. */ income?: string }
 /** A transfer between accounts (card payments), or into/out of a CDT when `cdt` is set (then `from`/`to` is 'cdt:<id>'). */
-export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string; ruleId?: string; ruleMonth?: string; cdt?: string }
+export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string; ruleId?: string; ruleMonth?: string; cdt?: string; /** Money into or out of an investment fund. */ fund?: string }
 export type ScheduleKind = 'Income' | 'Bill' | 'Subscription' | 'CardPayment';
 /**
  * Something that happens every month on `dueDay`: income, a bill or a subscription.
@@ -63,7 +63,25 @@ export interface Quote { price: number; change: number; changePct: number; at: n
  */
 export type CdtPayout = 'end' | 'monthly' | 'quarterly' | 'semiannual';
 export interface Cdt { id: string; ts: number; bank: string; amount: number; rate: number; days: number; start: string; payout: CdtPayout; withholding: boolean; acct?: string; hue: number; paid?: number; closed?: { date: string; how: 'cashout' | 'renew'; amt: number }; renewedFrom?: string }
-export interface Investments { cdts?: Cdt[]; trades: Trade[]; quotes: Record<string, Quote>; usdRate: number; usdRateAt: number; usdManual?: boolean; sim?: { amt: string; rate: string; months: string; deposit: string } }
+/** Kind of investment fund (in Colombia, a "fondo de inversión colectiva", voluntary pension or severance fund). */
+export type FundKind = 'vista' | 'fixed' | 'stocks' | 'balanced' | 'realestate' | 'pension' | 'severance' | 'other';
+export type FundRisk = 'low' | 'medium' | 'high';
+/** Money in or out of a fund, or a balance read from the fund's statement ('value'). */
+export interface FundMove { id: string; date: string; kind: 'in' | 'out' | 'value'; amt: number; acct?: string; note?: string }
+export interface Fund {
+  id: string; ts: number; name: string; manager: string; kind: FundKind; risk: FundRisk; currency: 'COP' | 'USD'; hue: number;
+  /** Recent yearly return, % effective annual, after the fund's fee (what statements and fact sheets show). Used to estimate growth between statements. */
+  rate?: number;
+  /** Yearly management fee (comisión de administración), %. Informational: the reported return already has it taken out. */
+  fee?: number;
+  /** 'vista' = withdraw any day; 'lock' = minimum stay (pacto de permanencia) of lockDays. */
+  liquidity: 'vista' | 'lock'; lockDays?: number;
+  /** Business days until a withdrawal reaches your account. */
+  settleDays?: number;
+  minAmount?: number; units?: number; notes?: string;
+  start: string; moves: FundMove[]; closed?: string;
+}
+export interface Investments { funds?: Fund[]; cdts?: Cdt[]; trades: Trade[]; quotes: Record<string, Quote>; usdRate: number; usdRateAt: number; usdManual?: boolean; sim?: { amt: string; rate: string; months: string; deposit: string } }
 
 export interface Data {
   version: 1;
@@ -99,6 +117,9 @@ export type Sheet =
   | { name: 'saved'; id: string }
   | { name: 'move'; id: string; to?: string }
   | { name: 'cover' }
+  | { name: 'fund'; id: string | null }
+  | { name: 'fundInfo'; id: string }
+  | { name: 'fundMove'; id: string; kind: 'in' | 'out' | 'value' }
   | { name: 'editPocket'; id: string | null }
   | { name: 'export'; acct: string }
   | { name: 'acct'; id: string }

@@ -67,11 +67,11 @@ export default function Accounts() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
           {parts.map(x => <span key={x.label} style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 999, background: 'var(--color-neutral-100)', color: 'var(--color-neutral-800)', whiteSpace: 'nowrap' }}>{x.label} {fmt(x.value)}</span>)}
         </div>
-        {(inv.total > 0 || inv.stocksCount > 0 || inv.cdtCount > 0) && (
+        {(inv.total > 0 || inv.stocksCount > 0 || inv.cdtCount > 0 || inv.fundCount > 0) && (
           <div style={{ marginTop: 8, paddingTop: 12, borderTop: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 14, fontWeight: 600 }}>Include investments</span>
-              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{nw.includeInvestments ? `Stocks and CDTs (${fmt(inv.total)}) count in your net worth` : `Left out: net worth shows only accounts${nw.groups.some(x => x.counted) ? ' and your groups' : ''}`}</span>
+              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{nw.includeInvestments ? `Stocks, CDTs and funds (${fmt(inv.total)}) count in your net worth` : `Left out: net worth shows only accounts${nw.groups.some(x => x.counted) ? ' and your groups' : ''}`}</span>
             </span>
             <Toggle on={nw.includeInvestments} onChange={v => setData(x => ({ settings: { ...x.settings, excludeInvestments: !v || undefined } }))} label="Include investments in net worth" />
           </div>
@@ -145,6 +145,7 @@ function InvestmentsCard({ inv }: { inv: ReturnType<typeof investmentsValue> }) 
         {row('📈', 'Stocks & ETFs', inv.stocksCount ? plural(inv.stocksCount, 'holding') : 'Add your first buy', fmt(inv.stocks), inv.stocksCount ? `${inv.stocksGain >= 0 ? '+' : '−'}${fmt(Math.abs(inv.stocksGain))} · ${(gainPct * 100).toFixed(1).replace('.', ',')}%` : undefined, inv.stocksGain >= 0 ? '#9ff0c4' : '#ffb4b4')}
         <div style={{ height: 1, background: 'rgba(255,255,255,.12)' }} />
         {row('🏦', 'CDTs', inv.cdtCount ? plural(inv.cdtCount, 'active CDT') : 'Add a CDT', fmt(inv.cdts))}
+        {row('📊', 'Investment funds', inv.fundCount ? plural(inv.fundCount, 'fund') : 'Add a fund', fmt(inv.funds))}
       </div>
     </div>
   );

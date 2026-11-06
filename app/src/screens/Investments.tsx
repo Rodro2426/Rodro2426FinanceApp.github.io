@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApp, setUI, openSheet, setData, flash } from '../lib/store';
-import { LINE, TEXT } from '../lib/constants';
+import { LINE, TEXT, ink, tint } from '../lib/constants';
 import { fmt, num } from '../lib/derive';
 import { dailyRate, monthlyRate } from '../lib/interest';
 import { OTHER, colorOf, finnhubKey, holdings, refreshQuotes, refreshUsdRate, type Holding } from '../lib/invest';
 import { MoneyInput } from '../ui/MoneyInput';
 import { cdtView, cdtsOf, type CdtView } from '../lib/cdt';
 import { CdtBadge } from '../sheets/CdtSheets';
+import { KIND_LABEL, RISK_LABEL, fundView, fundsOf, localValue, type FundView } from '../lib/funds';
 import { fmtDay } from '../lib/dates';
 import { ListCard, Segmented } from '../ui/bits';
 import * as I from '../ui/icons';
@@ -67,18 +68,24 @@ function Portfolio() {
   const cdts = cdtsOf(d).map(c => cdtView(c)).sort((a, b) => (a.status === 'closed' ? 1 : 0) - (b.status === 'closed' ? 1 : 0) || (a.end < b.end ? -1 : 1));
   const open = cdts.filter(v => v.status !== 'closed');
   const cdtValue = open.reduce((a, v) => a + v.value, 0), cdtIn = open.reduce((a, v) => a + v.c.amount, 0), cdtEarned = open.reduce((a, v) => a + v.earned, 0);
+  // Investment funds, in your currency (dollar funds converted at the dollar rate).
+  const funds = fundsOf(d).map(f => fundView(f)).sort((a, b) => (a.f.closed ? 1 : 0) - (b.f.closed ? 1 : 0) || b.value - a.value);
+  const openFunds = funds.filter(v => !v.f.closed);
+  const L = (v: FundView, n: number) => localValue(d, v.f, n);
+  const fundValue = openFunds.reduce((a, v) => a + L(v, v.value), 0), fundIn = openFunds.reduce((a, v) => a + L(v, v.invested), 0);
   const stockTotal = all.reduce((a, h) => a + h.valueLocal, 0), stockIn = all.reduce((a, h) => a + h.investedLocal, 0);
-  const total = stockTotal + cdtValue, invested = stockIn + cdtIn;
-  const gain = stockTotal - stockIn + cdtEarned, day = all.reduce((a, h) => a + h.dayChangeLocal, 0) + open.reduce((a, v) => a + v.perDay, 0);
+  const total = stockTotal + cdtValue + fundValue, invested = stockIn + cdtIn + fundIn;
+  const gain = stockTotal - stockIn + cdtEarned + (fundValue - fundIn), day = all.reduce((a, h) => a + h.dayChangeLocal, 0) + open.reduce((a, v) => a + v.perDay, 0) + openFunds.reduce((a, v) => a + L(v, v.perDay), 0);
   const lastAt = Math.max(0, ...all.map(h => (h.quote && !h.quote.manual ? h.quote.at : 0)));
-  const focused = focus === '_cdt' ? { ticker: 'CDTs', valueLocal: cdtValue, gain: cdtEarned, gainPct: cdtIn ? cdtEarned / cdtIn : 0 } : all.find(h => h.ticker === focus);
+  const focused = focus === '_cdt' ? { ticker: 'CDTs', valueLocal: cdtValue, gain: cdtEarned, gainPct: cdtIn ? cdtEarned / cdtIn : 0 }
+    : focus === '_fund' ? { ticker: 'Funds', valueLocal: fundValue, gain: fundValue - fundIn, gainPct: fundIn ? (fundValue - fundIn) / fundIn : 0 } : all.find(h => h.ticker === focus);
   const sorted = [...all].sort((a, b) => b.valueLocal - a.valueLocal);
   const trades = [...inv.trades].sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : b.ts - a.ts)).slice(0, 8);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ background: 'var(--surface)', borderRadius: 28, padding: '20px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-        <Donut all={all} total={total} extra={cdtValue > 0 ? [{ key: '_cdt', v: cdtValue, color: CDT_COLOR }] : []} focus={focus} onFocus={setFocus}>
+        <Donut all={all} total={total} extra={[...(cdtValue > 0 ? [{ key: '_cdt', v: cdtValue, color: CDT_COLOR }] : []), ...(fundValue > 0 ? [{ key: '_fund', v: fundValue, color: FUND_COLOR }] : [])]} focus={focus} onFocus={setFocus}>
           {focused ? (
             <>
               <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-neutral-700)' }}>{focused.ticker}</span>
@@ -140,6 +147,18 @@ function Portfolio() {
         <I.Plus size={18} sw={2.5} />Add CDT
       </button>
 
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '6px 4px 0' }}>
+        <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Investment funds</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{openFunds.length ? `${fmt(fundValue)} · ${openFunds.length === 1 ? '1 fund' : `${openFunds.length} funds`}` : 'FICs, pension and more'}</span>
+      </div>
+      <ListCard>
+        {funds.map((v, i) => <FundRow key={v.f.id} v={v} local={n => L(v, n)} last={i === funds.length - 1} />)}
+        {funds.length === 0 && <div style={{ padding: '16px 0', fontSize: 14, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>No funds yet. Add a collective investment fund (like a Fiducuenta), a voluntary pension or your cesantías to see them with the rest of your money.</div>}
+      </ListCard>
+      <button onClick={() => openSheet({ name: 'fund', id: null })} className="hv-n200" style={{ height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <I.Plus size={18} sw={2.5} />Add investment fund
+      </button>
+
       {trades.length > 0 && <>
         <div style={{ padding: '6px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Activity</div>
         <ListCard>
@@ -176,6 +195,25 @@ export function TickerLogo({ h, size = 40, color }: { h: { ticker: string; quote
 }
 
 const CDT_COLOR = '#6250d6';
+const FUND_COLOR = '#178a7a';
+/** One investment fund: its value today (estimated between statements) and the return so far. */
+function FundRow({ v, local, last }: { v: FundView; local: (n: number) => number; last: boolean }) {
+  const f = v.f, closed = !!f.closed;
+  const sub = closed ? 'Closed' : [KIND_LABEL[f.kind], RISK_LABEL[f.risk], f.rate ? `${pctCdt(f.rate)} E.A.` : '', f.liquidity === 'lock' && v.freeFrom && v.freeFrom > new Date().toISOString().slice(0, 10) ? `locked until ${fmtDay(v.freeFrom, { month: 'short', day: 'numeric' })}` : ''].filter(Boolean).join(' · ');
+  return (
+    <div onClick={() => openSheet({ name: 'fundInfo', id: f.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${last ? 'transparent' : LINE}`, cursor: 'pointer', opacity: closed ? 0.55 : 1 }}>
+      <span style={{ width: 42, height: 42, borderRadius: 14, background: tint(f.hue), color: ink(f.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, flex: 'none' }}>{f.name.trim().charAt(0).toUpperCase() || 'F'}</span>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
+        <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.manager ? `${f.manager} · ` : ''}{sub}</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap' }}>{closed ? '—' : `${v.estimated ? '≈ ' : ''}${fmt(local(v.value))}`}</span>
+        {!closed && <span style={{ fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', color: v.gain >= 0 ? UP : DOWN }}>{v.gain >= 0 ? '+' : '−'}{fmt(Math.abs(local(v.gain)))}</span>}
+      </div>
+    </div>
+  );
+}
 function CdtRow({ v, last }: { v: CdtView; last: boolean }) {
   const c = v.c, closed = v.status === 'closed';
   const sub = closed ? `${c.closed!.how === 'renew' ? 'Renewed' : 'Cashed out'} ${fmtDay(c.closed!.date, { month: 'short', day: 'numeric' })}`
