@@ -86,8 +86,15 @@ async function schedule(env, uid, body) {
     .map(i => ({ at: Math.round(i.at), title: clip(i.title, 80), body: clip(i.body, 200), url: clip(i.url, 200), tag: clip(i.tag, 80) }));
   const key = `s:${uid}:${device}`;
   if (!items.length) { await env.SCHED.delete(key); return { saved: true, items: 0 }; }
-  await env.SCHED.put(key, JSON.stringify({ sub: body.sub, items, sent: [] }), { expirationTtl: 45 * 86400 });
+  await env.SCHED.put(key, JSON.stringify({ sub: body.sub, items, sent: [] }), { expirationTtl: 45 * 86400, metadata: { next: nextAt(items, []) } });
   return { saved: true, items: items.length };
+}
+
+/** When this phone's next reminder is due (ms), or -1 when nothing is left. Kept on the entry's tag so the
+ *  check every few minutes only opens entries that actually have something to send. */
+function nextAt(items, sent) {
+  const left = items.filter(i => !sent.includes(i.tag + i.at)).map(i => i.at);
+  return left.length ? Math.min(...left) : -1;
 }
 
 async function sendDueReminders(env) {
@@ -97,18 +104,24 @@ async function sendDueReminders(env) {
   do {
     const page = await env.SCHED.list({ prefix: 's:', cursor });
     for (const k of page.keys) {
+      // Entries saved before tags existed have no metadata: open those the old way.
+      const next = k.metadata && typeof k.metadata.next === 'number' ? k.metadata.next : null;
+      if (next !== null && (next < 0 || next > now)) continue;
       const v = JSON.parse((await env.SCHED.get(k.name)) || 'null');
       if (!v) continue;
       const due = v.items.filter(i => i.at <= now && i.at > now - 6 * 36e5 && !v.sent.includes(i.tag + i.at));
-      if (!due.length) continue;
       let gone = false;
       for (const i of due) {
         const r = await sendPush(env, v.sub, i);
         if (r.gone) { gone = true; break; }
         v.sent.push(i.tag + i.at);
       }
-      if (gone) await env.SCHED.delete(k.name);
-      else { v.items = v.items.filter(i => i.at > now - 6 * 36e5); v.sent = v.sent.slice(-100); await env.SCHED.put(k.name, JSON.stringify(v), { expirationTtl: 45 * 86400 }); }
+      if (gone) { await env.SCHED.delete(k.name); continue; }
+      v.items = v.items.filter(i => i.at > now - 6 * 36e5);
+      v.sent = v.sent.slice(-100);
+      // Rewrite only when something was sent or the tag was missing or out of date.
+      const tag = nextAt(v.items, v.sent);
+      if (due.length || next === null || tag !== next) await env.SCHED.put(k.name, JSON.stringify(v), { expirationTtl: 45 * 86400, metadata: { next: tag } });
     }
     cursor = page.list_complete ? undefined : page.cursor;
   } while (cursor);
