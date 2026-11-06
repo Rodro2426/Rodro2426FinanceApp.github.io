@@ -6,7 +6,7 @@ import type { Data } from './types';
 import { upcomingReminders } from './reminders';
 
 /** The Worker's address (set once it's deployed). Empty = lock-screen notifications aren't available yet. */
-export const PUSH_URL: string = '';
+export const PUSH_URL: string = 'https://pockets-push.santi-health.workers.dev';
 /** Public half of the notification signing key; the private half is a secret in the Worker. */
 export const VAPID_PUBLIC = 'BOnlN8on5VmeBKs8p-PcRBYxolX2PY79zaTJyVK979ram_9HJZFDwyLXnlmCdQxdffONf0jv8pEuJRweJck9Tw4';
 
