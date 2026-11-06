@@ -71,9 +71,17 @@ export function SmallAmount({ value, onChange }: { value: string; onChange: (v: 
 export const textInput: CSSProperties = { border: 0, borderRadius: 18, background: 'var(--surface)', fontSize: 16, color: TEXT, padding: '15px 18px', outline: 'none', minWidth: 0 };
 
 /** Circle with a pocket's emoji/initial, or its photo. */
+/** A photo filling its round or rounded box. It's a real <img> (not a CSS background) so a new photo shows right away
+ *  at the right size; React can drop a background image when the box's color changes at the same time. */
+export function Fill({ src }: { src?: string | null }) {
+  const url = src?.startsWith('url(') ? src.slice(4, -1).replace(/^["']|["']$/g, '') : src;
+  if (!url || url === 'none') return null;
+  return <img src={url} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit', pointerEvents: 'none' }} />;
+}
+
 export function PocketDot({ st, size, fs, bg, color, radius = 999 }: { st: { initial: string; photoBg: string }; size: number; fs: number; bg: string; color: string; radius?: number }) {
   return (
-    <span style={{ width: size, height: size, borderRadius: radius, backgroundColor: bg, backgroundImage: st.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fs, flex: 'none' }}>{st.initial}</span>
+    <span style={{ width: size, height: size, borderRadius: radius, backgroundColor: bg, position: 'relative', overflow: 'hidden', color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fs, flex: 'none' }}>{st.initial}<Fill src={st.photoBg} /></span>
   );
 }
 
@@ -81,7 +89,7 @@ export function PocketDot({ st, size, fs, bg, color, radius = 999 }: { st: { ini
 export function PickChip({ st, on, hue, onClick, icon }: { st: { name: string; initial?: string; photoBg?: string }; on: boolean; hue: number; onClick: () => void; icon?: ReactNode }) {
   return (
     <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 8px', borderRadius: 999, border: `2px solid ${on ? ink(hue) : 'var(--surface)'}`, background: on ? ink(hue) : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, cursor: 'pointer', transition: 'all .15s' }}>
-      <span style={{ width: 24, height: 24, borderRadius: 999, backgroundColor: on ? 'rgba(255,255,255,.25)' : tint(hue), backgroundImage: st.photoBg || 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: on ? 'var(--on-text)' : ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{icon ?? st.initial}</span>
+      <span style={{ width: 24, height: 24, borderRadius: 999, backgroundColor: on ? 'rgba(255,255,255,.25)' : tint(hue), position: 'relative', overflow: 'hidden', color: on ? 'var(--on-text)' : ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{icon ?? st.initial}<Fill src={st.photoBg} /></span>
       <span style={{ fontSize: 14, fontWeight: 600 }}>{st.name}</span>
     </button>
   );
@@ -124,8 +132,8 @@ export function ExpRow({ v, last, size = 40, onClick }: { v: ExpView; last: bool
 /** Square-ish tile with an account's photo or initial. */
 export function AcctBadge({ photo, initial, size, radius, bg, color, fs }: { photo?: string | null; initial: string; size: number; radius: number; bg: string; color: string; fs: number }) {
   return (
-    <span style={{ width: size, height: size, borderRadius: radius, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fs, flex: 'none', overflow: 'hidden' }}>
-      {photo ? <span style={{ width: '100%', height: '100%', backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center' }} /> : <span>{initial}</span>}
+    <span style={{ width: size, height: size, borderRadius: radius, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fs, flex: 'none', overflow: 'hidden', position: 'relative' }}>
+      {photo ? <Fill src={photo} /> : <span>{initial}</span>}
     </span>
   );
 }
@@ -143,8 +151,8 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
 export function BillBadge({ b, size = 40, radius = 14 }: { b: { name: string; hue: number; kind: string; photo?: string | null }; size?: number; radius?: number }) {
   const hue = b.kind === 'Income' ? 150 : b.hue;
   return (
-    <div style={{ width: size, height: size, borderRadius: radius, background: b.photo ? '#fff' : tint(hue), backgroundImage: b.photo ? `url(${b.photo})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', boxShadow: b.photo ? 'inset 0 0 0 1px var(--color-neutral-200)' : 'none', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: size * 0.38, flex: 'none' }}>
-      {b.photo ? '' : b.name.trim().charAt(0).toUpperCase() || '·'}
+    <div style={{ width: size, height: size, borderRadius: radius, backgroundColor: b.photo ? '#fff' : tint(hue), position: 'relative', overflow: 'hidden', boxShadow: b.photo ? 'inset 0 0 0 1px var(--color-neutral-200)' : 'none', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: size * 0.38, flex: 'none' }}>
+      {b.photo ? <Fill src={b.photo} /> : b.name.trim().charAt(0).toUpperCase() || '·'}
     </div>
   );
 }

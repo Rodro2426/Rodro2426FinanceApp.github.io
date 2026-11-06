@@ -7,7 +7,7 @@ import { daysBetween, daysInMonth, relDay } from '../lib/dates';
 import type { PocketView } from '../lib/types';
 import { fmtDay, monthName } from '../lib/dates';
 import { billRows } from '../lib/bills';
-import { BillBadge, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
+import { BillBadge, Fill, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
 import { netWorth } from '../lib/networth';
 import { Blocks } from '../ui/Blocks';
@@ -76,7 +76,7 @@ export default function Home() {
             <I.Search size={19} />
           </button>
           <button data-tour="profile" onClick={() => openSheet({ name: 'settings' })} aria-label="Profile and settings" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, border: 0, padding: 0, cursor: 'pointer', overflow: 'hidden' }}>
-            {photo ? <div style={{ width: '100%', height: '100%', backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center' }} /> : <span>{d.settings.name.trim().charAt(0).toUpperCase() || 'S'}</span>}
+            {photo ? <span style={{ position: 'relative', width: '100%', height: '100%', display: 'block' }}><Fill src={photo} /></span> : <span>{d.settings.name.trim().charAt(0).toUpperCase() || 'S'}</span>}
           </button>
         </div>
       </div>
@@ -201,7 +201,7 @@ function PocketGrid({ items, tour, view }: { items: { p: PocketStats; left: numb
         <div key={p.id} data-tour={tour ? 'pocket' : undefined} onClick={() => openSheet({ name: 'pocket', id: p.id, view })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-              <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'var(--glass)', backgroundImage: p.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{p.initial}</span>
+              <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'var(--glass)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{p.initial}<Fill src={p.photoBg} /></span>
               <span style={{ fontSize: 14, fontWeight: 600, color: ink(p.hue), lineHeight: 1.25 }}>{p.name}</span>
             </span>
             <svg width="34" height="34" viewBox="0 0 40 40" style={{ flex: 'none', transform: 'rotate(-90deg)' }}>

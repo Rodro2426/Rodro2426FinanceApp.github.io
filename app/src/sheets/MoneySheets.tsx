@@ -17,7 +17,7 @@ import { makeBackup, pickBackupFile, readBackup, restoreBackup } from '../lib/ba
 import { dailyRate, earnsInterest, perDay } from '../lib/interest';
 import { emptyData, sampleData } from '../lib/seed';
 import type { AcctType, Currency } from '../lib/types';
-import { AcctBadge, Bar, BigAmount, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
+import { AcctBadge, Fill, Bar, BigAmount, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import * as I from '../ui/icons';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -157,7 +157,7 @@ export function AcctSheet({ id }: { id: string }) {
                   </div>
                 )}
                 <div onClick={() => t.kind !== 'payment' && openSheet({ name: 'txn', kind: t.kind, id: t.id, back: { name: 'acct', id } })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === shown.length - 1 ? 'transparent' : LINE}`, cursor: t.kind === 'payment' ? 'default' : 'pointer' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: tint(t.hue), backgroundImage: t.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', color: ink(t.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flex: 'none' }}>{t.icon != null ? t.icon : (t.pocket || t.note).charAt(0).toUpperCase()}</div>
+                  <div style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: tint(t.hue), position: 'relative', overflow: 'hidden', color: ink(t.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flex: 'none' }}>{t.icon != null ? t.icon : (t.pocket || t.note).charAt(0).toUpperCase()}<Fill src={t.photoBg} /></div>
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: 15, fontWeight: 600 }}>{t.note}</span>
                     <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[shortDate(t.date), t.pocket, t.fx].filter(Boolean).join(' · ')}</span>

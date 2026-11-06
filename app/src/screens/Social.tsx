@@ -10,7 +10,7 @@ import {
   type Trip
 } from '../lib/social';
 import { balances, personTotals, settleUp, sharesOf } from '../lib/settle';
-import { Segmented, textInput } from '../ui/bits';
+import { Fill, Segmented, textInput } from '../ui/bits';
 import * as I from '../ui/icons';
 
 export const useSocial = () => useSyncExternalStore(subscribeSocial, getSocial);
@@ -22,7 +22,7 @@ export function Avatar({ name, size = 34, uid }: { name: string; size?: number; 
   const { data: d } = useApp();
   const photo = uid ? (uid === myUid() ? d.settings.profilePhoto : so.photos[uid]) : null;
   const h = hueOf(name);
-  if (photo) return <span role="img" aria-label={name} style={{ display: 'inline-block', width: size, height: size, borderRadius: 999, flex: 'none', backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: tint(h) }} />;
+  if (photo) return <span role="img" aria-label={name} style={{ display: 'inline-block', width: size, height: size, borderRadius: 999, flex: 'none', backgroundColor: tint(h), position: 'relative', overflow: 'hidden' }}><Fill src={photo} /></span>;
   return <span aria-hidden="true" style={{ width: size, height: size, borderRadius: 999, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: size * 0.42, flex: 'none' }}>{name.trim().charAt(0).toUpperCase() || '?'}</span>;
 }
 const page = (children: React.ReactNode, title: string, back: () => void, right?: React.ReactNode) => (

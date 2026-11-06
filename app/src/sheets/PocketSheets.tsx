@@ -9,7 +9,7 @@ import { COVER, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, 
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
 import { allIncomeCats } from '../lib/reports';
 import type { Data, Move, PocketView } from '../lib/types';
-import { BigAmount, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
+import { BigAmount, Fill, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { HuePicker } from '../ui/HuePicker';
 import { CategoryPicker, type CatPick } from '../ui/CategoryPicker';
@@ -752,7 +752,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
     <SheetFrame title={isNew ? 'New pocket' : 'Edit pocket'}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14 }}>
-          <div style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: tint(hue), backgroundImage: photo ? `url(${photo})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 32, flex: 'none' }}>{icon}</div>
+          <div style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: tint(hue), position: 'relative', overflow: 'hidden', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 32, flex: 'none' }}>{icon}<Fill src={photo} /></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
             <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
               <I.Image size={14} />{photo ? 'Change image' : 'Upload image'}

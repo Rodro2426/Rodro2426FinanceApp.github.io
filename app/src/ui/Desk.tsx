@@ -8,6 +8,7 @@ import { useSocial } from '../screens/Social';
 import { hasUnread } from '../lib/social';
 import type { Tab } from '../lib/types';
 import * as I from './icons';
+import { Fill } from './bits';
 
 const MQ = '(min-width: 1024px) and (min-height: 560px)';
 const mq = typeof window !== 'undefined' ? window.matchMedia(MQ) : null;
@@ -61,8 +62,8 @@ export function Sidebar({ tabs }: { tabs: [Tab, string, (p: { size?: number; sw?
 
       <div style={{ flex: 1 }} />
       <button onClick={() => openSheet({ name: 'settings' })} className="hv-n200" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 16, border: 0, background: 'transparent', color: 'var(--color-text)', cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-        <span style={{ width: 40, height: 40, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, overflow: 'hidden', flex: 'none' }}>
-          {photo ? <span style={{ width: '100%', height: '100%', backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center' }} /> : (d.settings.name.trim().charAt(0).toUpperCase() || 'P')}
+        <span style={{ width: 40, height: 40, borderRadius: 999, background: 'var(--color-accent-200)', color: 'var(--color-accent-800)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, overflow: 'hidden', flex: 'none', position: 'relative' }}>
+          {photo ? <Fill src={photo} /> : (d.settings.name.trim().charAt(0).toUpperCase() || 'P')}
         </span>
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 14.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.settings.name}</span>

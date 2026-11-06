@@ -4,7 +4,7 @@ import { LINE, TEXT, tint } from '../lib/constants';
 import { ctxOf, fmt } from '../lib/derive';
 import { daysInMonth, fmtDay, monthLabel, parse, prevMonthKey, relDay } from '../lib/dates';
 import { dueDate, eventsOn } from '../lib/schedule';
-import { BillBadge, ListCard, SectionHead, expView } from '../ui/bits';
+import { BillBadge, Fill, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
 import { approxLocal, billAmount } from '../lib/schedule';
 
@@ -114,7 +114,7 @@ export default function CalendarScreen() {
         ))}
         {selSpent.map((v, i) => (
           <div key={v.key} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selSpent.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
-            <span style={{ width: 40, height: 40, borderRadius: 999, backgroundColor: v.tint, backgroundImage: v.photoBg, backgroundSize: 'cover', backgroundPosition: 'center', color: v.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{v.initial}</span>
+            <span style={{ width: 40, height: 40, borderRadius: 999, backgroundColor: v.tint, position: 'relative', overflow: 'hidden', color: v.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{v.initial}<Fill src={v.photoBg} /></span>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{v.note}</span>
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{v.meta}</span>
