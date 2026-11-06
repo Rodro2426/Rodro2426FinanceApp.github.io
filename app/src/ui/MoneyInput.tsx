@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, type CSSProperties } from 'react';
+import { STARS, moneyHidden } from '../lib/privacy';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { getData } from '../lib/store';
 
 /**
@@ -31,7 +32,10 @@ export function MoneyInput({ value, onChange, placeholder = '0', style, autoFocu
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const caret = useRef<number | null>(null); // digits to the left of the caret after an edit
-  const shown = formatTyping(value);
+  // With amounts hidden (the eye), a filled box shows ***** until you tap into it to edit.
+  const [focused, setFocused] = useState(false);
+  const masked = moneyHidden() && !focused && !!value;
+  const shown = masked ? STARS : formatTyping(value);
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -44,6 +48,7 @@ export function MoneyInput({ value, onChange, placeholder = '0', style, autoFocu
 
   return (
     <input ref={ref} type="text" inputMode={sep().decimals ? 'decimal' : 'numeric'} placeholder={placeholder} value={shown} autoFocus={autoFocus} aria-label={ariaLabel}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
       onChange={e => {
         const t = e.target.value, at = e.target.selectionStart ?? t.length, g = sep().group;
         caret.current = t.slice(0, at).split('').filter(ch => ch !== g && /[\d.,]/.test(ch)).length;

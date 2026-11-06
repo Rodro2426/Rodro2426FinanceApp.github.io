@@ -42,6 +42,8 @@ function Cropper({ req, done }: { req: Req; done: (url: string | null) => void }
   const pointers = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{ dist: number; s: number; mid: { x: number; y: number }; pos: { x: number; y: number } } | null>(null);
   const frame = useRef<HTMLDivElement>(null);
+  const raw = useRef({ x: 0, y: 0 }); // where the finger has dragged the image, before snapping
+  const [snap, setSnap] = useState({ x: false, y: false });
 
   useEffect(() => {
     const i = new Image();
@@ -77,8 +79,18 @@ function Cropper({ req, done }: { req: Req; done: (url: string | null) => void }
   const turn = () => { const r = (rot + 1) % 4; setRot(r); fitWith('fill', r); };
   const angle = rot * 90 + tilt;
 
+  const SNAP = 10;
+  /** Centred position for the current size, and a position pulled to the centre when it's close. */
+  const centerOf = (sc: number) => ({ x: (FW - img.width * sc) / 2, y: (FH - img.height * sc) / 2 });
+  const snapped = (q: { x: number; y: number }, sc: number) => {
+    const c = centerOf(sc), sx = Math.abs(q.x - c.x) < SNAP, sy = Math.abs(q.y - c.y) < SNAP;
+    setSnap({ x: sx, y: sy });
+    return { x: sx ? c.x : q.x, y: sy ? c.y : q.y };
+  };
+  const center = () => { const c = centerOf(s); setPos(c); setSnap({ x: true, y: true }); };
   const onDown = (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture(e.pointerId);
+    raw.current = { ...pos };
     pointers.current.set(e.pointerId, local(e));
     if (pointers.current.size === 2) {
       const [a, b] = [...pointers.current.values()];
@@ -97,10 +109,16 @@ function Cropper({ req, done }: { req: Req; done: (url: string | null) => void }
       const ix = (g.mid.x - g.pos.x) / g.s, iy = (g.mid.y - g.pos.y) / g.s;
       setS(ns); setPos({ x: mid.x - ix * ns, y: mid.y - iy * ns });
     } else if (pointers.current.size === 1) {
-      setPos(q => ({ x: q.x + p.x - prev.x, y: q.y + p.y - prev.y }));
+      raw.current = { x: raw.current.x + p.x - prev.x, y: raw.current.y + p.y - prev.y };
+      setPos(snapped(raw.current, s));
     }
   };
-  const onUp = (e: React.PointerEvent) => { pointers.current.delete(e.pointerId); if (pointers.current.size < 2) gesture.current = null; };
+  const onUp = (e: React.PointerEvent) => {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size < 2) gesture.current = null;
+    raw.current = { ...pos };
+    if (!pointers.current.size) setTimeout(() => setSnap({ x: false, y: false }), 600);
+  };
 
   const save = () => {
     const c = document.createElement('canvas'); c.width = OW; c.height = OH;
@@ -123,21 +141,23 @@ function Cropper({ req, done }: { req: Req; done: (url: string | null) => void }
       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button onClick={() => done(null)} style={{ border: 0, background: 'transparent', color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', padding: 8 }}>Cancel</button>
         <span style={{ fontSize: 17, fontWeight: 700 }}>{card ? 'Line up your card' : 'Move and scale'}</span>
-        <button onClick={save} style={{ border: 0, background: 'var(--surface)', color: '#201e1d', fontSize: 15, fontWeight: 700, cursor: 'pointer', padding: '8px 16px', borderRadius: 999 }}>Done</button>
+        <button onClick={save} style={{ border: 0, background: '#ffffff', color: '#201e1d', fontSize: 15, fontWeight: 700, cursor: 'pointer', padding: '8px 16px', borderRadius: 999 }}>Done</button>
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div ref={frame} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
           onWheel={e => { const p = local(e); zoomAt(s * (e.deltaY < 0 ? 1.08 : 1 / 1.08), p.x, p.y); }}
-          style={{ position: 'relative', width: FW, height: FH, borderRadius: card ? Math.round(FW * 0.045) : 64, overflow: 'hidden', background: bgCss, boxShadow: '0 0 0 2px var(--glass)', cursor: 'grab', touchAction: 'none' }}>
+          style={{ position: 'relative', width: FW, height: FH, borderRadius: card ? Math.round(FW * 0.045) : 64, overflow: 'hidden', background: bgCss, boxShadow: '0 0 0 2px rgba(255,255,255,.25)', cursor: 'grab', touchAction: 'none' }}>
           <img src={req.src} alt="" draggable={false} style={{ position: 'absolute', left: pos.x, top: pos.y, width: img.width * s, height: img.height * s, maxWidth: 'none', userSelect: 'none', pointerEvents: 'none', transform: `rotate(${angle}deg)` }} />
           {!card && <div style={{ position: 'absolute', inset: 0, borderRadius: 999, boxShadow: 'inset 0 0 0 1px rgba(255,255,255,.55)', pointerEvents: 'none' }} />}
+          {snap.x && <div aria-hidden="true" style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1, background: '#ffd84d', pointerEvents: 'none' }} />}
+          {snap.y && <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, background: '#ffd84d', pointerEvents: 'none' }} />}
           {/* Card mode: thirds guides to line up the edges and the chip. */}
           {card && <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(255,255,255,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.35) 1px, transparent 1px)', backgroundSize: `${FW / 3}px ${FH / 3}px`, backgroundPosition: '-1px -1px', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,.6)' }} />}
         </div>
       </div>
-      <span style={{ fontSize: 13, color: 'var(--glass)', textAlign: 'center' }}>{card ? 'Drag to move, pinch to zoom. Line the card\'s edges up with the frame; use Straighten if the photo is tilted.' : 'Drag to move, pinch to zoom. The circle shows how round icons will look.'}</span>
+      <span style={{ fontSize: 13, color: 'rgba(255,255,255,.72)', textAlign: 'center' }}>{card ? 'Drag to move, pinch to zoom. Line the card\'s edges up with the frame; use Straighten if the photo is tilted.' : 'Drag to move, pinch to zoom. The circle shows how round icons will look.'}</span>
       {card && <div style={{ width: '100%', maxWidth: 340, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 12, color: 'var(--glass)', width: 70 }}>Straighten</span>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,.72)', width: 70 }}>Straighten</span>
         <input type="range" aria-label="Straighten" min={-200} max={200} value={Math.round(tilt * 10)} onChange={e => setTilt(Number(e.target.value) / 10)} style={{ flex: 1, accentColor: '#fff' }} />
         <span style={{ fontSize: 12, width: 40, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{tilt > 0 ? '+' : ''}{tilt.toFixed(1)}°</span>
       </div>}
@@ -150,11 +170,12 @@ function Cropper({ req, done }: { req: Req; done: (url: string | null) => void }
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
         <button onClick={() => fit('fit')} style={pill(Math.abs(s - contain) < 1e-6)}>Fit whole image</button>
         <button onClick={() => fit('fill')} style={pill(Math.abs(s - cover) < 1e-6)}>Fill</button>
+        <button onClick={center} style={pill(false)}>Center</button>
         {card && <button onClick={turn} style={pill(false)}>Rotate 90°</button>}
         {card && tilt !== 0 && <button onClick={() => setTilt(0)} style={pill(false)}>Reset tilt</button>}
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <span style={{ fontSize: 12, color: 'var(--glass)' }}>Background</span>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,.72)' }}>Background</span>
         {(['white', 'black', 'none'] as Bg[]).map(b => <button key={b} onClick={() => setBg(b)} style={pill(bg === b)}>{b === 'none' ? 'Clear' : b === 'white' ? 'White' : 'Black'}</button>)}
       </div>
     </div>
