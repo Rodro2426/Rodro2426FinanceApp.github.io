@@ -21,9 +21,9 @@ export function Sidebar({ tabs }: { tabs: [Tab, string, (p: { size?: number; sw?
   const sync = useSync();
   const so = useSocial();
   const unread = d.notifications.filter(n => !n.read && !n.dismissed).length;
-  const chat = so.trips.some(t => hasUnread(t.id));
+  const chat = so.trips.some(t => hasUnread(t.id)) || so.dms.some(t => hasUnread(t.key));
   const photo = d.settings.profilePhoto;
-  const onPage = (p: string) => ui.page === p || (p === 'social' && /^(trip|tripstats|tripchat):/.test(ui.page ?? ''));
+  const onPage = (p: string) => ui.page === p || (p === 'social' && /^(trip|tripstats|tripchat|dm):/.test(ui.page ?? ''));
 
   const item = (key: string, label: string, icon: ReactNode, on: boolean, onClick: () => void, badge?: ReactNode) => (
     <button key={key} onClick={onClick} aria-current={on ? 'page' : undefined} className={on ? '' : 'hv-n200'}

@@ -40,10 +40,13 @@ const page = (children: React.ReactNode, title: string, back: () => void, right?
 const card = { background: 'var(--surface)', borderRadius: 24, padding: 16, display: 'flex', flexDirection: 'column' as const, gap: 10 };
 
 /* ---------------- Trips & friends ---------------- */
+/** The Trips/Friends tab you were on, so coming back from a chat returns to it. */
+let lastTab: 'trips' | 'friends' = 'trips';
 export default function SocialPage() {
   const sync = useSync();
   const so = useSocial();
-  const [tab, setTab] = useState<'trips' | 'friends'>('trips');
+  const [tab, setTabState] = useState<'trips' | 'friends'>(lastTab);
+  const setTab = (t: 'trips' | 'friends') => { lastTab = t; setTabState(t); };
   useEffect(() => { if (sync.uid) refreshSocial(); }, [sync.uid]);
   const refresh = <button onClick={() => refreshSocial()} aria-label="Refresh" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: so.loading ? 0.5 : 1 }}>{so.loading ? 'Loading…' : 'Refresh'}</button>;
   if (!sync.uid) return page(
@@ -54,7 +57,7 @@ export default function SocialPage() {
     </div>, 'Trips & friends', () => setUI({ page: null }));
   return page(<>
     <VerifyBanner />
-    <Segmented items={[['trips', `Trips${so.trips.length ? ` · ${so.trips.length}` : ''}`], ['friends', `Friends${so.friends.filter(f => f.status === 'pending' && f.incoming).length ? ' · new' : ''}`]]} value={tab} onPick={setTab} mt={0} />
+    <Segmented items={[['trips', `Trips${so.trips.length ? ` · ${so.trips.length}` : ''}`], ['friends', `Friends${so.friends.filter(f => f.status === 'pending' && f.incoming).length || so.dms.some(x => hasUnread(x.key)) ? ' · new' : ''}`]]} value={tab} onPick={setTab} mt={0} />
     {so.error && <div role="alert" style={{ background: 'var(--color-accent-100)', color: 'var(--color-accent-900)', borderRadius: 16, padding: '10px 12px', fontSize: 13 }}>{so.error}</div>}
     {tab === 'trips' ? <TripList /> : <FriendList />}
   </>, 'Trips & friends', () => setUI({ page: null }), refresh);
@@ -97,6 +100,25 @@ function FriendList() {
   );
   const small = (label: string, onClick: () => void, primary?: boolean) => <button onClick={onClick} style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: primary ? TEXT : 'var(--color-neutral-100)', color: primary ? 'var(--surface)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{label}</button>;
   return <>
+    {so.dms.length > 0 && <div style={card}>
+      <span style={{ fontSize: 15, fontWeight: 700 }}>Messages</span>
+      {so.dms.map((c, i) => {
+        const unread = hasUnread(c.key), mineLast = c.last?.uid === myUid();
+        return (
+          <button key={c.key} onClick={() => setUI({ page: `dm:${c.other}` })} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 6px', margin: '0 -6px', border: 0, borderBottom: `1px solid ${i === so.dms.length - 1 ? 'transparent' : LINE}`, borderRadius: 12, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
+            <Avatar name={c.name} uid={c.other} />
+            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={{ flex: 1, fontSize: 15, fontWeight: unread ? 800 : 600 }}>{c.name}</span>
+                {c.last && <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap' }}>{shortDate(new Date(c.last.at).toISOString().slice(0, 10))}</span>}
+              </span>
+              <span style={{ fontSize: 13, color: unread ? TEXT : 'var(--color-neutral-700)', fontWeight: unread ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.last ? `${mineLast ? 'You: ' : ''}${c.last.text || 'Message'}` : 'Say hi'}</span>
+            </span>
+            {unread && <span aria-label="Unread" style={{ width: 10, height: 10, borderRadius: 99, background: 'var(--color-accent)', flex: 'none' }} />}
+          </button>
+        );
+      })}
+    </div>}
     <div style={card}>
       <span style={{ fontSize: 15, fontWeight: 700 }}>Add a friend</span>
       <div style={{ display: 'flex', gap: 8 }}>
@@ -110,7 +132,7 @@ function FriendList() {
       {incoming.map((f, i) => row(f.id, f.name, f.email || 'Wants to be your friend', <div style={{ display: 'flex', gap: 6 }}>{small('Accept', async () => { const e = await acceptFriend(f.id); flash(e ?? `${f.name} is now your friend`); }, true)}{small('Decline', async () => { await removeFriend(f.id); })}</div>, i === incoming.length - 1))}</div>}
     <div style={card}>
       <span style={{ fontSize: 15, fontWeight: 700 }}>Friends{friends.length ? ` · ${friends.length}` : ''}</span>
-      {friends.map((f, i) => row(f.id, f.name, f.email, small('Remove', async () => { if (confirm(`Remove ${f.name} from your friends? Shared trips stay.`)) await removeFriend(f.id); }), i === friends.length - 1 && !outgoing.length))}
+      {friends.map((f, i) => row(f.id, f.name, f.email, <div style={{ display: 'flex', gap: 6 }}>{small('Message', () => setUI({ page: `dm:${f.uid}` }), true)}{small('Remove', async () => { if (confirm(`Remove ${f.name} from your friends? Shared trips stay.`)) await removeFriend(f.id); })}</div>, i === friends.length - 1 && !outgoing.length))}
       {outgoing.map((f, i) => row(f.id, f.name, `Request sent${f.email ? ` · ${f.email}` : ''}`, small('Cancel', async () => { await removeFriend(f.id); }), i === outgoing.length - 1))}
       {!friends.length && !outgoing.length && <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>No friends yet. Add one by email above.</span>}
     </div>

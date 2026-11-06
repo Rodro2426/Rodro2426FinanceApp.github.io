@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PushToggle } from '../ui/PushToggle';
 import { CardFace } from '../ui/CardFace';
 import { requestCrop } from '../ui/Cropper';
 import { HuePicker } from '../ui/HuePicker';
@@ -401,6 +402,7 @@ export function SettingsSheet() {
         <Segmented items={[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]} value={st.theme ?? 'system'} onPick={v => setS({ theme: v as 'system' | 'light' | 'dark' })} mt={8} />
         <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>System follows your iPhone's light or dark mode.</span>
         <BgPicker />
+        <PushToggle />
         <FieldLabel m="18px 4px 8px">Cloud backup</FieldLabel>
         <button onClick={() => openSheet({ name: 'cloud' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
           <span style={{ fontSize: 22 }}>☁️</span>

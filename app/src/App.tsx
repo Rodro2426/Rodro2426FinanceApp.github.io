@@ -3,6 +3,7 @@ import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, 
 import { markDirty, startCloud, syncNow } from './lib/cloud';
 import { Sidebar, useDesk } from './ui/Desk';
 import { applyBg } from './lib/bg';
+import { registerSW, syncReminders } from './lib/push';
 import { openTripLink, pollTrips } from './lib/tripNotify';
 import { publishPhoto } from './lib/social';
 import { useSync } from './sheets/CloudSheet';
@@ -33,7 +34,7 @@ import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
 import ReportPage from './screens/Reports';
 import SocialPage, { TripPage } from './screens/Social';
-import { TripChatPage, TripStatsPage } from './screens/TripExtras';
+import { DmPage, TripChatPage, TripStatsPage } from './screens/TripExtras';
 import { TripItemSheet, TripNewSheet, TripPeopleSheet } from './sheets/TripSheets';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
 import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
@@ -107,6 +108,31 @@ export default function App() {
     const t = setInterval(tick, 60000);
     return () => { document.removeEventListener('visibilitychange', tick); clearInterval(t); };
   }, []);
+
+  // Lock-screen notifications: the background script, tapping a notification opens its screen, and the phone's
+  // upcoming reminders are handed to the server whenever they change.
+  useEffect(() => {
+    registerSW();
+    const open = (link: string) => {
+      const h = link.replace(/^\.?\/?#?/, '');
+      if (/^(dm|trip|tripchat|tripstats):/.test(h)) setUI({ sheet: null, page: h as never });
+      else if (h === 'calendar' || h === 'accounts') setUI({ sheet: null, page: null, tab: h });
+      else if (h === 'backup') setUI({ sheet: { name: 'settings' } });
+      else return false;
+      return true;
+    };
+    if (location.hash && open(location.hash)) history.replaceState(null, '', location.pathname + location.search);
+    const onMsg = (e: MessageEvent) => { if (e.data?.type === 'open') open(String(e.data.url || '')); };
+    const onHash = () => { if (location.hash && open(location.hash)) history.replaceState(null, '', location.pathname + location.search); };
+    navigator.serviceWorker?.addEventListener('message', onMsg);
+    window.addEventListener('hashchange', onHash);
+    return () => { navigator.serviceWorker?.removeEventListener('message', onMsg); window.removeEventListener('hashchange', onHash); };
+  }, []);
+  useEffect(() => {
+    if (ui.tour) return;
+    const t = setTimeout(() => { syncReminders(getData()).catch(() => {}); }, 5000);
+    return () => clearTimeout(t);
+  }, [data, ui.tour]);
 
   // Shared trips: while signed in and the app is open, check for friends' expenses and messages every 90 seconds
   // (and right away when you come back to the app). There is no push, so this only runs while Pockets is open.
@@ -198,6 +224,7 @@ export default function App() {
       {ui.page?.startsWith('trip:') && <TripPage id={ui.page.slice(5)} />}
       {ui.page?.startsWith('tripstats:') && <TripStatsPage id={ui.page.slice(10)} />}
       {ui.page?.startsWith('tripchat:') && <TripChatPage id={ui.page.slice(9)} />}
+      {ui.page?.startsWith('dm:') && <DmPage uid={ui.page.slice(3)} />}
       </div>
 
       {!ui.sheet && !ui.tour && <div className="conflict-slot" style={{ position: 'absolute', left: 14, right: 14, top: 'calc(var(--top) - 6px)', zIndex: 32 }}><ConflictChoice /></div>}

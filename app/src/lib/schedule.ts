@@ -79,7 +79,7 @@ export function undoOccurrence(d: Data, b: Bill, m: string): Partial<Data> {
 }
 
 /** "Nov 15" → ISO date in the current or next year (whichever is not in the past). */
-function parseShortDate(s: string | undefined, today: string): string | null {
+export function parseShortDate(s: string | undefined, today: string): string | null {
   const m = /^\s*([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})\s*$/.exec(s || '');
   if (!m) return null;
   const mi = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(m[1].toLowerCase());

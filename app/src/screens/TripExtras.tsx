@@ -3,7 +3,7 @@ import { setUI, flash } from '../lib/store';
 import { LINE, TEXT } from '../lib/constants';
 import { fmt } from '../lib/derive';
 import { fmtDay, monthLabel, shortDate } from '../lib/dates';
-import { deleteMessage, loadItems, loadMessages, loadPhotos, markRead, myUid, sendMessage, tripMembers, type Attachment, type Message } from '../lib/social';
+import { deleteMessage, dmKey, loadItems, loadMessages, loadPhotos, markRead, myUid, sendMessage, tripMembers, type Attachment, type Message } from '../lib/social';
 import { prepGifFile, prepPhoto, type GifHit } from '../lib/chatMedia';
 import { AttachPreview, BubbleMedia, GifPanel, MediaViewer } from './ChatMedia';
 import { tripMonths, tripSpending, type TripItem } from '../lib/settle';
@@ -11,7 +11,7 @@ import { VIZ } from '../ui/charts';
 import * as I from '../ui/icons';
 import { Avatar, useSocial } from './Social';
 
-const backBtn = (onClick: () => void) => <button onClick={onClick} aria-label="Back to trip" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>;
+const backBtn = (onClick: () => void, label = 'Back to trip') => <button onClick={onClick} aria-label={label} className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>;
 
 /* ---------------- Spending summary ---------------- */
 export function TripStatsPage({ id }: { id: string }) {
@@ -109,9 +109,16 @@ function useViewportHeight() {
 
 type Row = { kind: 'msg'; m: Message } | { kind: 'event'; it: TripItem; at: number };
 
-export function TripChatPage({ id }: { id: string }) {
+export const TripChatPage = ({ id }: { id: string }) => <ChatPage id={id} />;
+/** A direct conversation with one friend (their account id). */
+export const DmPage = ({ uid }: { uid: string }) => <ChatPage id={dmKey(uid)} friend={uid} />;
+
+/** One chat screen for trips and direct messages: text, photos, GIFs, and (in trips) expenses as events. */
+function ChatPage({ id, friend }: { id: string; friend?: string }) {
   const so = useSocial();
-  const t = so.trips.find(x => x.id === id);
+  const t = friend ? undefined : so.trips.find(x => x.id === id);
+  const friendName = friend ? (so.friends.find(f => f.uid === friend)?.name ?? so.dms.find(x => x.other === friend)?.name ?? 'Friend') : '';
+  const friendEmail = friend ? so.friends.find(f => f.uid === friend)?.email ?? '' : '';
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   // A photo or GIF waiting to be sent (the message box is its caption), the GIF panel, and the photo being viewed.
@@ -125,18 +132,19 @@ export function TripChatPage({ id }: { id: string }) {
   // While the chat is open, check for new messages every few seconds (and for new expenses less often).
   useEffect(() => {
     let n = 0;
-    const tick = () => { if (document.visibilityState !== 'visible') return; loadMessages(id).then(() => markRead(id)).catch(() => {}); if (++n % 5 === 0) loadItems(id).catch(() => {}); };
+    const tick = () => { if (document.visibilityState !== 'visible') return; loadMessages(id).then(() => markRead(id)).catch(() => {}); if (!friend && ++n % 5 === 0) loadItems(id).catch(() => {}); };
     tick(); const h = setInterval(tick, 3000);
     return () => clearInterval(h);
   }, [id]);
-  const memberKey = (so.trips.find(x => x.id === id)?.members ?? []).join(',');
+  const memberKey = (friend ? [friend] : so.trips.find(x => x.id === id)?.members ?? []).join(',');
   useEffect(() => { if (memberKey) loadPhotos(memberKey.split(',')).catch(() => {}); }, [memberKey]);
-  const msgs = so.messages[id] ?? [], items = so.items[id] ?? [];
+  const msgs = so.messages[id] ?? [], items = friend ? [] : so.items[id] ?? [];
   const rows: Row[] = [...msgs.map(m => ({ kind: 'msg' as const, m })), ...items.map(it => ({ kind: 'event' as const, it, at: it.createdAt }))]
     .sort((a, b) => (a.kind === 'msg' ? a.m.createdAt : a.at) - (b.kind === 'msg' ? b.m.createdAt : b.at));
   useLayoutEffect(() => { list.current?.scrollTo({ top: list.current.scrollHeight }); }, [rows.length]);
-  if (!t) return null;
-  const members = tripMembers(t), nameOf = (x: string) => (x === me ? 'You' : members.find(m => m.id === x)?.name ?? 'Someone');
+  if (!t && !friend) return null;
+  const members = t ? tripMembers(t) : [{ id: friend!, name: friendName }];
+  const nameOf = (x: string) => (x === me ? 'You' : members.find(m => m.id === x)?.name ?? 'Someone');
   const canSend = !sending && !att?.busy && (!!text.trim() || !!att?.payload);
   const send = async () => {
     if (!canSend) return;
@@ -163,15 +171,15 @@ export function TripChatPage({ id }: { id: string }) {
   return (
     <div className="chatpage" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: vh ? `${vh}px` : '100%', zIndex: 26, background: 'var(--page)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'calc(var(--top) + 4px) 16px 10px', borderBottom: `1px solid ${LINE}`, background: 'var(--page)' }}>
-        {backBtn(() => setUI({ page: `trip:${id}` }))}
-        <span style={{ fontSize: 22 }}>{t.emoji}</span>
+        {backBtn(() => setUI({ page: t ? `trip:${id}` : 'social' }), t ? 'Back to trip' : 'Back to friends')}
+        {t ? <span style={{ fontSize: 22 }}>{t.emoji}</span> : <Avatar name={friendName} uid={friend} size={36} />}
         <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{ fontSize: 17, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</span>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{members.map(m => nameOf(m.id)).join(', ')}</span>
+          <span style={{ fontSize: 17, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t ? t.name : friendName}</span>
+          <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t ? members.map(m => nameOf(m.id)).join(', ') : friendEmail || 'Friend'}</span>
         </span>
       </div>
       <div ref={list} className="noscroll" style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {!rows.length && <span style={{ margin: 'auto', textAlign: 'center', fontSize: 14, color: 'var(--color-neutral-700)', maxWidth: 260 }}>Say hi 👋 Messages are only seen by the people in this trip.</span>}
+        {!rows.length && <span style={{ margin: 'auto', textAlign: 'center', fontSize: 14, color: 'var(--color-neutral-700)', maxWidth: 260 }}>{t ? 'Say hi 👋 Messages are only seen by the people in this trip.' : `Say hi to ${friendName} 👋 Only the two of you can see this chat.`}</span>}
         {rows.map((r, i) => {
           const at = r.kind === 'msg' ? r.m.createdAt : r.at, day = new Date(at).toDateString();
           const sep = day !== lastDay ? <div key={`d${i}`} style={{ alignSelf: 'center', margin: '8px 0 4px', fontSize: 11.5, fontWeight: 700, color: 'var(--color-neutral-600)' }}>{fmtDay(new Date(at).toISOString().slice(0, 10), { weekday: 'short', month: 'short', day: 'numeric' })}</div> : null;
@@ -180,12 +188,12 @@ export function TripChatPage({ id }: { id: string }) {
             const it = r.it;
             return <div key={`e${it.id}`} style={{ display: 'contents' }}>{sep}<div style={{ alignSelf: 'center', maxWidth: '86%', fontSize: 12.5, color: 'var(--color-neutral-700)', background: 'var(--color-neutral-100)', borderRadius: 999, padding: '5px 12px', textAlign: 'center' }}>{it.kind === 'payment' ? `🤝 ${nameOf(it.paidBy)} paid ${nameOf(it.to ?? '')} ${fmt(it.amount)}` : `🧾 ${nameOf(it.createdBy)} added ${it.desc} · ${fmt(it.amount)}`}</div></div>;
           }
-          const m = r.m, mine = m.uid === me, prev = rows[i - 1], showName = !mine && !(prev && prev.kind === 'msg' && prev.m.uid === m.uid && !sep);
+          const m = r.m, mine = m.uid === me, prev = rows[i - 1], startRun = !mine && !(prev && prev.kind === 'msg' && prev.m.uid === m.uid && !sep), showName = startRun && !friend;
           return (
             <div key={m.id} style={{ display: 'contents' }}>
               {sep}
               <div style={{ alignSelf: mine ? 'flex-end' : 'flex-start', maxWidth: '86%', display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-              {!mine && <span style={{ width: 28, flex: 'none', alignSelf: 'flex-start', marginTop: showName ? 22 : 0, visibility: showName ? 'visible' : 'hidden' }}><Avatar name={m.name} size={28} uid={m.uid} /></span>}
+              {!mine && <span style={{ width: 28, flex: 'none', alignSelf: 'flex-start', marginTop: showName ? 22 : 0, visibility: startRun ? 'visible' : 'hidden' }}><Avatar name={m.name} size={28} uid={m.uid} /></span>}
               <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start' }}>
                 {showName && <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--color-neutral-600)', margin: '4px 10px 2px' }}>{m.name}</span>}
                 {(m.img || m.gif) && <div style={{ marginBottom: m.text ? 3 : 0 }}><BubbleMedia m={m} onOpen={() => setView(m)} /></div>}

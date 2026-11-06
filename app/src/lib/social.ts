@@ -4,8 +4,9 @@
 //   friendships/{a_b}         { users: [a, b], from, status: 'pending' | 'accepted', names }
 //   trips/{tripId}            { name, emoji, owner, members: [uid], guests: [{id, name}], names }
 //   trips/{tripId}/items/{id} expenses and payments (see settle.ts)
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, orderBy, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore/lite';
+import { addDoc, collection, deleteDoc, deleteField, doc, getDoc, getDocs, limit, orderBy, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore/lite';
 import { auth, db } from './cloud';
+import { notifyThread } from './push';
 import { groupWideItems, relinkPerson, withMorePeople, type Member, type TripItem } from './settle';
 
 export interface Friend { uid: string; name: string; email: string; status: 'pending' | 'accepted'; incoming: boolean; id: string }
@@ -24,8 +25,8 @@ export interface Message {
   /** A GIF from GIPHY. */
   gif?: { url: string; w: number; h: number; big?: string };
 }
-interface SocialState { /** Friends' profile pictures (small), by account id; null = no picture. */ photos: Record<string, string | null>; friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; messages: Record<string, Message[]>; latest: Record<string, number>; loading: boolean; error: string | null; loadedAt: number }
-let state: SocialState = { photos: {}, friends: [], trips: [], items: {}, messages: {}, latest: {}, loading: false, error: null, loadedAt: 0 };
+interface SocialState { /** Direct-message conversations, newest first. */ dms: Dm[]; /** Friends' profile pictures (small), by account id; null = no picture. */ photos: Record<string, string | null>; friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; messages: Record<string, Message[]>; latest: Record<string, number>; loading: boolean; error: string | null; loadedAt: number }
+let state: SocialState = { dms: [], photos: {}, friends: [], trips: [], items: {}, messages: {}, latest: {}, loading: false, error: null, loadedAt: 0 };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 export const getSocial = () => state;
@@ -44,6 +45,17 @@ export async function ensureProfile(name?: string) {
   const n = name?.trim() || myName();
   await setDoc(doc(db, 'profiles', u.uid), { name: n, email: clean(u.email ?? ''), updatedAt: Date.now() }, { merge: true });
   if (u.emailVerified && u.email) await setDoc(doc(db, 'emails', clean(u.email)), { uid: u.uid, name: n });
+}
+
+/* ---------------- Notification addresses ---------------- */
+/** Saves this phone's notification address in your profile (one per device), so the server can deliver to it. */
+export async function savePushSub(device: string, sub: string) {
+  const u = me(); if (!u) throw new Error('Sign in first.');
+  await setDoc(doc(db, 'profiles', u.uid), { push: { [device]: sub }, updatedAt: Date.now() }, { merge: true });
+}
+export async function removePushSub(device: string) {
+  const u = me(); if (!u) return;
+  await updateDoc(doc(db, 'profiles', u.uid), { [`push.${device}`]: deleteField() });
 }
 
 /* ---------------- Profile pictures ---------------- */
@@ -129,9 +141,10 @@ export async function refreshSocial() {
   try {
     await ensureProfile().catch(() => {});
     await Promise.all([loadFriends(), loadTrips()]);
+    await loadDms().catch(() => {});
     await Promise.all(state.trips.map(t => Promise.all([loadItems(t.id), loadLatest(t.id).catch(() => {})])));
     setS({ loading: false, loadedAt: Date.now() });
-    loadPhotos([...state.friends.map(f => f.uid), ...state.trips.flatMap(t => t.members)]).catch(() => {});
+    loadPhotos([...state.friends.map(f => f.uid), ...state.trips.flatMap(t => t.members), ...state.dms.map(t => t.other)]).catch(() => {});
   } catch (e) { fail(e); }
 }
 
@@ -194,7 +207,13 @@ export async function saveItem(tripId: string, item: Omit<TripItem, 'id'> & { id
     if (id) await setDoc(doc(db, 'trips', tripId, 'items', id), body);
     else await addDoc(collection(db, 'trips', tripId, 'items'), body);
     await updateDoc(doc(db, 'trips', tripId), { updatedAt: Date.now() });
-    await loadItems(tripId); return null;
+    await loadItems(tripId);
+    if (!id) {
+      const t = state.trips.find(x => x.id === tripId), who = (x?: string) => (t ? tripMembers(t).find(m => m.id === x)?.name : undefined) ?? 'someone';
+      const amt = Math.round(item.amount).toLocaleString('es-CO');
+      notifyThread(tripId, { title: `${t?.emoji ?? ''} ${t?.name ?? 'Trip'}`.trim(), body: item.kind === 'payment' ? `${myName()} paid ${who(item.to)} $${amt}` : `${myName()} added ${item.desc} · $${amt}`, url: `#trip:${tripId}`, tag: `item:${tripId}` });
+    }
+    return null;
   } catch (e) { return fail(e); }
 }
 export async function deleteItem(tripId: string, id: string) {
@@ -208,12 +227,16 @@ export const myUid = () => testUid || me()?.uid || '';
 // Development builds only: lets screenshots fill in a sample trip without Firebase. Not in the live app.
 if (import.meta.env.DEV && typeof window !== 'undefined') (window as unknown as { __social: unknown }).__social = { set: (p: Partial<SocialState>, uid?: string) => { if (uid) testUid = uid; setS(p); } };
 
-/* ---------------- Trip chat ---------------- */
+/* ---------------- Chats: trips and direct messages ---------------- */
+// A chat is named by a key: a trip's id, or "dm:" + the pair id of two friends (the same id as their friendship).
+//   trips/{tripId}/messages, trips/{tripId}/media     dms/{pairId} (users, names, last), dms/{pairId}/messages, /media
+export const dmKey = (friendUid: string) => `dm:${pairId(myUid(), friendUid)}`;
+const threadPath = (key: string): [string, string] => (key.startsWith('dm:') ? ['dms', key.slice(3)] : ['trips', key]);
 //   trips/{tripId}/messages/{id}  { uid, name, text, createdAt }
 const MAX_LOAD = 150;
 /** When the newest message in a trip was sent (for the "new messages" dot). */
 export async function loadLatest(tripId: string) {
-  const snap = await getDocs(query(collection(db, 'trips', tripId, 'messages'), orderBy('createdAt', 'desc'), limit(1)));
+  const snap = await getDocs(query(collection(db, ...threadPath(tripId), 'messages'), orderBy('createdAt', 'desc'), limit(1)));
   const at = snap.docs[0]?.data().createdAt as number | undefined;
   setS({ latest: { ...state.latest, [tripId]: at ?? 0 } });
 }
@@ -222,8 +245,8 @@ export async function loadMessages(tripId: string) {
   const have = state.messages[tripId] ?? [];
   const after = have.length ? have[have.length - 1].createdAt : 0;
   const q = after
-    ? query(collection(db, 'trips', tripId, 'messages'), where('createdAt', '>', after), orderBy('createdAt'))
-    : query(collection(db, 'trips', tripId, 'messages'), orderBy('createdAt', 'desc'), limit(MAX_LOAD));
+    ? query(collection(db, ...threadPath(tripId), 'messages'), where('createdAt', '>', after), orderBy('createdAt'))
+    : query(collection(db, ...threadPath(tripId), 'messages'), orderBy('createdAt', 'desc'), limit(MAX_LOAD));
   const snap = await getDocs(q);
   if (!snap.size && after) return;
   const got = snap.docs.map(d => ({ ...(d.data() as Omit<Message, 'id'>), id: d.id }));
@@ -239,12 +262,21 @@ export async function sendMessage(tripId: string, text: string, att?: Attachment
     const msg: Omit<Message, 'id'> = { uid: u.uid, name: myName(), text: t.slice(0, 2000), createdAt: Date.now() };
     if (att?.img) {
       msg.img = { ...att.img };
-      if (att.full) { const m = await addDoc(collection(db, 'trips', tripId, 'media'), { uid: u.uid, data: att.full, createdAt: Date.now() }); msg.img.media = m.id; media.set(m.id, att.full); }
+      if (att.full) { const m = await addDoc(collection(db, ...threadPath(tripId), 'media'), { uid: u.uid, data: att.full, createdAt: Date.now() }); msg.img.media = m.id; media.set(m.id, att.full); }
       if (!msg.img.gif) delete msg.img.gif;
     }
     if (att?.gif) msg.gif = att.gif;
-    await addDoc(collection(db, 'trips', tripId, 'messages'), msg);
+    if (tripId.startsWith('dm:')) {
+      const other = tripId.slice(3).split('_').find(x => x !== u.uid) ?? '';
+      const f = state.friends.find(x => x.uid === other);
+      const preview = msg.gif || msg.img?.gif ? 'GIF' : msg.img ? (msg.text ? `📷 ${msg.text}` : '📷 Photo') : msg.text;
+      await setDoc(doc(db, 'dms', tripId.slice(3)), { users: [u.uid, other].sort(), names: { [u.uid]: myName(), [other]: f?.name ?? 'Friend' }, updatedAt: msg.createdAt, last: { uid: u.uid, name: msg.name, text: preview.slice(0, 120), at: msg.createdAt } }, { merge: true });
+    }
+    await addDoc(collection(db, ...threadPath(tripId), 'messages'), msg);
     await loadMessages(tripId); markRead(tripId);
+    const said = msg.gif || msg.img?.gif ? 'sent a GIF' : msg.img ? (msg.text ? `📷 ${msg.text}` : 'sent a photo') : msg.text;
+    if (tripId.startsWith('dm:')) notifyThread(tripId, { title: msg.name, body: said.startsWith('sent a ') ? `${msg.name} ${said}` : said, url: `#dm:${u.uid}`, tag: tripId });
+    else { const t = state.trips.find(x => x.id === tripId); notifyThread(tripId, { title: `${t?.emoji ?? ''} ${t?.name ?? 'Trip'}`.trim(), body: said.startsWith('sent a ') ? `${msg.name} ${said}` : `${msg.name}: ${said}`, url: `#tripchat:${tripId}`, tag: `chat:${tripId}` }); }
     return null;
   } catch (e) { return fail(e); }
 }
@@ -252,7 +284,7 @@ export async function sendMessage(tripId: string, text: string, att?: Attachment
 const media = new Map<string, string>();
 export async function loadMedia(tripId: string, id: string): Promise<string | null> {
   if (media.has(id)) return media.get(id)!;
-  const snap = await getDoc(doc(db, 'trips', tripId, 'media', id));
+  const snap = await getDoc(doc(db, ...threadPath(tripId), 'media', id));
   const data = snap.exists() ? (snap.data().data as string) : null;
   if (data) media.set(id, data);
   return data;
@@ -260,8 +292,8 @@ export async function loadMedia(tripId: string, id: string): Promise<string | nu
 export async function deleteMessage(tripId: string, id: string) {
   try {
     const m = (state.messages[tripId] ?? []).find(x => x.id === id);
-    await deleteDoc(doc(db, 'trips', tripId, 'messages', id));
-    if (m?.img?.media) await deleteDoc(doc(db, 'trips', tripId, 'media', m.img.media)).catch(() => {});
+    await deleteDoc(doc(db, ...threadPath(tripId), 'messages', id));
+    if (m?.img?.media) await deleteDoc(doc(db, ...threadPath(tripId), 'media', m.img.media)).catch(() => {});
     setS({ messages: { ...state.messages, [tripId]: (state.messages[tripId] ?? []).filter(x => x.id !== id) } });
     return null;
   } catch (e) { return fail(e); }
@@ -276,7 +308,22 @@ export function hasUnread(tripId: string) {
   return at > read && !(mine && (state.messages[tripId] ?? []).length > 0);
 }
 
+/* ---------------- Direct messages ---------------- */
+export interface Dm { key: string; other: string; name: string; updatedAt: number; last?: { uid: string; name: string; text: string; at: number } }
+/** Your conversations with friends (one read for all of them). */
+export async function loadDms() {
+  const u = me(); if (!u) return;
+  const snap = await getDocs(query(collection(db, 'dms'), where('users', 'array-contains', u.uid)));
+  const dms: Dm[] = snap.docs.map(d => {
+    const x = d.data() as { users: string[]; names?: Record<string, string>; updatedAt: number; last?: Dm['last'] };
+    const other = x.users.find(v => v !== u.uid) ?? '';
+    return { key: `dm:${d.id}`, other, name: state.friends.find(f => f.uid === other)?.name ?? x.names?.[other] ?? 'Friend', updatedAt: x.updatedAt, last: x.last };
+  }).sort((a, b) => b.updatedAt - a.updatedAt);
+  setS({ dms, latest: { ...state.latest, ...Object.fromEntries(dms.map(t => [t.key, t.last && t.last.uid !== u.uid ? t.last.at : 0])) } });
+}
+
 /* ---------------- Activity for notifications ---------------- */
+export interface DmActivity { dm: Dm; messages: Message[] }
 export interface TripActivity { trip: Trip; items: TripItem[]; messages: Message[]; /** Someone added you to this trip since the last check. */ joined?: boolean }
 const seenKey = (tripId: string) => `pockets-seen-${tripId}`;
 /**
@@ -284,6 +331,24 @@ const seenKey = (tripId: string) => `pockets-seen-${tripId}`;
  * A trip seen for the first time starts from now, so old history doesn't flood the notifications.
  * Costs about one read per trip per kind when nothing is new.
  */
+/** New messages from friends in direct messages since this phone last checked (one read when nothing is new). */
+export async function checkDmActivity(): Promise<DmActivity[]> {
+  const u = me(); if (!u) return [];
+  await loadDms();
+  const out: DmActivity[] = [];
+  await Promise.all(state.dms.map(async dm => {
+    let since = 0; try { since = Number(localStorage.getItem(seenKey(dm.key)) || 0); } catch { /* none */ }
+    if (!since) { try { localStorage.setItem(seenKey(dm.key), String(dm.last?.at ?? Date.now())); } catch { /* not saved */ } if (!dm.last || dm.last.uid === u.uid || dm.last.at < Date.now() - 864e5) return; since = dm.last.at - 1; }
+    if (!dm.last || dm.last.at <= since) return;
+    const ms = await getDocs(query(collection(db, 'dms', dm.key.slice(3), 'messages'), where('createdAt', '>', since), orderBy('createdAt')));
+    const messages = ms.docs.map(d => ({ ...(d.data() as Omit<Message, 'id'>), id: d.id })).filter(m => m.uid !== u.uid);
+    const newest = Math.max(since, ...ms.docs.map(d => d.data().createdAt as number));
+    try { localStorage.setItem(seenKey(dm.key), String(newest)); } catch { /* not saved */ }
+    if (messages.length) out.push({ dm, messages });
+  }));
+  return out;
+}
+
 export async function checkTripActivity(): Promise<TripActivity[]> {
   const u = me(); if (!u) return [];
   await loadTrips();

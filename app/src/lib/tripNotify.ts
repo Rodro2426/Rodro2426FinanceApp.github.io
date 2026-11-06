@@ -1,5 +1,5 @@
 // Turns new activity in shared trips (other people's expenses, payments and messages) into Home notifications.
-import { checkTripActivity, loadItems, markRead, myUid, type TripActivity } from './social';
+import { checkDmActivity, checkTripActivity, dmKey, loadItems, markRead, myUid, type DmActivity, type TripActivity } from './social';
 import { getState, openSheet, setData, setUI } from './store';
 import { fmt } from './derive';
 import { sharesOf } from './settle';
@@ -38,19 +38,34 @@ export function tripNotifs(acts: TripActivity[], uid: string, today: string, exi
   return out;
 }
 
+/** One notification per friend per day for direct messages, counting up as more arrive. */
+export function dmNotifs(acts: DmActivity[], today: string, existing: Notif[], now = Date.now()): Notif[] {
+  return acts.map(({ dm, messages }) => {
+    const id = `dm:${dm.other}:${today}`;
+    const before = existing.find(n => n.id === id && !n.dismissed);
+    const count = messages.length + (before ? Number(before.body.match(/^(\d+) new messages/)?.[1] ?? 1) : 0);
+    const last = messages[messages.length - 1];
+    const words = last.text.length > 80 ? last.text.slice(0, 79) + '…' : last.text;
+    const text = last.gif || last.img?.gif ? 'Sent a GIF' : last.img ? (words ? `📷 ${words}` : 'Sent a photo') : words;
+    return { id, date: today, ts: now, kind: 'dm' as const, title: dm.name, body: (count > 1 ? `${count} new messages · ` : '') + text, read: false, dismissed: false, bannered: false, link: { dm: dm.other } };
+  });
+}
+
 let busy = false;
 /** Checks the trips once and adds what's new to the notifications. Skipped during the tour (practice data). */
 export async function pollTrips() {
   if (busy || getState().ui.tour) return;
   busy = true;
   try {
-    const acts = await checkTripActivity();
+    const [acts, dmActs] = await Promise.all([checkTripActivity(), checkDmActivity().catch(() => [] as DmActivity[])]);
     const page = getState().ui.page;
+    // A conversation you're looking at right now doesn't need a notification.
+    const dms = dmActs.filter(a => page !== `dm:${a.dm.other}`);
     // Messages in a chat you're looking at right now don't need a notification.
     const shown = acts.map(a => (page === `tripchat:${a.trip.id}` ? { ...a, messages: [] } : a)).filter(a => a.items.length || a.messages.length || a.joined);
-    if (!shown.length) return;
+    if (!shown.length && !dms.length) return;
     setData(x => {
-      const fresh = tripNotifs(shown, myUid(), todayISO(), x.notifications);
+      const fresh = [...tripNotifs(shown, myUid(), todayISO(), x.notifications), ...dmNotifs(dms, todayISO(), x.notifications)];
       const ids = new Set(fresh.map(n => n.id));
       return { notifications: [...fresh, ...x.notifications.filter(n => !ids.has(n.id))] };
     });
@@ -59,7 +74,9 @@ export async function pollTrips() {
 
 /** Opens what a trip notification is about: the chat, or the trip with that expense open. */
 export async function openTripLink(link: NonNullable<Notif['link']>) {
+  if (link.dm) { setUI({ sheet: null, page: `dm:${link.dm}` }); markRead(dmKey(link.dm)); return; }
+  if (!link.trip) return;
   if (link.chat) { setUI({ sheet: null, page: `tripchat:${link.trip}` }); markRead(link.trip); return; }
   setUI({ sheet: null, page: `trip:${link.trip}` });
-  if (link.item) { await loadItems(link.trip).catch(() => {}); openSheet({ name: 'tripItem', trip: link.trip, id: link.item }); }
+  if (link.item) { const trip = link.trip; await loadItems(trip).catch(() => {}); openSheet({ name: 'tripItem', trip, id: link.item }); }
 }

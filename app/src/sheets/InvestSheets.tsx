@@ -3,7 +3,7 @@ import { useApp, setData, closeSheet, openSheet, flash, getData } from '../lib/s
 import { LINE, RED, TEXT } from '../lib/constants';
 import { fmt, num, uid } from '../lib/derive';
 import { todayISO } from '../lib/dates';
-import { colorOf, holdings, refreshQuotes, refreshUsdRate, searchSymbols, toLocal, type SymbolMatch } from '../lib/invest';
+import { FINNHUB_KEY, colorOf, finnhubKey, holdings, refreshQuotes, refreshUsdRate, searchSymbols, toLocal, type SymbolMatch } from '../lib/invest';
 import type { Trade } from '../lib/types';
 import { FieldLabel, GhostDanger, PrimaryBtn, Segmented, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -30,7 +30,7 @@ export function TradeSheet({ ticker: t0, side: s0 }: { ticker?: string; side?: '
 
   // Look up tickers as you type (needs the Finnhub key).
   useEffect(() => {
-    if (t0 || !d.settings.finnhubKey || ticker.length < 1) { setMatches([]); return; }
+    if (t0 || !finnhubKey(d) || ticker.length < 1) { setMatches([]); return; }
     const h = setTimeout(() => { searchSymbols(ticker).then(setMatches).catch(() => setMatches([])); }, 350);
     return () => clearTimeout(h);
   }, [ticker]);
@@ -47,7 +47,7 @@ export function TradeSheet({ ticker: t0, side: s0 }: { ticker?: string; side?: '
     const trade: Trade = { id: uid('t'), ts: Date.now(), ticker: T, name: name.trim() || own?.name || T, currency, side, qty: q, price: p, fee: f, date };
     setData(x => ({ investments: { ...x.investments, trades: [...x.investments.trades, trade] } }));
     closeSheet(); flash(`${side === 'buy' ? 'Bought' : 'Sold'} ${fmtQty(q)} ${T}`);
-    if (d.settings.finnhubKey) refreshQuotes();
+    if (finnhubKey(d)) refreshQuotes();
   };
   const priceField = currency === 'USD'
     ? <input type="text" inputMode="decimal" placeholder="0.00" value={price} onChange={e => setPrice(decInput(e.target.value))} style={{ ...textInput, fontWeight: 600, width: '100%' }} />
@@ -174,7 +174,7 @@ export function HoldingSheet({ ticker }: { ticker: string }) {
           <button onClick={setPrice} disabled={!(num(manual) > 0)} style={{ height: 52, padding: '0 18px', borderRadius: 18, border: 0, background: TEXT, color: 'var(--on-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: num(manual) > 0 ? 1 : 0.45 }}>Set</button>
         </div>
         <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
-          Useful for Colombian stocks or funds without a live price. {q?.manual && d.settings.finnhubKey && <button onClick={useLive} style={{ border: 0, padding: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Use live price again</button>}
+          Useful for Colombian stocks or funds without a live price. {q?.manual && finnhubKey(d) && <button onClick={useLive} style={{ border: 0, padding: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Use live price again</button>}
         </span>
 
         <FieldLabel>Trades</FieldLabel>
@@ -215,6 +215,7 @@ export function PriceSettingsSheet() {
         <span style={{ margin: '0 4px', fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>
           Live prices come from Finnhub. Create a free account at <a href="https://finnhub.io/register" target="_blank" rel="noreferrer">finnhub.io</a>, copy your API key from the dashboard and paste it here. It stays on this phone. US stocks and ETFs update during market hours; others you can price yourself.
         </span>
+        {FINNHUB_KEY && <span style={{ margin: '10px 4px 0', fontSize: 13, lineHeight: 1.45, color: 'oklch(0.45 0.11 150)', fontWeight: 600 }}>Live prices are already on for everyone. You only need your own key if you want a separate limit.</span>}
         <FieldLabel m="14px 4px 6px">Finnhub API key</FieldLabel>
         <input value={key} onChange={e => setKey(e.target.value.trim())} placeholder="Paste your key" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{ ...textInput, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 16 }} />
         <PrimaryBtn onClick={saveKey} disabled={testing} mt={12} h={50} fs={15}>{testing ? 'Checking…' : 'Save key'}</PrimaryBtn>

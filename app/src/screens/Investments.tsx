@@ -3,7 +3,7 @@ import { useApp, setUI, openSheet, setData, flash } from '../lib/store';
 import { LINE, TEXT } from '../lib/constants';
 import { fmt, num } from '../lib/derive';
 import { dailyRate, monthlyRate } from '../lib/interest';
-import { OTHER, colorOf, holdings, refreshQuotes, refreshUsdRate, type Holding } from '../lib/invest';
+import { OTHER, colorOf, finnhubKey, holdings, refreshQuotes, refreshUsdRate, type Holding } from '../lib/invest';
 import { MoneyInput } from '../ui/MoneyInput';
 import { cdtView, cdtsOf, type CdtView } from '../lib/cdt';
 import { CdtBadge } from '../sheets/CdtSheets';
@@ -33,7 +33,7 @@ export default function Investments() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0 0' }}>
         <button onClick={() => setUI({ page: null })} aria-label="Back to accounts" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
         <span style={{ flex: 1, fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em' }}>Investments</span>
-        <button onClick={() => openSheet({ name: 'priceSettings' })} aria-label="Price settings" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{d.settings.finnhubKey ? 'Prices' : 'Connect'}</button>
+        <button onClick={() => openSheet({ name: 'priceSettings' })} aria-label="Price settings" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{finnhubKey(d) ? 'Prices' : 'Connect'}</button>
       </div>
       <Segmented items={[['portfolio', 'Portfolio'], ['sim', 'Returns simulator']]} value={view} onPick={setView} />
       <div style={{ marginTop: 14 }}>{view === 'portfolio' ? <Portfolio /> : <Simulator />}</div>
@@ -108,7 +108,7 @@ function Portfolio() {
         </div>
       </div>
 
-      {!d.settings.finnhubKey && (
+      {!finnhubKey(d) && (
         <div onClick={() => openSheet({ name: 'priceSettings' })} style={{ background: 'oklch(0.94 0.04 250)', borderRadius: 22, padding: 16, display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer' }}>
           <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--surface)', color: 'oklch(0.42 0.1 250)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.TrendUp size={18} /></div>
           <span style={{ flex: 1, fontSize: 14, lineHeight: 1.35, color: 'oklch(0.32 0.08 250)' }}>Connect live prices with a free Finnhub key. Until then, you can type prices in yourself.</span>

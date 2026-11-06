@@ -38,6 +38,8 @@ export interface SyncState {
 let state: SyncState = { uid: null, email: null, syncedAt: 0, dirty: false, status: 'off', conflict: null };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
+// Development builds only: lets screenshots show signed-in screens without Firebase. Not in the live app.
+if (import.meta.env.DEV && typeof window !== 'undefined') Object.assign(window, { __sync: (p: Partial<SyncState>) => { state = { ...state, ...p }; emit(); } });
 export const getSync = () => state;
 export const subscribeSync = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 function update(p: Partial<SyncState>) {

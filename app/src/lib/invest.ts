@@ -50,9 +50,13 @@ async function fh<T>(path: string, key: string): Promise<T> {
   return r.json();
 }
 
+/** Finnhub key built into the app so live prices work for everyone. Someone's own key (Prices) takes priority. */
+export const FINNHUB_KEY = '';
+export const finnhubKey = (d: { settings: { finnhubKey?: string } }) => d.settings.finnhubKey || FINNHUB_KEY;
+
 export interface SymbolMatch { symbol: string; description: string; type: string }
 export async function searchSymbols(q: string): Promise<SymbolMatch[]> {
-  const key = getData().settings.finnhubKey;
+  const key = finnhubKey(getData());
   if (!key || q.trim().length < 1) return [];
   const r = await fh<{ result: SymbolMatch[] }>(`/search?q=${encodeURIComponent(q.trim())}`, key);
   return (r.result || []).filter(x => !x.symbol.includes('.') || x.symbol.endsWith('.CO')).slice(0, 8);
@@ -60,7 +64,7 @@ export async function searchSymbols(q: string): Promise<SymbolMatch[]> {
 
 /** Refreshes prices (and names/logos the first time) for every held ticker without a manual price. */
 export async function refreshQuotes(): Promise<{ ok: number; failed: string[]; error?: string }> {
-  const d = getData(), key = d.settings.finnhubKey;
+  const d = getData(), key = finnhubKey(d);
   const tickers = holdings(d).filter(h => !d.investments.quotes[h.ticker]?.manual).map(h => h.ticker);
   if (!key) return { ok: 0, failed: tickers, error: 'nokey' };
   const quotes: Record<string, Quote> = {}, failed: string[] = [];

@@ -39,9 +39,9 @@ export interface Bill {
   /** Someone else pays it (e.g. a shared plan): listed for reference, but never charged, reminded or counted. */
   notMine?: boolean;
 }
-export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup' | 'trip';
+export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup' | 'trip' | 'dm';
 /** `id` is a stable key, so the same event never notifies twice. */
-export interface Notif { id: string; date: string; ts: number; kind: NotifKind; title: string; body: string; read: boolean; dismissed: boolean; bannered: boolean; /** Trip activity: tapping opens the chat or the expense. */ link?: { trip: string; chat?: boolean; item?: string } }
+export interface Notif { id: string; date: string; ts: number; kind: NotifKind; title: string; body: string; read: boolean; dismissed: boolean; bannered: boolean; /** Trip or direct-message activity: tapping opens the chat, the expense or the conversation (dm = friend's id). */ link?: { trip?: string; chat?: boolean; item?: string; dm?: string } }
 export interface Goal { id: string; name: string; saved: number; target: number; months: number; hue: number }
 export interface Category { name: string; subs: string[] }
 
@@ -130,7 +130,7 @@ export interface UI {
   toast: string | null;
   lastAdd: { pocket: string; acct: string };
   /** A full-screen page shown over the tabs. */
-  page?: 'investments' | 'social' | `report:${string}` | `trip:${string}` | `tripstats:${string}` | `tripchat:${string}` | null;
+  page?: 'investments' | 'social' | `report:${string}` | `trip:${string}` | `tripstats:${string}` | `tripchat:${string}` | `dm:${string}` | null;
   /** First open on this device: choose sample data, a fresh start or a backup. */
   welcome?: boolean;
   /** Home-screen install guide: shown in iPhone Safari, or opened from Profile. */

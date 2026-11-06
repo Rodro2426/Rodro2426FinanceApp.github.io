@@ -42,3 +42,14 @@ describe('photo and GIF messages', () => {
     expect(tripNotifs([{ trip, items: [], messages: [{ ...photo, text: 'La playa!' }] }], 'me', '2026-11-05', [])[0].body).toBe('Ana: 📷 La playa!');
   });
 });
+
+import { dmNotifs } from './tripNotify';
+describe('direct message notifications', () => {
+  const dm = { key: 'dm:ana_me', other: 'ana', name: 'Ana', updatedAt: 3 };
+  it('one per friend per day, counting up, opening the conversation', () => {
+    const first = dmNotifs([{ dm, messages: [{ id: 'a', uid: 'ana', name: 'Ana', text: 'Hola!', createdAt: 1 }] }], '2026-11-06', []);
+    expect(first[0]).toMatchObject({ id: 'dm:ana:2026-11-06', kind: 'dm', title: 'Ana', body: 'Hola!', link: { dm: 'ana' } });
+    const next = dmNotifs([{ dm, messages: [{ id: 'b', uid: 'ana', name: 'Ana', text: '', createdAt: 2, img: { thumb: 'x', w: 1, h: 1 } }] }], '2026-11-06', first);
+    expect(next[0].body).toBe('2 new messages · Sent a photo');
+  });
+});

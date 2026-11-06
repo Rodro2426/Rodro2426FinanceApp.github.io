@@ -222,10 +222,11 @@ export const NOTIF_TONE: Record<NotifKind, { bg: string; fg: string }> = {
   budget: { bg: 'oklch(0.96 0.055 92)', fg: 'oklch(0.46 0.09 75)' },
   card: { bg: 'oklch(0.94 0.04 250)', fg: 'oklch(0.42 0.1 250)' },
   backup: { bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-800)' },
-  trip: { bg: 'oklch(0.94 0.045 300)', fg: 'oklch(0.42 0.11 300)' }
+  trip: { bg: 'oklch(0.94 0.045 300)', fg: 'oklch(0.42 0.11 300)' },
+  dm: { bg: 'oklch(0.94 0.04 240)', fg: 'oklch(0.42 0.11 240)' }
 };
 export const NotifIcon = ({ kind, size = 18 }: { kind: NotifKind; size?: number }) =>
-  kind === 'income' ? <I.Plus size={size} /> : kind === 'budget' ? <I.Alert size={size} /> : kind === 'card' ? <I.Card size={size} /> : kind === 'backup' ? <I.Download size={size} /> : kind === 'trip' ? <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><circle cx="17" cy="9" r="2.6" /><path d="M16.5 14.6c2.6.2 4.5 1.9 5 4.9" /></svg> : <I.Calendar size={size} />;
+  kind === 'income' ? <I.Plus size={size} /> : kind === 'budget' ? <I.Alert size={size} /> : kind === 'card' ? <I.Card size={size} /> : kind === 'backup' ? <I.Download size={size} /> : kind === 'dm' ? <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg> : kind === 'trip' ? <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><circle cx="17" cy="9" r="2.6" /><path d="M16.5 14.6c2.6.2 4.5 1.9 5 4.9" /></svg> : <I.Calendar size={size} />;
 
 /** One tap: opens the share sheet with the backup file, then clears the reminder. */
 export function BackupNowButton({ id }: { id: string }) {
@@ -263,7 +264,7 @@ export function NotificationsSheet() {
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 15, fontWeight: 700 }}>{n.title}</span>
                 <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', lineHeight: 1.35 }}>{n.body}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-neutral-500)', marginTop: 2 }}>{relDay(n.date, today)}{n.link ? (n.link.chat ? ' · Tap to open the chat' : ' · Tap to see it') : ''}</span>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-neutral-500)', marginTop: 2 }}>{relDay(n.date, today)}{n.link ? (n.link.chat || n.link.dm ? ' · Tap to open the chat' : ' · Tap to see it') : ''}</span>
                 {n.kind === 'backup' && <BackupNowButton id={n.id} />}
               </div>
               <button onClick={e => { e.stopPropagation(); dismiss(n.id); }} aria-label="Dismiss" style={{ width: 30, height: 30, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.X size={14} /></button>
