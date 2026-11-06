@@ -98,6 +98,7 @@ export type Sheet =
   | { name: 'pocket'; id: string; view?: PocketView }
   | { name: 'saved'; id: string }
   | { name: 'move'; id: string; to?: string }
+  | { name: 'cover' }
   | { name: 'editPocket'; id: string | null }
   | { name: 'export'; acct: string }
   | { name: 'acct'; id: string }

@@ -144,7 +144,7 @@ export function transferLeftover(d: Data, c: Ctx, from: string, parts: Record<st
   const src = pocketStats(d, from, c);
   if (!src) return null;
   const entries = Object.entries(parts).map(([to, v]) => [to, whole(d, v)] as const).filter(([, v]) => v > 0);
-  const known = (id: string) => id !== from && (d.pockets.some(p => p.id === id) || d.goals.some(g => g.id === id));
+  const known = (id: string) => id !== from && (id === COVER || d.pockets.some(p => p.id === id) || d.goals.some(g => g.id === id));
   const total = sum(entries.map(([, v]) => v));
   if (!entries.length || entries.some(([to, v]) => !known(to) || v < 0) || total > Math.max(0, src.left) + 1e-9) return null;
   const moves: Move[] = entries.map(([to, amt]) => ({ id: uid('m'), week: c.weekStart, from, to, amt }));
@@ -153,4 +153,33 @@ export function transferLeftover(d: Data, c: Ctx, from: string, parts: Record<st
     moves: [...d.moves, ...moves],
     goals: toGoal.size ? d.goals.map(g => (toGoal.has(g.id) ? { ...g, saved: g.saved + toGoal.get(g.id)! } : g)) : d.goals
   };
+}
+
+/* ---------------- Covering the shortfall with leftovers ---------------- */
+/** Destination for leftover that is given up to cover the shortfall: it leaves the pockets and isn't spent. */
+export const COVER = '_cover';
+
+/** This week's leftover in each pocket (what could be given up), biggest first. */
+export function leftovers(d: Data, c: Ctx) {
+  return d.pockets.map(p => ({ id: p.id, left: whole(d, Math.max(0, pocketStats(d, p.id, c)?.left ?? 0)) })).filter(x => x.left > 0).sort((a, b) => b.left - a.left);
+}
+
+/** A suggestion: take from the biggest leftovers first until the real shortfall is covered (or the leftovers run out). */
+export function suggestCover(d: Data, c: Ctx): Record<string, number> {
+  let need = whole(d, Math.max(0, monthSummary(d, c).real));
+  const out: Record<string, number> = {};
+  for (const x of leftovers(d, c)) { if (need <= 0) break; const take = Math.min(x.left, need); out[x.id] = take; need = whole(d, need - take); }
+  return out;
+}
+
+/** Gives up leftover from several pockets at once (per pocket, never more than it has left this week). */
+export function coverWith(d: Data, c: Ctx, parts: Record<string, number>): Partial<Data> | null {
+  let cur = d; let any = false;
+  for (const [pid, v] of Object.entries(parts)) {
+    if (!(v > 0)) continue;
+    const p = transferLeftover(cur, c, pid, { [COVER]: v });
+    if (!p) return null;
+    cur = { ...cur, ...p }; any = true;
+  }
+  return any ? { moves: cur.moves } : null;
 }

@@ -136,7 +136,10 @@ export default function Budget() {
         {line('Left to spend in pockets', fmt(sum.toSpend), 'what your pockets still promise this month')}
         {line('In your accounts', fmt(sum.balance), 'debit, savings and cash, minus card debt')}
         {line(sum.real > 0 ? 'Real shortfall' : 'Covered by your accounts', fmt(Math.abs(sum.real)), sum.real > 0 ? 'the number that matters: it ignores what you already spent' : 'your accounts cover every pocket', sum.real > 0 ? RED : 'oklch(0.45 0.11 150)')}
-        {sum.real > 0.004 && <div role="alert" style={{ background: 'var(--color-accent-100)', borderRadius: 14, padding: '10px 12px', fontSize: 13, lineHeight: 1.4, color: 'var(--color-accent-900)' }}>Your pockets add up to <b>{fmt(sum.real)}</b> more than you have in your accounts.</div>}
+        {sum.real > 0.004 && <div role="alert" style={{ background: 'var(--color-accent-100)', borderRadius: 14, padding: '10px 12px', fontSize: 13, lineHeight: 1.4, color: 'var(--color-accent-900)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <span>Your pockets add up to <b>{fmt(sum.real)}</b> more than you have in your accounts.</span>
+          {allStats(d, c).some(p => p.left > 0.004) && <button onClick={() => openSheet({ name: 'cover' })} style={{ alignSelf: 'flex-start', height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cover it with this week's leftovers</button>}
+        </div>}
         <button onClick={() => openSheet({ name: 'reconcile' })} className="hv-n200" style={{ height: 42, borderRadius: 999, border: 0, background: issues ? 'oklch(0.96 0.055 92)' : 'var(--color-neutral-100)', color: issues ? 'oklch(0.33 0.07 70)' : TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
           {issues ? `Review mismatches (${issues})` : 'Review mismatches'}
         </button>

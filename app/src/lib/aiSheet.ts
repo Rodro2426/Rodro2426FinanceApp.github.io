@@ -16,7 +16,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const weeks = d.settings.weeks;
   const acc = (id: string) => d.accounts.find(a => a.id === id);
   const pocketName = (id: string) => (id ? d.pockets.find(p => p.id === id)?.name || 'Deleted pocket' : 'No pocket (scheduled bill)');
-  const goalOrPocket = (id: string) => (id === '_income' ? 'New income' : d.pockets.find(p => p.id === id)?.name || d.goals.find(g => g.id === id)?.name || 'Deleted');
+  const goalOrPocket = (id: string) => (id === '_income' ? 'New income' : id === '_cover' ? 'Covered the shortfall' : d.pockets.find(p => p.id === id)?.name || d.goals.find(g => g.id === id)?.name || 'Deleted');
   const period = months.length === 1 ? monthLabel(months[0]) : `${monthLabel(months[0])} to ${monthLabel(months[months.length - 1])}`;
   const acctLabel = acctId === 'all' ? 'All accounts' : acc(acctId)?.name || '';
   const cur = d.settings.currency;

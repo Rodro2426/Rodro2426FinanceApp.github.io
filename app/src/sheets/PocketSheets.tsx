@@ -4,7 +4,7 @@ import { EMOJIS, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
 import { monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
-import { addExtraIncome, coverFirst, monthSummary, splitAmong, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
+import { COVER, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, splitAmong, suggestCover, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
 import { allIncomeCats } from '../lib/reports';
 import type { Data, Move, PocketView } from '../lib/types';
@@ -448,7 +448,7 @@ function MovesCard({ id }: { id: string }) {
   const list = d.moves.filter(m => (m.to === id || m.from === id) && (moveMonth(m) === c.month || m.week === c.weekStart))
     .sort((a, b) => moveTime(b) - moveTime(a) || (b.week > a.week ? 1 : -1));
   if (!list.length) return null;
-  const nameOf = (x: string) => d.pockets.find(p => p.id === x)?.name ?? d.goals.find(g => g.id === x)?.name ?? 'a deleted pocket';
+  const nameOf = (x: string) => (x === COVER ? 'cover the shortfall' : d.pockets.find(p => p.id === x)?.name ?? d.goals.find(g => g.id === x)?.name ?? 'a deleted pocket');
   const incomeOf = (m: Move) => d.incomes.find(t => incomeMoves([m], t).length);
   const label = (m: Move) => m.to === id
     ? (m.from === '_income' ? `From income${incomeOf(m) ? ` · ${incomeOf(m)!.note}` : ''}` : `From ${nameOf(m.from)}`)
@@ -584,7 +584,12 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
   const all = allStats(d, c), s = all.find(x => x.id === id);
   const others = all.filter(x => x.id !== id);
   const leftover = s ? Math.max(0, roundAmt(s.left)) : 0;
-  const [parts, setParts] = useState<Record<string, string>>(() => (to ? { [to]: String(d.settings.currency === 'COP' ? Math.floor(leftover) : leftover) } : {}));
+  const shortfall = Math.max(0, roundAmt(monthSummary(d, c).real));
+  const [parts, setParts] = useState<Record<string, string>>(() => {
+    if (!to) return {};
+    const v = to === COVER ? Math.min(leftover, shortfall) : leftover;
+    return { [to]: String(d.settings.currency === 'COP' ? Math.floor(v) : v) };
+  });
   if (!s) return null;
   const nums = Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, roundAmt(num(v))]));
   const total = Object.values(nums).reduce((a, n) => a + n, 0);
@@ -603,7 +608,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
     if (!patch) return;
     setData(x => transferLeftover(x, ctxOf(x), id, nums) ?? {});
     const n = Object.values(nums).filter(v => v > 0).length;
-    closeSheet(); flash(`Moved ${fmt(total)} from ${s.name} to ${n === 1 ? (d.pockets.find(p => nums[p.id] > 0)?.name ?? d.goals.find(g => nums[g.id] > 0)?.name) : `${n} places`} · just for this week`);
+    closeSheet(); flash(n === 1 && nums[COVER] > 0 ? `${fmt(total)} from ${s.name} now covers the shortfall` : `Moved ${fmt(total)} from ${s.name} to ${n === 1 ? (d.pockets.find(p => nums[p.id] > 0)?.name ?? d.goals.find(g => nums[g.id] > 0)?.name) : `${n} places`} · just for this week`);
   };
   const destRow = (key: string, name: string, hue: number, sub: string, st?: { initial: string; photoBg: string }) => (
     <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: `1px solid ${LINE}` }}>
@@ -634,14 +639,16 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
               <button key={l as string} onClick={f as () => void} disabled={!leftover || !others.length} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{l as string}</button>
             ))}
           </div>
+          {(sumB.real > 0.004 || nums[COVER] > 0) && destRow(COVER, 'Cover the shortfall', 25, `Shortfall: ${fmt(Math.max(0, sumB.real))} → ${fmt(Math.max(0, sumA.real))}`)}
           {others.map(o => destRow(o.id, o.name, o.hue, `Week: ${fmt(o.left)} → ${fmt(nums[o.id] ? weekLeftAfter(o.id) : o.left)} left`, o))}
           {d.goals.map(g => destRow(g.id, g.name, g.hue, `Goal: ${fmt(g.saved)} → ${fmt(g.saved + (nums[g.id] || 0))} of ${fmt(g.target)}`))}
           {others.length === 0 && d.goals.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '8px 0' }}>Create another pocket or a savings goal first.</span>}
         </div>
 
         <div aria-label="Move check" style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
-          <span style={{ fontWeight: 700 }}>Only a transfer for this week</span>
-          <span style={{ lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>No new money is created: what {s.name} gives, the others get. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</span>
+          <span style={{ fontWeight: 700 }}>{nums[COVER] > 0 ? 'Only for this week' : 'Only a transfer for this week'}</span>
+          <span style={{ lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{nums[COVER] > 0 ? <>Money given up to the shortfall leaves {s.name} for this week and stays in your account. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</> : <>No new money is created: what {s.name} gives, the others get. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</>}</span>
+          {sumB.real > 0.004 && <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ color: 'var(--color-neutral-700)' }}>Real shortfall</span><span style={{ whiteSpace: 'nowrap' }}>{fmt(Math.max(0, sumB.real))} → <b style={{ color: sumA.real > 0.004 ? RED : 'oklch(0.5 0.12 150)' }}>{fmt(Math.max(0, sumA.real))}</b></span></div>}
           {[['Month income', sumB.income, sumA.income], ['Month plan', sumB.plan, sumA.plan], ['All pockets this week', all.reduce((a, x) => a + x.budget, 0), allStats(after, c).reduce((a, x) => a + x.budget, 0)]].map(([l, b, a]) => (
             <div key={l as string} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
               <span style={{ color: 'var(--color-neutral-700)' }}>{l as string}</span>
@@ -651,6 +658,62 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
           {d.goals.some(g => (nums[g.id] || 0) > 0) && <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Money sent to a goal leaves the pockets and is saved there.</span>}
         </div>
         <PrimaryBtn onClick={confirm} disabled={!patch}>{total > 0 && !tooMuch ? `Move ${fmt(total)}` : 'Move'}</PrimaryBtn>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Cover the shortfall with this week's leftovers ---------------- */
+export function CoverSheet() {
+  const { data: d } = useApp();
+  const c = ctxOf(d);
+  const all = allStats(d, c), left = leftovers(d, c);
+  const [parts, setParts] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(suggestCover(d, c)).map(([k, v]) => [k, String(v)])));
+  const nums = Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, roundAmt(num(v))]));
+  const total = Object.values(nums).reduce((a, n) => a + n, 0);
+  const patch = total > 0 ? coverWith(d, c, nums) : null;
+  const before = monthSummary(d, c), after = patch ? monthSummary({ ...d, ...patch }, c) : before;
+  const over = left.find(x => (nums[x.id] || 0) > x.left + 0.004);
+  const confirm = () => {
+    if (!patch) return;
+    setData(x => coverWith(x, ctxOf(x), nums) ?? {});
+    closeSheet(); flash(after.real > 0.004 ? `${fmt(total)} covered · ${fmt(after.real)} still short` : `Shortfall covered with ${fmt(total)} of leftovers`);
+  };
+  return (
+    <SheetFrame title="Cover the shortfall">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: before.real > 0.004 ? 'var(--color-accent-100)' : 'oklch(0.95 0.045 155)', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: before.real > 0.004 ? 'var(--color-accent-800)' : 'oklch(0.42 0.09 155)' }}>Your pockets promise more than you have</span>
+          <span style={{ fontSize: 34, fontWeight: 700, letterSpacing: '-0.03em', color: before.real > 0.004 ? 'var(--color-accent-900)' : 'oklch(0.3 0.07 155)' }}>{fmt(Math.max(0, before.real))}</span>
+          <span style={{ fontSize: 13, color: before.real > 0.004 ? 'var(--color-accent-800)' : 'oklch(0.42 0.09 155)' }}>{total > 0 ? <>After this: <b>{after.real > 0.004 ? `${fmt(after.real)} short` : 'covered ✓'}</b></> : 'Give up some of this week\'s leftovers to close it.'}</span>
+        </div>
+        <span style={{ margin: '12px 6px 0', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Money you didn't spend this week stays in your account instead of being promised to the pocket. Only this week changes: next Monday every pocket starts again from its own budget.</span>
+        <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '10px 12px 4px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', gap: 6, paddingBottom: 8 }}>
+            <button onClick={() => setParts(Object.fromEntries(Object.entries(suggestCover(d, c)).map(([k, v]) => [k, String(v)])))} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Just enough</button>
+            <button onClick={() => setParts(Object.fromEntries(left.map(x => [x.id, String(x.left)])))} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>All leftovers</button>
+            <button onClick={() => setParts({})} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Clear</button>
+          </div>
+          {left.map(x => {
+            const st = all.find(a => a.id === x.id)!;
+            return (
+              <div key={x.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: `1px solid ${LINE}` }}>
+                <PocketDot st={st} size={32} fs={15} bg={tint(st.hue)} color={ink(st.hue)} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{st.name}</span>
+                  <span style={{ fontSize: 12, color: (nums[x.id] || 0) > x.left + 0.004 ? RED : 'var(--color-neutral-700)' }}>{fmt(x.left)} left this week{nums[x.id] ? ` → ${fmt(Math.max(0, x.left - nums[x.id]))}` : ''}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(st.hue), borderRadius: 14, padding: '8px 10px', width: 116, flex: 'none' }}>
+                  <span style={{ fontSize: 14, color: ink(st.hue) }}>{curSymbol()}</span>
+                  <MoneyInput value={parts[x.id] || ''} onChange={v => setParts(p0 => ({ ...p0, [x.id]: v }))} ariaLabel={`From ${st.name}`} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(st.hue), outline: 'none', padding: 0 }} />
+                </div>
+              </div>
+            );
+          })}
+          {!left.length && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '8px 0 10px' }}>No pocket has money left this week.</span>}
+        </div>
+        {over && <span style={{ margin: '8px 6px 0', fontSize: 12.5, color: RED }}>That's more than {all.find(a => a.id === over.id)?.name} has left this week.</span>}
+        <PrimaryBtn onClick={confirm} disabled={!patch}>{total > 0 && patch ? `Use ${fmt(total)} of leftovers` : 'Choose how much to use'}</PrimaryBtn>
       </div>
     </SheetFrame>
   );

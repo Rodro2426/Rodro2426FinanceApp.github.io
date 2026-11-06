@@ -42,7 +42,7 @@ import { GroupItemSheet, GroupSheet } from './sheets/GroupSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
 import { EditTxnSheet } from './sheets/EditTxn';
-import { AddSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
+import { AddSheet, CoverSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
 import * as I from './ui/icons';
 
@@ -57,6 +57,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'pocket': return <PocketSheet id={sheet.id} view={sheet.view} />;
     case 'saved': return <SavedSheet id={sheet.id} />;
     case 'move': return <MoveSheet id={sheet.id} to={sheet.to} />;
+    case 'cover': return <CoverSheet />;
     case 'editPocket': return <EditPocketSheet id={sheet.id} />;
     case 'export': return <ExportSheet acct={sheet.acct} />;
     case 'acct': return <AcctSheet id={sheet.id} />;

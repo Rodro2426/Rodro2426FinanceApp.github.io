@@ -5,7 +5,7 @@ import { makeCtx } from './dates';
 import { emptyData, sampleData } from './seed';
 import { monthStats, pocketStats } from './derive';
 import { largestRemainder, weekShares } from './split';
-import { addExtraIncome, coverFirst, deleteIncome, editIncomeAmount, findMismatches, markIncluded, monthSummary, splitAmong, transferLeftover, undoMoves, type ExtraIncome } from './plan';
+import { addExtraIncome, COVER, coverFirst, coverWith, deleteIncome, editIncomeAmount, findMismatches, markIncluded, monthSummary, splitAmong, suggestCover, transferLeftover, undoMoves, type ExtraIncome } from './plan';
 
 /** November 2026, week 1 (Nov 2–8), today Wednesday Nov 4: 4 weeks in the month, 4 left. */
 const c = makeCtx(4, '2026-11-04');
@@ -186,5 +186,40 @@ describe('moving a pocket\'s leftover', () => {
     const next = makeCtx(4, '2026-11-11');
     expect(pocketStats(d1, 'lunch', next)!.budget).toBe(32000);
     expect(pocketStats(d1, 'salidas', next)!.budget).toBe(65000);
+  });
+});
+
+describe('covering the shortfall with leftovers', () => {
+  // Pockets still promise $464.500 this month; the bank has less.
+  const short = (bal: number): Data => { const d = cleaned(); return { ...d, accounts: d.accounts.map(a => (a.id === 'bank' ? { ...a, bal } : a)) }; };
+  it('the leftover given up comes off the shortfall, peso for peso, and nothing else changes', () => {
+    const d0 = short(420000), before = monthSummary(d0, c);
+    expect(before.real).toBe(44500);
+    const parts = suggestCover(d0, c);
+    expect(parts).toEqual({ salidas: 44500 }); // biggest leftover first, only what's needed
+    const d1 = apply(d0, coverWith(d0, c, parts)!), after = monthSummary(d1, c);
+    expect(after.real).toBe(0);
+    expect(after.toSpend).toBe(before.toSpend - 44500);
+    expect([after.income, after.plan, after.balance]).toEqual([before.income, before.plan, before.balance]);
+    expect(pocketStats(d1, 'salidas', c)!.left).toBe(64000 - 44500);
+    expect(d1.moves.filter(m => m.to === COVER)).toHaveLength(1);
+  });
+  it('when leftovers are not enough, it uses them all and says what is still missing', () => {
+    const d0 = short(361058 - 60558); // $300.500 in the bank
+    const parts = suggestCover(d0, c);
+    expect(parts).toEqual({ salidas: 64000, wagon: 18500, lunch: 16000 });
+    const d1 = apply(d0, coverWith(d0, c, parts)!);
+    expect(monthSummary(d1, c).real).toBe(monthSummary(d0, c).real - 98500);
+  });
+  it('can\'t give up more than a pocket has left; next week every pocket starts again', () => {
+    const d0 = short(420000);
+    expect(coverWith(d0, c, { lunch: 16001 })).toBeNull();
+    const d1 = apply(d0, coverWith(d0, c, { salidas: 30000, lunch: 10000 })!);
+    const next = makeCtx(4, '2026-11-11');
+    expect(pocketStats(d1, 'salidas', next)!.budget).toBe(65000);
+    expect(pocketStats(d1, 'lunch', next)!.budget).toBe(32000);
+  });
+  it('no shortfall, no suggestion', () => {
+    expect(suggestCover(short(900000), c)).toEqual({});
   });
 });
