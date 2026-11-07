@@ -1,5 +1,5 @@
 import type { Data } from './types';
-import { acctTxns, catOf, num } from './derive';
+import { acctTxns, catOf, num, periodsInMonth } from './derive';
 import { fmtDay, monthLabel, todayISO } from './dates';
 import { buildAiSheet, type AiSheet } from './aiSheet';
 
@@ -41,7 +41,7 @@ export function exportData(d: Data, month: string, acctId: string): ExportPayloa
     .sort((x, y) => (x.date < y.date ? -1 : 1))
     .map((p, i) => ({ month: p.date.slice(0, 7), date: p.date, desc: 'Payment to ' + (acc(p.to)?.name || 'card'), amount: -p.amt, from: acc(p.from)?.name || '', to: acc(p.to)?.name || '', id: 'P' + (i + 1) }));
   const pockets = months.length === 1 && acctId === 'all'
-    ? d.pockets.map(p => ({ name: p.name, planned: num(p.weeklyStr) * weeks, spent: details.filter(x => x.pocket === p.name).reduce((a, x) => a + x.amount, 0) }))
+    ? d.pockets.map(p => ({ name: p.name, planned: num(p.weeklyStr) * periodsInMonth(p, weeks), spent: details.filter(x => x.pocket === p.name).reduce((a, x) => a + x.amount, 0) }))
     : null;
   let statement: ExportPayload['statement'] = null;
   const a = acctId !== 'all' ? acc(acctId) : undefined;

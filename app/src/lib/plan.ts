@@ -1,7 +1,7 @@
 // The month's money in one place: income, plan, the two gaps, extra income splits and fixing mismatches.
 import type { Data, Income, Move } from './types';
-import { monthKey, type Ctx } from './dates';
-import { incomeMoves, monthStats, moveMonth, num, pocketStats, uid, weeksLeft } from './derive';
+import { makeCtx, monthKey, type Ctx } from './dates';
+import { incomeMoves, monthPlanOf, monthStats, moveMonth, num, pocketStats, uid, weeksLeft } from './derive';
 import { largestRemainder, unitsFor } from './split';
 
 const scale = (d: Data) => unitsFor(d.settings.currency);
@@ -30,7 +30,7 @@ export interface MonthSummary {
 export function monthSummary(d: Data, c: Ctx): MonthSummary {
   const base = num(d.incomeStr);
   const extra = sum(extraIncomes(d, c).map(t => t.amt));
-  const plan = sum(d.pockets.map(p => num(p.weeklyStr) * c.weeks)) + sum(incomeSplits(d, c).map(m => m.amt));
+  const plan = sum(d.pockets.map(p => monthPlanOf(p, c))) + sum(incomeSplits(d, c).map(m => m.amt));
   const toSpend = sum(d.pockets.map(p => Math.max(0, monthStats(d, p.id, c).left)));
   const balance = sum(d.accounts.map(a => (a.type === 'card' ? -a.bal : a.bal)));
   const income = base + extra;
@@ -45,7 +45,7 @@ export type SplitDist = 'budget' | 'even' | 'manual';
 export function splitAmong(d: Data, A: number, dist: SplitDist, manual: Record<string, number> = {}): Record<string, number> {
   const ps = d.pockets;
   if (dist === 'manual') return Object.fromEntries(ps.map(p => [p.id, whole(d, manual[p.id] || 0)]));
-  const parts = largestRemainder(A, ps.map(p => (dist === 'budget' ? num(p.weeklyStr) : 1)), scale(d));
+  const parts = largestRemainder(A, ps.map(p => (dist === 'budget' ? monthPlanOf(p, makeCtx(d.settings.weeks)) : 1)), scale(d));
   return Object.fromEntries(ps.map((p, i) => [p.id, parts[i]]));
 }
 
@@ -67,7 +67,7 @@ export function addExtraIncome(d: Data, c: Ctx, x: ExtraIncome): Partial<Data> {
   const parts = A > 0 ? splitAmong(d, A, x.dist, x.manual) : {};
   const spread = x.mode === 'month' ? weeksLeft(c) : 1;
   const moves: Move[] = Object.entries(parts).filter(([, v]) => v > 0)
-    .map(([to, amt]) => ({ id: uid('m'), week: c.weekStart, from: '_income', to, amt, income: id, month: c.month, spread }));
+    .map(([to, amt]) => ({ id: uid('m'), week: c.weekStart, day: c.today, from: '_income', to, amt, income: id, month: c.month, spread }));
   return {
     incomes: [{ id, ts: x.ts ?? Date.now(), a: x.acct, amt: X, note: x.note.trim() || x.cat || 'Income', date: c.today, ...(x.cat ? { cat: x.cat } : {}) }, ...d.incomes],
     accounts: d.accounts.map(y => (y.id === x.acct ? { ...y, bal: y.type === 'card' ? y.bal - X : y.bal + X } : y)),
@@ -147,7 +147,7 @@ export function transferLeftover(d: Data, c: Ctx, from: string, parts: Record<st
   const known = (id: string) => id !== from && (id === COVER || d.pockets.some(p => p.id === id) || d.goals.some(g => g.id === id));
   const total = sum(entries.map(([, v]) => v));
   if (!entries.length || entries.some(([to, v]) => !known(to) || v < 0) || total > Math.max(0, src.left) + 1e-9) return null;
-  const moves: Move[] = entries.map(([to, amt]) => ({ id: uid('m'), week: c.weekStart, from, to, amt }));
+  const moves: Move[] = entries.map(([to, amt]) => ({ id: uid('m'), week: c.weekStart, day: c.today, from, to, amt }));
   const toGoal = new Map(entries.filter(([to]) => d.goals.some(g => g.id === to)));
   return {
     moves: [...d.moves, ...moves],

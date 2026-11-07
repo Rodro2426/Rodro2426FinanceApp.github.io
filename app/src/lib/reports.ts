@@ -1,7 +1,7 @@
 // Data for the Insights reports: categories, accounts and budgets, over a period or over time.
 import type { Data, Income } from './types';
 import { addDays, daysInMonth, makeCtx, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
-import { acctTxns, catOf, ctxOf, num, pocketStats } from './derive';
+import { acctTxns, catOf, ctxOf, monthPlanOf, pocketStats } from './derive';
 import { cdtView, cdtsOf } from './cdt';
 import { holdings } from './invest';
 import { groupValue } from './networth';
@@ -128,7 +128,7 @@ export function compareBudgets(d: Data, c: Ctx, scope: 'week' | 'month'): Budget
   return d.pockets.map(p => {
     if (scope === 'week') { const s = pocketStats(d, p.id, c)!; return { id: p.id, name: p.name, hue: p.hue, budget: s.budget, spent: s.spent, left: s.left }; }
     const spent = d.expenses.filter(e => e.p === p.id && monthKey(e.date) === c.month).reduce((a, e) => a + e.amt, 0);
-    const budget = num(p.weeklyStr) * c.weeks + d.moves.filter(m => m.to === p.id && (m.month ?? monthKey(addDays(m.week, 6))) === c.month).reduce((a, m) => a + m.amt, 0)
+    const budget = monthPlanOf(p, c) + d.moves.filter(m => m.to === p.id && (m.month ?? monthKey(addDays(m.week, 6))) === c.month).reduce((a, m) => a + m.amt, 0)
       - d.moves.filter(m => m.from === p.id && (m.month ?? monthKey(addDays(m.week, 6))) === c.month).reduce((a, m) => a + m.amt, 0);
     return { id: p.id, name: p.name, hue: p.hue, budget, spent, left: budget - spent };
   });

@@ -1449,9 +1449,41 @@ Pockets lock|Bloqueo de Pockets
 1 pocket|1 bolsillo
 Fiducuenta|Fiducuenta
 For AI|Para IA
+Starts over|Se reinicia
+Every week|Cada semana
+Every 15 days|Cada 15 días
+Every quincena: from the 1st to the 15th, and from the 16th to the end of the month.|Cada quincena: del 1 al 15, y del 16 al final del mes.
+Every week, Monday to Sunday.|Cada semana, de lunes a domingo.
+Budget for 15 days|Presupuesto por quincena
+This quincena is already underway|Esta quincena ya empezó
+This week is already underway|Esta semana ya empezó
+For this quincena only, it starts with:|Solo para esta quincena, empieza con:
+For this week only, it starts with:|Solo para esta semana, empieza con:
+Days left|Días que quedan
+Full amount|Valor completo
+Full amount ·|Valor completo ·
+Days left ·|Días que quedan ·
+Type what you actually have left if it's different.|Escribe lo que de verdad te queda si es diferente.
+Every day. The Today view shares the quincena’s money across the days left.|Todos los días. La vista de Hoy reparte el dinero de la quincena entre los días que quedan.
+Nothing spent here yet this quincena.|Nada gastado aquí esta quincena.
+The quincena's money is shared only by the days you turn on, and days that are off get $0. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day.|El dinero de la quincena se reparte solo entre los días activados, y los días apagados reciben $0. Los días pasados muestran lo que gastaste; hoy y los próximos muestran lo que le toca a cada uno. Lo que no gastes hoy pasa al siguiente día de gasto.
+per week or 15 days|por semana o quincena
+every 15 days|cada 15 días
 `;
 
 export const ES_PATTERNS = `
+{0} a month over 2 quincenas|{0} al mes en 2 quincenas
+{0} a month over {1} weeks|{0} al mes en {1} semanas
+Until {0}. From {1} it gets the full {2}.|Hasta el {0}. Desde el {1} recibe los {2} completos.
+Until Sunday. From Monday it gets the full {0}.|Hasta el domingo. Desde el lunes recibe los {0} completos.
+No more spending days until {0}. It starts over on {1}.|No quedan días de gasto hasta el {0}. Empieza de nuevo el {1}.
+Over budget until {0}|Pasado del presupuesto hasta el {0}
+Left until {0}|Queda hasta el {0}
+left until {0}|quedan hasta el {0}
+Until {0}|Hasta el {0}
+· until {0}|· hasta el {0}
+{0} every 15 days × 2|{0} cada 15 días × 2
+{0} a week × {1} weeks|{0} a la semana × {1} semanas
 Unlock with {0}|Desbloquear con {0}
 {0} isn't available here (iPhone needs iOS 16+ and iCloud Keychain on).|{0} no está disponible aquí (el iPhone necesita iOS 16+ y el Llavero de iCloud activado).
 Pockets asks for {0} when you come back.|Pockets pide {0} cuando vuelves.

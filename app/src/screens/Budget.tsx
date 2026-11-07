@@ -4,7 +4,7 @@ import { useApp, openSheet, setData, flash } from '../lib/store';
 import { extraIncomes, findMismatches, markIncluded, monthSummary } from '../lib/plan';
 import { incomeMoves } from '../lib/derive';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { allStats, ctxOf, curSymbol, fmt, num, pctOf } from '../lib/derive';
+import { allStats, ctxOf, curSymbol, fmt, isHalf, num, pctOf, periodsInMonth } from '../lib/derive';
 import { monthLabel } from '../lib/dates';
 import { Bar, Fill } from '../ui/bits';
 import * as I from '../ui/icons';
@@ -98,7 +98,7 @@ export default function Budget() {
         { id: 'pockets', name: 'Weekly pockets', desc: 'Your pockets and their budgets', node: <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0' }}>
         <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Weekly pockets</span>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>per week</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{d.pockets.some(p => isHalf(p)) ? 'per week or 15 days' : 'per week'}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {all.map(s => {
@@ -108,7 +108,7 @@ export default function Budget() {
               <button onClick={() => openSheet({ name: 'editPocket', id: s.id })} aria-label="Edit pocket" style={{ width: 40, height: 40, borderRadius: 999, border: 0, padding: 0, cursor: 'pointer', backgroundColor: tint(s.hue), position: 'relative', overflow: 'hidden', color: ink(s.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flex: 'none' }}>{s.initial}<Fill src={s.photoBg} /></button>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <input value={p.name} onChange={e => setPocket(s.id, { name: e.target.value })} style={{ border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: 'var(--color-text)', padding: '1px 0', outline: 'none', minWidth: 0 }} />
-                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{fmt(s.weekly * weeks)} / month</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{fmt(num(p.weeklyStr) * periodsInMonth(p, weeks))} / month{isHalf(p) ? ' · every 15 days' : ''}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(s.hue), borderRadius: 14, padding: '9px 12px', width: 116, flex: 'none' }}>
                 <span style={{ fontSize: 14, color: ink(s.hue) }}>{cur}</span>

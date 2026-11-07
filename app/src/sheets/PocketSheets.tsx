@@ -1,9 +1,9 @@
 import { moneyHidden } from '../lib/privacy';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { EMOJIS, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, monthExpenses, monthStats, num, pctOf, pocketStats, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
-import { monthName, relDay, shortDate } from '../lib/dates';
+import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
+import { addDays, monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { COVER, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, splitAmong, suggestCover, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
@@ -360,37 +360,38 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
   if (!s) return <SheetFrame title="Pocket"><div style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>This pocket was deleted.</div></SheetFrame>;
   const k = ink(s.hue);
   const ds = dayStats(d, id, c, s), ms = monthStats(d, id, c);
-  const list = view === 'day' ? d.expenses.filter(e => e.p === id && e.date === c.today) : view === 'week' ? weekExpenses(d, c).filter(e => e.p === id) : monthExpenses(d, c).filter(e => e.p === id);
+  const pk = d.pockets.find(x => x.id === id), half = isHalf(pk), until = `Until ${shortDate(s.to)}`;
+  const list = view === 'day' ? d.expenses.filter(e => e.p === id && e.date === c.today) : view === 'week' ? weekExpenses(d, pocketCtx(pk, c)).filter(e => e.p === id) : monthExpenses(d, c).filter(e => e.p === id);
   const items = [...list].sort(byDateDesc).map(e => expView(d, e, c));
   const cantMove = s.left <= 0.004;
   const big = (label: string, n: number) => <>
     <span style={{ fontSize: 14, fontWeight: 600, color: k }}>{label}</span>
     <span style={{ fontSize: 42, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: n < 0 ? RED : k }}>{fmt(Math.abs(n))}</span>
   </>;
-  const empty = view === 'day' ? 'Nothing spent here today.' : view === 'week' ? 'Nothing spent here yet this week.' : `Nothing spent here in ${monthName(c.month)} yet.`;
+  const empty = view === 'day' ? 'Nothing spent here today.' : view === 'week' ? (half ? 'Nothing spent here yet this quincena.' : 'Nothing spent here yet this week.') : `Nothing spent here in ${monthName(c.month)} yet.`;
 
   return (
     <SheetFrame title={s.name}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <Segmented items={[['day', 'Today'], ['week', 'This week'], ['month', monthName(c.month)]]} value={view} onPick={setView} mt={2} />
+        <Segmented items={[['day', 'Today'], ['week', half ? until : 'This week'], ['month', monthName(c.month)]]} value={view} onPick={setView} mt={2} />
         <div style={{ marginTop: 10, background: tint(s.hue), borderRadius: 28, padding: 22, display: 'flex', flexDirection: 'column', gap: 4 }}>
           {view === 'day' ? (
             ds.active ? <>
               {big(ds.left < 0 ? 'Over today’s amount by' : 'You can spend today', ds.left)}
               <div style={{ marginTop: 12 }}><Bar pct={pctOf(ds.spentToday, ds.allowance)} track="var(--glass)" fill={k} /></div>
               <span style={{ marginTop: 8, fontSize: 13, lineHeight: 1.4, color: k }}>
-                {fmt(ds.allowance)} for today: {fmt(s.left + ds.spentToday)} left this week ÷ {ds.week.filter(x => x.active && !x.past).length} spending day{ds.week.filter(x => x.active && !x.past).length === 1 ? '' : 's'} left (today included).{ds.spentToday > 0 ? ` Spent ${fmt(ds.spentToday)} so far.` : ''}
+                {fmt(ds.allowance)} for today: {fmt(s.left + ds.spentToday)} {half ? `left until ${shortDate(s.to)}` : 'left this week'} ÷ {ds.week.filter(x => x.active && !x.past).length} {ds.week.filter(x => x.active && !x.past).length === 1 ? 'spending day' : 'spending days'} left (today included).{ds.spentToday > 0 ? ` Spent ${fmt(ds.spentToday)} so far.` : ''}
               </span>
             </> : <>
               <span style={{ fontSize: 14, fontWeight: 600, color: k }}>Today isn’t a spending day</span>
               <span style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, color: ds.spentToday > 0 ? RED : k }}>{ds.spentToday > 0 ? `Spent ${fmt(ds.spentToday)} today` : 'Better not spend today'}</span>
               <span style={{ marginTop: 8, fontSize: 13, lineHeight: 1.4, color: k }}>
-                {ds.next ? `Next spending day: ${dayLabel(ds.next.date, c)}, with ${fmt(ds.next.amount)}.` : 'No more spending days this week. It starts over on Monday.'}
+                {ds.next ? `Next spending day: ${dayLabel(ds.next.date, c)}, with ${fmt(ds.next.amount)}.` : (half ? `No more spending days until ${shortDate(s.to)}. It starts over on ${shortDate(addDays(s.to, 1))}.` : 'No more spending days this week. It starts over on Monday.')}
                 {ds.spentToday > 0 ? ' What you spend today comes out of the days still to come.' : ''}
               </span>
             </>
           ) : view === 'week' ? <>
-            {big(s.left < 0 ? 'Over budget this week' : 'Left this week', s.left)}
+            {big(half ? (s.left < 0 ? `Over budget until ${shortDate(s.to)}` : `Left until ${shortDate(s.to)}`) : s.left < 0 ? 'Over budget this week' : 'Left this week', s.left)}
             <div style={{ marginTop: 12 }}><Bar pct={pctOf(s.spent, s.budget)} track="var(--glass)" fill={k} /></div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
               <span style={pill(k)}>Planned {fmt(s.weekly)}</span>
@@ -401,11 +402,11 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
             {big(ms.left < 0 ? `Over budget in ${monthName(c.month)}` : `Left in ${monthName(c.month)}`, ms.left)}
             <div style={{ marginTop: 12 }}><Bar pct={pctOf(ms.spent, ms.budget)} track="var(--glass)" fill={k} /></div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-              <span style={pill(k)}>Planned {fmt(s.weekly * c.weeks)}</span>
+              <span style={pill(k)}>Planned {fmt(monthPlanOf(pk, c))}</span>
               <span style={pill(k)}>Spent {fmt(ms.spent)}</span>
               <span style={pill(k)}>Moved {fmt(ms.extra, true)}</span>
             </div>
-            <span style={{ marginTop: 8, fontSize: 12.5, color: k }}>{fmt(s.weekly)} a week × {c.weeks} weeks{ms.extra ? `, ${ms.extra > 0 ? 'plus' : 'minus'} ${fmt(Math.abs(ms.extra))} moved this month` : ''}.</span>
+            <span style={{ marginTop: 8, fontSize: 12.5, color: k }}>{half ? `${fmt(num(pk?.weeklyStr))} every 15 days × 2` : `${fmt(num(pk?.weeklyStr))} a week × ${c.weeks} weeks`}{ms.extra ? `, ${ms.extra > 0 ? 'plus' : 'minus'} ${fmt(Math.abs(ms.extra))} moved this month` : ''}.</span>
           </>}
         </div>
 
@@ -535,21 +536,23 @@ function DayPlanner({ id, hue, ds }: { id: string; hue: number; ds: DayStats }) 
         <span style={{ fontSize: 15, fontWeight: 700 }}>Spending days</span>
         <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Tap a day to turn it on or off</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${ds.week.length > 7 ? 8 : 7},minmax(0,1fr))`, gap: 4 }}>
         {ds.week.map(x => (
           <button key={x.date} onClick={() => toggle(x.wd)} aria-pressed={x.active} aria-label={`${DAY_NAMES[x.wd]}: ${x.active ? 'spending day' : 'no spending'}`}
             style={{ border: 0, borderRadius: 14, padding: '8px 0 7px', cursor: 'pointer', background: x.active ? tint(hue) : 'var(--color-neutral-100)', boxShadow: x.today ? `inset 0 0 0 2px ${k}` : 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, color: x.active ? k : 'var(--color-neutral-500)', opacity: x.past ? 0.6 : 1, minWidth: 0 }}>
             <span style={{ fontSize: 13, fontWeight: 800 }}>{DAY_LETTERS[x.wd]}</span>
+            {ds.week.length > 7 && <span style={{ fontSize: 10, fontWeight: 600, opacity: 0.75 }}>{Number(x.date.slice(8))}</span>}
             <span style={{ fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>{x.past ? (x.spent ? compactAmt(x.spent) : '–') : x.active ? compactAmt(x.amount) : '0'}</span>
           </button>
         ))}
       </div>
       <span style={{ padding: '0 4px', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
-        The week's money is shared only by the days you turn on, and days that are off get $0. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day.
+        {ds.week.length > 7 ? "The quincena's money is shared only by the days you turn on, and days that are off get $0. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day." : "The week's money is shared only by the days you turn on, and days that are off get $0. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day."}
       </span>
     </div>
   );
 }
+const startChip = (on: boolean, hue: number): CSSProperties => ({ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: on ? tint(hue) : 'var(--color-neutral-100)', color: on ? ink(hue) : TEXT, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' });
 /** 18.000 → 18k, 1.250.000 → 1,3M, for the small day tiles. */
 const compactAmt = (n: number) => { const a = Math.abs(n); if (moneyHidden() && n) return '***'; return a >= 1e6 ? `${(n / 1e6).toLocaleString('es-CO', { maximumFractionDigits: 1 })}M` : a >= 1e3 ? `${Math.round(n / 1e3)}k` : String(Math.round(n)); };
 
@@ -732,13 +735,29 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const [confirmDel, setConfirmDel] = useState(false);
   const [days, setDays] = useState<number[]>(base?.days?.length ? base.days : [0, 1, 2, 3, 4, 5, 6]);
   const [hue, setHue] = useState(base ? base.hue : HUES[d.pockets.length % HUES.length]);
+  const [period, setPeriod] = useState<'week' | 'half'>(base?.period ?? 'week');
+  const [startStr, setStartStr] = useState<string | null>(null);
   const w = num(weekly), cant = !name.trim();
+  const half = period === 'half';
+  // Starting partway through a week or quincena: the first period only gets the days that are left.
+  const c = ctxOf(d), [ps, pe] = periodAt({ period }, c.today);
+  const spendDays = (a: string, b: string) => { let n = 0; for (let x = a; x <= b; x = addDays(x, 1)) if (days.includes(weekdayOf(x))) n++; return n; };
+  const mid = isNew && c.today > ps;
+  const suggested = roundAmt(w * spendDays(c.today, pe) / Math.max(1, spendDays(ps, pe)));
+  const startAmt = startStr === null ? suggested : num(startStr);
+  const switchPeriod = (v: 'week' | 'half') => {
+    if (v === period) return;
+    // Keep the same money per month: weekly × weeks = per 15 days × 2.
+    if (w > 0) setWeekly(String(roundAmt(v === 'half' ? w * d.settings.weeks / 2 : w * 2 / d.settings.weeks)));
+    setPeriod(v); setStartStr(null);
+  };
   const icon = photo ? '' : emoji || name.trim().charAt(0).toUpperCase() || '·';
 
   const save = () => {
     if (cant) return;
-    const patch = { name: name.trim(), weeklyStr: String(w), emoji, photo, hue, days: days.length === 7 ? undefined : [...days].sort() };
-    if (isNew) { setData(x => ({ pockets: [...x.pockets, { id: uid('p'), ...patch }] })); closeSheet(); }
+    const patch = { name: name.trim(), weeklyStr: String(w), emoji, photo, hue, days: days.length === 7 ? undefined : [...days].sort(), period: half ? 'half' as const : undefined };
+    const start = mid && Math.abs(startAmt - w) > 0.004 ? { from: ps, amt: Math.max(0, startAmt) } : undefined;
+    if (isNew) { setData(x => ({ pockets: [...x.pockets, { id: uid('p'), ...patch, ...(start ? { start } : {}) }] })); closeSheet(); }
     else { setData(x => ({ pockets: x.pockets.map(p => (p.id === id ? { ...p, ...patch } : p)) })); openSheet({ name: 'pocket', id: id! }); }
     flash(isNew ? `${patch.name} created` : 'Pocket updated');
   };
@@ -768,9 +787,26 @@ export function EditPocketSheet({ id }: { id: string | null }) {
         </div>
         <FieldLabel m="14px 4px 6px">Name</FieldLabel>
         <input value={name} placeholder="Gym" onChange={e => setName(e.target.value)} style={textInput} />
-        <FieldLabel m="14px 4px 6px">Weekly budget</FieldLabel>
-        <SmallAmount value={weekly} onChange={setWeekly} />
-        <span style={{ margin: '8px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>{fmt(w * d.settings.weeks)} a month over {d.settings.weeks} weeks</span>
+        <FieldLabel m="14px 4px 6px">Starts over</FieldLabel>
+        <Segmented items={[['week', 'Every week'], ['half', 'Every 15 days']]} value={period} onPick={v => switchPeriod(v as 'week' | 'half')} />
+        <span style={{ margin: '6px 4px 0', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
+          {half ? 'Every quincena: from the 1st to the 15th, and from the 16th to the end of the month.' : 'Every week, Monday to Sunday.'}
+        </span>
+        <FieldLabel m="14px 4px 6px">{half ? 'Budget for 15 days' : 'Weekly budget'}</FieldLabel>
+        <SmallAmount value={weekly} onChange={v => { setWeekly(v); setStartStr(null); }} />
+        <span style={{ margin: '8px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>{half ? `${fmt(w * 2)} a month over 2 quincenas` : `${fmt(w * d.settings.weeks)} a month over ${d.settings.weeks} weeks`}</span>
+        {mid && w > 0 && <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>{half ? 'This quincena is already underway' : 'This week is already underway'}</span>
+          <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{half ? 'For this quincena only, it starts with:' : 'For this week only, it starts with:'}</span>
+          <SmallAmount value={startStr ?? String(suggested)} onChange={setStartStr} />
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <button onClick={() => setStartStr(null)} aria-pressed={startStr === null} style={startChip(startStr === null, hue)}>Days left · {fmt(suggested)}</button>
+            <button onClick={() => setStartStr(String(w))} aria-pressed={startStr !== null && num(startStr) === w} style={startChip(startStr !== null && num(startStr) === w, hue)}>Full amount · {fmt(w)}</button>
+          </div>
+          <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
+            {half ? `Until ${shortDate(pe)}. From ${shortDate(addDays(pe, 1))} it gets the full ${fmt(w)}.` : `Until Sunday. From Monday it gets the full ${fmt(w)}.`} Type what you actually have left if it's different.
+          </span>
+        </div>}
         <FieldLabel m="14px 4px 6px">Spending days</FieldLabel>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 4 }}>
           {DAY_LETTERS.map((l, wd) => {
@@ -780,7 +816,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
           })}
         </div>
         <span style={{ margin: '8px 4px 0', fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
-          {days.length === 7 ? 'Every day. The Today view shares the week’s money across the days left.' : `Only ${days.slice().sort().map(x => DAY_NAMES[x]).join(', ')}${w > 0 ? `: about ${fmt(w / days.length)} each` : ''}. Other days show that you shouldn’t spend from this pocket.`}
+          {days.length === 7 ? (half ? 'Every day. The Today view shares the quincena’s money across the days left.' : 'Every day. The Today view shares the week’s money across the days left.') : `Only ${days.slice().sort().map(x => DAY_NAMES[x]).join(', ')}${w > 0 ? `: about ${fmt(w / days.length)} each` : ''}. Other days show that you shouldn’t spend from this pocket.`}
         </span>
         <PrimaryBtn onClick={save} disabled={cant} mt={18}>{isNew ? 'Create pocket' : 'Save changes'}</PrimaryBtn>
         {!isNew && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : 'Delete pocket'}</GhostDanger>}

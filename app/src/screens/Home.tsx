@@ -6,7 +6,7 @@ import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthExpenses, mo
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { daysBetween, daysInMonth, relDay } from '../lib/dates';
 import type { PocketView } from '../lib/types';
-import { fmtDay, monthName } from '../lib/dates';
+import { fmtDay, monthName, shortDate } from '../lib/dates';
 import { billRows } from '../lib/bills';
 import { BillBadge, Fill, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
 import * as I from '../ui/icons';
@@ -216,7 +216,7 @@ function PocketGrid({ items, tour, view }: { items: { p: PocketStats; left: numb
               <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>{off}</span>
             </> : <>
               <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em', color: left < 0 ? RED : ink(p.hue) }}>{fmt(left)}</span>
-              <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>left of {fmt(budget)}{view === 'day' ? ' today' : ''}</span>
+              <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>left of {fmt(budget)}{view === 'day' ? ' today' : view === 'week' && p.period === 'half' ? ` · until ${shortDate(p.to)}` : ''}</span>
             </>}
           </div>
         </div>

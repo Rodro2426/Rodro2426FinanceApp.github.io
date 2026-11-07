@@ -1,7 +1,7 @@
 // Builds the "For AI" sheet: one page with every budget and figure of the period,
 // written so an AI assistant given the Excel file can answer questions about it.
 import type { Data } from './types';
-import { catOf, num } from './derive';
+import { catOf, num, periodsInMonth } from './derive';
 import { addDays, daysInMonth, fmtDay, inRange, monthLabel, shortDate, todayISO, weekStart } from './dates';
 
 export type Cell = string | number | { v: number; fmt: 'money' | 'pct' };
@@ -65,7 +65,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
     header: ['Pocket', 'Weekly budget', 'Planned for period', 'Spent', 'Left vs plan', '% used', 'Expenses', 'Top category'],
     rows: d.pockets.map(p => {
       const es = exp.filter(e => e.p === p.id), spent = es.reduce((a, e) => a + e.amt, 0);
-      const planned = num(p.weeklyStr) * weeks * months.length;
+      const planned = num(p.weeklyStr) * periodsInMonth(p, weeks) * months.length;
       const byCat: Record<string, number> = {};
       es.forEach(e => { const c = catOf(e)[0]; byCat[c] = (byCat[c] || 0) + e.amt; });
       const top = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
