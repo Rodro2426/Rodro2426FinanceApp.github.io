@@ -1469,6 +1469,13 @@ Nothing spent here yet this quincena.|Nada gastado aquí esta quincena.
 The quincena's money is shared only by the days you turn on, and days that are off get $0. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day.|El dinero de la quincena se reparte solo entre los días activados, y los días apagados reciben $0. Los días pasados muestran lo que gastaste; hoy y los próximos muestran lo que le toca a cada uno. Lo que no gastes hoy pasa al siguiente día de gasto.
 per week or 15 days|por semana o quincena
 every 15 days|cada 15 días
+This card isn't mine|Esta tarjeta no es mía
+This account isn't mine|Esta cuenta no es mía
+For a card you use but someone else owns. What you owe on it isn't in your net worth, and what you pay with it isn't counted as your spending or taken from your pockets.|Para una tarjeta que usas pero es de otra persona. Lo que se debe en ella no entra en tu patrimonio, y lo que pagues con ella no cuenta como tu gasto ni sale de tus bolsillos.
+For an account you use but someone else owns. Its balance isn't in your net worth, and what you pay with it isn't counted as your spending or taken from your pockets.|Para una cuenta que usas pero es de otra persona. Su saldo no entra en tu patrimonio, y lo que pagues con ella no cuenta como tu gasto ni sale de tus bolsillos.
+This card or account isn't yours: the expense is saved on it, but it isn't counted as your spending or taken from your pockets.|Esta tarjeta o cuenta no es tuya: el gasto se guarda en ella, pero no cuenta como tu gasto ni sale de tus bolsillos.
+Not yours|No es tuya
+Balance owed · not yours|Saldo adeudado · no es tuya
 `;
 
 export const ES_PATTERNS = `

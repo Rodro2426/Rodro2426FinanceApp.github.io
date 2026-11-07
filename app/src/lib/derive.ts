@@ -25,8 +25,15 @@ export const ctxOf = (d: Data) => makeCtx(d.settings.weeks);
 export const catOf = (e: Expense): [string, string] => (e.cat ? [e.cat, e.sub || ''] : POCKET_CAT[e.p] || ['Other', 'Other']);
 export const byDateDesc = (x: { date: string; ts: number }, y: { date: string; ts: number }) => (y.date > x.date ? 1 : y.date < x.date ? -1 : y.ts - x.ts);
 export const sortedExpenses = (d: Data) => [...d.expenses].sort(byDateDesc);
-export const weekExpenses = (d: Data, c: Ctx) => d.expenses.filter(e => inRange(e.date, c.weekStart, c.weekEnd));
-export const monthExpenses = (d: Data, c: Ctx) => d.expenses.filter(e => monthKey(e.date) === c.month);
+/** Your own accounts and cards (not ones marked "This isn't mine"). */
+export const myAccounts = (d: Data) => d.accounts.filter(a => !a.notMine);
+/** Expenses that count as your spending: not the ones paid with someone else's account or card. */
+export function myExpenses(d: Data) {
+  const off = new Set(d.accounts.filter(a => a.notMine).map(a => a.id));
+  return off.size ? d.expenses.filter(e => !off.has(e.a)) : d.expenses;
+}
+export const weekExpenses = (d: Data, c: Ctx) => myExpenses(d).filter(e => inRange(e.date, c.weekStart, c.weekEnd));
+export const monthExpenses = (d: Data, c: Ctx) => myExpenses(d).filter(e => monthKey(e.date) === c.month);
 
 export interface PocketStats {
   id: string; name: string; hue: number; weekly: number; mIn: number; mOut: number; spent: number; budget: number; left: number;

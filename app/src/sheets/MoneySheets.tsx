@@ -190,7 +190,7 @@ function rateFields(prev: { rate?: number; accruedTo?: string; earned?: number }
 }
 
 function AcctForm({ initial, isNew, onSave, onDelete }: {
-  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; photo: string | null; hue: number; rate: string; cardImg?: string | null; cardText?: 'light' | 'dark' };
+  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; photo: string | null; hue: number; rate: string; cardImg?: string | null; cardText?: 'light' | 'dark'; notMine?: boolean };
   isNew: boolean; onSave: (v: typeof initial) => void; onDelete?: () => void;
 }) {
   const [f, setF] = useState(initial);
@@ -255,6 +255,13 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
           </span>
         </>
       )}
+      <div style={{ marginTop: 14, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>{isCard ? "This card isn't mine" : "This account isn't mine"}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{isCard ? "For a card you use but someone else owns. What you owe on it isn't in your net worth, and what you pay with it isn't counted as your spending or taken from your pockets." : "For an account you use but someone else owns. Its balance isn't in your net worth, and what you pay with it isn't counted as your spending or taken from your pockets."}</span>
+        </div>
+        <Toggle on={!!f.notMine} onChange={v => setF(x => ({ ...x, notMine: v || undefined }))} label={isCard ? "This card isn't mine" : "This account isn't mine"} />
+      </div>
       <PrimaryBtn onClick={() => onSave(f)} disabled={cant} mt={20}>{isNew ? `Add ${isCard ? 'card' : 'account'}` : 'Save changes'}</PrimaryBtn>
       {onDelete && <GhostDanger onClick={() => (confirmDel ? onDelete() : setConfirmDel(true))}>{confirmDel ? 'Tap again to delete' : 'Delete account'}</GhostDanger>}
     </div>
@@ -268,10 +275,10 @@ export function EditAcctSheet({ id }: { id: string }) {
   return (
     <SheetFrame title="Edit account">
       <AcctForm isNew={false}
-        initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '', cardImg: a.cardImg ?? null, cardText: a.cardText }}
+        initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '', cardImg: a.cardImg ?? null, cardText: a.cardText, notMine: a.notMine }}
         onSave={f => {
           const card = f.type === 'card';
-          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: Math.abs(num(f.bal) - y.bal) < 1 ? y.bal : roundAmt(num(f.bal)), limit: card ? num(f.limit) : undefined, due: card ? f.due.trim() || 'Nov 25' : undefined, photo: f.photo, hue: f.hue, cardImg: card ? f.cardImg : undefined, cardText: card && f.cardImg ? f.cardText : undefined, ...rateFields(y, f) } : y)) }));
+          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: Math.abs(num(f.bal) - y.bal) < 1 ? y.bal : roundAmt(num(f.bal)), limit: card ? num(f.limit) : undefined, due: card ? f.due.trim() || 'Nov 25' : undefined, photo: f.photo, hue: f.hue, cardImg: card ? f.cardImg : undefined, cardText: card && f.cardImg ? f.cardText : undefined, notMine: f.notMine || undefined, ...rateFields(y, f) } : y)) }));
           openSheet({ name: 'acct', id }); flash('Account updated');
         }}
         onDelete={() => {
@@ -290,7 +297,7 @@ export function AddAcctSheet() {
       <AcctForm isNew initial={{ name: '', type: 'bank', bal: '', limit: '', due: '', photo: null, hue: HUES[d.accounts.length % HUES.length], rate: '' }}
         onSave={f => {
           const card = f.type === 'card';
-          const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card && f.cardImg ? { cardImg: f.cardImg, cardText: f.cardText } : {}), ...(card ? { limit: num(f.limit), due: f.due.trim() || 'Nov 25' } : {}), ...rateFields(null, f) };
+          const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card && f.cardImg ? { cardImg: f.cardImg, cardText: f.cardText } : {}), ...(card ? { limit: num(f.limit), due: f.due.trim() || 'Nov 25' } : {}), ...(f.notMine ? { notMine: true } : {}), ...rateFields(null, f) };
           setData(x => ({ accounts: [...x.accounts, a] }));
           setUI({ sheet: null, tab: 'accounts' }); flash(`${a.name} added`);
         }} />

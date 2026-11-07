@@ -1,7 +1,7 @@
 // Data for the Insights reports: categories, accounts and budgets, over a period or over time.
 import type { Data, Income } from './types';
 import { addDays, daysInMonth, makeCtx, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
-import { acctTxns, catOf, ctxOf, monthPlanOf, pocketStats } from './derive';
+import { acctTxns, catOf, ctxOf, monthPlanOf, pocketStats, myExpenses } from './derive';
 import { cdtView, cdtsOf } from './cdt';
 import { holdings } from './invest';
 import { groupValue } from './networth';
@@ -55,7 +55,7 @@ export interface CatTotal { name: string; sum: number; n: number }
 const sortTotals = (m: Map<string, CatTotal>) => [...m.values()].sort((a, b) => b.sum - a.sum);
 export function expenseCats(d: Data, c: Ctx, p: Period): CatTotal[] {
   const m = new Map<string, CatTotal>();
-  d.expenses.filter(e => inPeriod(p, e.date, c)).forEach(e => { const k = catOf(e)[0]; const t = m.get(k) ?? { name: k, sum: 0, n: 0 }; t.sum += e.amt; t.n++; m.set(k, t); });
+  myExpenses(d).filter(e => inPeriod(p, e.date, c)).forEach(e => { const k = catOf(e)[0]; const t = m.get(k) ?? { name: k, sum: 0, n: 0 }; t.sum += e.amt; t.n++; m.set(k, t); });
   return sortTotals(m);
 }
 export function incomeCats(d: Data, c: Ctx, p: Period): CatTotal[] {
@@ -81,7 +81,7 @@ export function pieSlices(d: Data, rows: CatTotal[], kind: 'expense' | 'income',
 /** Monthly totals for one category (or all when `cat` is null). */
 export function catOverTime(d: Data, months: string[], kind: 'expense' | 'income', cat: string | null): number[] {
   return months.map(m => kind === 'expense'
-    ? d.expenses.filter(e => monthKey(e.date) === m && (!cat || catOf(e)[0] === cat)).reduce((a, e) => a + e.amt, 0)
+    ? myExpenses(d).filter(e => monthKey(e.date) === m && (!cat || catOf(e)[0] === cat)).reduce((a, e) => a + e.amt, 0)
     : d.incomes.filter(t => monthKey(t.date) === m && (!cat || incCatOf(d, t) === cat)).reduce((a, t) => a + t.amt, 0));
 }
 /** Category × month table, categories with any money in the range, biggest first. */
@@ -106,7 +106,7 @@ export const cdtWorthAt = (d: Data, date: string) => cdtsOf(d).filter(c => c.sta
 /** Stocks held on a date (trades up to then), valued at the latest known price. */
 export const stocksAt = (d: Data, date: string) => holdings({ ...d, investments: { ...d.investments, trades: d.investments.trades.filter(t => t.date <= date) } }).reduce((a, h) => a + h.valueLocal, 0);
 /** Net worth on a date, with the same rules as the Accounts tab: investments unless excluded, and counted groups at today's value. */
-export const netWorthAt = (d: Data, date: string) => d.accounts.reduce((a, x) => a + worthAt(d, x.id, date), 0)
+export const netWorthAt = (d: Data, date: string) => d.accounts.filter(a => !a.notMine).reduce((a, x) => a + worthAt(d, x.id, date), 0)
   + (d.settings.excludeInvestments ? 0 : cdtWorthAt(d, date) + stocksAt(d, date))
   + (d.groups ?? []).filter(g => g.inNetWorth).reduce((a, g) => a + groupValue(g), 0);
 export const netWorthSeries = (d: Data, months: string[], c: Ctx) => months.map(m => netWorthAt(d, monthEnd(m, c)));
@@ -116,7 +116,7 @@ export const balanceSeries = (d: Data, acctId: string, months: string[], c: Ctx)
 export function cashflow(d: Data, months: string[]) {
   return months.map(m => {
     const income = d.incomes.filter(t => monthKey(t.date) === m).reduce((a, t) => a + t.amt, 0);
-    const expenses = d.expenses.filter(e => monthKey(e.date) === m).reduce((a, e) => a + e.amt, 0);
+    const expenses = myExpenses(d).filter(e => monthKey(e.date) === m).reduce((a, e) => a + e.amt, 0);
     return { month: m, income, expenses, net: income - expenses };
   });
 }
@@ -127,7 +127,7 @@ export interface BudgetRow { id: string; name: string; hue: number; budget: numb
 export function compareBudgets(d: Data, c: Ctx, scope: 'week' | 'month'): BudgetRow[] {
   return d.pockets.map(p => {
     if (scope === 'week') { const s = pocketStats(d, p.id, c)!; return { id: p.id, name: p.name, hue: p.hue, budget: s.budget, spent: s.spent, left: s.left }; }
-    const spent = d.expenses.filter(e => e.p === p.id && monthKey(e.date) === c.month).reduce((a, e) => a + e.amt, 0);
+    const spent = myExpenses(d).filter(e => e.p === p.id && monthKey(e.date) === c.month).reduce((a, e) => a + e.amt, 0);
     const budget = monthPlanOf(p, c) + d.moves.filter(m => m.to === p.id && (m.month ?? monthKey(addDays(m.week, 6))) === c.month).reduce((a, m) => a + m.amt, 0)
       - d.moves.filter(m => m.from === p.id && (m.month ?? monthKey(addDays(m.week, 6))) === c.month).reduce((a, m) => a + m.amt, 0);
     return { id: p.id, name: p.name, hue: p.hue, budget, spent, left: budget - spent };

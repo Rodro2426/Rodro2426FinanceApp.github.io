@@ -32,7 +32,7 @@ export function monthSummary(d: Data, c: Ctx): MonthSummary {
   const extra = sum(extraIncomes(d, c).map(t => t.amt));
   const plan = sum(d.pockets.map(p => monthPlanOf(p, c))) + sum(incomeSplits(d, c).map(m => m.amt));
   const toSpend = sum(d.pockets.map(p => Math.max(0, monthStats(d, p.id, c).left)));
-  const balance = sum(d.accounts.map(a => (a.type === 'card' ? -a.bal : a.bal)));
+  const balance = sum(d.accounts.filter(a => !a.notMine).map(a => (a.type === 'card' ? -a.bal : a.bal)));
   const income = base + extra;
   return { base, extra, income, plan, planGap: income - plan, toSpend, balance, real: toSpend - balance };
 }

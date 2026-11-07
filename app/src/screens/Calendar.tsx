@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { getLang } from '../lib/i18n';
 import { useApp, openSheet } from '../lib/store';
 import { LINE, TEXT, tint } from '../lib/constants';
-import { ctxOf, fmt } from '../lib/derive';
+import { ctxOf, fmt, myExpenses } from '../lib/derive';
 import { daysInMonth, fmtDay, monthLabel, parse, prevMonthKey, relDay } from '../lib/dates';
 import { dueDate, eventsOn } from '../lib/schedule';
 import { BillBadge, Fill, ListCard, SectionHead, expView } from '../ui/bits';
@@ -24,7 +24,7 @@ export default function CalendarScreen() {
   const cells: (string | null)[] = [...Array(lead).fill(null), ...Array.from({ length: n }, (_, i) => `${month}-${pad(i + 1)}`)];
   while (cells.length % 7) cells.push(null);
 
-  const spentOn = (date: string) => d.expenses.filter(e => e.date === date);
+  const spentOn = (date: string) => myExpenses(d).filter(e => e.date === date);
   const incomeOn = (date: string) => (d.incomes || []).filter(t => t.date === date);
   const scheduled = d.bills.filter(b => !b.start || dueDate(b, month) >= b.start);
   const incomeTotal = scheduled.filter(b => b.kind === 'Income').reduce((a, b) => a + approxLocal(d, b), 0);

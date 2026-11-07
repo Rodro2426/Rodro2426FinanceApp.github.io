@@ -81,14 +81,14 @@ export default function Accounts() {
       </div>
       </> },
         { id: 'cash', name: 'Debit and Cash', desc: 'Bank, savings and cash accounts', node: <>
-      <FoldHead title="Debit and Cash" open={!isFolded('cash')} onToggle={() => toggle('cash')} summary={`${plural(cash.length, 'account')} · ${fmt(cash.reduce((a, x) => a + x.bal, 0))}`} />
+      <FoldHead title="Debit and Cash" open={!isFolded('cash')} onToggle={() => toggle('cash')} summary={`${plural(cash.length, 'account')} · ${fmt(cash.filter(x => !x.notMine).reduce((a, x) => a + x.bal, 0))}`} />
       {!isFolded('cash') && <ListCard>
         {cash.map((a, i) => (
           <div key={a.id} onClick={() => openSheet({ name: 'acct', id: a.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', borderBottom: `1px solid ${i === cash.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
             <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={42} radius={14} bg={tint(a.hue)} color={ink(a.hue)} fs={16} />
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{a.name}</span>
-              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{a.kind} · {plural(acctTxns(d, a.id).list.length, 'transaction')}</span>
+              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{a.notMine ? 'Not yours' : a.kind} · {plural(acctTxns(d, a.id).list.length, 'transaction')}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <span style={{ fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(a.bal)}</span>
@@ -107,7 +107,7 @@ export default function Accounts() {
       </> },
         ...(d.groups ?? []).map(g => ({ id: `group:${g.id}`, name: `${g.emoji} ${g.name}`, desc: 'Your custom group', node: <GroupCard g={g} /> })),
         { id: 'cards', name: 'Credit cards', desc: 'Card balances and payments', node: <>
-      <FoldHead title="Credit cards" open={!isFolded('cards')} onToggle={() => toggle('cards')} summary={`${plural(cards.length, 'card')} · ${fmt(cards.reduce((a, x) => a + x.bal, 0))} owed`} />
+      <FoldHead title="Credit cards" open={!isFolded('cards')} onToggle={() => toggle('cards')} summary={`${plural(cards.length, 'card')} · ${fmt(cards.filter(x => !x.notMine).reduce((a, x) => a + x.bal, 0))} owed`} />
       {!isFolded('cards') && cards.map(a => {
         const { k } = cardInk(a);
         return <CardFace key={a.id} a={a} onClick={() => openSheet({ name: 'acct', id: a.id })}

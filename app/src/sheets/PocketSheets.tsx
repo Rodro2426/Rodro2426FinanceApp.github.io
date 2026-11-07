@@ -2,7 +2,7 @@ import { moneyHidden } from '../lib/privacy';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { EMOJIS, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats } from '../lib/derive';
+import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
 import { addDays, monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { COVER, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, splitAmong, suggestCover, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
@@ -333,6 +333,7 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
             </button>
           ))}
         </div>
+        {d.accounts.find(x => x.id === a)?.notMine && <span style={{ margin: '6px 4px 0', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>This card or account isn't yours: the expense is saved on it, but it isn't counted as your spending or taken from your pockets.</span>}
         <FieldLabel>Tags</FieldLabel>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           {d.tags.map(t => {
@@ -361,7 +362,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
   const k = ink(s.hue);
   const ds = dayStats(d, id, c, s), ms = monthStats(d, id, c);
   const pk = d.pockets.find(x => x.id === id), half = isHalf(pk), until = `Until ${shortDate(s.to)}`;
-  const list = view === 'day' ? d.expenses.filter(e => e.p === id && e.date === c.today) : view === 'week' ? weekExpenses(d, pocketCtx(pk, c)).filter(e => e.p === id) : monthExpenses(d, c).filter(e => e.p === id);
+  const list = view === 'day' ? myExpenses(d).filter(e => e.p === id && e.date === c.today) : view === 'week' ? weekExpenses(d, pocketCtx(pk, c)).filter(e => e.p === id) : monthExpenses(d, c).filter(e => e.p === id);
   const items = [...list].sort(byDateDesc).map(e => expView(d, e, c));
   const cantMove = s.left <= 0.004;
   const big = (label: string, n: number) => <>

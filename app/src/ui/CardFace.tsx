@@ -5,7 +5,7 @@ import { fmt, initialOf, pctOf } from '../lib/derive';
 import { AcctBadge } from './bits';
 import { CARD_RATIO } from './Cropper';
 
-export interface CardLook { name: string; hue: number; photo?: string | null; cardImg?: string | null; cardText?: 'light' | 'dark'; bal: number; limit?: number; due?: string }
+export interface CardLook { name: string; hue: number; photo?: string | null; cardImg?: string | null; cardText?: 'light' | 'dark'; bal: number; limit?: number; due?: string; notMine?: boolean }
 
 /** Colors for text and the small glass chips, on a plain color or on a card photo. */
 export function cardInk(a: CardLook) {
@@ -34,7 +34,7 @@ export function CardFace({ a, onClick, action }: { a: CardLook; onClick?: () => 
         <span style={{ fontSize: 12, fontWeight: 600, color: k, background: glass, padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap', backdropFilter: a.cardImg ? 'blur(8px)' : undefined, WebkitBackdropFilter: a.cardImg ? 'blur(8px)' : undefined }}>Due {a.due || '—'}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ marginTop: a.cardImg ? 0 : 10, fontSize: 13, color: k }}>Balance owed</span>
+        <span style={{ marginTop: a.cardImg ? 0 : 10, fontSize: 13, color: k }}>{a.notMine ? 'Balance owed · not yours' : 'Balance owed'}</span>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em', color: k, lineHeight: 1.1 }}>{fmt(a.bal)}</span>
         <div style={{ marginTop: 8, height: 10, borderRadius: 999, background: glass, overflow: 'hidden' }}>
           <div style={{ height: 10, borderRadius: 999, width: pctOf(a.bal, lim), background: k, transition: 'width .5s ease' }} />

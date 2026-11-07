@@ -1,7 +1,7 @@
 // Builds the "For AI" sheet: one page with every budget and figure of the period,
 // written so an AI assistant given the Excel file can answer questions about it.
 import type { Data } from './types';
-import { catOf, num, periodsInMonth } from './derive';
+import { catOf, num, periodsInMonth, myExpenses } from './derive';
 import { addDays, daysInMonth, fmtDay, inRange, monthLabel, shortDate, todayISO, weekStart } from './dates';
 
 export type Cell = string | number | { v: number; fmt: 'money' | 'pct' };
@@ -22,7 +22,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const cur = d.settings.currency;
   const curName = cur === 'COP' ? 'Colombian pesos (COP)' : cur === '€' ? 'euros' : cur === '£' ? 'pounds' : 'dollars';
 
-  const exp = d.expenses.filter(e => months.includes(e.date.slice(0, 7)) && (acctId === 'all' || e.a === acctId));
+  const exp = (acctId === 'all' ? myExpenses(d) : d.expenses).filter(e => months.includes(e.date.slice(0, 7)) && (acctId === 'all' || e.a === acctId));
   const total = exp.reduce((a, e) => a + e.amt, 0);
   const income = num(d.incomeStr);
   const weeklyTotal = d.pockets.reduce((a, p) => a + num(p.weeklyStr), 0);
@@ -81,7 +81,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
     const moves = d.moves.filter(m => m.week === ws);
     d.pockets.forEach(p => {
       const budget = num(p.weeklyStr) + moves.filter(m => m.to === p.id).reduce((a, m) => a + m.amt, 0) - moves.filter(m => m.from === p.id).reduce((a, m) => a + m.amt, 0);
-      const spent = d.expenses.filter(e => e.p === p.id && inRange(e.date, ws, we) && (acctId === 'all' || e.a === acctId)).reduce((a, e) => a + e.amt, 0);
+      const spent = myExpenses(d).filter(e => e.p === p.id && inRange(e.date, ws, we) && (acctId === 'all' || e.a === acctId)).reduce((a, e) => a + e.amt, 0);
       weekRows.push([label, p.name, money(budget), money(spent), money(budget - spent)]);
     });
   }

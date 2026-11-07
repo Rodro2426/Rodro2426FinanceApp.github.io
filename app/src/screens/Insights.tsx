@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Blocks } from '../ui/Blocks';
 import { useApp, openSheet, setData } from '../lib/store';
 import { HUES, LINE, ink, mid, tint } from '../lib/constants';
-import { allStats, byDateDesc, catOf, ctxOf, fmt, monthExpenses, pctOf, plural } from '../lib/derive';
+import { allStats, byDateDesc, catOf, ctxOf, fmt, monthExpenses, pctOf, plural, myExpenses } from '../lib/derive';
 import { addDays, inRange, monthKey, monthName, prevMonthKey } from '../lib/dates';
 import { billRows } from '../lib/bills';
 import { applyOccurrence, approxLocal, billAmount, undoOccurrence } from '../lib/schedule';
@@ -24,7 +24,7 @@ export default function Insights() {
 
   const known = new Set(d.pockets.map(p => p.id));
   const weekSpent = all.reduce((a, x) => a + x.spent, 0);
-  const lastWeek = d.expenses.filter(e => known.has(e.p) && inRange(e.date, c.lastWeekStart, c.lastWeekEnd)).reduce((a, e) => a + e.amt, 0);
+  const lastWeek = myExpenses(d).filter(e => known.has(e.p) && inRange(e.date, c.lastWeekStart, c.lastWeekEnd)).reduce((a, e) => a + e.amt, 0);
   const maxW = Math.max(weekSpent, lastWeek, 1);
 
   const best = all.filter(x => x.budget > 0 && x.left > 0).sort((a, b) => b.left / b.budget - a.left / a.budget)[0];
@@ -161,7 +161,7 @@ function CategoryTable() {
   const [sel, setSel] = useState<string[]>([]);
   const inPeriod = (date: string) => period === 'week' ? inRange(date, c.weekStart, addDays(c.weekStart, 6))
     : period === 'month' ? monthKey(date) === c.month : period === 'last' ? monthKey(date) === prevMonthKey(c.month) : true;
-  const exps = d.expenses.filter(e => inPeriod(e.date));
+  const exps = myExpenses(d).filter(e => inPeriod(e.date));
   const total = exps.reduce((a, e) => a + e.amt, 0);
   const order = d.cats.map(k => k.name);
   const hueOf = (k: string) => HUES[(order.indexOf(k) < 0 ? order.length : order.indexOf(k)) % HUES.length];

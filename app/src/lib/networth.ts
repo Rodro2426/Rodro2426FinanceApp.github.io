@@ -23,8 +23,9 @@ export interface NetWorth {
   assets: number; debts: number; total: number;
 }
 export function netWorth(d: Data): NetWorth {
-  const accounts = d.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0);
-  const cards = d.accounts.filter(a => a.type === 'card').reduce((x, a) => x + a.bal, 0);
+  const mine = d.accounts.filter(a => !a.notMine);
+  const accounts = mine.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0);
+  const cards = mine.filter(a => a.type === 'card').reduce((x, a) => x + a.bal, 0);
   const inv = investmentsValue(d).total, includeInvestments = !d.settings.excludeInvestments;
   const groups = (d.groups ?? []).map(g => ({ g, value: groupValue(g), counted: g.inNetWorth }));
   const counted = groups.filter(x => x.counted);

@@ -1,5 +1,5 @@
 import type { Data } from './types';
-import { acctTxns, catOf, num, periodsInMonth } from './derive';
+import { acctTxns, catOf, num, periodsInMonth, myExpenses } from './derive';
 import { fmtDay, monthLabel, todayISO } from './dates';
 import { buildAiSheet, type AiSheet } from './aiSheet';
 
@@ -27,7 +27,7 @@ export function exportData(d: Data, month: string, acctId: string): ExportPayloa
   const weeks = d.settings.weeks, today = todayISO(), curMonth = today.slice(0, 7);
   const months = month === 'all' ? allMonths(d) : [month];
   const acc = (id: string) => d.accounts.find(a => a.id === id);
-  const raw = d.expenses.map(e => { const [cat, sub] = catOf(e); return { e, date: e.date, month: e.date.slice(0, 7), cat, sub }; })
+  const raw = (acctId === 'all' ? myExpenses(d) : d.expenses).map(e => { const [cat, sub] = catOf(e); return { e, date: e.date, month: e.date.slice(0, 7), cat, sub }; })
     .filter(x => months.includes(x.month) && (acctId === 'all' || x.e.a === acctId));
   const catTot: Record<string, number> = {};
   raw.forEach(x => { const k = x.month + '|' + x.cat; catTot[k] = (catTot[k] || 0) + x.e.amt; });
