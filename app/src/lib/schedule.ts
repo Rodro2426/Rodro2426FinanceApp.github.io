@@ -1,3 +1,4 @@
+import { getLang } from './i18n';
 // Scheduled income, bills and subscriptions, plus the notifications they produce.
 // `runSchedule` is idempotent: it can run any number of times a day and only
 // applies or notifies what hasn't been handled yet.
@@ -184,7 +185,7 @@ export function eventsOn(d: Data, date: string) {
 }
 
 export const describeDay = (b: Bill) => `Every month on the ${ordinal(b.dueDay)}${b.dueDay > 28 ? ' (or the last day)' : ''}`;
-export function ordinal(n: number) { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+export function ordinal(n: number) { if (getLang() === 'es') return `día ${n}`; const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
 export const shortDue = (b: Bill, m: string) => shortDate(dueDate(b, m));
 
 /** Dates whose TRM is needed: today, plus any dollar item waiting to run. */

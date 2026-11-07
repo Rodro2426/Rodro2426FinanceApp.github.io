@@ -24,7 +24,7 @@ export function BgPicker() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8, background: 'var(--surface)', borderRadius: 20, padding: 14 }}>
       <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
         <span style={{ flex: 1, fontSize: 15, fontWeight: 700 }}>Background color</span>
-        <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>for {mode} mode</span>
+        <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{mode === 'light' ? 'For light mode' : 'For dark mode'}</span>
       </span>
       <div role="radiogroup" aria-label="Background color presets" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(38px, 1fr))', gap: 8 }}>
         {PRESETS[mode].map(([c, name]) => {
@@ -43,7 +43,7 @@ export function BgPicker() {
         <span aria-hidden="true" style={{ width: 44, height: 44, flex: 'none', borderRadius: 14, background: value, boxShadow: 'inset 0 0 0 1px rgba(128,128,128,.35)' }} />
       </div>
       {!typed && hex && <span style={{ fontSize: 12, color: 'var(--color-accent-700)' }}>Type a color code like #EEF0FB.</span>}
-      {!ok && <span role="alert" style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-accent-700)' }}>Text may be hard to read on this color in {mode} mode. Try a {mode === 'light' ? 'lighter' : 'darker'} one.</span>}
+      {!ok && <span role="alert" style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-accent-700)' }}>{mode === 'light' ? 'Text may be hard to read on this color in light mode. Try a lighter one.' : 'Text may be hard to read on this color in dark mode. Try a darker one.'}</span>}
       <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ flex: 1, fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Light and dark mode each keep their own color. Switch Appearance to set the other one.</span>
         {chosen && <button onClick={() => set(undefined)} style={{ border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 4, whiteSpace: 'nowrap' }}>Reset</button>}

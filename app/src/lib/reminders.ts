@@ -1,5 +1,6 @@
 // The reminders a phone hands to the notification server, so they arrive even when Pockets is closed:
 // the same "due tomorrow" messages as the in-app notifications, at 9:00 the day before.
+import { tr } from './i18n';
 import type { Bill, Data } from './types';
 import { addDays, monthKey, todayISO } from './dates';
 import { billAmount, dueDate, isAuto, isCardPay, isIncome, notMine, parseShortDate } from './schedule';
@@ -68,5 +69,5 @@ export function upcomingReminders(d: Data, today = todayISO(), days = 35): Remin
       if (nineAm(iso) > now && (!d.settings.lastBackup || d.settings.lastBackup < iso)) { out.push({ at: nineAm(iso), title: 'Time for your monthly backup', body: 'Open Pockets and tap Back up now.', url: '#backup', tag: `backup:${iso.slice(0, 7)}` }); break; }
     }
   }
-  return out.sort((a, b) => a.at - b.at).slice(0, 60);
+  return out.sort((a, b) => a.at - b.at).slice(0, 60).map(r => ({ ...r, title: tr(r.title), body: tr(r.body) }));
 }

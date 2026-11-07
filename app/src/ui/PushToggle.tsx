@@ -1,4 +1,5 @@
 // Profile > Lock-screen notifications: on or off for this phone.
+import { dateLocale } from '../lib/i18n';
 import { useEffect, useState } from 'react';
 import { flash, useApp } from '../lib/store';
 import { useSync } from '../sheets/CloudSheet';
@@ -46,7 +47,7 @@ function PushCheck() {
   const [msg, setMsg] = useState<string | null>(null);
   const load = () => { setSt('loading'); pushStatus().then(setSt); };
   useEffect(load, []);
-  const when = (t: number) => new Date(t).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const when = (t: number) => new Date(t).toLocaleString(dateLocale(), { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   const line = st === 'loading' ? 'Checking the notification server…'
     : !st ? 'Couldn\'t reach the notification server. Check that the Worker is deployed.'
     : st.kv === false ? 'Reminders aren\'t set up on the server (the KV binding SCHED is missing).'

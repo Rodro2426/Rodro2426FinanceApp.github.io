@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { getLang, setLang, type Lang } from '../lib/i18n';
+import { dateLocale } from '../lib/i18n';
 import { LockSetting } from '../ui/LockSetting';
 import { logOutAndClear } from '../lib/session';
 import { PushToggle } from '../ui/PushToggle';
@@ -421,6 +423,8 @@ export function SettingsSheet() {
         <FieldLabel m="18px 4px 0">Appearance</FieldLabel>
         <Segmented items={[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]} value={st.theme ?? 'system'} onPick={v => setS({ theme: v as 'system' | 'light' | 'dark' })} mt={8} />
         <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>System follows your iPhone's light or dark mode.</span>
+        <FieldLabel m="18px 4px 0">Language</FieldLabel>
+        <Segmented items={[['en', 'English'], ['es', 'Español']]} value={getLang()} onPick={v => { if (v !== getLang()) setLang(v as Lang); }} mt={8} />
         <BgPicker />
         <PushToggle />
         <FieldLabel m="18px 4px 0">Privacy</FieldLabel>
@@ -463,7 +467,7 @@ export function SettingsSheet() {
           {restore && (
             <div style={{ background: 'var(--color-accent-100)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
               <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-accent-900)' }}>
-                Backup{restore.summary.exportedAt ? ` from ${new Date(restore.summary.exportedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''} for {restore.summary.name}: {restore.summary.accounts} accounts, {restore.summary.expenses} expenses, {restore.summary.pockets} pockets, {restore.summary.scheduled} scheduled, {restore.summary.trades} trades. <b>Restoring replaces everything on this phone.</b>
+                Backup{restore.summary.exportedAt ? ` from ${new Date(restore.summary.exportedAt).toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric', year: 'numeric' })}` : ''} for {restore.summary.name}: {restore.summary.accounts} accounts, {restore.summary.expenses} expenses, {restore.summary.pockets} pockets, {restore.summary.scheduled} scheduled, {restore.summary.trades} trades. <b>Restoring replaces everything on this phone.</b>
               </span>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => { restoreBackup(restore.data); setRestore(null); closeSheet(); flash('Backup restored'); }} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Restore it</button>

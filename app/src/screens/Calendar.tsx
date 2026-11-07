@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getLang } from '../lib/i18n';
 import { useApp, openSheet } from '../lib/store';
 import { LINE, TEXT, tint } from '../lib/constants';
 import { ctxOf, fmt } from '../lib/derive';
@@ -54,7 +55,7 @@ export default function CalendarScreen() {
           <button onClick={() => go(nextMonth(month))} aria-label="Next month" className="hv-n200" style={{ width: 36, height: 36, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.Chevron size={18} /></button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 2 }}>
-          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((w, i) => <span key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--color-neutral-500)', padding: '2px 0 4px' }}>{w}</span>)}
+          {(getLang() === 'es' ? ['L', 'M', 'M', 'J', 'V', 'S', 'D'] : ['M', 'T', 'W', 'T', 'F', 'S', 'S']).map((w, i) => <span key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: 'var(--color-neutral-500)', padding: '2px 0 4px' }}>{w}</span>)}
           {cells.map((date, i) => {
             if (!date) return <span key={i} />;
             const ev = eventsOn(d, date), on = date === sel, isToday = date === c.today;

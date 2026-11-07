@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { dateLocale } from '../lib/i18n';
 import { setUI, flash } from '../lib/store';
 import { LINE, TEXT } from '../lib/constants';
 import { fmt } from '../lib/derive';
@@ -199,9 +200,9 @@ function ChatPage({ id, friend }: { id: string; friend?: string }) {
                 {(m.img || m.gif) && <div style={{ marginBottom: m.text ? 3 : 0 }}><BubbleMedia m={m} onOpen={() => setView(m)} /></div>}
                 {m.text && <div onClick={() => { if (mine && confirm('Delete this message for everyone?')) deleteMessage(id, m.id); }}
                   style={{ background: mine ? TEXT : 'var(--surface)', color: mine ? 'var(--on-text)' : TEXT, borderRadius: 20, borderBottomRightRadius: mine ? 6 : 20, borderBottomLeftRadius: mine ? 20 : 6, padding: '9px 13px', fontSize: 15, lineHeight: 1.35, whiteSpace: 'pre-wrap', wordBreak: 'break-word', cursor: mine ? 'pointer' : 'default' }}>
-                  {m.text}
+                  <span translate="no">{m.text}</span>
                 </div>}
-                <span style={{ fontSize: 10.5, color: 'var(--color-neutral-500)', margin: '2px 8px 0' }}>{new Date(m.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                <span style={{ fontSize: 10.5, color: 'var(--color-neutral-500)', margin: '2px 8px 0' }}>{new Date(m.createdAt).toLocaleTimeString(dateLocale(), { hour: 'numeric', minute: '2-digit' })}</span>
               </div>
               </div>
             </div>

@@ -7,6 +7,7 @@ import { pickBackupFile, readBackup } from '../lib/backup';
 import { TEXT } from '../lib/constants';
 import * as I from '../ui/icons';
 import { useDesk } from '../ui/Desk';
+import { LangSwitch } from '../ui/LangSwitch';
 
 const NAVY = '#232e7a', NAVY2 = '#3d4784';
 
@@ -67,6 +68,7 @@ export default function Welcome() {
         <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.035em', color: NAVY }}>Pockets</span>
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: 13.5, fontWeight: 600, color: NAVY2 }}>On your computer and your iPhone</span>
+        <LangSwitch />
       </header>
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '48px 48px 56px', display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(380px, 460px)', gap: 64, alignItems: 'start' }}>
         <section aria-label="About Pockets" style={{ display: 'flex', flexDirection: 'column', gap: 22, paddingTop: 12 }}>
@@ -114,6 +116,7 @@ export default function Welcome() {
           <img src="./pockets-mark.svg" alt="" width={60} height={73} />
           <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.035em', color: NAVY }}>Pockets</span>
           <span style={{ fontSize: 14.5, lineHeight: 1.4, color: NAVY2, maxWidth: 300 }}>Split your income into weekly pockets and always know what's safe to spend.</span>
+          <div style={{ marginTop: 6 }}><LangSwitch /></div>
         </div>
         <div style={{ marginTop: 16, background: 'rgba(255,255,255,.55)', borderRadius: 26, padding: '12px 14px 14px' }}>
           {busy ? <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 15, fontWeight: 600, color: NAVY }}>{busy}</div>

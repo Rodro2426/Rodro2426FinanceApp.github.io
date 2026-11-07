@@ -4,6 +4,9 @@ import App from './App';
 import { loadData } from './lib/store';
 import { watchForUpdates } from './lib/update';
 import './styles.css';
+import { startTranslator } from './lib/i18n';
+
+startTranslator();
 
 // Keep the app sized to the visible area when the iPhone keyboard opens, and stop
 // Safari from scrolling the whole page (which pushed sheets out of view).

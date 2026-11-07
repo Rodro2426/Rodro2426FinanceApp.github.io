@@ -1,4 +1,5 @@
 import { useState, useSyncExternalStore } from 'react';
+import { dateLocale } from '../lib/i18n';
 import { logOutAndClear } from '../lib/session';
 import { flash } from '../lib/store';
 import { TEXT } from '../lib/constants';
@@ -7,7 +8,7 @@ import { FieldLabel, PrimaryBtn, Segmented, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 
 export const useSync = () => useSyncExternalStore(subscribeSync, getSync);
-const ago = (t: number) => { if (!t) return 'never'; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+const ago = (t: number) => { if (!t) return 'never'; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : new Date(t).toLocaleDateString(dateLocale(), { month: 'short', day: 'numeric' }); };
 export const syncLabel = (s: SyncState) => !s.uid ? 'Off' : s.status === 'syncing' ? 'Syncing…' : s.status === 'conflict' ? 'Needs your choice' : s.status === 'offline' ? 'Offline · will sync later' : s.status === 'error' ? 'Couldn\'t sync' : s.dirty ? 'Changes waiting to upload' : `Synced ${ago(s.syncedAt)}`;
 
 /** Sign-in form; also used by the welcome screen. */
@@ -51,7 +52,7 @@ export function ConflictChoice() {
   return (
     <div role="alertdialog" aria-label="Choose which data to keep" style={{ background: 'oklch(0.96 0.055 92)', borderRadius: 18, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
       <span style={{ fontSize: 14.5, fontWeight: 700, color: 'oklch(0.33 0.07 70)' }}>This phone and your cloud copy are different</span>
-      <span style={{ fontSize: 13, lineHeight: 1.4, color: 'oklch(0.4 0.08 70)' }}>The cloud copy was saved {new Date(s.conflict.cloudAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}{s.conflict.cloudSummary ? ` (${s.conflict.cloudSummary})` : ''}. Which one do you want to keep? The other one is replaced.</span>
+      <span style={{ fontSize: 13, lineHeight: 1.4, color: 'oklch(0.4 0.08 70)' }}>The cloud copy was saved {new Date(s.conflict.cloudAt).toLocaleString(dateLocale(), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}{s.conflict.cloudSummary ? ` (${s.conflict.cloudSummary})` : ''}. Which one do you want to keep? The other one is replaced.</span>
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={() => resolveConflict('phone')} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'oklch(0.33 0.07 70)', color: '#fff', fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>Keep this phone's</button>
         <button onClick={() => resolveConflict('cloud')} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13.5, fontWeight: 700, cursor: 'pointer' }}>Use the cloud's</button>

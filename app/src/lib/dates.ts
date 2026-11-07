@@ -1,3 +1,4 @@
+import { dateLocale } from './i18n';
 // All dates are local calendar days as 'YYYY-MM-DD'.
 const pad = (n: number) => String(n).padStart(2, '0');
 export const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -13,10 +14,11 @@ export const daysBetween = (a: string, b: string) => Math.round((parse(b).getTim
 export const weekStart = (s: string) => { const d = parse(s); const wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return iso(d); };
 export const inRange = (s: string, a: string, b: string) => s >= a && s <= b;
 
-export const fmtDay = (s: string, opts: Intl.DateTimeFormatOptions) => parse(s).toLocaleDateString('en-US', opts);
+export const fmtDay = (s: string, opts: Intl.DateTimeFormatOptions) => parse(s).toLocaleDateString(dateLocale(), opts);
 export const shortDate = (s: string) => fmtDay(s, { month: 'short', day: 'numeric' });
 export const monthName = (m: string) => fmtDay(m + '-15', { month: 'long' });
-export const monthLabel = (m: string) => (m === 'all' ? 'All months' : fmtDay(m + '-15', { month: 'long', year: 'numeric' }));
+export const monthLabel = (m: string) => (m === 'all' ? 'All months' : cap(fmtDay(m + '-15', { month: 'long', year: 'numeric' })));
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** "Today", a weekday for the last 6 days, otherwise "Oct 31". */
 export function relDay(s: string, today: string) {
