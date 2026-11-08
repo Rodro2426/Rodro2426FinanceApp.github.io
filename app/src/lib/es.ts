@@ -49,8 +49,8 @@ Sign in first: if Face ID ever fails, your Pockets password unlocks it.|Primero 
 One moment…|Un momento…
 Lock after leaving Pockets for|Bloquear después de salir de Pockets por
 Immediately|De inmediato
-1 min|1 min
-5 min|5 min
+1 minute|1 minuto
+5 minutes|5 minutos
 Scheduled|Programado
 No pocket|Sin bolsillo
 Income|Ingreso
