@@ -10,6 +10,7 @@ More context lives in `docs/`:
 - `docs/progress.md`: what's done, what's waiting on the owner, ideas for next.
 - `docs/decisions.md`: key choices and why.
 - `docs/gotchas.md`: bugs already hit, fragile areas, things that look wrong but aren't.
+- `docs/firestore.rules`: a copy of the Firestore security rules published in the Firebase console.
 
 The root `README.md` is the original Claude Design handoff note (`chats/` and `project/` hold that prototype). It does not document the app.
 

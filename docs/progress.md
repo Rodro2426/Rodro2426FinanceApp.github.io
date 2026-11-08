@@ -36,7 +36,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 
 **Notifications**
 - In-app bell.
-- **Lock-screen push** through the Cloudflare Worker: friends' messages and expenses (worded like a messaging app), and scheduled reminders.
+- **Lock-screen push** through the Cloudflare Worker: friends' messages and expenses (worded like a messaging app), and scheduled reminders. The owner confirmed on the phone (Nov 2026) that the cron runs every 5 minutes and reminders arrive.
 - A check panel in Profile: status, "Send a test", "Send reminders now".
 
 **Insights**
@@ -62,7 +62,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - Firebase sign-in (email or Google) with cloud sync, including a conflict chooser.
 - Log out, which clears the device.
 - Backup and restore to a file, with a monthly backup reminder.
-- Face ID lock: a passkey, with the Pockets password or Google as fallback, and a lock delay.
+- Face ID lock: a passkey, with the Pockets password or Google as fallback, and a lock delay. All three were checked by the owner on the real phone (Nov 2026).
 - Eye toggle to hide amounts, including in input boxes.
 
 **Look and feel**
@@ -76,15 +76,13 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 
 ## Waiting on the owner (not confirmed yet)
 
-- **Scheduled reminders:** check that the Cloudflare cron trigger is `*/5 * * * *` and that the latest `cloudflare/pockets-push.js` is pasted in (it has `/status` and `/test`). Then confirm that a reminder set a few minutes ahead actually arrives.
-- **Real-device checks** of the Face ID lock, the password or Google fallback, and the lock delay.
-- **Firestore security rules:** they live only in the Firebase console and are not in this repo. Ask the owner to paste the current rules into `docs/firestore.rules` so they're versioned (see `gotchas.md`).
+Nothing right now. Scheduled reminders and the Face ID lock were confirmed on the phone, and the Firestore rules are saved in `docs/firestore.rules` (Nov 2026).
 
 ## Next / ideas (not started)
 
 - Known limits left by recent features:
   - The Home card "Safe to spend this week" adds 15-day pockets' quincena left to weekly pockets' week left.
-  - The weekly pocket report table (Reports → budgets over weeks) still treats every pocket as weekly.
+  - The weekly pocket report table (Reports → budgets over weeks) shows a 15-day pocket's whole-quincena numbers in every week of that quincena, so adding up the rows counts it two or three times.
   - The Excel/"For AI" export is English only.
   - Friends' notifications are worded in the sender's language.
   - Sample-data pocket names show in Spanish on Home but in English in the Budget edit boxes (they're stored data).

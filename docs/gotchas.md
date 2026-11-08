@@ -25,7 +25,7 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 
 ## Firebase
 
-- **The Firestore rules are not in this repo.** They live only in the Firebase console, and the owner pastes them in by hand.
+- **The Firestore rules that Firebase uses live in the Firebase console**, and the owner pastes them in by hand. `docs/firestore.rules` is a copy of the published rules (saved Nov 2026). Nothing deploys it, so whenever the rules change, update it in the same commit and give the owner that whole file to paste.
   - The owner twice nested blocks wrongly (`messages` inside `items`, then `dms` inside `items`), which caused "permission-denied". Each time, give the complete rules file, not a snippet.
   - Collections in use:
     - `users/{uid}` with chunks
