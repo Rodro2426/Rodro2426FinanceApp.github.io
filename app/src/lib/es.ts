@@ -937,6 +937,7 @@ Sign in|Iniciar sesión
 Create account|Crear cuenta
 What should we call you?|¿Cómo te llamamos?
 Email|Correo
+you@example.com|tu@correo.com
 At least 6 characters|Al menos 6 caracteres
 Your password|Tu contraseña
 Type your email first, then tap this again.|Escribe tu correo primero y vuelve a tocar aquí.
@@ -1479,6 +1480,13 @@ Balance owed · not yours|Saldo adeudado · no es tuya
 `;
 
 export const ES_PATTERNS = `
+Safe to spend: {0}|Puedes gastar: {0}
+Pockets: {0}|Bolsillos: {0}
+{0} from {1} on the {2}|{0} desde {1} el {2}
+{0} into {1} on the {2}|{0} a {1} el {2}
+{0} in pesos|{0} en pesos
+{0} card payments|{0} pagos de tarjeta
+{0} card payment|{0} pago de tarjeta
 {0} a month over 2 quincenas|{0} al mes en 2 quincenas
 {0} a month over {1} weeks|{0} al mes en {1} semanas
 Until {0}. From {1} it gets the full {2}.|Hasta el {0}. Desde el {1} recibe los {2} completos.

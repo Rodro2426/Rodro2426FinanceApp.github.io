@@ -79,6 +79,23 @@ npm run build                      # what CI runs
   - `window.__social.set(partial, uid)`.
 - Saved data can be read straight from IndexedDB: database `keyval-store`, store `keyval`, key `pockets-data-v1`.
 - To test in Spanish, run `localStorage.setItem('pockets-lang','es')` in an init script.
+- Reusable scripts in `app/scripts/` (dev server must be running):
+  - `node scripts/shots.cjs --places=tab:home,sheet:editPocket --themes=light,dark --sizes=phone,desktop --lang=en --out=<dir>` takes screenshots.
+  - `node scripts/es-gaps.cjs [--places=…]` lists text still in English when the app runs in Spanish.
+  - Place names are documented in `scripts/lib.cjs`.
+
+## Agents (`.claude/agents/`)
+
+Use them to save tokens on repeated work. Each one returns a short report.
+
+| Agent | When | What it does |
+|---|---|---|
+| `money-logic-reviewer` | Before shipping any change to money math: `lib/derive.ts`, `plan.ts`, `reports.ts`, `networth.ts`, `schedule.ts`, `reminders.ts`, `funds.ts`, `cdt.ts`, or screens that compute totals. Skip for design or text-only changes. | Checks the diff against the money rules in `docs/` and writes the missing vitest cases. |
+| `spanish-gaps` | After a change adds or changes user-facing text. | Runs `es-gaps.cjs` and adds lines to `lib/es.ts`. Lists sentences that need a code change. |
+| `ship-check` | When the code is done. Pass `places`, `sizes` and the full commit message with its footer. | Typecheck, tests, build, screenshots, commit, push, watch the deploy. Never fixes code. |
+| `security-auditor` | Before inviting people beyond friends, or after changes to auth, sync, social, push, the service worker, backup, lock or logout. | Writes `docs/security-review.md`, covering Firestore rules, Auth settings, the Worker, XSS, device data, privacy law and dependencies. |
+
+Usual order for a feature: build it → `money-logic-reviewer` (if money changed) → `spanish-gaps` → `ship-check`. Small fixes go straight to `ship-check`.
 
 ## Rules
 
