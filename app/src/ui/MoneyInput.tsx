@@ -32,6 +32,7 @@ export function MoneyInput({ value, onChange, placeholder = '0', style, autoFocu
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const caret = useRef<number | null>(null); // digits to the left of the caret after an edit
+  const fresh = useRef(false); // just focused: the first mouseup must not clear the selection
   // With amounts hidden (the eye), a filled box shows ***** until you tap into it to edit.
   const [focused, setFocused] = useState(false);
   const masked = moneyHidden() && !focused && !!value;
@@ -48,8 +49,13 @@ export function MoneyInput({ value, onChange, placeholder = '0', style, autoFocu
 
   return (
     <input ref={ref} type="text" inputMode={sep().decimals ? 'decimal' : 'numeric'} placeholder={placeholder} value={shown} autoFocus={autoFocus} aria-label={ariaLabel}
-      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      // Tapping a box selects the whole amount, so typing replaces it (no need to select and erase first).
+      // iOS places the caret after focus, so the selection is made a moment later, and the mouseup that would undo it is skipped once.
+      onFocus={e => { setFocused(true); fresh.current = true; const el = e.currentTarget; setTimeout(() => { if (document.activeElement === el) el.setSelectionRange(0, el.value.length); }, 0); }}
+      onMouseUp={e => { if (fresh.current) { e.preventDefault(); fresh.current = false; } }}
+      onBlur={() => { setFocused(false); fresh.current = false; }}
       onChange={e => {
+        fresh.current = false;
         const t = e.target.value, at = e.target.selectionStart ?? t.length, g = sep().group;
         caret.current = t.slice(0, at).split('').filter(ch => ch !== g && /[\d.,]/.test(ch)).length;
         onChange(parseTyping(t));
