@@ -11,6 +11,14 @@ You are the **orchestrator**. You read, plan, decide design and review. Workers 
 
 Task from the owner: $ARGUMENTS
 
+## Progress bar (optional)
+If the tool `mcp__savvy-progress__progress` is among your tools (load it with ToolSearch `select:mcp__savvy-progress__progress` if it is deferred), keep it current; if it isn't there, skip this silently. Call it:
+- after presenting the plan: `title` (a few words), `total` (number of worker tasks), `tasks` as `[{ title, tier, after }]` in plan order, `phase: "delegate"` (or `"design"` during section 2). Map tiers: `pockets-quick` → `light`, `pockets-builder` → `medium`, `pockets-heavy` → `heavy`. `after` lists the task numbers it waits for.
+- each time a task is accepted: `done` (accepted so far); use `phase: "review"` while reviewing;
+- if re-planning changes the tasks: the new `tasks` and `total`;
+- once at the end: `finished: true`.
+When delegating, pass the task's `title` exactly as the Agent tool's `description`, so the panel can match the run to the planned task.
+
 ## 1. Understand and plan
 1. Read `CLAUDE.md`, the relevant parts of `docs/progress.md`, `docs/decisions.md` and `docs/gotchas.md`, and the files the task touches. Don't read whole folders.
 2. If the task is small (one or two files, obvious change), say so and do it the normal way instead: build it, then `ship-check`. The flow costs more than it saves on small work.
@@ -36,7 +44,7 @@ Copy rules from CLAUDE.md apply: warm, simple, Colombian context, one whole sent
 Run independent tasks in parallel only when they touch different files.
 
 ## 4. Delegate
-Each brief includes: the task paragraph, the files, the design spec if any, the relevant rules from CLAUDE.md and docs (quote the lines, don't say "read the docs"), and "Do not commit. Report changed files, what you ran and the results in under 10 lines."
+Each brief includes: the task paragraph, the files, the design spec if any, the relevant rules from CLAUDE.md and docs (quote the lines, don't say "read the docs"), and "Do not commit. Report changed files, what you ran and the results in under 10 lines." If `mcp__savvy-progress__step` is among your tools, add: "Before other work, call `mcp__savvy-progress__step` with `total` (your plan in 3-8 steps) and `done: 0`, then again with `done` and a short `note` after each step."
 
 ## 5. Review (you)
 For each returned task:
