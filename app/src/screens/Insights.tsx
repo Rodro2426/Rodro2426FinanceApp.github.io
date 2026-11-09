@@ -51,23 +51,6 @@ export default function Insights() {
       <div style={{ padding: '4px 4px 0', fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Insights</div>
 
       <Blocks page="insights" title="Insights" blocks={[
-        { id: 'categories', name: 'Spending by category', desc: 'The filterable category table', node: <>
-      <CategoryTable />
-      </> },
-        { id: 'reports', name: 'Reports', desc: 'Your saved charts', node: <>
-      <div style={{ padding: '10px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Reports</div>
-      <ReportList />
-      </> },
-        ...(best && goal0 ? [{ id: 'tip', name: 'Savings tip', desc: 'Move leftovers to a goal', node: (
-
-        <div style={{ background: 'oklch(0.95 0.04 160)', borderRadius: 26, padding: 18, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--surface)', color: 'oklch(0.42 0.09 160)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Bulb size={18} /></div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span style={{ fontSize: 14, lineHeight: 1.4, color: 'oklch(0.32 0.07 160)', textWrap: 'pretty' }}>{best.name} still has {fmt(best.left)} this week. Move some to {goal0.name}?</span>
-            <button onClick={() => openSheet({ name: 'move', id: best.id, to: goal0.id })} style={{ alignSelf: 'flex-start', height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'oklch(0.42 0.09 160)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Move to goal</button>
-          </div>
-        </div>
-        ) }] : []),
         { id: 'month', name: 'Spent this month', desc: 'Month total by pocket', node: <>
       <div style={{ ...card, gap: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -87,37 +70,6 @@ export default function Insights() {
             </div>
           ))}
         </div>
-      </div>
-      </> },
-        { id: 'week', name: 'This week vs last week', desc: 'Weekly comparison', node: <>
-      <div style={{ ...card, gap: 12 }}>
-        <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>This week vs last week</span>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>This week</span><span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(weekSpent)}</span></div>
-          <Bar h={12} pct={pctOf(weekSpent, maxW)} track="var(--color-neutral-200)" fill="var(--color-accent)" />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 6 }}><span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Last week</span><span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(lastWeek)}</span></div>
-          <Bar h={12} pct={pctOf(lastWeek, maxW)} track="var(--color-neutral-200)" fill="var(--color-neutral-500)" />
-        </div>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{weekSpent <= lastWeek ? `${fmt(lastWeek - weekSpent)} less than last week so far.` : `${fmt(weekSpent - lastWeek)} more than last week.`}</span>
-      </div>
-      </> },
-        { id: 'tags', name: 'Spending by tag', desc: 'Totals for each tag', node: <>
-      <div style={{ ...card, gap: 6 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Spending by tag</span>
-          <span onClick={() => openSheet({ name: 'search' })} style={{ fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 600, cursor: 'pointer' }}>Search</span>
-        </div>
-        {tagTotals.map(x => (
-          <div key={x.t} onClick={() => openSheet({ name: 'search', tag: x.t })} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0', cursor: 'pointer' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
-              <span style={{ fontWeight: 700, color: ink(tagHue(x.t)), background: tint(tagHue(x.t)), padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>#{x.t}</span>
-              <span style={{ flex: 1, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{plural(x.n, 'expense')}</span>
-              <span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(x.sum)}</span>
-            </div>
-            <Bar h={8} pct={pctOf(x.sum, maxTag)} track="var(--color-neutral-200)" fill={mid(tagHue(x.t))} />
-          </div>
-        ))}
-        {tagTotals.length === 0 && <span style={{ fontSize: 14, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add tags to your expenses to see them here.</span>}
       </div>
       </> },
         { id: 'bills', name: 'Bills and subscriptions', desc: 'All your bills this month', node: <>
@@ -146,7 +98,55 @@ export default function Insights() {
           Add bill or subscription
         </button>
       </ListCard>
-      </> }
+      </> },
+        { id: 'categories', name: 'Spending by category', desc: 'The filterable category table', node: <>
+      <CategoryTable />
+      </> },
+        { id: 'tags', name: 'Spending by tag', desc: 'Totals for each tag', node: <>
+      <div style={{ ...card, gap: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Spending by tag</span>
+          <span onClick={() => openSheet({ name: 'search' })} style={{ fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 600, cursor: 'pointer' }}>Search</span>
+        </div>
+        {tagTotals.map(x => (
+          <div key={x.t} onClick={() => openSheet({ name: 'search', tag: x.t })} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0', cursor: 'pointer' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
+              <span style={{ fontWeight: 700, color: ink(tagHue(x.t)), background: tint(tagHue(x.t)), padding: '4px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>#{x.t}</span>
+              <span style={{ flex: 1, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{plural(x.n, 'expense')}</span>
+              <span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(x.sum)}</span>
+            </div>
+            <Bar h={8} pct={pctOf(x.sum, maxTag)} track="var(--color-neutral-200)" fill={mid(tagHue(x.t))} />
+          </div>
+        ))}
+        {tagTotals.length === 0 && <span style={{ fontSize: 14, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add tags to your expenses to see them here.</span>}
+      </div>
+      </> },
+        { id: 'week', name: 'This week vs last week', desc: 'Weekly comparison', node: <>
+      <div style={{ ...card, gap: 12 }}>
+        <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>This week vs last week</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>This week</span><span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(weekSpent)}</span></div>
+          <Bar h={12} pct={pctOf(weekSpent, maxW)} track="var(--color-neutral-200)" fill="var(--color-accent)" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 6 }}><span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Last week</span><span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(lastWeek)}</span></div>
+          <Bar h={12} pct={pctOf(lastWeek, maxW)} track="var(--color-neutral-200)" fill="var(--color-neutral-500)" />
+        </div>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{weekSpent <= lastWeek ? `${fmt(lastWeek - weekSpent)} less than last week so far.` : `${fmt(weekSpent - lastWeek)} more than last week.`}</span>
+      </div>
+      </> },
+        ...(best && goal0 ? [{ id: 'tip', name: 'Savings tip', desc: 'Move leftovers to a goal', node: (
+
+        <div style={{ background: 'oklch(0.95 0.04 160)', borderRadius: 26, padding: 18, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--surface)', color: 'oklch(0.42 0.09 160)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Bulb size={18} /></div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontSize: 14, lineHeight: 1.4, color: 'oklch(0.32 0.07 160)', textWrap: 'pretty' }}>{best.name} still has {fmt(best.left)} this week. Move some to {goal0.name}?</span>
+            <button onClick={() => openSheet({ name: 'move', id: best.id, to: goal0.id })} style={{ alignSelf: 'flex-start', height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'oklch(0.42 0.09 160)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Move to goal</button>
+          </div>
+        </div>
+        ) }] : []),
+        { id: 'reports', name: 'Reports', desc: 'Your saved charts', node: <>
+      <div style={{ padding: '10px 4px 0', fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Reports</div>
+      <ReportList />
+      </> },
       ]} />
     </div>
   );
