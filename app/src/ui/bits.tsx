@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { Data, Expense } from '../lib/types';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
-import { catOf, curSymbol, fmt, fxText, initialOf, pocketStats, type PocketStats } from '../lib/derive';
+import { catOf, curSymbol, fmt, fxText, initialOf, isCOP, pocketStats, type PocketStats } from '../lib/derive';
 import { relDay, type Ctx } from '../lib/dates';
 import { MoneyInput } from './MoneyInput';
 
@@ -135,6 +135,26 @@ export function AcctBadge({ photo, initial, size, radius, bg, color, fs }: { pho
     <span style={{ width: size, height: size, borderRadius: radius, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fs, flex: 'none', overflow: 'hidden', position: 'relative' }}>
       {photo ? <Fill src={photo} /> : <span>{initial}</span>}
     </span>
+  );
+}
+
+/**
+ * Slider for one row's share of `total`, in whole percents. `max` caps the amount (what the other rows left free),
+ * so the rows can never add up to more than the total. Calls `onChange` with the amount, not the percent.
+ */
+export function PctSlider({ amount, total, max = total, hue, label, onChange }: { amount: number; total: number; max?: number; hue: number; label: string; onChange: (amt: number) => void }) {
+  const pct = total > 0 ? Math.round((amount / total) * 100) : 0;
+  const pick = (v: number) => {
+    const raw = v >= 100 ? total : (total * v) / 100;
+    const amt = Math.max(0, Math.min(max, raw));
+    onChange(isCOP() ? Math.floor(amt) : Math.floor(amt * 100) / 100);
+  };
+  return (
+    <div style={{ flexBasis: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '0 0 2px 42px' }}>
+      <input type="range" min={0} max={100} step={1} value={pct} disabled={!(total > 0)} aria-label={label} aria-valuetext={`${pct}%`}
+        onChange={e => pick(Number(e.target.value))} style={{ flex: 1, minWidth: 0, height: 28, margin: 0, accentColor: ink(hue), cursor: 'pointer' }} />
+      <span style={{ width: 42, textAlign: 'right', fontSize: 13, fontWeight: 700, color: ink(hue), fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
+    </div>
   );
 }
 

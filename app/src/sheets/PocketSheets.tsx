@@ -9,7 +9,7 @@ import { COVER, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, 
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
 import { allIncomeCats } from '../lib/reports';
 import type { Data, Move, PocketView } from '../lib/types';
-import { BigAmount, Fill, Bar, ExpRow, FieldLabel, GhostDanger, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
+import { BigAmount, Fill, Bar, ExpRow, FieldLabel, GhostDanger, PctSlider, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { HuePicker } from '../ui/HuePicker';
 import { CategoryPicker, type CatPick } from '../ui/CategoryPicker';
@@ -121,6 +121,13 @@ function IncomeForm() {
   const quick = (v: number) => { setDist(dd => (dd === 'manual' ? 'budget' : dd)); setToP(String(v)); };
   /** Tapping a pocket puts everything going to pockets there (the whole income if nothing was chosen yet). */
   const allTo = (id: string) => { setManual({ [id]: String(A > 0 && !tooMuch ? A : X) }); setDist('manual'); };
+  /** What each pocket gets right now (typed, or from By budget / Evenly). */
+  const cur: Record<string, number> = dist === 'manual' ? manualNums : parts;
+  /** Sliding a pocket switches to Manual, keeping what the other pockets already had. */
+  const slide = (id: string, amt: number) => {
+    setManual({ ...Object.fromEntries(Object.entries(cur).filter(([, v]) => v > 0).map(([k, v]) => [k, String(v)])), [id]: amt > 0 ? String(amt) : '' });
+    setDist('manual');
+  };
   const save = () => {
     if (cant) return;
     setData(x => addExtraIncome(x, ctxOf(x), input));
@@ -189,13 +196,13 @@ function IncomeForm() {
             {chipBtn('Evenly', dist === 'even', () => setDist('even'))}
             {chipBtn('Manual', dist === 'manual', () => { setManual(Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, String(v)]))); setDist('manual'); })}
           </div>
-          {d.pockets.length > 0 && <span style={{ margin: '0 2px', fontSize: 12, color: 'var(--color-neutral-700)' }}>Tap a pocket to put it all there.</span>}
+          {d.pockets.length > 0 && <span style={{ margin: '0 2px', fontSize: 12, color: 'var(--color-neutral-700)' }}>Tap a pocket to put it all there, or slide to choose a percent.</span>}
           {d.pockets.map(p => {
             const ms0 = monthStats(d, p.id, c), part = parts[p.id] ?? 0;
             const perWeek = mode === 'month' ? weekShares(part, nWeeks, scale)[0] : part;
             const st = allStats(d, c).find(x => x.id === p.id)!;
             return (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: `1px solid ${LINE}` }}>
+              <div key={p.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 10px', padding: '6px 0', borderTop: `1px solid ${LINE}` }}>
                 <button onClick={() => allTo(p.id)} aria-label={`Put all in ${p.name}`} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, border: 0, background: 'transparent', padding: 0, margin: 0, color: TEXT, font: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
                   <PocketDot st={st} size={32} fs={15} bg={tint(p.hue)} color={ink(p.hue)} />
                   <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -210,6 +217,7 @@ function IncomeForm() {
                     ? <MoneyInput value={manual[p.id] || ''} onChange={x => setManual(s0 => ({ ...s0, [p.id]: x }))} ariaLabel={`${p.name} share`} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(p.hue), padding: 0, outline: 'none', textAlign: 'right' }} />
                     : <span style={{ width: '100%', fontSize: 16, fontWeight: 700, color: ink(p.hue), textAlign: 'right' }}>{fmt(part).replace(curSymbol(), '')}</span>}
                 </div>
+                <PctSlider amount={cur[p.id] || 0} total={X} max={X - Object.entries(cur).reduce((t, [k, v]) => (k === p.id ? t : t + v), 0)} hue={p.hue} label={`Percent for ${p.name}`} onChange={v => slide(p.id, v)} />
               </div>
             );
           })}
@@ -622,7 +630,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
     closeSheet(); flash(n === 1 && nums[COVER] > 0 ? `${fmt(total)} from ${s.name} now covers the shortfall` : `Moved ${fmt(total)} from ${s.name} to ${n === 1 ? (d.pockets.find(p => nums[p.id] > 0)?.name ?? d.goals.find(g => nums[g.id] > 0)?.name) : `${n} places`} · just for this week`);
   };
   const destRow = (key: string, name: string, hue: number, sub: string, st?: { initial: string; photoBg: string }) => (
-    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: `1px solid ${LINE}` }}>
+    <div key={key} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 10px', padding: '8px 0', borderTop: `1px solid ${LINE}` }}>
       <button onClick={() => setParts(allTo(key))} disabled={!leftover} aria-label={`Move all to ${name}`} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, border: 0, background: 'transparent', padding: 0, margin: 0, color: TEXT, font: 'inherit', textAlign: 'left', cursor: leftover ? 'pointer' : 'default' }}>
         {st ? <PocketDot st={st} size={32} fs={15} bg={tint(hue)} color={ink(hue)} /> : <span style={{ width: 32, height: 32, borderRadius: 999, background: tint(hue), color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Target size={15} /></span>}
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -634,6 +642,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
         <span style={{ fontSize: 14, color: ink(hue) }}>{curSymbol()}</span>
         <MoneyInput value={parts[key] || ''} onChange={x => setParts(p0 => ({ ...p0, [key]: x }))} ariaLabel={`To ${name}`} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(hue), padding: 0, outline: 'none', textAlign: 'right' }} />
       </div>
+      <PctSlider amount={nums[key] || 0} total={leftover} max={Math.min(key === COVER ? shortfall : leftover, leftover - (total - (nums[key] || 0)))} hue={hue} label={`Percent for ${name}`} onChange={v => setParts(p0 => ({ ...p0, [key]: v > 0 ? String(v) : '' }))} />
     </div>
   );
 
@@ -643,7 +652,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
         <div style={{ background: tint(s.hue), borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: k }}>Left in {s.name} this week</span>
           <span style={{ fontSize: 34, fontWeight: 700, letterSpacing: '-0.03em', color: k }}>{fmt(leftover)}</span>
-          <span style={{ fontSize: 13, color: tooMuch ? RED : k }}>{tooMuch ? `That's ${fmt(-remaining)} more than ${s.name} has left.` : total > 0 ? `${fmt(total)} moves · ${fmt(remaining)} stays in ${s.name}` : 'Tap a pocket to move it all, or type amounts below.'}</span>
+          <span style={{ fontSize: 13, color: tooMuch ? RED : k }}>{tooMuch ? `That's ${fmt(-remaining)} more than ${s.name} has left.` : total > 0 ? `${fmt(total)} moves · ${fmt(remaining)} stays in ${s.name}` : 'Tap a pocket to move it all, or slide to choose a percent.'}</span>
         </div>
 
         <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '10px 12px 4px', display: 'flex', flexDirection: 'column' }}>

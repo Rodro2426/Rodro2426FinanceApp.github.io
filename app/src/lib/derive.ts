@@ -7,7 +7,7 @@ import { STARS, moneyHidden } from './privacy';
 import { unitsFor, weekShares } from './split';
 
 export const num = (s: unknown) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
-const isCOP = () => getData().settings.currency === 'COP';
+export const isCOP = () => getData().settings.currency === 'COP';
 export const curSymbol = () => (isCOP() ? '$' : getData().settings.currency);
 export function fmt(n: number, sign?: boolean) {
   const cop = isCOP();
