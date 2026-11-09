@@ -18,7 +18,7 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 
 - **Every DEV hook must be guarded** with `import.meta.env.DEV && typeof window !== 'undefined'`. Without the window check, vitest crashed with "window is not defined".
 - **Sum spending with `myExpenses(d)`, `weekExpenses` or `monthExpenses`, never `d.expenses`.** Otherwise "this isn't mine" cards leak back into spending.
-- **Pocket periods:** use `pocketStats` / `dayStats` / `monthStats` / `monthPlanOf` and `pocketCtx`. Never assume `c.weekStart` is the pocket's period, and never compute `weeklyStr * weeks`. A 15-day pocket's `dayStats().week` has 15–16 entries, not 7.
+- **Pocket periods:** use `pocketStats` / `dayStats` / `monthStats` / `monthPlanOf` and `pocketCtx`. Never assume `c.weekStart` is the pocket's period, and never compute `weeklyStr * weeks`. A 15-day pocket's `dayStats().week` has 15–16 entries, not 7. For anything shown "per week", use `weekShare`, not `pocketStats` (that's the whole quincena). `dayStats().futureShare` already has today's overspend taken out, so don't add a negative `dayStats().left` on top.
 - **Moves have both `week` and, since Nov 2026, `day`.** Older moves have no `day`; code must fall back (see `moveInPeriod`).
 - **Income splits are linked to their income by `Move.income`.** Very old splits were matched by the shared id timestamp (`incomeMoves`). Don't break that fallback.
 - **`loadPhotos` failures must keep cached friend photos.** An earlier version wiped them on any error.
@@ -77,3 +77,4 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - **Don't leave a stray `cat` reading stdin** in a shell chain. It hangs the command.
 - **Reminder tests depend on the date window:** a December date is beyond the default 35 days, so pass `days`.
 - **Some GitHub Pages deploys time out.** Re-run the workflow or push again.
+- **One English word, one Spanish word:** `es.ts` translates a whole string the same way everywhere. If the same English word means two things ("Clear" the boxes vs. a "Transparent" photo background), use different English words, or one of them shows the wrong Spanish.

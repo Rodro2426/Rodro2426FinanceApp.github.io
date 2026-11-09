@@ -79,3 +79,43 @@ describe('net worth with investments and groups', () => {
     expect(netWorth(notCounted).total).toBe(accounts + 4000000);
   });
 });
+
+describe('budgetWeeks with 15-day pockets', () => {
+  it('splits a quincena across its weeks and the straddling week', async () => {
+    const { emptyData } = await import('./seed');
+    const { budgetWeeks } = await import('./reports');
+    const { pocketStats, weekShare } = await import('./derive');
+    const e = emptyData(sampleData());
+    const d = { ...e, settings: { ...e.settings, currency: 'COP' as const, weeks: 4 as const }, incomeStr: '2000000',
+      pockets: [{ id: 'wk', name: 'Lunch', weeklyStr: '100000', hue: 60 }, { id: 'q', name: 'Market', weeklyStr: '300000', hue: 150, period: 'half' as const }],
+      expenses: [{ id: 'a', ts: 1, p: 'q', a: 'bank', amt: 5000, note: 'a', date: '2026-11-03', tags: [], cat: 'Other', sub: '' }], incomes: [], moves: [], goals: [] };
+    const c = makeCtx(4, '2026-11-25'); // week Nov 23-29
+    const rows = budgetWeeks(d, c, 4, 'q'); // weeks Nov 2, 9, 16, 23
+    const q1 = pocketStats(d, 'q', makeCtx(4, '2026-11-05'))!.budget;
+    // Nov 2-8 is 7 of 15 days; Nov 9-15 (Mon-Sun) is 7 of 15 days; Nov 16 is 1 day in the 16-30 quincena
+    expect(rows[0].budget).toBeCloseTo(q1 * 7 / 15, 0);
+    expect(rows[0].spent).toBe(5000);
+    expect(rows[1].budget).toBeCloseTo(q1 * 7 / 15, 0);
+    expect(rows[2].budget).toBeGreaterThan(0);
+    expect(rows[3].budget).toBe(weekShare(d, 'q', c).budget);
+    // weekly pocket unchanged
+    const w = budgetWeeks(d, c, 2, 'wk');
+    expect(w[0].budget).toBe(pocketStats(d, 'wk', makeCtx(4, '2026-11-22'))!.budget);
+  });
+
+  it('past weeks add up to the quincena budget, and the straddling week splits exactly', async () => {
+    const { emptyData } = await import('./seed');
+    const { budgetWeeks } = await import('./reports');
+    const e = emptyData(sampleData());
+    const d = { ...e, settings: { ...e.settings, currency: 'COP' as const, weeks: 4 as const }, incomeStr: '2000000',
+      pockets: [{ id: 'q', name: 'Market', weeklyStr: '300000', hue: 150, period: 'half' as const }],
+      expenses: [], incomes: [], moves: [], goals: [] };
+    const rows = budgetWeeks(d, makeCtx(4, '2026-11-25'), 5, 'q'); // weeks Oct 26, Nov 2, Nov 9, Nov 16, Nov 23
+    // Oct 26-Nov 1 straddles: 6 of 16 days (Oct 16-31) + 1 of 15 days (Nov 1-15) = 112.500 + 20.000
+    expect(rows[0].budget).toBeCloseTo(132500, 5);
+    expect(rows[1].budget).toBeCloseTo(140000, 5); // 7/15
+    expect(rows[2].budget).toBeCloseTo(140000, 5);
+    // Nov 1-15 quincena: the 1 day in the first row plus two full weeks = the whole 300.000
+    expect(20000 + rows[1].budget + rows[2].budget).toBeCloseTo(300000, 5);
+  });
+});

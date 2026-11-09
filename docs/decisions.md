@@ -21,6 +21,7 @@ Key choices, with the reason behind each one. Newest topics are near the end of 
 
 - **Pocket budgets are amounts per period.** The field is still called `weeklyStr` for backward compatibility. With `period: 'half'`, the amount is per quincena.
 - **Quincenas are calendar halves (1–15, 16–end), not rolling 15 days.** That matches how Colombians are paid. A pocket can be weekly or every 15 days, and the owner chose per pocket rather than app-wide.
+- **A 15-day pocket's share of a week:** this week counts only the days in the current quincena (today's amount plus each remaining spending day's share, up to Sunday or the quincena end). The next quincena's money isn't counted until it starts, because the owner hasn't been paid yet. A quincena overspend shows fully. Past weeks in Reports split each quincena's budget by spending days, and the current week's row is the same number as Home.
 - **Moves (money between pockets and goals) never change account balances.**
   - Pocket → pocket only affects the current period; next period every pocket starts again from its own budget.
   - Weekly pockets match moves by `week` (its Monday). 15-day pockets match by `day`, the date the move was made; old moves fall back to the Sunday of their week.

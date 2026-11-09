@@ -94,6 +94,21 @@ export function pocketStats(d: Data, id: string, c: Ctx = ctxOf(d)): PocketStats
   };
 }
 export const allStats = (d: Data, c: Ctx = ctxOf(d)) => d.pockets.map(p => pocketStats(d, p.id, c)!);
+/** A pocket's share of the current Mon–Sun week. Weekly pockets: their week. 15-day pockets: only this week's spending days inside the current quincena. */
+export function weekShare(d: Data, id: string, c: Ctx = ctxOf(d), s: PocketStats | null = pocketStats(d, id, c)): { budget: number; spent: number; left: number } {
+  const p = d.pockets.find(x => x.id === id);
+  if (!p || !s) return { budget: 0, spent: 0, left: 0 };
+  if (!isHalf(p)) return { budget: s.budget, spent: s.spent, left: s.left };
+  const [qa, qb] = halfOf(c.today), weekEnd = addDays(c.weekStart, 6);
+  const from = c.weekStart > qa ? c.weekStart : qa, to = weekEnd < qb ? weekEnd : qb;
+  const ds = dayStats(d, id, c, s);
+  const n = ds.week.filter(x => x.date > c.today && x.date <= to && x.active).length;
+  // dayStats' futureShare already has today's overspend taken out, so today's part never goes below 0.
+  const planned = Math.max(0, ds.left) + ds.futureShare * n;
+  const left = s.left <= 0 ? s.left : Math.min(s.left, planned);
+  const spent = myExpenses(d).filter(e => e.p === id && inRange(e.date, from, c.today)).reduce((a, e) => a + e.amt, 0);
+  return { budget: spent + left, spent, left };
+}
 
 /**
  * This period's share of income split for the month: each monthly move is spread evenly over its weeks.

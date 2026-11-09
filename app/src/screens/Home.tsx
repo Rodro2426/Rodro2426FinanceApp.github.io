@@ -2,7 +2,7 @@ import { useApp, openSheet, setUI } from '../lib/store';
 import { getLang } from '../lib/i18n';
 import { EyeToggle } from '../ui/EyeToggle';
 import { LINE, RED, ink, tint } from '../lib/constants';
-import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthExpenses, monthStats, pctOf, weekExpenses, type PocketStats } from '../lib/derive';
+import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthExpenses, monthStats, pctOf, weekShare, type PocketStats } from '../lib/derive';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { daysBetween, daysInMonth, relDay } from '../lib/dates';
 import type { PocketView } from '../lib/types';
@@ -29,9 +29,10 @@ export default function Home() {
   const c = ctxOf(d);
   const all = allStats(d, c);
   const stats = new Map(all.map(x => [x.id, x]));
-  const weekBudget = all.reduce((a, x) => a + x.budget, 0);
-  const weekLeft = all.reduce((a, x) => a + x.left, 0);
-  const weekSpent = weekExpenses(d, c).filter(e => stats.has(e.p)).reduce((a, e) => a + e.amt, 0);
+  const shares = all.map(x => weekShare(d, x.id, c, x));
+  const weekBudget = shares.reduce((a, x) => a + x.budget, 0);
+  const weekLeft = shares.reduce((a, x) => a + x.left, 0);
+  const weekSpent = shares.reduce((a, x) => a + x.spent, 0);
   // CDTs count as money you have: opening one moves money out of an account, not out of your net worth.
   const nw = netWorth(d), assets = nw.assets;
   const debt = nw.debts;

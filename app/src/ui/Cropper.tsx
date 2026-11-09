@@ -176,7 +176,7 @@ function Cropper({ req, done }: { req: Req; done: (url: string | null) => void }
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <span style={{ fontSize: 12, color: 'rgba(255,255,255,.72)' }}>Background</span>
-        {(['white', 'black', 'none'] as Bg[]).map(b => <button key={b} onClick={() => setBg(b)} style={pill(bg === b)}>{b === 'none' ? 'Clear' : b === 'white' ? 'White' : 'Black'}</button>)}
+        {(['white', 'black', 'none'] as Bg[]).map(b => <button key={b} onClick={() => setBg(b)} style={pill(bg === b)}>{b === 'none' ? 'Transparent' : b === 'white' ? 'White' : 'Black'}</button>)}
       </div>
     </div>
   );

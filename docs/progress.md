@@ -10,6 +10,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - Moving leftovers (pocket → pocket, pocket → goal, or "cover the shortfall"). Moves can be edited or undone.
 - Extra income can be split into pockets for this week or for the rest of the month. These splits are linked to the income they came from, and a review sheet catches mismatches.
 - **Per-pocket period:** every week, or every 15 days (1–15 / 16–end).
+- **Week view of 15-day pockets:** "Safe to spend this week" on Home and the weekly rows in Reports count only a 15-day pocket's share of the Mon–Sun week (`weekShare` in `derive.ts`, `budgetWeeks` in `reports.ts`). Move leftover: tap a pocket or goal's name to send it the whole leftover.
 - **Starting partway through a period:** a new pocket created mid-week or mid-quincena gets a first-period amount, suggested from the days left. The owner can edit it or pick the full amount. The next period gets the real budget.
 - Savings goals.
 
@@ -81,8 +82,6 @@ Nothing right now. Scheduled reminders and the Face ID lock were confirmed on th
 ## Next / ideas (not started)
 
 - Known limits left by recent features:
-  - The Home card "Safe to spend this week" adds 15-day pockets' quincena left to weekly pockets' week left.
-  - The weekly pocket report table (Reports → budgets over weeks) shows a 15-day pocket's whole-quincena numbers in every week of that quincena, so adding up the rows counts it two or three times.
   - The Excel/"For AI" export is English only.
   - Friends' notifications are worded in the sender's language.
   - Sample-data pocket names show in Spanish on Home but in English in the Budget edit boxes (they're stored data).

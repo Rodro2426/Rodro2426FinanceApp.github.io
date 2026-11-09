@@ -1,7 +1,7 @@
 // Data for the Insights reports: categories, accounts and budgets, over a period or over time.
 import type { Data, Income } from './types';
-import { addDays, daysInMonth, makeCtx, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
-import { acctTxns, catOf, ctxOf, monthPlanOf, pocketStats, myExpenses } from './derive';
+import { addDays, daysInMonth, inRange, makeCtx, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
+import { acctTxns, catOf, ctxOf, daysOf, halfOf, isHalf, monthPlanOf, pocketStats, myExpenses, weekdayOf, weekShare } from './derive';
 import { cdtView, cdtsOf } from './cdt';
 import { holdings } from './invest';
 import { groupValue } from './networth';
@@ -139,8 +139,25 @@ export function budgetWeeks(d: Data, c: Ctx, n: number, pocket: string | null) {
   const out: { week: string; budget: number; spent: number; left: number }[] = [];
   for (let i = n - 1; i >= 0; i--) {
     const ws = addDays(weekStart(c.today), -7 * i), cw = makeCtx(c.weeks, i === 0 ? c.today : addDays(ws, 6));
-    const s = ids.map(id => pocketStats(d, id, cw)).filter(Boolean) as NonNullable<ReturnType<typeof pocketStats>>[];
-    const budget = s.reduce((a, x) => a + x.budget, 0), spent = s.reduce((a, x) => a + x.spent, 0);
+    const we = addDays(ws, 6);
+    let budget = 0, spent = 0;
+    for (const id of ids) {
+      const p = d.pockets.find(x => x.id === id), s = pocketStats(d, id, cw);
+      if (!p || !s) continue;
+      if (!isHalf(p)) { budget += s.budget; spent += s.spent; continue; }
+      if (i === 0) { const w = weekShare(d, id, cw, s); budget += w.budget; spent += w.spent; continue; }
+      const on = new Set(daysOf(p));
+      const active = (a: string, b: string) => { let n = 0; for (let x = a; x <= b; x = addDays(x, 1)) if (on.has(weekdayOf(x))) n++; return n; };
+      let q = halfOf(ws)[0];
+      while (q <= we) {
+        const [qa, qb] = halfOf(q);
+        const from = ws > qa ? ws : qa, to = we < qb ? we : qb;
+        const total = active(qa, qb);
+        if (total > 0) budget += pocketStats(d, id, makeCtx(c.weeks, from))!.budget * active(from, to) / total;
+        q = addDays(qb, 1);
+      }
+      spent += myExpenses(d).filter(e => e.p === id && inRange(e.date, ws, we)).reduce((a, e) => a + e.amt, 0);
+    }
     out.push({ week: ws, budget, spent, left: budget - spent });
   }
   return out;

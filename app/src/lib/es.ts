@@ -92,7 +92,8 @@ Center|Centrar
 Rotate 90°|Girar 90°
 Reset tilt|Quitar inclinación
 Background|Fondo
-Clear|Transparente
+Clear|Borrar
+Transparent|Transparente
 White|Blanco
 Black|Negro
 Edit layout|Editar diseño
