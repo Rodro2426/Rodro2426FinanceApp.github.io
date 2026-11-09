@@ -119,6 +119,8 @@ function IncomeForm() {
   const cover = coverFirst(d, c, X);
 
   const quick = (v: number) => { setDist(dd => (dd === 'manual' ? 'budget' : dd)); setToP(String(v)); };
+  /** Tapping a pocket puts everything going to pockets there (the whole income if nothing was chosen yet). */
+  const allTo = (id: string) => { setManual({ [id]: String(A > 0 && !tooMuch ? A : X) }); setDist('manual'); };
   const save = () => {
     if (cant) return;
     setData(x => addExtraIncome(x, ctxOf(x), input));
@@ -176,7 +178,7 @@ function IncomeForm() {
         </span>
       </div>
 
-      {(A > 0 || dist === 'manual') && (
+      {(X > 0 || dist === 'manual') && (
         <div style={{ marginTop: 10, background: 'var(--surface)', borderRadius: 22, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           <Segmented items={[['week', 'This week'], ['month', `Rest of ${monthName(c.month)}`]]} value={mode} onPick={setMode} mt={0} h={36} />
           <span style={{ margin: '0 2px', fontSize: 12, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>
@@ -187,18 +189,21 @@ function IncomeForm() {
             {chipBtn('Evenly', dist === 'even', () => setDist('even'))}
             {chipBtn('Manual', dist === 'manual', () => { setManual(Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, String(v)]))); setDist('manual'); })}
           </div>
+          {d.pockets.length > 0 && <span style={{ margin: '0 2px', fontSize: 12, color: 'var(--color-neutral-700)' }}>Tap a pocket to put it all there.</span>}
           {d.pockets.map(p => {
             const ms0 = monthStats(d, p.id, c), part = parts[p.id] ?? 0;
             const perWeek = mode === 'month' ? weekShares(part, nWeeks, scale)[0] : part;
             const st = allStats(d, c).find(x => x.id === p.id)!;
             return (
               <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: `1px solid ${LINE}` }}>
-                <PocketDot st={st} size={32} fs={15} bg={tint(p.hue)} color={ink(p.hue)} />
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-                  <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Left in month: {fmt(ms0.left)} → <b style={{ color: TEXT }}>{fmt(ms0.left + part)}</b></span>
-                  {part > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'oklch(0.45 0.11 150)' }}>{mode === 'month' ? `+${fmt(perWeek)}/week` : `+${fmt(part)} this week`}</span>}
-                </div>
+                <button onClick={() => allTo(p.id)} aria-label={`Put all in ${p.name}`} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, border: 0, background: 'transparent', padding: 0, margin: 0, color: TEXT, font: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
+                  <PocketDot st={st} size={32} fs={15} bg={tint(p.hue)} color={ink(p.hue)} />
+                  <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                    <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Left in month: {fmt(ms0.left)} → <b style={{ color: TEXT }}>{fmt(ms0.left + part)}</b></span>
+                    {part > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'oklch(0.45 0.11 150)' }}>{mode === 'month' ? `+${fmt(perWeek)}/week` : `+${fmt(part)} this week`}</span>}
+                  </span>
+                </button>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(p.hue), borderRadius: 14, padding: '8px 10px', width: 116, flex: 'none' }}>
                   <span style={{ fontSize: 14, color: ink(p.hue) }}>{curSymbol()}</span>
                   {dist === 'manual'

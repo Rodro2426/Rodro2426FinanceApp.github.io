@@ -505,6 +505,7 @@ spent of|gastado de
 Left in|Queda en
 Type how much goes to each pocket below.|Escribe abajo cuánto va a cada bolsillo.
 Tap a pocket to move it all, or type amounts below.|Toca un bolsillo para moverlo todo, o escribe abajo cuánto va a cada uno.
+Tap a pocket to put it all there.|Toca un bolsillo para ponerlo todo ahí.
 Cover the shortfall|Cubrir el faltante
 cover the shortfall|cubrir el faltante
 Create another pocket or a savings goal first.|Primero crea otro bolsillo o una meta de ahorro.
@@ -1744,6 +1745,7 @@ Undone · {0} {1}|Deshecho · {0} {1}
 {0} places|{0} lugares
 To {0}|A {0}
 Move all to {0}|Mover todo a {0}
+Put all in {0}|Poner todo en {0}
 Shortfall: {0} → {1}|Faltante: {0} → {1}
 Week: {0} → {1} left|Semana: quedan {0} → {1}
 Goal: {0} → {1} of {2}|Meta: {0} → {1} de {2}
