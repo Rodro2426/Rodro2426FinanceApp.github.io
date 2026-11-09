@@ -34,7 +34,8 @@ import Welcome from './screens/Welcome';
 import Tour from './screens/Tour';
 import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
-import ReportPage from './screens/Reports';
+import ReportPage, { ReportsIndex } from './screens/Reports';
+import CategoriesPage from './screens/Categories';
 import SocialPage, { TripPage } from './screens/Social';
 import { DmPage, TripChatPage, TripStatsPage } from './screens/TripExtras';
 import { TripItemSheet, TripNewSheet, TripPeopleSheet } from './sheets/TripSheets';
@@ -225,6 +226,8 @@ export default function App() {
       </div>
 
       {ui.page === 'investments' && <Investments />}
+      {ui.page === 'reports' && <ReportsIndex />}
+      {ui.page === 'categories' && <CategoriesPage />}
       {ui.page?.startsWith('report:') && <ReportPage id={ui.page.slice(7)} />}
       {ui.page === 'social' && <SocialPage />}
       {ui.page?.startsWith('trip:') && <TripPage id={ui.page.slice(5)} />}

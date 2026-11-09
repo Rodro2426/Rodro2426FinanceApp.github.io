@@ -213,17 +213,31 @@ export default function ReportPage({ id }: { id: string }) {
 
   function monthEnd(m: string) { return m === c.month ? c.today : `${m}-${String(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 0).getDate()).padStart(2, '0')}`; }
 
+  return <SubPage title={def.title} icon={<ReportIcon icon={def.icon} tone={def.tone} size={30} />} back={() => setUI({ page: 'reports' })} backLabel="Back to reports">{body}</SubPage>;
+}
+
+/** A full page over the Insights tab, with a back button and a title. */
+export function SubPage({ title, icon, back, backLabel, children }: { title: string; icon?: ReactNode; back: () => void; backLabel: string; children: ReactNode }) {
   return (
     <div className="page noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 25, background: 'var(--page)' }}>
       <div className="scroll-body" style={{ padding: 'var(--top) 18px calc(var(--tb) + 30px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0 2px' }}>
-          <button onClick={() => setUI({ page: null })} aria-label="Back to insights" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
-          <ReportIcon icon={def.icon} tone={def.tone} size={30} />
-          <span style={{ flex: 1, fontSize: 21, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{def.title}</span>
+          <button onClick={back} aria-label={backLabel} className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
+          {icon}
+          <span style={{ flex: 1, fontSize: 21, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{title}</span>
         </div>
-        {body}
+        {children}
       </div>
     </div>
+  );
+}
+
+/** Every chart, grouped; opened from the Reports card on Insights. */
+export function ReportsIndex() {
+  return (
+    <SubPage title="Reports" back={() => setUI({ page: null })} backLabel="Back to insights">
+      <ReportList />
+    </SubPage>
   );
 }
 

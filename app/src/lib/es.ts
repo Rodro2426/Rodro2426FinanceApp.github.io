@@ -105,6 +105,19 @@ Rotate 90°|Girar 90°
 Reset tilt|Quitar inclinación
 Background|Fondo
 Clear|Borrar
+Show less|Ver menos
+Back to reports|Volver a reportes
+Your categories|Tus categorías
+1 category|1 categoría
+1 subcategory|1 subcategoría
+No subcategories.|Sin subcategorías.
+Delete category|Eliminar categoría
+New category, like Pets|Nueva categoría, como Mascotas
+New category|Nueva categoría
+Create|Crear
+Categories and reports|Categorías y reportes
+Open the categories hub or the charts|Abre las categorías o los gráficos
+Deleting a category only removes it from this list. Expenses already in it keep their category, so your history doesn't change.|Eliminar una categoría solo la quita de esta lista. Los gastos que ya tiene conservan su categoría, así que tu historial no cambia.
 Transparent|Transparente
 White|Blanco
 Black|Negro
@@ -1495,6 +1508,12 @@ Balance owed · not yours|Saldo adeudado · no es tuya
 `;
 
 export const ES_PATTERNS = `
+Top: {0}|Mayor gasto: {0}
+{0} charts|{0} gráficos
+See all {0}|Ver los {0}
+{0} subcategories|{0} subcategorías
+New subcategory in {0}|Nueva subcategoría en {0}
+{0} already exists|{0} ya existe
 Carried {0}|Acumulado {0}
 {0} next week · only this once|{0} la próxima semana · solo esta vez
 {0} next quincena · only this once|{0} la próxima quincena · solo esta vez

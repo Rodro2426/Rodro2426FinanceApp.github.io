@@ -157,7 +157,7 @@ export interface UI {
   toast: string | null;
   lastAdd: { pocket: string; acct: string };
   /** A full-screen page shown over the tabs. */
-  page?: 'investments' | 'social' | `report:${string}` | `trip:${string}` | `tripstats:${string}` | `tripchat:${string}` | `dm:${string}` | null;
+  page?: 'investments' | 'social' | 'categories' | 'reports' | `report:${string}` | `trip:${string}` | `tripstats:${string}` | `tripchat:${string}` | `dm:${string}` | null;
   /** First open on this device: choose sample data, a fresh start or a backup. */
   welcome?: boolean;
   /** Home-screen install guide: shown in iPhone Safari, or opened from Profile. */
