@@ -3,7 +3,7 @@ import { getLang } from './i18n';
 // `runSchedule` is idempotent: it can run any number of times a day and only
 // applies or notifies what hasn't been handled yet.
 import type { Account, Bill, Data, Expense, FxOrig, Income, Notif, NotifKind } from './types';
-import { allStats, ctxOf, fmt, uid } from './derive';
+import { allStats, ctxOf, fmt, roundAmt, uid } from './derive';
 import { addDays, daysInMonth, monthKey, prevMonthKey, shortDate, todayISO } from './dates';
 import { fmtUsd, isUsd, latestRate, trmFor } from './trm';
 
@@ -12,7 +12,7 @@ import { fmtUsd, isUsd, latestRate, trmFor } from './trm';
  * lookup failed, the newest known rate. Returns null while the TRM is still loading.
  */
 export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig?: FxOrig } | null {
-  if (isCardPay(b)) return { amt: Math.round(cardPayAmount(d, b)) };
+  if (isCardPay(b)) return { amt: roundAmt(cardPayAmount(d, b)) };
   if (!isUsd(b)) return { amt: b.amt };
   const trm = trmFor(d, date);
   if (!trm && !d.fx?.tried[date]) return null;
@@ -53,7 +53,7 @@ export function applyOccurrence(d: Data, b: Bill, m: string, date: string): Part
   if (notMine(b)) return {};
   if (!isAuto(b, d)) return { bills: d.bills.map(markPaid) };
   const ts = Date.now();
-  const { amt, orig } = localAmount(d, b, date) ?? { amt: Math.round(b.amt * (isUsd(b) ? latestRate(d) : 1)) };
+  const { amt, orig } = localAmount(d, b, date) ?? { amt: isUsd(b) ? Math.round(b.amt * latestRate(d)) : b.amt };
   if (isCardPay(b)) {
     if (!(amt > 0)) return { bills: d.bills.map(markPaid) };
     const pay = { id: uid('pay'), ts, from: b.acct!, to: b.toCard!, amt, date, ruleId: b.id, ruleMonth: m };

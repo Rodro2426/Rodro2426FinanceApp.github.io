@@ -10,6 +10,8 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
   - Card design photos in `CardFace` still use one `background` shorthand. That's safe because it's a single property; keep it that way.
 - **Don't mix the `background` shorthand with `background*` longhands in one React style object.** It's the same bug as above.
 - **Avatars made of a `<span>` need `display`** (inline-block or flex), or they collapse to nothing.
+- **iPhones in Colombia or Europe show a comma as the decimal key.** In $, € or £ the amount box shows commas between thousands, so `MoneyInput` turns a comma that was *just typed* into the decimal point (`typedComma`). Before this fix, typing 12,50 became 1,250.
+- **Don't round money with `Math.round` unless the amount is surely in pesos.** Use `roundAmt` (whole pesos, or cents in other currencies). Card payments in euros used to drop the cents.
 - **Inputs need a font size of at least 16px**, or iOS zooms in when they're focused.
 - **The keyboard resizes the visual viewport.** `main.tsx` sets `--app-h` and the `kb` class, and the tab bar hides while typing. Don't use `100vh`.
 - **Desktop CSS** uses `:not(.page)` to keep sheet scroll bodies working; there was a specificity fight with `.page` scroll bodies.

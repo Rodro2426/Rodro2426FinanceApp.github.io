@@ -17,6 +17,16 @@ export function formatTyping(raw: string) {
   return (neg ? '-' : '') + g + (decimals && frac !== undefined ? dec + frac : '');
 }
 
+/**
+ * iPhones set to Colombia or Europe show a comma as the decimal key. In dollars, euros or pounds the box
+ * shows commas between thousands, so a comma just typed (one new character, and no decimal point yet)
+ * is turned into the decimal point. Commas already shown between thousands are left alone.
+ */
+export function typedComma(prev: string, next: string, at: number, decimals: boolean) {
+  if (!decimals || next.length !== prev.length + 1 || next[at - 1] !== ',' || next.includes('.')) return next;
+  return next.slice(0, at - 1) + '.' + next.slice(at);
+}
+
 /** Turns what was typed (with separators) back into a plain number string. */
 function parseTyping(text: string) {
   const { group, dec, decimals } = sep();
@@ -56,7 +66,8 @@ export function MoneyInput({ value, onChange, placeholder = '0', style, autoFocu
       onBlur={() => { setFocused(false); fresh.current = false; }}
       onChange={e => {
         fresh.current = false;
-        const t = e.target.value, at = e.target.selectionStart ?? t.length, g = sep().group;
+        const at = e.target.selectionStart ?? e.target.value.length, g = sep().group;
+        const t = typedComma(shown, e.target.value, at, sep().decimals);
         caret.current = t.slice(0, at).split('').filter(ch => ch !== g && /[\d.,]/.test(ch)).length;
         onChange(parseTyping(t));
       }}
