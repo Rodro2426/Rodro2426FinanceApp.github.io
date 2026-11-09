@@ -34,7 +34,7 @@ export default function Investments() {
     <div className="page noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 25, background: 'var(--page)' }}>
       <div className="scroll-body" style={{ padding: 'var(--top) 18px calc(var(--tb) + 30px)', boxSizing: 'border-box' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0 0' }}>
-        <button onClick={() => setUI({ page: null })} aria-label="Back to accounts" className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
+        <button onClick={() => setUI({ page: null })} aria-label="Back to accounts" data-back className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>
         <span style={{ flex: 1, fontSize: 26, fontWeight: 700, letterSpacing: '-0.03em' }}>Investments</span>
         <EyeToggle size={40} />
         <button onClick={() => openSheet({ name: 'priceSettings' })} aria-label="Price settings" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{finnhubKey(d) ? 'Prices' : 'Connect'}</button>

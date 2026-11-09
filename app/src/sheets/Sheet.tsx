@@ -13,7 +13,7 @@ export function SheetFrame({ title, children, topOnFocus }: { title: string; chi
         <div className="grabber" style={{ alignSelf: 'center', width: 40, height: 5, borderRadius: 999, background: 'var(--color-neutral-300)', marginBottom: 10, flex: 'none' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 10 }}>
           <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</span>
-          <button onClick={closeSheet} aria-label="Close" style={{ width: 34, height: 34, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 0, background: 'var(--color-neutral-200)', color: 'var(--color-text)', cursor: 'pointer', padding: 0, flex: 'none' }}>
+          <button onClick={closeSheet} aria-label="Close" data-back style={{ width: 34, height: 34, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 0, background: 'var(--color-neutral-200)', color: 'var(--color-text)', cursor: 'pointer', padding: 0, flex: 'none' }}>
             <I.X size={16} sw={2.5} />
           </button>
         </div>

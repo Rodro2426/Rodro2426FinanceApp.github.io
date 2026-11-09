@@ -50,7 +50,7 @@ export function LockGate() {
   };
 
   return (
-    <div className="force-light" role="dialog" aria-label="Pockets is locked" style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 28, textAlign: 'center' }}>
+    <div className="force-light" role="dialog" aria-label="Pockets is locked" data-modal style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 28, textAlign: 'center' }}>
       <img src="./pockets-mark.svg" alt="" width={64} height={78} />
       <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.035em', color: NAVY }}>Pockets</span>
       {locked && <>

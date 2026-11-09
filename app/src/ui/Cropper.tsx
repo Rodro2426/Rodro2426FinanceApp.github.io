@@ -137,7 +137,7 @@ function Cropper({ req, done }: { req: Req; done: (url: string | null) => void }
   const pill = (on: boolean) => ({ height: 36, padding: '0 14px', borderRadius: 999, border: 0, background: on ? '#fff' : 'rgba(255,255,255,.14)', color: on ? '#201e1d' : '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }) as const;
 
   return (
-    <div role="dialog" aria-label="Edit image" style={{ position: 'absolute', inset: 0, zIndex: 70, background: '#1b1a19', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'var(--top) 20px calc(var(--tb) + 12px)', gap: 16, touchAction: 'none' }}>
+    <div role="dialog" aria-label="Edit image" data-modal style={{ position: 'absolute', inset: 0, zIndex: 70, background: '#1b1a19', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'var(--top) 20px calc(var(--tb) + 12px)', gap: 16, touchAction: 'none' }}>
       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button onClick={() => done(null)} style={{ border: 0, background: 'transparent', color: '#fff', fontSize: 16, fontWeight: 600, cursor: 'pointer', padding: 8 }}>Cancel</button>
         <span style={{ fontSize: 17, fontWeight: 700 }}>{card ? 'Line up your card' : 'Move and scale'}</span>

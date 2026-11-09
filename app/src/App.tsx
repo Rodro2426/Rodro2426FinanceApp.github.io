@@ -46,6 +46,7 @@ import { ReconcileSheet } from './sheets/ReconcileSheet';
 import { GroupItemSheet, GroupSheet } from './sheets/GroupSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
+import { useSwipeNav } from './ui/swipe';
 import { EditTxnSheet } from './sheets/EditTxn';
 import { AddSheet, CoverSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
@@ -180,6 +181,8 @@ export default function App() {
   const patchNotif = (id: string, p: { dismissed?: boolean; bannered?: boolean }) => setData(x => ({ notifications: x.notifications.map(n => (n.id === id ? { ...n, ...p } : n)) }));
 
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
+  // Phone swipes: left edge → back; left/right on a main tab → next/previous tab.
+  useSwipeNav(TABS.map(t => t[0]), !desk);
   useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
   // Light/dark: follow the setting, or the iPhone when it's "System".
   const theme = data.settings.theme ?? 'system';

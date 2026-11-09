@@ -12,7 +12,7 @@ import { VIZ } from '../ui/charts';
 import * as I from '../ui/icons';
 import { Avatar, useSocial } from './Social';
 
-const backBtn = (onClick: () => void, label = 'Back to trip') => <button onClick={onClick} aria-label={label} className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>;
+const backBtn = (onClick: () => void, label = 'Back to trip') => <button onClick={onClick} aria-label={label} data-back className="hv-n200" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.ChevronLeft size={20} /></button>;
 
 /* ---------------- Spending summary ---------------- */
 export function TripStatsPage({ id }: { id: string }) {
