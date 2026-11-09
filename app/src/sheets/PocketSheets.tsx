@@ -590,11 +590,12 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
   const others = all.filter(x => x.id !== id);
   const leftover = s ? Math.max(0, roundAmt(s.left)) : 0;
   const shortfall = Math.max(0, roundAmt(monthSummary(d, c).real));
-  const [parts, setParts] = useState<Record<string, string>>(() => {
-    if (!to) return {};
-    const v = to === COVER ? Math.min(leftover, shortfall) : leftover;
-    return { [to]: String(d.settings.currency === 'COP' ? Math.floor(v) : v) };
-  });
+  /** Everything to one place (for the shortfall, only as much as it needs). */
+  const allTo = (key: string): Record<string, string> => {
+    const v = key === COVER ? Math.min(leftover, shortfall) : leftover;
+    return v > 0 ? { [key]: String(d.settings.currency === 'COP' ? Math.floor(v) : v) } : {};
+  };
+  const [parts, setParts] = useState<Record<string, string>>(() => (to ? allTo(to) : {}));
   if (!s) return null;
   const nums = Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, roundAmt(num(v))]));
   const total = Object.values(nums).reduce((a, n) => a + n, 0);
@@ -617,11 +618,13 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
   };
   const destRow = (key: string, name: string, hue: number, sub: string, st?: { initial: string; photoBg: string }) => (
     <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: `1px solid ${LINE}` }}>
-      {st ? <PocketDot st={st} size={32} fs={15} bg={tint(hue)} color={ink(hue)} /> : <span style={{ width: 32, height: 32, borderRadius: 999, background: tint(hue), color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Target size={15} /></span>}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
-        <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{sub}</span>
-      </div>
+      <button onClick={() => setParts(allTo(key))} disabled={!leftover} aria-label={`Move all to ${name}`} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, border: 0, background: 'transparent', padding: 0, margin: 0, color: TEXT, font: 'inherit', textAlign: 'left', cursor: leftover ? 'pointer' : 'default' }}>
+        {st ? <PocketDot st={st} size={32} fs={15} bg={tint(hue)} color={ink(hue)} /> : <span style={{ width: 32, height: 32, borderRadius: 999, background: tint(hue), color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Target size={15} /></span>}
+        <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+          <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{sub}</span>
+        </span>
+      </button>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(hue), borderRadius: 14, padding: '8px 10px', width: 116, flex: 'none' }}>
         <span style={{ fontSize: 14, color: ink(hue) }}>{curSymbol()}</span>
         <MoneyInput value={parts[key] || ''} onChange={x => setParts(p0 => ({ ...p0, [key]: x }))} ariaLabel={`To ${name}`} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(hue), padding: 0, outline: 'none', textAlign: 'right' }} />
@@ -635,7 +638,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
         <div style={{ background: tint(s.hue), borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: k }}>Left in {s.name} this week</span>
           <span style={{ fontSize: 34, fontWeight: 700, letterSpacing: '-0.03em', color: k }}>{fmt(leftover)}</span>
-          <span style={{ fontSize: 13, color: tooMuch ? RED : k }}>{tooMuch ? `That's ${fmt(-remaining)} more than ${s.name} has left.` : total > 0 ? `${fmt(total)} moves · ${fmt(remaining)} stays in ${s.name}` : 'Type how much goes to each pocket below.'}</span>
+          <span style={{ fontSize: 13, color: tooMuch ? RED : k }}>{tooMuch ? `That's ${fmt(-remaining)} more than ${s.name} has left.` : total > 0 ? `${fmt(total)} moves · ${fmt(remaining)} stays in ${s.name}` : 'Tap a pocket to move it all, or type amounts below.'}</span>
         </div>
 
         <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '10px 12px 4px', display: 'flex', flexDirection: 'column' }}>
