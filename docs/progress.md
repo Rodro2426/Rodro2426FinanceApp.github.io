@@ -11,7 +11,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - Extra income can be split into pockets for this week or for the rest of the month. These splits are linked to the income they came from, and a review sheet catches mismatches.
 - **Per-pocket period:** every week, or every 15 days (1–15 / 16–end).
 - **Week view of 15-day pockets:** "Safe to spend this week" on Home and the weekly rows in Reports count only a 15-day pocket's share of the Mon–Sun week (`weekShare` in `derive.ts`, `budgetWeeks` in `reports.ts`). Move leftover: tap a pocket or goal's name to send it the whole leftover.
-- **Insights redesign:** the tab shows Spent this month, two cards (Categories, Reports), Bills and Tags with the first 3 and "See all", This week vs last week, and the savings tip. **Categories hub** (`screens/Categories.tsx`, page `categories`): the filterable category table plus "Your categories" to create categories, add or remove subcategories, and delete categories (deleting only removes it from the list; old expenses keep it). **Reports page** (page `reports`) lists the 13 charts; back from a chart returns there.
+- **Insights redesign:** the tab shows Spent this month, two cards (Categories, Reports), Bills and Tags with the first 3 and "See all", This week vs last week, and the savings tip. **Categories hub** (`screens/Categories.tsx`, page `categories`): the filterable category table plus "Your categories" to create categories, add or remove subcategories, and delete categories (deleting only removes it from the list; old expenses keep it). Income categories are editable there too (`Data.incCats`, missing = `INCOME_CATS`); charts still show a deleted one while incomes use it. **Reports page** (page `reports`) lists the 13 charts; back from a chart returns there.
 - **Carry over:** a per-pocket switch (Edit pocket) carries what's left, or overspent, into the next week or quincena, across month ends too (`Pocket.carry`, `carryInto` in `derive.ts`). Move leftover also has a one-time "Next week" / "Next quincena" destination (`Move.next`, `NEXT` in `plan.ts`). Move leftover and New income have tap-to-send-all and percent sliders.
 - **Starting partway through a period:** a new pocket created mid-week or mid-quincena gets a first-period amount, suggested from the days left. The owner can edit it or pick the full amount. The next period gets the real budget.
 - Savings goals.
@@ -84,7 +84,6 @@ Nothing right now. Scheduled reminders and the Face ID lock were confirmed on th
 ## Next / ideas (not started)
 
 - Known limits left by recent features:
-  - Income categories are a fixed list (`INCOME_CATS`): they can't be created or deleted in the Categories hub yet.
   - The Excel "For AI" weekly table computes pocket budgets by hand: it ignores carry over and 15-day periods (it does count one-time next-week moves).
   - The Excel/"For AI" export is English only.
   - Friends' notifications are worded in the sender's language.

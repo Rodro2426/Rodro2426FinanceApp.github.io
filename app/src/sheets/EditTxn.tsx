@@ -7,7 +7,7 @@ import type { Sheet } from '../lib/types';
 import { BigAmount, FieldLabel, GhostDanger, PickChip, PrimaryBtn, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import { deleteIncome, editIncomeAmount } from '../lib/plan';
-import { allIncomeCats, incCatOf } from '../lib/reports';
+import { incCatOf, incomeCatList } from '../lib/reports';
 
 const chip = (on: boolean) => ({ background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT });
 const acctBtn = (on: boolean, hue: number) => ({ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${on ? ink(hue) : 'var(--surface)'}`, background: on ? tint(hue) : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }) as const;
@@ -84,7 +84,7 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
         {inc && <>
           <FieldLabel>Category</FieldLabel>
           <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
-            {allIncomeCats(d).map(k => <button key={k} onClick={() => setIncCat(k)} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, ...chip(k === incCat), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k}</button>)}
+            {[...new Set([...incomeCatList(d), incCat])].filter(Boolean).map(k => <button key={k} onClick={() => setIncCat(k)} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, ...chip(k === incCat), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k}</button>)}
           </div>
         </>}
         {e && <>

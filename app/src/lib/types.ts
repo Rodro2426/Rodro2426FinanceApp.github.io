@@ -110,6 +110,8 @@ export interface Data {
   bills: Bill[];
   goals: Goal[];
   cats: Category[];
+  /** Income categories you can pick (edited in the Categories hub). Missing = the built-in list, INCOME_CATS. */
+  incCats?: string[];
   tags: string[];
 }
 

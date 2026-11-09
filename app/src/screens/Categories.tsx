@@ -4,6 +4,7 @@ import { useApp, openSheet, setData, setUI, flash } from '../lib/store';
 import { HUES, LINE, RED, TEXT, ink, mid, tint } from '../lib/constants';
 import { byDateDesc, catOf, ctxOf, fmt, monthExpenses, pctOf, plural, myExpenses } from '../lib/derive';
 import { addDays, inRange, monthKey, monthName, prevMonthKey } from '../lib/dates';
+import { incCatOf, incomeCatList } from '../lib/reports';
 import { Bar, ExpRow, expView, textInput } from '../ui/bits';
 import * as I from '../ui/icons';
 import { ReportIcon, SubPage } from './Reports';
@@ -13,7 +14,61 @@ export default function CategoriesPage() {
     <SubPage title="Categories" icon={<ReportIcon icon="pie" tone="#e5484d" size={30} />} back={() => setUI({ page: null })} backLabel="Back to insights">
       <CategoryTable />
       <ManageCategories />
+      <IncomeCategories />
     </SubPage>
+  );
+}
+
+/** Income categories: a simple list (no subcategories) to create or delete. */
+function IncomeCategories() {
+  const { data: d } = useApp();
+  const c = ctxOf(d);
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const [name, setName] = useState('');
+  const list = incomeCatList(d);
+  const got = (k: string) => d.incomes.filter(t => monthKey(t.date) === c.month && incCatOf(d, t) === k).reduce((a, t) => a + t.amt, 0);
+  const add = () => {
+    const n = name.trim();
+    if (!n) return;
+    if (list.some(k => k.toLowerCase() === n.toLowerCase())) { flash(`${n} already exists`); return; }
+    setData(x => ({ incCats: [...incomeCatList(x), n] }));
+    setName(''); flash(`${n} created`);
+  };
+  const del = (k: string) => {
+    if (confirm !== k) { setConfirm(k); return; }
+    setData(x => ({ incCats: incomeCatList(x).filter(y => y !== k) }));
+    setConfirm(null); flash(`${k} deleted`);
+  };
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0', gap: 8 }}>
+        <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Income categories</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{plural(list.length, 'category', 'categories')}</span>
+      </div>
+      <div style={{ background: 'var(--surface)', borderRadius: 24, padding: '4px 16px' }}>
+        {list.map((k, i) => {
+          const g = got(k);
+          return (
+            <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: i === list.length - 1 ? 0 : `1px solid ${LINE}` }}>
+              <span style={{ width: 12, height: 12, borderRadius: 999, background: 'oklch(0.62 0.12 160)', flex: 'none' }} />
+              <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{k}</span>
+              {g > 0 && <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', color: 'oklch(0.45 0.11 150)' }}>+{fmt(g)}</span>}
+              <button onClick={() => del(k)} aria-label={confirm === k ? `Tap again to delete ${k}` : `Delete ${k}`}
+                style={confirm === k ? { height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-accent-100)', color: RED, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }
+                  : { width: 32, height: 32, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-neutral-500)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}>
+                {confirm === k ? 'Tap again to delete' : <I.Trash size={15} />}
+              </button>
+            </div>
+          );
+        })}
+        {list.length === 0 && <span style={{ display: 'block', padding: '12px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Create at least one so you can file your incomes.</span>}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') add(); }} placeholder="New category, like Rent" aria-label="New income category" style={{ ...textInput, flex: 1 }} />
+        <button onClick={add} disabled={!name.trim()} style={{ height: 50, padding: '0 18px', borderRadius: 999, border: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: name.trim() ? 1 : 0.4 }}><I.Plus size={16} />Create</button>
+      </div>
+      <span style={{ margin: '0 4px', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Deleting a category only removes it from these lists. Expenses and incomes already in it keep their category, so your history doesn't change.</span>
+    </>
   );
 }
 
@@ -55,7 +110,7 @@ function ManageCategories() {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0', gap: 8 }}>
-        <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Your categories</span>
+        <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>Expense categories</span>
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{plural(d.cats.length, 'category', 'categories')}</span>
       </div>
       <div style={{ background: 'var(--surface)', borderRadius: 24, padding: '4px 16px' }}>
@@ -101,7 +156,6 @@ function ManageCategories() {
         <input value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addCat(); }} placeholder="New category, like Pets" aria-label="New category" style={{ ...textInput, flex: 1 }} />
         <button onClick={addCat} disabled={!newCat.trim()} style={{ ...small, height: 50, padding: '0 18px', display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-accent)', color: '#fff', opacity: newCat.trim() ? 1 : 0.4 }}><I.Plus size={16} />Create</button>
       </div>
-      <span style={{ margin: '0 4px', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Deleting a category only removes it from this list. Expenses already in it keep their category, so your history doesn't change.</span>
     </>
   );
 }

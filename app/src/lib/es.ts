@@ -117,7 +117,12 @@ New category|Nueva categoría
 Create|Crear
 Categories and reports|Categorías y reportes
 Open the categories hub or the charts|Abre las categorías o los gráficos
-Deleting a category only removes it from this list. Expenses already in it keep their category, so your history doesn't change.|Eliminar una categoría solo la quita de esta lista. Los gastos que ya tiene conservan su categoría, así que tu historial no cambia.
+Deleting a category only removes it from these lists. Expenses and incomes already in it keep their category, so your history doesn't change.|Eliminar una categoría solo la quita de estas listas. Los gastos e ingresos que ya la tienen la conservan, así que tu historial no cambia.
+Expense categories|Categorías de gastos
+Income categories|Categorías de ingresos
+New category, like Rent|Nueva categoría, como Arriendo
+New income category|Nueva categoría de ingreso
+Create at least one so you can file your incomes.|Crea al menos una para clasificar tus ingresos.
 Transparent|Transparente
 White|Blanco
 Black|Negro
@@ -1508,6 +1513,7 @@ Balance owed · not yours|Saldo adeudado · no es tuya
 `;
 
 export const ES_PATTERNS = `
+Tap again to delete {0}|Toca otra vez para eliminar {0}
 Top: {0}|Mayor gasto: {0}
 {0} charts|{0} gráficos
 See all {0}|Ver los {0}

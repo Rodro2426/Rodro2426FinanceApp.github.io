@@ -119,3 +119,15 @@ describe('budgetWeeks with 15-day pockets', () => {
     expect(20000 + rows[1].budget + rows[2].budget).toBeCloseTo(300000, 5);
   });
 });
+
+describe('income categories', () => {
+  it('uses the built-in list until you edit it, and keeps deleted ones in charts while incomes use them', async () => {
+    const { INCOME_CATS, allIncomeCats, incomeCatList } = await import('./reports');
+    const base = sampleData();
+    expect(incomeCatList(base)).toEqual(INCOME_CATS);
+    const used = { ...base, incCats: ['Salary', 'Rent'], incomes: [...base.incomes, { id: 'in-t1', ts: 1, a: base.accounts[0].id, amt: 50000, note: 'x', date: '2026-11-03', cat: 'Gift' }] };
+    expect(incomeCatList(used)).toEqual(['Salary', 'Rent']);
+    expect(allIncomeCats(used)).toContain('Gift');
+    expect(allIncomeCats(used)).toContain('Rent');
+  });
+});

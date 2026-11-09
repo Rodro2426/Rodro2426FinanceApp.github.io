@@ -64,7 +64,10 @@ export function incomeCats(d: Data, c: Ctx, p: Period): CatTotal[] {
   return sortTotals(m);
 }
 export const allExpenseCats = (d: Data) => [...new Set([...d.cats.map(k => k.name), ...d.expenses.map(e => catOf(e)[0])])];
-export const allIncomeCats = (d: Data) => [...new Set([...INCOME_CATS, ...d.incomes.map(t => incCatOf(d, t))])];
+/** The income categories offered when you add an income (yours, or the built-in list). */
+export const incomeCatList = (d: Data) => d.incCats ?? INCOME_CATS;
+/** For charts: your list plus any category an income already uses, so deleting one never hides history. */
+export const allIncomeCats = (d: Data) => [...new Set([...incomeCatList(d), ...d.incomes.map(t => incCatOf(d, t))])];
 
 /**
  * Stable colors for a pie: categories ranked by all-time money get slots 1–7 for good, so a category keeps

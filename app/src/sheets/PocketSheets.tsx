@@ -7,7 +7,7 @@ import { addDays, monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { COVER, NEXT, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, splitAmong, suggestCover, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
-import { allIncomeCats } from '../lib/reports';
+import { incomeCatList } from '../lib/reports';
 import type { Data, Move, PocketView } from '../lib/types';
 import { BigAmount, Fill, Toggle, Bar, ExpRow, FieldLabel, GhostDanger, PctSlider, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -152,7 +152,7 @@ function IncomeForm() {
       <input placeholder="e.g. Freelance, gift, refund" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
       <FieldLabel m="14px 4px 6px">Category {!incCat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</FieldLabel>
       <div className="noscroll" aria-label="Income category" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
-        {allIncomeCats(d).map(k => <button key={k} onClick={() => setIncCat(k)} aria-pressed={incCat === k} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: incCat === k ? TEXT : 'var(--surface)', color: incCat === k ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k}</button>)}
+        {incomeCatList(d).map(k => <button key={k} onClick={() => setIncCat(k)} aria-pressed={incCat === k} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, background: incCat === k ? TEXT : 'var(--surface)', color: incCat === k ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k}</button>)}
       </div>
       <FieldLabel>Goes into</FieldLabel>
       <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
