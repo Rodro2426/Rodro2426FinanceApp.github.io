@@ -47,6 +47,9 @@ import { GroupItemSheet, GroupSheet } from './sheets/GroupSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
 import { useSwipeNav } from './ui/swipe';
+import { QuickAddSheet } from './sheets/QuickAddSheet';
+import { pullQuickInbox, pushQuickMenu } from './lib/quickaddSync';
+import { quickMenu } from './lib/quickadd';
 import { EditTxnSheet } from './sheets/EditTxn';
 import { AddSheet, CoverSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
@@ -76,6 +79,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'goal': return <GoalSheet id={sheet.id} />;
     case 'newGoal': return <NewGoalSheet />;
     case 'settings': return <SettingsSheet />;
+    case 'quickAdd': return <QuickAddSheet />;
     case 'schedule': return <ScheduleSheet id={sheet.id} day={sheet.day} kind={sheet.kind} />;
     case 'notifications': return <NotificationsSheet />;
     case 'trade': return <TradeSheet ticker={sheet.ticker} side={sheet.side} />;
@@ -183,6 +187,18 @@ export default function App() {
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
   // Phone swipes: left edge → back; left/right on a main tab → next/previous tab.
   useSwipeNav(TABS.map(t => t[0]), !desk);
+  // Quick add from an iPhone Shortcut: collect the inbox when the app opens or comes back, and keep the Shortcut's pocket list current.
+  const quickKey = data.settings.quickAdd?.key;
+  const quickOn = !!quickKey && !ui.tour && !ui.welcome;
+  useEffect(() => {
+    if (!quickOn) return;
+    const run = () => { if (document.visibilityState === 'visible') { pullQuickInbox(); pushQuickMenu().catch(() => {}); } };
+    run();
+    document.addEventListener('visibilitychange', run);
+    return () => document.removeEventListener('visibilitychange', run);
+  }, [quickOn, quickKey]);
+  const quickList = quickOn ? JSON.stringify(quickMenu(data, 'en')) : '';
+  useEffect(() => { if (quickList) pushQuickMenu().catch(() => {}); }, [quickList]);
   useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
   // Light/dark: follow the setting, or the iPhone when it's "System".
   const theme = data.settings.theme ?? 'system';
