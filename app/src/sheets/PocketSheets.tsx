@@ -2,14 +2,14 @@ import { moneyHidden } from '../lib/privacy';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { EMOJIS, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
+import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
 import { addDays, monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
-import { COVER, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, splitAmong, suggestCover, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
+import { COVER, NEXT, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, splitAmong, suggestCover, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
 import { allIncomeCats } from '../lib/reports';
 import type { Data, Move, PocketView } from '../lib/types';
-import { BigAmount, Fill, Bar, ExpRow, FieldLabel, GhostDanger, PctSlider, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
+import { BigAmount, Fill, Toggle, Bar, ExpRow, FieldLabel, GhostDanger, PctSlider, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { HuePicker } from '../ui/HuePicker';
 import { CategoryPicker, type CatPick } from '../ui/CategoryPicker';
@@ -411,6 +411,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
               <span style={pill(k)}>Planned {fmt(s.weekly)}</span>
               <span style={pill(k)}>Spent {fmt(s.spent)}</span>
               <span style={pill(k)}>Moved {fmt(s.mIn - s.mOut, true)}</span>
+              {s.carry !== 0 && <span style={pill(k)}>Carried {fmt(s.carry, true)}</span>}
             </div>
           </> : <>
             {big(ms.left < 0 ? `Over budget in ${monthName(c.month)}` : `Left in ${monthName(c.month)}`, ms.left)}
@@ -461,25 +462,30 @@ function MovesCard({ id }: { id: string }) {
   const [open, setOpen] = useState<string | null>(null);
   const [amt, setAmt] = useState('');
   const [confirmAll, setConfirmAll] = useState(false);
-  const list = d.moves.filter(m => (m.to === id || m.from === id) && (moveMonth(m) === c.month || m.week === c.weekStart))
+  const pk = d.pockets.find(x => x.id === id), half = isHalf(pk);
+  const prevEnd = addDays(periodAt(pk, c.today)[0], -1), prevC = { ...c, today: prevEnd, weekStart: periodAt(pk, prevEnd)[0] };
+  const nextOut = (m: Move) => !!m.next && moveInPeriod(m, pk, c);
+  const nextIn = (m: Move) => !!m.next && !nextOut(m);
+  const list = d.moves.filter(m => (m.to === id || m.from === id) && (moveMonth(m) === c.month || m.week === c.weekStart || (m.next && moveInPeriod(m, pk, prevC))))
     .sort((a, b) => moveTime(b) - moveTime(a) || (b.week > a.week ? 1 : -1));
   if (!list.length) return null;
   const nameOf = (x: string) => (x === COVER ? 'cover the shortfall' : d.pockets.find(p => p.id === x)?.name ?? d.goals.find(g => g.id === x)?.name ?? 'a deleted pocket');
   const incomeOf = (m: Move) => d.incomes.find(t => incomeMoves([m], t).length);
-  const label = (m: Move) => m.to === id
+  const label = (m: Move) => m.next ? (nextOut(m) ? (half ? 'To next quincena' : 'To next week') : (half ? 'From last quincena' : 'From last week')) : m.to === id
     ? (m.from === '_income' ? `From income${incomeOf(m) ? ` · ${incomeOf(m)!.note}` : ''}` : `From ${nameOf(m.from)}`)
     : `To ${nameOf(m.to)}${d.goals.some(g => g.id === m.to) ? ' (goal)' : ''}`;
   const when = (m: Move) => {
     const t = moveTime(m), w = `week of ${shortDate(m.week)}`;
     return [t ? relDay(isoOf(t), c.today) : '', m.month ? `spread over ${m.spread ?? 1} week${(m.spread ?? 1) > 1 ? 's' : ''}` : w].filter(Boolean).join(' · ');
   };
-  const net = list.reduce((a, m) => a + (m.to === id ? m.amt : -m.amt), 0);
+  const isIn = (m: Move) => m.next ? nextIn(m) : m.to === id;
+  const net = list.reduce((a, m) => a + (isIn(m) ? m.amt : -m.amt), 0);
   const save = (m: Move) => {
     const v = roundAmt(num(amt)), max = moveMax(d, m, c);
     if (v > max + 0.004) { flash(`The most this can be is ${fmt(max)}`); return; }
     setData(x => editMove(x, m.id, v)); setOpen(null); flash(v > 0 ? `Move changed to ${fmt(v)}` : 'Move undone');
   };
-  const undo = (m: Move) => { setData(x => undoMove(x, m.id)); setOpen(null); flash(`Undone · ${fmt(m.amt)} ${m.to === id ? `went back to ${m.from === '_income' ? 'your saved income' : nameOf(m.from)}` : `came back to this pocket`}`); };
+  const undo = (m: Move) => { setData(x => undoMove(x, m.id)); setOpen(null); flash(m.next ? `Undone · ${fmt(m.amt)} came back to this pocket` : `Undone · ${fmt(m.amt)} ${m.to === id ? `went back to ${m.from === '_income' ? 'your saved income' : nameOf(m.from)}` : `came back to this pocket`}`); };
   const undoAll = () => {
     if (!confirmAll) { setConfirmAll(true); return; }
     setData(x => list.reduce<Data>((acc, m) => ({ ...acc, ...undoMove(acc, m.id) }), x));
@@ -493,7 +499,7 @@ function MovesCard({ id }: { id: string }) {
       </div>
       <span style={{ display: 'block', marginTop: 2, fontSize: 12, color: 'var(--color-neutral-700)' }}>Tap a move to change it or undo it.</span>
       {list.map((m, i) => {
-        const inn = m.to === id, isOpen = open === m.id;
+        const inn = isIn(m), isOpen = open === m.id;
         return (
           <div key={m.id} style={{ borderBottom: `1px solid ${i === list.length - 1 ? 'transparent' : LINE}` }}>
             <button onClick={() => { setOpen(isOpen ? null : m.id); setAmt(String(m.amt)); }} aria-expanded={isOpen}
@@ -517,7 +523,7 @@ function MovesCard({ id }: { id: string }) {
                 <button onClick={() => undo(m)} style={{ height: 42, borderRadius: 999, border: 0, background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Undo this move</button>
                 <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
                   {m.from === '_income' ? 'Undoing it takes the money out of this pocket; the income stays in your account, just not assigned to a pocket.'
-                    : inn ? `Undoing it gives the money back to ${nameOf(m.from)}.` : `Undoing it brings the money back to this pocket${d.goals.some(g => g.id === m.to) ? ' and takes it off the goal' : ''}.`} Moves never change your account balances.
+                    : m.next ? (inn ? 'Undoing it takes the money back out of this pocket and returns it to the period it left.' : 'Undoing it brings the money back to this pocket.') : inn ? `Undoing it gives the money back to ${nameOf(m.from)}.` : `Undoing it brings the money back to this pocket${d.goals.some(g => g.id === m.to) ? ' and takes it off the goal' : ''}.`} Moves never change your account balances.
                 </span>
               </div>
             )}
@@ -602,6 +608,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
   const all = allStats(d, c), s = all.find(x => x.id === id);
   const others = all.filter(x => x.id !== id);
   const leftover = s ? Math.max(0, roundAmt(s.left)) : 0;
+  const half = isHalf(d.pockets.find(p => p.id === id));
   const shortfall = Math.max(0, roundAmt(monthSummary(d, c).real));
   /** Everything to one place (for the shortfall, only as much as it needs). */
   const allTo = (key: string): Record<string, string> => {
@@ -617,6 +624,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
   const after = patch ? { ...d, ...patch } : d;
   const sumB = monthSummary(d, c), sumA = monthSummary(after, c);
   const weekLeftAfter = (pid: string) => pocketStats(after, pid, c)?.left ?? 0;
+  const onlyNext = nums[NEXT] > 0 && Object.entries(nums).every(([k2, v]) => k2 === NEXT || !(v > 0));
   const k = ink(s.hue);
   const fill = (how: 'even' | 'budget' | 'clear') => {
     if (how === 'clear' || !others.length) return setParts({});
@@ -627,7 +635,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
     if (!patch) return;
     setData(x => transferLeftover(x, ctxOf(x), id, nums) ?? {});
     const n = Object.values(nums).filter(v => v > 0).length;
-    closeSheet(); flash(n === 1 && nums[COVER] > 0 ? `${fmt(total)} from ${s.name} now covers the shortfall` : `Moved ${fmt(total)} from ${s.name} to ${n === 1 ? (d.pockets.find(p => nums[p.id] > 0)?.name ?? d.goals.find(g => nums[g.id] > 0)?.name) : `${n} places`} · just for this week`);
+    closeSheet(); flash(n === 1 && nums[NEXT] > 0 ? (half ? `${fmt(total)} moves to ${s.name}'s next quincena` : `${fmt(total)} moves to ${s.name}'s next week`) : n === 1 && nums[COVER] > 0 ? `${fmt(total)} from ${s.name} now covers the shortfall` : `Moved ${fmt(total)} from ${s.name} to ${n === 1 ? (d.pockets.find(p => nums[p.id] > 0)?.name ?? d.goals.find(g => nums[g.id] > 0)?.name) : `${n} places`} · just for this week`);
   };
   const destRow = (key: string, name: string, hue: number, sub: string, st?: { initial: string; photoBg: string }) => (
     <div key={key} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 10px', padding: '8px 0', borderTop: `1px solid ${LINE}` }}>
@@ -661,6 +669,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
               <button key={l as string} onClick={f as () => void} disabled={!leftover || !others.length} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{l as string}</button>
             ))}
           </div>
+          {destRow(NEXT, half ? 'Next quincena' : 'Next week', s.hue, half ? `${s.name} next quincena · only this once` : `${s.name} next week · only this once`, s)}
           {(sumB.real > 0.004 || nums[COVER] > 0) && destRow(COVER, 'Cover the shortfall', 25, `Shortfall: ${fmt(Math.max(0, sumB.real))} → ${fmt(Math.max(0, sumA.real))}`)}
           {others.map(o => destRow(o.id, o.name, o.hue, `Week: ${fmt(o.left)} → ${fmt(nums[o.id] ? weekLeftAfter(o.id) : o.left)} left`, o))}
           {d.goals.map(g => destRow(g.id, g.name, g.hue, `Goal: ${fmt(g.saved)} → ${fmt(g.saved + (nums[g.id] || 0))} of ${fmt(g.target)}`))}
@@ -668,8 +677,8 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
         </div>
 
         <div aria-label="Move check" style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
-          <span style={{ fontWeight: 700 }}>{nums[COVER] > 0 ? 'Only for this week' : 'Only a transfer for this week'}</span>
-          <span style={{ lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{nums[COVER] > 0 ? <>Money given up to the shortfall leaves {s.name} for this week and stays in your account. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</> : <>No new money is created: what {s.name} gives, the others get. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</>}</span>
+          <span style={{ fontWeight: 700 }}>{onlyNext ? 'Only moved in time' : nums[COVER] > 0 ? 'Only for this week' : 'Only a transfer for this week'}</span>
+          <span style={{ lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{onlyNext ? `Nothing is created or lost: this money leaves ${s.name} now and is added to it when the next ${half ? 'quincena' : 'week'} starts. Your month income and plan stay the same.` : nums[COVER] > 0 ? <>Money given up to the shortfall leaves {s.name} for this week and stays in your account. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</> : <>No new money is created: what {s.name} gives, the others get. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</>}</span>
           {sumB.real > 0.004 && <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ color: 'var(--color-neutral-700)' }}>Real shortfall</span><span style={{ whiteSpace: 'nowrap' }}>{fmt(Math.max(0, sumB.real))} → <b style={{ color: sumA.real > 0.004 ? RED : 'oklch(0.5 0.12 150)' }}>{fmt(Math.max(0, sumA.real))}</b></span></div>}
           {[['Month income', sumB.income, sumA.income], ['Month plan', sumB.plan, sumA.plan], ['All pockets this week', all.reduce((a, x) => a + x.budget, 0), allStats(after, c).reduce((a, x) => a + x.budget, 0)]].map(([l, b, a]) => (
             <div key={l as string} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
@@ -755,6 +764,8 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const [hue, setHue] = useState(base ? base.hue : HUES[d.pockets.length % HUES.length]);
   const [period, setPeriod] = useState<'week' | 'half'>(base?.period ?? 'week');
   const [startStr, setStartStr] = useState<string | null>(null);
+  const [resetCarry, setResetCarry] = useState(false);
+  const [carry, setCarry] = useState(!!base?.carry);
   const w = num(weekly), cant = !name.trim();
   const half = period === 'half';
   // Starting partway through a week or quincena: the first period only gets the days that are left.
@@ -767,13 +778,13 @@ export function EditPocketSheet({ id }: { id: string | null }) {
     if (v === period) return;
     // Keep the same money per month: weekly × weeks = per 15 days × 2.
     if (w > 0) setWeekly(String(roundAmt(v === 'half' ? w * d.settings.weeks / 2 : w * 2 / d.settings.weeks)));
-    setPeriod(v); setStartStr(null);
+    setPeriod(v); setStartStr(null); setResetCarry(true);
   };
   const icon = photo ? '' : emoji || name.trim().charAt(0).toUpperCase() || '·';
 
   const save = () => {
     if (cant) return;
-    const patch = { name: name.trim(), weeklyStr: String(w), emoji, photo, hue, days: days.length === 7 ? undefined : [...days].sort(), period: half ? 'half' as const : undefined };
+    const patch = { name: name.trim(), weeklyStr: String(w), emoji, photo, hue, days: days.length === 7 ? undefined : [...days].sort(), period: half ? 'half' as const : undefined, carry: carry ? (base?.carry && !resetCarry ? base.carry : periodAt({ period: half ? 'half' : undefined }, c.today)[0]) : undefined };
     const start = mid && Math.abs(startAmt - w) > 0.004 ? { from: ps, amt: Math.max(0, startAmt) } : undefined;
     if (isNew) { setData(x => ({ pockets: [...x.pockets, { id: uid('p'), ...patch, ...(start ? { start } : {}) }] })); closeSheet(); }
     else { setData(x => ({ pockets: x.pockets.map(p => (p.id === id ? { ...p, ...patch } : p)) })); openSheet({ name: 'pocket', id: id! }); }
@@ -836,6 +847,13 @@ export function EditPocketSheet({ id }: { id: string | null }) {
         <span style={{ margin: '8px 4px 0', fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
           {days.length === 7 ? (half ? 'Every day. The Today view shares the quincena’s money across the days left.' : 'Every day. The Today view shares the week’s money across the days left.') : `Only ${days.slice().sort().map(x => DAY_NAMES[x]).join(', ')}${w > 0 ? `: about ${fmt(w / days.length)} each` : ''}. Other days show that you shouldn’t spend from this pocket.`}
         </span>
+        <div style={{ marginTop: 14, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 15, fontWeight: 700 }}>{half ? 'Carry over to next quincena' : 'Carry over to next week'}</span>
+            <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>What you don't spend is added to the next one, and overspending is taken from it.</span>
+          </div>
+          <Toggle on={carry} onChange={setCarry} label={half ? 'Carry over to next quincena' : 'Carry over to next week'} />
+        </div>
         <PrimaryBtn onClick={save} disabled={cant} mt={18}>{isNew ? 'Create pocket' : 'Save changes'}</PrimaryBtn>
         {!isNew && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : 'Delete pocket'}</GhostDanger>}
       </div>

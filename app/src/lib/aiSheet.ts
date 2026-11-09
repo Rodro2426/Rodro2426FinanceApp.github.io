@@ -1,7 +1,7 @@
 // Builds the "For AI" sheet: one page with every budget and figure of the period,
 // written so an AI assistant given the Excel file can answer questions about it.
 import type { Data } from './types';
-import { catOf, num, periodsInMonth, myExpenses } from './derive';
+import { catOf, num, periodsInMonth, myExpenses, isHalf } from './derive';
 import { addDays, daysInMonth, fmtDay, inRange, monthLabel, shortDate, todayISO, weekStart } from './dates';
 
 export type Cell = string | number | { v: number; fmt: 'money' | 'pct' };
@@ -80,7 +80,8 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
     const we = addDays(ws, 6), label = `${shortDate(ws)} – ${shortDate(we)}`;
     const moves = d.moves.filter(m => m.week === ws);
     d.pockets.forEach(p => {
-      const budget = num(p.weeklyStr) + moves.filter(m => m.to === p.id).reduce((a, m) => a + m.amt, 0) - moves.filter(m => m.from === p.id).reduce((a, m) => a + m.amt, 0);
+      const nextIn = d.moves.filter(m => m.next && m.week === addDays(ws, -7) && m.to === p.id).reduce((a, m) => a + m.amt, 0);
+      const budget = num(p.weeklyStr) + nextIn + moves.filter(m => m.to === p.id && !m.next).reduce((a, m) => a + m.amt, 0) - moves.filter(m => m.from === p.id).reduce((a, m) => a + m.amt, 0);
       const spent = myExpenses(d).filter(e => e.p === p.id && inRange(e.date, ws, we) && (acctId === 'all' || e.a === acctId)).reduce((a, e) => a + e.amt, 0);
       weekRows.push([label, p.name, money(budget), money(spent), money(budget - spent)]);
     });
@@ -139,7 +140,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const moves = d.moves.filter(m => periodWeeks.has(`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`));
   sections.push({
     title: 'Money moved between pockets and goals', header: ['Week', 'From', 'To', 'Amount'],
-    rows: moves.map(m => [`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`, goalOrPocket(m.from), goalOrPocket(m.to), money(m.amt)])
+    rows: moves.map(m => [`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`, goalOrPocket(m.from), m.next ? `${goalOrPocket(m.to)} (${isHalf(d.pockets.find(p => p.id === m.to)) ? 'next quincena' : 'next week'})` : goalOrPocket(m.to), money(m.amt)])
   });
 
   sections.push({

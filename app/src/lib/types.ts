@@ -6,7 +6,7 @@ export type AcctType = 'bank' | 'savings' | 'cash' | 'card';
  * `weeklyStr` is the budget for one period: a week (Monday–Sunday), or with `period: 'half'` a quincena (1st–15th, 16th–end).
  * `start`: a pocket created partway through a period gets `amt` for that first period only (`from` = that period's first day).
  */
-export interface Pocket { id: string; name: string; emoji?: string; photo?: string | null; weeklyStr: string; hue: number; days?: number[]; period?: 'week' | 'half'; start?: { from: string; amt: number } }
+export interface Pocket { id: string; name: string; emoji?: string; photo?: string | null; weeklyStr: string; hue: number; days?: number[]; period?: 'week' | 'half'; start?: { from: string; amt: number }; /** Carry over: the first day of the period in which the switch was turned on. What's left (or overspent) in each period then moves into the next one. Missing = off. */ carry?: string }
 /**
  * `rate` is an annual return (% E.A.) for bank/savings accounts, like Nu's Cajitas.
  * Interest is added daily (compound) up to `accruedTo`; `earned` is the total so far.
@@ -23,7 +23,7 @@ export interface Income { id: string; ts: number; a: string; amt: number; note: 
  * Money moved into or out of a pocket for one week (`week` = its Monday).
  * With `month`, it was income split for the whole month: it's spread evenly over `spread` weeks starting at `week`.
  */
-export interface Move { id: string; week: string; /** The day it was made (pockets that reset every 15 days use it). */ day?: string; from: string; to: string; amt: number; month?: string; spread?: number; /** The income it was split from. */ income?: string }
+export interface Move { id: string; week: string; /** The day it was made (pockets that reset every 15 days use it). */ day?: string; from: string; to: string; amt: number; month?: string; spread?: number; /** The income it was split from. */ income?: string; /** "Send to next week": `from` and `to` are both the pocket. It leaves the pocket in the period it was made and arrives in the pocket's following period. */ next?: boolean }
 /** A transfer between accounts (card payments), or into/out of a CDT when `cdt` is set (then `from`/`to` is 'cdt:<id>'). */
 export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string; ruleId?: string; ruleMonth?: string; cdt?: string; /** Money into or out of an investment fund. */ fund?: string }
 export type ScheduleKind = 'Income' | 'Bill' | 'Subscription' | 'CardPayment';

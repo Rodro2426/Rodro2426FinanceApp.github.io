@@ -37,6 +37,8 @@ export const monthExpenses = (d: Data, c: Ctx) => myExpenses(d).filter(e => mont
 
 export interface PocketStats {
   id: string; name: string; hue: number; weekly: number; mIn: number; mOut: number; spent: number; budget: number; left: number;
+  /** What came in from the previous periods (0 when carry over is off); already part of `budget`. */
+  carry: number;
   initial: string; photoBg: string; emoji: string; photo: string | null;
   /** 'week' or 'half' (every 15 days), and the first and last day of the current period. */
   period: 'week' | 'half'; from: string; to: string;
@@ -67,27 +69,66 @@ export function monthPlanOf(p: PocketLike, c: Ctx): number {
   const cut = p?.start && monthKey(p.start.from) === c.month ? amt - p.start.amt : 0;
   return amt * periodsInMonth(p, c.weeks) - cut;
 }
+/** Whether a move was made in the period that starts on `start` (a week's Monday, or a quincena's first day). */
+function moveAtStart(m: Move, p: PocketLike, start: string): boolean {
+  if (m.month) return false;
+  if (!isHalf(p)) return m.week === start;
+  const [a, b] = halfOf(start);
+  return inRange(m.day ?? addDays(m.week, 6), a, b);
+}
 /** Whether a pocket-to-pocket move counts in this pocket's current period. */
 export function moveInPeriod(m: Move, p: PocketLike, c: Ctx): boolean {
-  if (m.month) return false;
-  if (!isHalf(p)) return m.week === c.weekStart;
-  const [a, b] = halfOf(c.today);
-  return inRange(m.day ?? addDays(m.week, 6), a, b);
+  return moveAtStart(m, p, isHalf(p) ? halfOf(c.today)[0] : c.weekStart);
+}
+const prevStart = (p: PocketLike, s: string) => (isHalf(p) ? halfOf(addDays(s, -1))[0] : addDays(s, -7));
+const nextStart = (p: PocketLike, s: string) => (isHalf(p) ? addDays(halfOf(s)[1], 1) : addDays(s, 7));
+
+/** A period's budget without any carry, and what was spent in it (moves in/out, spread income, and "next" moves arriving from the period before). */
+function periodParts(d: Data, p: Data['pockets'][number], c: Ctx) {
+  const pc = pocketCtx(p, c), id = p.id;
+  const amount = num(p.weeklyStr);
+  const weekly = p.start && p.start.from === pc.weekStart ? p.start.amt : amount;
+  const moves = d.moves.filter(m => moveInPeriod(m, p, c));
+  const before = prevStart(p, pc.weekStart);
+  const arriving = d.moves.filter(m => m.next && m.to === id && moveAtStart(m, p, before)).reduce((a, m) => a + m.amt, 0);
+  const mIn = moves.filter(m => m.to === id && !m.next).reduce((a, m) => a + m.amt, 0) + arriving + spreadThisPeriod(d, id, pc);
+  const mOut = moves.filter(m => m.from === id).reduce((a, m) => a + m.amt, 0);
+  const spent = weekExpenses(d, pc).filter(e => e.p === id).reduce((a, e) => a + e.amt, 0);
+  return { pc, weekly, mIn, mOut, spent };
+}
+
+const carryMemo = new WeakMap<Data, Map<string, number>>();
+/** What carries into the period starting on `start`: the running balance (budget without carry − spent) of every period since carry over was turned on. */
+function carryInto(d: Data, p: Data['pockets'][number], start: string): number {
+  if (!p.carry) return 0;
+  const first = periodAt(p, p.carry)[0];
+  if (start <= first) return 0;
+  let memo = carryMemo.get(d);
+  if (!memo) carryMemo.set(d, (memo = new Map()));
+  const key = (s: string) => `${p.id}|${p.carry}|${s}`;
+  const todo: string[] = [];
+  let q = start, guard = 0;
+  while (q > first && !memo.has(key(q)) && guard++ < 5000) { todo.push(q); q = prevStart(p, q); }
+  if (q <= first) memo.set(key(first), 0);
+  let acc = memo.get(key(q)) ?? 0;
+  while (todo.length) {
+    // q is the earlier period; add its balance to get the carry into the next one.
+    const s = periodParts(d, p, makeCtx(d.settings.weeks, periodAt(p, q)[1]));
+    acc += s.weekly + s.mIn - s.mOut - s.spent;
+    q = nextStart(p, q); todo.pop();
+    memo.set(key(q), acc);
+  }
+  return acc;
 }
 
 export function pocketStats(d: Data, id: string, c: Ctx = ctxOf(d)): PocketStats | null {
   const p = d.pockets.find(x => x.id === id);
   if (!p) return null;
-  const pc = pocketCtx(p, c);
-  const amount = num(p.weeklyStr);
-  const weekly = p.start && p.start.from === pc.weekStart ? p.start.amt : amount;
-  const moves = d.moves.filter(m => moveInPeriod(m, p, c));
-  const mIn = moves.filter(m => m.to === id).reduce((a, m) => a + m.amt, 0) + spreadThisPeriod(d, id, pc);
-  const mOut = moves.filter(m => m.from === id).reduce((a, m) => a + m.amt, 0);
-  const spent = weekExpenses(d, pc).filter(e => e.p === id).reduce((a, e) => a + e.amt, 0);
-  const budget = weekly + mIn - mOut;
+  const { pc, weekly, mIn, mOut, spent } = periodParts(d, p, c);
+  const carry = carryInto(d, p, pc.weekStart);
+  const budget = weekly + mIn + carry - mOut;
   return {
-    id, name: p.name, hue: p.hue, weekly, mIn, mOut, spent, budget, left: budget - spent,
+    id, name: p.name, hue: p.hue, weekly, mIn, mOut, spent, budget, left: budget - spent, carry,
     initial: p.photo ? '' : p.emoji || p.name.trim().charAt(0).toUpperCase() || '·',
     photoBg: p.photo ? `url(${p.photo})` : 'none', emoji: p.emoji || '', photo: p.photo || null,
     period: isHalf(p) ? 'half' : 'week', from: pc.weekStart, to: pc.weekEnd
@@ -131,9 +172,23 @@ export interface MonthStats { id: string; budget: number; spent: number; left: n
 export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
   const p = d.pockets.find(x => x.id === id);
   const moves = d.moves.filter(m => moveMonth(m) === c.month);
-  const extra = moves.filter(m => m.to === id).reduce((a, m) => a + m.amt, 0) - moves.filter(m => m.from === id).reduce((a, m) => a + m.amt, 0);
+  // A "next" move leaves in its own month and arrives in the month the following period belongs to.
+  const arrives = (m: Move) => monthKey(isHalf(p) ? nextStart(p, periodAt(p, m.day ?? addDays(m.week, 6))[0]) : addDays(m.week, 13));
+  const nextIn = d.moves.filter(m => m.next && m.to === id && arrives(m) === c.month).reduce((a, m) => a + m.amt, 0);
+  // A "next" move out of a 15-day pocket leaves in the quincena it was made in, which can be in the month before moveMonth.
+  const halfNext = (m: Move) => !!m.next && isHalf(p);
+  const leaveMonth = (m: Move) => monthKey(periodAt(p, m.day ?? addDays(m.week, 6))[0]);
+  const outNow = moves.filter(m => m.from === id && !halfNext(m)).reduce((a, m) => a + m.amt, 0);
+  const outHalfNext = d.moves.filter(m => m.from === id && halfNext(m) && leaveMonth(m) === c.month).reduce((a, m) => a + m.amt, 0);
+  const extra = moves.filter(m => m.to === id && !m.next).reduce((a, m) => a + m.amt, 0) - outNow - outHalfNext + nextIn;
   const spent = monthExpenses(d, c).filter(e => e.p === id).reduce((a, e) => a + e.amt, 0);
-  const budget = monthPlanOf(p, c) + extra;
+  let carry = 0;
+  if (p?.carry) {
+    const m01 = c.month + '-01';
+    // Weekly: the first week whose Sunday is in the month (like moveMonth); 15-day: the quincena starting on the 1st.
+    carry = carryInto(d, p, isHalf(p) ? m01 : addDays(m01, -weekdayOf(m01)));
+  }
+  const budget = monthPlanOf(p, c) + extra + carry;
   return { id, budget, spent, left: budget - spent, extra };
 }
 /* ---------------- Days ---------------- */
@@ -225,8 +280,11 @@ export function moveMax(d: Data, m: Move, c: Ctx = ctxOf(d)): number {
     const inc = d.incomes.find(t => incomeMoves([m], t).length);
     return inc ? inc.amt - incomeMoves(d.moves, inc).filter(x => x.id !== m.id).reduce((a, x) => a + x.amt, 0) : Infinity;
   }
+  const srcPocket = d.pockets.find(p => p.id === m.from);
+  // A "next" move edited from its arrival side (made in an earlier period): it can only be lowered or undone.
+  if (m.next && !moveInPeriod(m, srcPocket, c)) return m.amt;
   const src = pocketStats(d, m.from, c);
-  return src && moveInPeriod(m, d.pockets.find(p => p.id === m.from), c) ? Math.max(0, src.left) + m.amt : Infinity;
+  return src && moveInPeriod(m, srcPocket, c) ? Math.max(0, src.left) + m.amt : Infinity;
 }
 
 /** Weeks left in the month, counting this one. */

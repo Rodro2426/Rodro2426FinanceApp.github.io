@@ -134,6 +134,8 @@ export function markIncluded(d: Data, incomeIds: string[], keepSplits: string[] 
 export const markNotIncluded = (d: Data, incomeId: string): Partial<Data> => ({ incomes: d.incomes.map(t => (t.id === incomeId ? { ...t, inBase: undefined } : t)) });
 
 /* ---------------- Moving a pocket's leftover ---------------- */
+/** Destination key for "send to the pocket's next period": a move from the pocket to itself, flagged `next`. */
+export const NEXT = '_next';
 /**
  * Moves money left in pocket `from` this week to other pockets and goals, `parts` per destination.
  * Pocket to pocket is only a transfer for this week: it never touches the month income or the month plan,
@@ -144,10 +146,10 @@ export function transferLeftover(d: Data, c: Ctx, from: string, parts: Record<st
   const src = pocketStats(d, from, c);
   if (!src) return null;
   const entries = Object.entries(parts).map(([to, v]) => [to, whole(d, v)] as const).filter(([, v]) => v > 0);
-  const known = (id: string) => id !== from && (id === COVER || d.pockets.some(p => p.id === id) || d.goals.some(g => g.id === id));
+  const known = (id: string) => id === NEXT || id !== from && (id === COVER || d.pockets.some(p => p.id === id) || d.goals.some(g => g.id === id));
   const total = sum(entries.map(([, v]) => v));
   if (!entries.length || entries.some(([to, v]) => !known(to) || v < 0) || total > Math.max(0, src.left) + 1e-9) return null;
-  const moves: Move[] = entries.map(([to, amt]) => ({ id: uid('m'), week: c.weekStart, day: c.today, from, to, amt }));
+  const moves: Move[] = entries.map(([to, amt]) => (to === NEXT ? { id: uid('m'), week: c.weekStart, day: c.today, from, to: from, amt, next: true } : { id: uid('m'), week: c.weekStart, day: c.today, from, to, amt }));
   const toGoal = new Map(entries.filter(([to]) => d.goals.some(g => g.id === to)));
   return {
     moves: [...d.moves, ...moves],

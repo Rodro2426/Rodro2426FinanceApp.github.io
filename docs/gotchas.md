@@ -78,3 +78,5 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - **Reminder tests depend on the date window:** a December date is beyond the default 35 days, so pass `days`.
 - **Some GitHub Pages deploys time out.** Re-run the workflow or push again.
 - **One English word, one Spanish word:** `es.ts` translates a whole string the same way everywhere. If the same English word means two things ("Clear" the boxes vs. a "Transparent" photo background), use different English words, or one of them shows the wrong Spanish.
+- **"Next" moves have `from === to`.** Anything that sums moves by `m.to === id` must skip `m.next` and count the arrival in the following period instead. For 15-day pockets, the month a next-move leaves is the quincena's month, not `moveMonth` (a quincena ending on the 30th can sit in a week whose Sunday is in the next month).
+- **Carry is memoized per `Data` object** (`carryMemo` WeakMap). It relies on `Data` being replaced on every change, never mutated.

@@ -1,6 +1,18 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Carry over to next week|Pasar a la próxima semana
+Carry over to next quincena|Pasar a la próxima quincena
+What you don't spend is added to the next one, and overspending is taken from it.|Lo que no gastes se suma a la siguiente, y lo que te pases se descuenta de ella.
+To next week|A la próxima semana
+To next quincena|A la próxima quincena
+From last week|De la semana pasada
+From last quincena|De la quincena pasada
+Next week|Próxima semana
+Next quincena|Próxima quincena
+Only moved in time|Solo se mueve en el tiempo
+Undoing it takes the money back out of this pocket and returns it to the period it left.|Al deshacerlo, la plata sale de este bolsillo y vuelve al periodo de donde salió.
+Undoing it brings the money back to this pocket.|Al deshacerlo, la plata vuelve a este bolsillo.
 Due|Vence
 Balance owed|Saldo adeudado
 % of|% de
@@ -1483,6 +1495,14 @@ Balance owed · not yours|Saldo adeudado · no es tuya
 `;
 
 export const ES_PATTERNS = `
+Carried {0}|Acumulado {0}
+{0} next week · only this once|{0} la próxima semana · solo esta vez
+{0} next quincena · only this once|{0} la próxima quincena · solo esta vez
+{0} moves to {1}'s next week|{0} pasan a la próxima semana de {1}
+{0} moves to {1}'s next quincena|{0} pasan a la próxima quincena de {1}
+Nothing is created or lost: this money leaves {0} now and is added to it when the next week starts. Your month income and plan stay the same.|No se crea ni se pierde nada: esta plata sale de {0} ahora y se le suma cuando empiece la próxima semana. Tu ingreso del mes y tu plan siguen igual.
+Nothing is created or lost: this money leaves {0} now and is added to it when the next quincena starts. Your month income and plan stay the same.|No se crea ni se pierde nada: esta plata sale de {0} ahora y se le suma cuando empiece la próxima quincena. Tu ingreso del mes y tu plan siguen igual.
+Undone · {0} came back to this pocket|Deshecho · {0} volvió a este bolsillo
 Safe to spend: {0}|Puedes gastar: {0}
 Pockets: {0}|Bolsillos: {0}
 {0} from {1} on the {2}|{0} desde {1} el {2}
