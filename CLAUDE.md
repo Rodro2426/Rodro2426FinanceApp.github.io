@@ -94,6 +94,9 @@ Use them to save tokens on repeated work. Each one returns a short report.
 | `spanish-gaps` | After a change adds or changes user-facing text. | Runs `es-gaps.cjs` and adds lines to `lib/es.ts`. Lists sentences that need a code change. |
 | `ship-check` | When the code is done. Pass `places`, `sizes` and the full commit message with its footer. | Typecheck, tests, build, screenshots, commit, push, watch the deploy. Never fixes code. |
 | `security-auditor` | Before inviting people beyond friends, or after changes to auth, sync, social, push, the service worker, backup, lock or logout. | Writes `docs/security-review.md`, covering Firestore rules, Auth settings, the Worker, XSS, device data, privacy law and dependencies. |
+| `pockets-quick` / `pockets-builder` / `pockets-heavy` | Only inside `/pockets-flow`. | Worker agents on Haiku / Sonnet / Opus that implement one planned task and report without committing. |
+
+**`/pockets-flow <task>`** (`.claude/skills/pockets-flow/`): for bigger features. The main session plans, decides design, delegates to the workers above, reviews each result, then runs the checks below and ships. Small fixes skip it.
 
 Usual order for a feature: build it → `money-logic-reviewer` (if money changed) → `spanish-gaps` → `ship-check`. Small fixes go straight to `ship-check`.
 
