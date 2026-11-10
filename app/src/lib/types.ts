@@ -56,7 +56,7 @@ export interface AssetItem { id: string; name: string; value: number; debt?: boo
 /** A custom group in Accounts, like Real estate or Vehicles. */
 export interface AssetGroup { id: string; name: string; emoji: string; hue: number; inNetWorth: boolean; items: AssetItem[] }
 
-export interface Settings { /** Quick add from an iPhone Shortcut: the private inbox key, and the account Shortcut expenses are paid from. */ quickAdd?: { key: string; acct?: string }; name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean; /** Leave stocks and CDTs out of net worth. */ excludeInvestments?: boolean; /** Appearance: follow the iPhone, or always light/dark. */ theme?: 'system' | 'light' | 'dark'; /** Edit layout: block order and hidden blocks per page. */ layouts?: Record<string, { order: string[]; hidden: string[] }>; /** Folded section titles (e.g. on Accounts). */ folded?: string[]; /** Background color chosen by the user, one for light and one for dark mode (hex). */ bg?: { light?: string; dark?: string }; /** Your own GIPHY key for GIF search in trip chats. */ giphyKey?: string }
+export interface Settings { name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean; /** Leave stocks and CDTs out of net worth. */ excludeInvestments?: boolean; /** Appearance: follow the iPhone, or always light/dark. */ theme?: 'system' | 'light' | 'dark'; /** Edit layout: block order and hidden blocks per page. */ layouts?: Record<string, { order: string[]; hidden: string[] }>; /** Folded section titles (e.g. on Accounts). */ folded?: string[]; /** Background color chosen by the user, one for light and one for dark mode (hex). */ bg?: { light?: string; dark?: string }; /** Your own GIPHY key for GIF search in trip chats. */ giphyKey?: string }
 
 /** One buy or sell of a stock/ETF. Prices are in the stock's own currency. */
 export interface Trade { id: string; ts: number; ticker: string; name: string; currency: 'USD' | 'COP'; side: 'buy' | 'sell'; qty: number; price: number; fee: number; date: string }
@@ -137,7 +137,6 @@ export type Sheet =
   | { name: 'goal'; id: string }
   | { name: 'newGoal' }
   | { name: 'settings' }
-  | { name: 'quickAdd' }
   | { name: 'schedule'; id: string | null; day?: number; kind?: ScheduleKind }
   | { name: 'notifications' }
   | { name: 'trade'; ticker?: string; side?: 'buy' | 'sell' }

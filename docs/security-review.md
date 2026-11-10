@@ -1,3 +1,5 @@
+> **Note (2026-11-10):** quick add from iPhone was removed. The section below is kept for history only.
+
 # Pockets security review
 
 The full review (Firestore rules, Auth, push Worker, XSS, device data, privacy law, dependencies) has not been written

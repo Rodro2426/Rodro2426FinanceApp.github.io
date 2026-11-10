@@ -105,41 +105,8 @@ Rotate 90°|Girar 90°
 Reset tilt|Quitar inclinación
 Background|Fondo
 Clear|Borrar
-Couldn't reach the Pockets server. Check your connection and try again.|No se pudo conectar con el servidor de Pockets. Revisa tu conexión e inténtalo otra vez.
-Quick add needs your Pockets account, so only your phone can create your inbox.|Agregar rápido necesita tu cuenta de Pockets, para que solo tu teléfono pueda crear tu buzón.
 Sign in first|Inicia sesión primero
-Turning on…|Activando…
-Quick add from iPhone|Agregar rápido
-Quick add|Agregar rápido
-On · Control Center or Action button|Activado · Centro de control o botón de Acción
-Log expenses from Control Center|Registra gastos desde el Centro de control
-Log an expense in seconds|Registra un gasto en segundos
-A button in Control Center or on the Action button runs an iPhone Shortcut. It asks for the pocket and the amount in small iPhone pop-ups, without opening Pockets. The expense is saved here the next time you open the app.|Un botón en el Centro de control o en el botón de Acción abre un atajo del iPhone. Te pide el bolsillo y el monto en ventanitas del iPhone, sin abrir Pockets. El gasto se guarda aquí la próxima vez que abras la app.
-Turn on quick add|Activar agregar rápido
-Turn off quick add|Desactivar agregar rápido
-Tap again to turn off|Toca otra vez para desactivar
-Quick add is on|Agregar rápido está activado
-Quick add is off|Agregar rápido está desactivado
-Your links|Tus enlaces
-Pocket list|Lista de bolsillos
 Copy|Copiar
-Link copied|Enlace copiado
-Could not copy. Press and hold the link to copy it.|No se pudo copiar. Mantén presionado el enlace para copiarlo.
-Anyone with these links can add expenses to your Pockets, so keep them to yourself. If one leaks, turn quick add off and on again to get new links.|Cualquiera con estos enlaces puede agregar gastos a tu Pockets, así que guárdalos solo para ti. Si uno se filtra, desactiva y vuelve a activar agregar rápido para tener enlaces nuevos.
-Build the Shortcut|Crea el atajo
-Open the Shortcuts app, tap + and name the new shortcut "Pockets".|Abre la app Atajos, toca + y ponle al atajo nuevo el nombre "Pockets".
-Add "Get Contents of URL" and paste the Pocket list link.|Agrega "Obtener contenido de URL" y pega el enlace Lista de bolsillos.
-Add "Get Dictionary Value": get the value for "pockets" in Contents of URL.|Agrega "Obtener valor del diccionario": obtén el valor de "pockets" en Contenido de URL.
-Add "Choose from List" with that Dictionary Value, and set the prompt to "Pocket".|Agrega "Elegir de la lista" con ese Valor del diccionario y pon como mensaje "Bolsillo".
-Add "Ask for Input": type Number, prompt "Amount".|Agrega "Solicitar entrada": tipo Número, mensaje "Monto".
-Add another "Ask for Input": type Text, prompt "Note" (you can leave it empty when you use it).|Agrega otro "Solicitar entrada": tipo Texto, mensaje "Nota" (puedes dejarla vacía cuando lo uses).
-Add "Get Contents of URL" and paste the Add expense link. Open its options: Method POST, Request Body JSON, and add three fields: pocket (Text) = Chosen Item, amount (Number) = the Amount answer, note (Text) = the Note answer.|Agrega "Obtener contenido de URL" y pega el enlace Agregar gasto. Abre sus opciones: Método POST, Cuerpo de la solicitud JSON, y agrega tres campos: pocket (Texto) = Elemento elegido, amount (Número) = la respuesta de Monto, note (Texto) = la respuesta de Nota.
-Add "Get Dictionary Value" for "text" and then "Show Notification" with it. It tells you "Saved $25.000 to Groceries", or what to fix if something is wrong.|Agrega "Obtener valor del diccionario" para "text" y luego "Mostrar notificación" con ese valor. Te dice "Guardado: $25.000 en Mercado", o qué arreglar si algo está mal.
-Add the button: open Control Center, tap +, then Add a Control → Shortcut, and pick "Pockets". For the Action button: Settings → Action Button → Shortcut.|Agrega el botón: abre el Centro de control, toca +, luego Agregar un control → Atajo, y elige "Pockets". Para el botón de Acción: Configuración → Botón de Acción → Atajo.
-Check for new expenses|Buscar gastos nuevos
-Pockets also checks every time you open it. The pocket list updates on its own when you add or rename pockets.|Pockets también revisa cada vez que lo abres. La lista de bolsillos se actualiza sola cuando agregas o renombras bolsillos.
-No new expenses from your Shortcut|No hay gastos nuevos de tu atajo
-Added 1 expense from your Shortcut|Se agregó 1 gasto desde tu atajo
 Show less|Ver menos
 Back to reports|Volver a reportes
 Your categories|Tus categorías
@@ -1548,7 +1515,6 @@ Balance owed · not yours|Saldo adeudado · no es tuya
 `;
 
 export const ES_PATTERNS = `
-Added {0} expenses from your Shortcut|Se agregaron {0} gastos desde tu atajo
 Tap again to delete {0}|Toca otra vez para eliminar {0}
 Top: {0}|Mayor gasto: {0}
 {0} charts|{0} gráficos

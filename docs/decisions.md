@@ -66,4 +66,4 @@ Key choices, with the reason behind each one. Newest topics are near the end of 
 - **Photos are drawn with `<img>` (`Fill` in `ui/bits.tsx`), not CSS backgrounds.** See the gotchas.
 - **Edit layout uses invisible movable blocks around the existing designs** (`ui/Blocks.tsx`). The owner explicitly didn't want the pockets' look changed.
 - **The category picker shows the last 3 used plus search**, not every category as bubbles, as the owner asked.
-- **Quick add uses an inbox, not Firestore.** An iPhone Shortcut can't sign in to Firebase safely, so it posts to the Worker with a long random key (the only lock). The key can add expenses and read pocket/account/category names, nothing else. Items wait in KV (max 50, 30 days) until the app collects them; each becomes expense `eq-<id>`, so collecting twice never doubles one.
+- **No iPhone Shortcut quick add.** It was built (a Worker inbox an iPhone Shortcut posted to) and then removed at the owner's request on 2026-11-10. If it comes back, read the security notes in git history (commit 4b43d17 and docs/security-review.md at that time) first.

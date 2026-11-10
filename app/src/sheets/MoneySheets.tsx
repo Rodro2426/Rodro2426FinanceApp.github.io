@@ -4,7 +4,6 @@ import { dateLocale } from '../lib/i18n';
 import { LockSetting } from '../ui/LockSetting';
 import { logOutAndClear } from '../lib/session';
 import { PushToggle } from '../ui/PushToggle';
-import { quickAddOff } from '../lib/quickaddSync';
 import { CardFace } from '../ui/CardFace';
 import { requestCrop } from '../ui/Cropper';
 import { HuePicker } from '../ui/HuePicker';
@@ -437,15 +436,6 @@ export function SettingsSheet() {
         <PushToggle />
         <FieldLabel m="18px 4px 0">Privacy</FieldLabel>
         <LockSetting />
-        <FieldLabel m="18px 4px 8px">Quick add</FieldLabel>
-        <button onClick={() => openSheet({ name: 'quickAdd' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
-          <span style={{ fontSize: 22 }}>⚡️</span>
-          <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 15, fontWeight: 700 }}>Quick add from iPhone</span>
-            <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>{d.settings.quickAdd ? 'On · Control Center or Action button' : 'Log expenses from Control Center'}</span>
-          </span>
-          <span aria-hidden="true" style={{ color: 'var(--color-neutral-500)', fontSize: 18 }}>›</span>
-        </button>
         <FieldLabel m="18px 4px 8px">Cloud backup</FieldLabel>
         <button onClick={() => openSheet({ name: 'cloud' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
           <span style={{ fontSize: 22 }}>☁️</span>
@@ -514,9 +504,7 @@ export function SettingsSheet() {
           }} className="hv-n200" style={{ height: 48, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{confirm === 'sample' ? 'Tap to replace' : 'Load sample data'}</button>
           <button onClick={() => {
             if (confirm !== 'erase') return setConfirm('erase');
-            if (d.settings.quickAdd) quickAddOff(d.settings.quickAdd.key);
-            const blank = emptyData(d);
-            replaceData({ ...blank, settings: { ...blank.settings, quickAdd: undefined } }); closeSheet(); flash('All data erased');
+            replaceData(emptyData(d)); closeSheet(); flash('All data erased');
           }} className="hv-acc100" style={{ height: 48, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: 'inset 0 0 0 1.5px var(--color-accent-300)' }}>{confirm === 'erase' ? 'Tap again to erase' : 'Start fresh'}</button>
         </div>
         {sync.uid && <LogOutBlock email={sync.email ?? ''} />}

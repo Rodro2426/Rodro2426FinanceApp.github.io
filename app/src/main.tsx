@@ -1,7 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
-import { getState, loadData, setUI } from './lib/store';
+import { getData, loadData, setData } from './lib/store';
+import type { Settings } from './lib/types';
 import { watchForUpdates } from './lib/update';
 import './styles.css';
 import { startTranslator } from './lib/i18n';
@@ -25,17 +26,18 @@ syncViewport();
 watchForUpdates();
 
 loadData().then(() => {
-  openFromLink();
+  forgetQuickAdd();
   createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
 });
 
 /**
- * Links that open a sheet right away, for iPhone Shortcuts (Control Center, Action button) and the icon menu:
- * ./?add=expense or ./?add=income. The part after ? is removed so a reload doesn't open it again.
+ * Quick add from an iPhone Shortcut was removed. If this phone had it on, switch its inbox off on the Worker (so the
+ * pocket names stored there go away) and forget the key. Safe to delete once everyone has opened the app once.
  */
-function openFromLink() {
-  const q = new URLSearchParams(location.search), add = q.get('add');
-  if (!add) return;
-  history.replaceState(null, '', location.pathname + location.hash);
-  if ((add === 'expense' || add === 'income') && !getState().ui.welcome) setUI({ sheet: { name: 'add', mode: add } });
+type OldSettings = Settings & { quickAdd?: { key: string } };
+function forgetQuickAdd() {
+  const key = (getData().settings as OldSettings).quickAdd?.key;
+  if (!key) return;
+  fetch(`https://pockets-push.santi-health.workers.dev/q/${key}/off`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {});
+  setData(x => { const { quickAdd: _gone, ...settings } = x.settings as OldSettings; return { settings }; });
 }

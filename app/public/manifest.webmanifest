@@ -6,10 +6,6 @@
   "display": "standalone",
   "background_color": "#f7f5f3",
   "theme_color": "#f7f5f3",
-  "shortcuts": [
-    { "name": "Add expense", "short_name": "Expense", "url": "./?add=expense" },
-    { "name": "Add income", "short_name": "Income", "url": "./?add=income" }
-  ],
   "icons": [
     { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml" },
     { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" },
