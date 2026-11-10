@@ -105,6 +105,17 @@ Rotate 90°|Girar 90°
 Reset tilt|Quitar inclinación
 Background|Fondo
 Clear|Borrar
+Merge|Combinar
+Subcategories|Subcategorías
+Tap a subcategory to rename it.|Toca una subcategoría para cambiarle el nombre.
+No expenses in this category yet.|Aún no hay gastos en esta categoría.
+No incomes in this category yet.|Aún no hay ingresos en esta categoría.
+1 income|1 ingreso
+Select all|Seleccionar todo
+Select none|Quitar selección
+Move 1 transaction to|Mover 1 movimiento a
+Move to category|Mover a categoría
+Move to subcategory|Mover a subcategoría
 Sign in first|Inicia sesión primero
 Copy|Copiar
 Show less|Ver menos
@@ -1515,6 +1526,20 @@ Balance owed · not yours|Saldo adeudado · no es tuya
 `;
 
 export const ES_PATTERNS = `
+{0} categories|{0} categorías
+{0} already exists. Merging moves everything from {1} into it.|{0} ya existe. Al combinar, todo lo de {1} pasa a esa categoría.
+Name of {0}|Nombre de {0}
+Rename {0}|Cambiar nombre de {0}
+New name for {0}|Nuevo nombre para {0}
+{0} incomes|{0} ingresos
+Select {0}|Seleccionar {0}
+Move {0} transactions to|Mover {0} movimientos a
+Renamed to {0}|Nuevo nombre: {0}
+{0} merged into {1}|{0} se combinó con {1}
+Moved 1 expense to {0}|1 gasto movido a {0}
+Moved {0} expenses to {1}|{0} gastos movidos a {1}
+Moved 1 income to {0}|1 ingreso movido a {0}
+Moved {0} incomes to {1}|{0} ingresos movidos a {1}
 Tap again to delete {0}|Toca otra vez para eliminar {0}
 Top: {0}|Mayor gasto: {0}
 {0} charts|{0} gráficos
