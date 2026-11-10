@@ -17,7 +17,7 @@ const STEPS = [
   'Add "Ask for Input": type Number, prompt "Amount".',
   'Add another "Ask for Input": type Text, prompt "Note" (you can leave it empty when you use it).',
   'Add "Get Contents of URL" and paste the Add expense link. Open its options: Method POST, Request Body JSON, and add three fields: pocket (Text) = Chosen Item, amount (Number) = the Amount answer, note (Text) = the Note answer.',
-  'Optional: add "Get Dictionary Value" for "text" and then "Show Notification" with it, so you see "Saved $25.000 to Groceries".',
+  'Add "Get Dictionary Value" for "text" and then "Show Notification" with it. It tells you "Saved $25.000 to Groceries", or what to fix if something is wrong.',
   'Add the button: open Control Center, tap +, then Add a Control → Shortcut, and pick "Pockets". For the Action button: Settings → Action Button → Shortcut.'
 ];
 

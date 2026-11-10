@@ -253,6 +253,25 @@ function parseAmount(raw) {
   const thousands = !both && (s.indexOf(sep) !== last || tail.length === 3);
   return thousands ? Number(head + tail) : Number(head + '.' + tail);
 }
+/**
+ * What the Shortcut sent, however Shortcuts sends it: a JSON body, a Form body, or ?amount=… in the link.
+ * Spanish field names work too (monto, bolsillo, nota, cuenta, categoria).
+ */
+async function readBody(req, url) {
+  const type = req.headers.get('Content-Type') || '';
+  let b = {};
+  try {
+    if (type.includes('json')) b = await req.json();
+    else if (type.includes('form')) b = Object.fromEntries((await req.formData()).entries());
+    else { const t = await req.text(); b = t.trim().startsWith('{') ? JSON.parse(t) : Object.fromEntries(new URLSearchParams(t)); }
+  } catch { b = {}; }
+  const all = { ...Object.fromEntries(url.searchParams), ...(b && typeof b === 'object' ? b : {}) };
+  const pick = (...names) => { for (const n of names) for (const k of Object.keys(all)) if (k.trim().toLowerCase() === n) return all[k]; return undefined; };
+  return {
+    amount: pick('amount', 'monto', 'valor', 'cantidad'), pocket: pick('pocket', 'bolsillo'), note: pick('note', 'nota'),
+    account: pick('account', 'cuenta'), category: pick('category', 'categoria', 'categoría'), ids: all.ids
+  };
+}
 async function quick(env, req, key, action) {
   const post = req.method === 'POST';
   const mk = `qm:${key}`, ik = `qi:${key}`;
@@ -274,8 +293,8 @@ async function quick(env, req, key, action) {
   const box = JSON.parse((await env.SCHED.get(ik)) || 'null') || { items: [], day: '', adds: 0 };
   const save = () => env.SCHED.put(ik, JSON.stringify(box), { expirationTtl: 30 * 86400 });
   if (action === 'items') return { items: box.items };
-  if (!post) return { ok: false, text: 'Use POST' };
-  const body = await req.json().catch(() => ({}));
+  if (!post) return { ok: false, text: es ? 'En la última acción "Obtener contenido de URL", cambia el Método a POST.' : 'In the last "Get Contents of URL" action, set Method to POST.' };
+  const body = await readBody(req, new URL(req.url));
   if (action === 'add') {
     const amt = parseAmount(body.amount);
     if (!(amt > 0 && amt < 1e10)) return { ok: false, text: es ? 'Escribe un monto mayor que 0.' : 'Type an amount above 0.' };
