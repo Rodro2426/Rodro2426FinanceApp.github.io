@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { getLang } from './lib/i18n';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud, syncNow } from './lib/cloud';
@@ -46,7 +46,7 @@ import { ReconcileSheet } from './sheets/ReconcileSheet';
 import { GroupItemSheet, GroupSheet } from './sheets/GroupSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
-import { useSwipeNav } from './ui/swipe';
+import { useSwipeNav, type Peek } from './ui/swipe';
 import { EditTxnSheet } from './sheets/EditTxn';
 import { AddSheet, CoverSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
@@ -55,6 +55,14 @@ import * as I from './ui/icons';
 const TABS: [Tab, string, (p: { size?: number; sw?: number }) => ReactNode][] = [
   ['home', 'Home', I.Home], ['accounts', 'Accounts', I.Card], ['budget', 'Budget', I.Wallet], ['insights', 'Insights', I.Chart], ['calendar', 'Calendar', I.Calendar]
 ];
+
+function TabView({ tab }: { tab: Tab }) {
+  if (tab === 'home') return <Home />;
+  if (tab === 'accounts') return <Accounts />;
+  if (tab === 'budget') return <Budget />;
+  if (tab === 'insights') return <Insights />;
+  return <CalendarScreen />;
+}
 
 function SheetRouter({ sheet }: { sheet: Sheet }) {
   switch (sheet.name) {
@@ -182,7 +190,11 @@ export default function App() {
 
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
   // Phone swipes: left edge → back; left/right on a main tab → next/previous tab.
-  useSwipeNav(TABS.map(t => t[0]), !desk);
+  const [peek, setPeek] = useState<Peek | null>(null);
+  const peekRef = useRef<HTMLDivElement>(null);
+  useSwipeNav({ tabs: TABS.map(t => t[0]), enabled: !desk, scroller: scroll, peek: peekRef, setPeek });
+  // After a swipe the tab changes while the old one is slid off-screen: put the scroller back before the screen is drawn.
+  useLayoutEffect(() => { const el = scroll.current; if (el) { el.style.transition = ''; el.style.transform = ''; } }, [ui.tab]);
   useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
   // Light/dark: follow the setting, or the iPhone when it's "System".
   const theme = data.settings.theme ?? 'system';
@@ -220,13 +232,13 @@ export default function App() {
       </div>
       <div ref={scroll} onScroll={onScroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 1 }}>
         <div className="scroll-body" style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}>
-        {ui.tab === 'home' && <Home />}
-        {ui.tab === 'accounts' && <Accounts />}
-        {ui.tab === 'budget' && <Budget />}
-        {ui.tab === 'insights' && <Insights />}
-        {ui.tab === 'calendar' && <CalendarScreen />}
+        <TabView tab={ui.tab} />
         </div>
       </div>
+      {/* The tab sliding in beside the current one while you swipe (see ui/swipe.ts). */}
+      {peek && <div ref={peekRef} aria-hidden="true" className="noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', transform: `translateX(${peek.side * 100}%)` }}>
+        <div className="scroll-body" style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}><TabView tab={peek.tab} /></div>
+      </div>}
 
       {ui.page === 'investments' && <Investments />}
       {ui.page === 'reports' && <ReportsIndex />}
