@@ -61,6 +61,13 @@ Key choices, with the reason behind each one. Newest topics are near the end of 
 - **Vocabulary:** Colombian Spanish with "tú". Pockets are "bolsillos" (as in Nequi), plus "arriendo", "cupo", "mecato". The brand stays "Pockets".
 - **The default language is English.** Spanish is opt-in in Profile or on the welcome screen.
 
+## Debts
+
+- **Debts are separate from trips.** Debts are between you and one person and live only in your own data, so they work without an account and the other person doesn't need Pockets. Trips are shared with a group in Firestore. A debt can link a friend (`Debt.friend` = uid) for the avatar and a Message button, but the friend doesn't see it.
+- **Lending and borrowing are not spending or income.** They only move account balances (`lib/debts.ts`), so categories, pockets and cashflow stay honest. The spending is recorded when the money is actually used.
+- **What you owe always lowers net worth; what you're owed is a switch** (`settings.owedInNetWorth`, off by default), because the owner wanted to choose whether lent money looks "lost".
+- **Pockets follow the owner's rule:** lent money only hurts the pockets if it comes back after you need it. "Need it" = the card's next due date (`parseShortDate(card.due)`) when lent with a card, else the end of this month. Borrowed money due this month (or with no date) isn't spendable. This enters `monthSummary().balance`, so the existing real shortfall and Cover the shortfall do the adjusting.
+
 ## UI
 
 - **Photos are drawn with `<img>` (`Fill` in `ui/bits.tsx`), not CSS backgrounds.** See the gotchas.

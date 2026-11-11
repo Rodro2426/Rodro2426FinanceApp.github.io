@@ -3,6 +3,7 @@ import { fundsOf, fundsTotal } from './funds';
 import type { AssetGroup, Data } from './types';
 import { holdings } from './invest';
 import { cdtTotal, cdtsOf } from './cdt';
+import { debtTotals } from './debts';
 
 export const groupValue = (g: AssetGroup) => g.items.reduce((a, x) => a + (x.debt ? -x.value : x.value), 0);
 export const groupAssets = (g: AssetGroup) => g.items.filter(x => !x.debt).reduce((a, x) => a + x.value, 0);
@@ -19,6 +20,8 @@ export function investmentsValue(d: Data) {
 export interface NetWorth {
   accounts: number; cards: number; investments: number; includeInvestments: boolean;
   groups: { g: AssetGroup; value: number; counted: boolean }[];
+  /** Open debts: people owe you (counted only with the switch on), and you owe (always counted). */
+  owedToMe: number; includeOwed: boolean; iOwe: number;
   /** What you have and what you owe, counting only what's included. */
   assets: number; debts: number; total: number;
 }
@@ -29,7 +32,8 @@ export function netWorth(d: Data): NetWorth {
   const inv = investmentsValue(d).total, includeInvestments = !d.settings.excludeInvestments;
   const groups = (d.groups ?? []).map(g => ({ g, value: groupValue(g), counted: g.inNetWorth }));
   const counted = groups.filter(x => x.counted);
-  const assets = accounts + (includeInvestments ? inv : 0) + counted.reduce((a, x) => a + groupAssets(x.g), 0);
-  const debts = cards + counted.reduce((a, x) => a + groupDebts(x.g), 0);
-  return { accounts, cards, investments: inv, includeInvestments, groups, assets, debts, total: assets - debts };
+  const { owedToMe, iOwe } = debtTotals(d), includeOwed = !!d.settings.owedInNetWorth;
+  const assets = accounts + (includeInvestments ? inv : 0) + counted.reduce((a, x) => a + groupAssets(x.g), 0) + (includeOwed ? owedToMe : 0);
+  const debts = cards + counted.reduce((a, x) => a + groupDebts(x.g), 0) + iOwe;
+  return { accounts, cards, investments: inv, includeInvestments, groups, owedToMe, includeOwed, iOwe, assets, debts, total: assets - debts };
 }

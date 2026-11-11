@@ -1523,9 +1523,135 @@ For an account you use but someone else owns. Its balance isn't in your net wort
 This card or account isn't yours: the expense is saved on it, but it isn't counted as your spending or taken from your pockets.|Esta tarjeta o cuenta no es tuya: el gasto se guarda en ella, pero no cuenta como tu gasto ni sale de tus bolsillos.
 Not yours|No es tuya
 Balance owed · not yours|Saldo adeudado · no es tuya
+Friends & trips|Amigos y viajes
+Friends and trips|Amigos y viajes
+Debts|Deudas
+Trips|Viajes
+Friends · new|Amigos · nuevo
+new|nuevo
+People owe you|Te deben
+Owed to you|Te deben
+You owe|Debes
+Nobody owes you money right now.|Nadie te debe plata ahora.
+Debts with one person, and trips shared with a group|Deudas con una persona y viajes compartidos con un grupo
+Debts and trips|Deudas y viajes
+From trips|De viajes
+From debts|De deudas
+Nothing right now|Nada por ahora
+No pay-back date|Sin fecha de pago
+Money between you and one person: you lent it, paid for them, or borrowed. Only you see these, and they don't count as spending.|Plata entre tú y una persona: se la prestaste, pagaste por ella o te la prestaron. Solo tú ves esto y no cuenta como gasto.
+Someone owes me|Alguien me debe
+I owe someone|Le debo a alguien
+They owe me|Me deben
+I owe them|Les debo
+Your pockets|Tus bolsillos
+Adjust my pockets|Ajustar mis bolsillos
+You have enough money to cover it, so your pockets don't need to change.|Tienes plata suficiente para cubrirlo, así que tus bolsillos no necesitan cambios.
+Count what people owe you in your net worth|Contar lo que te deben en tu patrimonio
+Off: money you lent only shows once they pay you back.|Apagado: la plata que prestaste solo aparece cuando te la paguen.
+What you owe always counts.|Lo que debes siempre cuenta.
+Paid back|Pagadas
+No balance changes|Sin cambios en saldos
+Debt|Deuda
+This debt was deleted.|Esta deuda fue eliminada.
+Debt updated|Deuda actualizada
+Debt deleted|Deuda eliminada
+Edit debt|Editar deuda
+Save debt|Guardar deuda
+Delete debt|Eliminar deuda
+Who owes you|Quién te debe
+Who you owe|A quién le debes
+Or type any name, like Juan|O escribe cualquier nombre, como Juan
+Name, like Juan|Nombre, como Juan
+What for (optional)|Para qué (opcional)
+What for|Para qué
+Concert tickets|Boletas de concierto
+Rent help|Ayuda con el arriendo
+Paid with|Pagado con
+Money went into|La plata entró a
+When|Cuándo
+Pays you back by|Te paga el
+You pay back by|Pagas el
+The pay-back date is before the debt started.|La fecha de pago es antes de que empezara la deuda.
+Only tracks the debt. Use this if the money already left an account you registered before.|Solo registra la deuda. Úsalo si la plata ya salió de una cuenta que registraste antes.
+Only tracks the debt. No account balance changes.|Solo registra la deuda. No cambia ningún saldo.
+Still owed|Por pagar
+Paid back in full|Pagada por completo
+a deleted account|una cuenta eliminada
+Paid you back|Te pagó
+You paid back|Pagaste
+Remove payment|Quitar pago
+Remove this payment? Its account change is undone.|¿Quitar este pago? Se deshace el cambio en la cuenta.
+Pay back|Pagar
+Half|La mitad
+Save payment|Guardar pago
+Only marks it as paid. No account balance changes.|Solo la marca como pagada. No cambia ningún saldo.
+Paid from|Se paga desde
+Due after this month, so your pockets don't change yet.|Vence después de este mes, así que tus bolsillos aún no cambian.
+Due this month: your pockets count it as money that isn't yours.|Vence este mes: tus bolsillos lo cuentan como plata que no es tuya.
+No date to pay back: your pockets count it as money that isn't yours.|Sin fecha de pago: tus bolsillos lo cuentan como plata que no es tuya.
+Comes back this month, so your pockets don't change.|Vuelve este mes, así que tus bolsillos no cambian.
+Comes back after this month: your pockets cover it for now.|Vuelve después de este mes: tus bolsillos lo cubren por ahora.
+For a group that shares costs: a trip, a dinner, a shared apartment. Everyone adds what they paid and Pockets says who pays whom, in the fewest payments.|Para un grupo que comparte gastos: un viaje, una comida, un apartamento compartido. Cada uno agrega lo que pagó y Pockets dice quién le paga a quién, con los menos pagos posibles.
+Share trips with friends|Comparte viajes con tus amigos
+Trips are shared with your friends, so you need a Pockets account. Debts with one person work without one.|Los viajes se comparten con tus amigos, así que necesitas una cuenta de Pockets. Las deudas con una persona funcionan sin cuenta.
+People with a Pockets account. Add them by email to share trips, send messages, and link them to your debts.|Personas con cuenta de Pockets. Agrégalas por correo para compartir viajes, enviar mensajes y vincularlas a tus deudas.
+Add your friends|Agrega a tus amigos
+Friends are people with a Pockets account. Sign in to add them by email.|Los amigos son personas con cuenta de Pockets. Inicia sesión para agregarlos por correo.
 `;
 
 export const ES_PATTERNS = `
+· pays you back by {0}|· te paga el {0}
+· you pay back by {0}|· pagas el {0}
+Lent to {0}|Prestado a {0}
+Borrowed from {0}|Préstamo de {0}
+{0} paid you back in full 🎉|{0} te pagó todo 🎉
+You paid {0} back in full 🎉|Le pagaste todo a {0} 🎉
+{0} paid you back|{0} te pagó
+Paid back {0}|Pagada el {0}
+You paid {0} back|Le pagaste a {0}
+Saved: you owe {0} to {1}|Guardado: le debes {0} a {1}
+{0} was due to pay you back on {1}: your pockets cover it until {2} pays.|{0} debía pagarte el {1}: tus bolsillos lo cubren hasta que {2} te pague.
+Remove {0} from your friends? Shared trips and debts stay.|¿Quitar a {0} de tus amigos? Los viajes compartidos y las deudas se quedan.
+Delete this debt with {0}? Any account changes it made are undone.|¿Borrar esta deuda con {0}? Se deshacen los cambios que hizo en tus cuentas.
+{0} paid me back|{0} me pagó
+I paid {0} back|Le pagué a {0}
+{0} owes you {1}|{0} te debe {1}
+{0} owes you|{0} te debe
+Owes you {0}|Te debe {0}
+Pays you back by {0}|Te paga el {0}
+Pay back by {0}|Pagas el {0}
+pays you back by {0}|te paga el {0}
+you pay back by {0}|pagas el {0}
+{0} in debts|{0} en deudas
+{0} in trips|{0} en viajes
+{0} trips|{0} viajes
+{0} friends|{0} amigos
+{0} debts|{0} deudas
+1 trip|1 viaje
+1 friend|1 amigo
+1 debt|1 deuda
+{0} of {1} paid back|{0} de {1} pagado
+{0} that people owe you comes back after you need it (after your card is due or after this month), so your pockets can't count on it yet.|{0} que te deben vuelven después de que los necesites (después del pago de tu tarjeta o de este mes), así que tus bolsillos aún no pueden contar con eso.
+{0} you owe is due this month (or has no date), so it isn't money your pockets can spend.|{0} que debes vencen este mes (o no tienen fecha), así que no es plata que tus bolsillos puedan gastar.
+Your pockets promise {0} more than you have.|Tus bolsillos prometen {0} más de lo que tienes.
+On: the {0} people owe you counts as yours, as if they had already paid.|Encendido: los {0} que te deben cuentan como tuyos, como si ya te hubieran pagado.
+Comes back before {0} is due, so your pockets don't change.|Vuelve antes de que venza {0}, así que tus bolsillos no cambian.
+Comes back after {0} is due: your pockets cover it for now.|Vuelve después de que venza {0}: tus bolsillos lo cubren por ahora.
+No pay-back date: your pockets cover it until {0} pays.|Sin fecha de pago: tus bolsillos lo cubren hasta que {0} pague.
+{0} will owe {1} more. It isn't counted as your spending.|{0} va a deber {1} más. No cuenta como gasto tuyo.
+{0} goes down {1}. It isn't counted as your spending.|{0} baja {1}. No cuenta como gasto tuyo.
+{0} will owe {1} less. It isn't counted as income.|{0} va a deber {1} menos. No cuenta como ingreso.
+{0} goes up {1}. It isn't counted as income.|{0} sube {1}. No cuenta como ingreso.
+{0} will owe {1} more. It isn't counted as spending.|{0} va a deber {1} más. No cuenta como gasto.
+{0} goes down {1}. It isn't counted as spending.|{0} baja {1}. No cuenta como gasto.
+It can't be less than the {0} already paid back.|No puede ser menos que los {0} ya pagados.
+That's more than the {0} still owed.|Es más que los {0} que faltan por pagar.
+{0} still owed|{0} por pagar
+Paid with {0}|Pagado con {0}
+Went into {0}|Entró a {0}
+All of it · {0}|Todo · {0}
+Save {0}|Guardar {0}
 {0} categories|{0} categorías
 {0} already exists. Merging moves everything from {1} into it.|{0} ya existe. Al combinar, todo lo de {1} pasa a esa categoría.
 Name of {0}|Nombre de {0}
@@ -1894,4 +2020,5 @@ All {0}|Todo {0}
 {0} account{1}|{0} cuenta{1}
 {0} pocket{1}|{0} bolsillo{1}
 {0} expense{1}|{0} gasto{1}
+of {0}|de {0}
 `;

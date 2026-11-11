@@ -55,6 +55,14 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - Returns simulator.
 - Custom asset and debt groups that can count in net worth.
 
+**Debts with one person** (Friends & trips → Debts; works without an account)
+- "Someone owes me" (lent, or paid for them) and "I owe someone", with a person (optionally a friend), amount, account, date and pay-back date.
+- Partial or full paybacks into any account; edit and delete undo the account changes.
+- Never counted as spending or income. Shows in the account's history.
+- Net worth: what you owe always counts; a switch counts what people owe you.
+- Pockets: money owed to you counts if it comes back before you need it (the card's due date when lent with a card, else the end of the month); what you owe counts if due this month. "Adjust my pockets" opens Cover the shortfall.
+- Friends & trips page redesigned: money summary on top, then Debts / Trips / Friends tabs, each with a one-line purpose. Friends show what they owe you and have a "Debt" button. Home has a "Friends & trips" block.
+
 **Social** (needs a Firebase account)
 - Friends by email (verified emails only).
 - Shared trips with settle-up in the fewest payments.

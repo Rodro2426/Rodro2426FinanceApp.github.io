@@ -1,5 +1,6 @@
 import { getLang } from './i18n';
 import type { Account, Data, Expense, Income, Move } from './types';
+import { debtAcctLines } from './debts';
 import { POCKET_CAT } from './constants';
 import { addDays, daysBetween, fmtDay, inRange, makeCtx, monthKey, parse, type Ctx } from './dates';
 import { getData } from './store';
@@ -303,6 +304,7 @@ export const weeksLeft = (c: Ctx) => Math.max(1, c.weeks - c.weekNo + 1);
 export interface Txn {
   kind: 'expense' | 'payment' | 'income'; id: string; icon: string | null; photoBg: string; ts: number; date: string; note: string; pocket: string;
   hue: number; tags: string[]; category: string; show: number; effect: number; after: number; fx?: string;
+  /** Lending, borrowing or paying back: the debt it belongs to. */ debt?: string;
 }
 /** Every movement on an account, newest first, with the running balance after each one. */
 export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; card: boolean } {
@@ -345,7 +347,11 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
         note: out ? `Payment to ${other ? other.name : 'card'}` : `Payment from ${other ? other.name : 'account'}`,
         pocket: 'Card payment', hue: 150, tags: [], category: 'Card payment', show: out ? -p.amt : p.amt, effect: -p.amt, after: 0
       };
-    })
+    }),
+    ...debtAcctLines(d, id).map(x => ({
+      kind: 'payment' as const, id: x.id, icon: '🤝', photoBg: 'none', ts: x.ts, date: x.date, note: x.note, pocket: 'Debt',
+      hue: 60, tags: [], category: 'Debt', show: x.show, effect: x.effect, after: 0, debt: x.debt
+    }))
   ].sort(byDateDesc);
   let bal = a.bal;
   items.forEach(t => { t.after = bal; bal -= t.effect; });

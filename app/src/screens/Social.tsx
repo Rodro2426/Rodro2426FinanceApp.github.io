@@ -12,9 +12,11 @@ import {
 import { balances, personTotals, settleUp, sharesOf } from '../lib/settle';
 import { Fill, Segmented, textInput } from '../ui/bits';
 import * as I from '../ui/icons';
+import { isOpen } from '../lib/debts';
+import { DebtList, MoneyBetween, Purpose, friendDebt } from './Debts';
 
 export const useSocial = () => useSyncExternalStore(subscribeSocial, getSocial);
-const GREEN = 'oklch(0.45 0.11 150)';
+const GREEN = 'var(--money-in)';
 const hueOf = (s: string) => [20, 60, 150, 220, 280, 320, 100, 190][[...s].reduce((a, ch) => a + ch.charCodeAt(0), 0) % 8];
 /** A person's round picture: their profile photo if they shared one, otherwise their initial on a color. */
 export function Avatar({ name, size = 34, uid }: { name: string; size?: number; uid?: string }) {
@@ -39,28 +41,46 @@ const page = (children: React.ReactNode, title: string, back: () => void, right?
 );
 const card = { background: 'var(--surface)', borderRadius: 24, padding: 16, display: 'flex', flexDirection: 'column' as const, gap: 10 };
 
-/* ---------------- Trips & friends ---------------- */
-/** The Trips/Friends tab you were on, so coming back from a chat returns to it. */
-let lastTab: 'trips' | 'friends' = 'trips';
+/* ---------------- Friends & trips ---------------- */
+type SocialTab = 'debts' | 'trips' | 'friends';
+/** The tab you were on, so coming back from a chat or a trip returns to it. */
+let lastTab: SocialTab = 'debts';
 export default function SocialPage() {
   const sync = useSync();
   const so = useSocial();
-  const [tab, setTabState] = useState<'trips' | 'friends'>(lastTab);
-  const setTab = (t: 'trips' | 'friends') => { lastTab = t; setTabState(t); };
+  const { data: d } = useApp();
+  const [tab, setTabState] = useState<SocialTab>(lastTab);
+  const setTab = (t: SocialTab) => { lastTab = t; setTabState(t); };
   useEffect(() => { if (sync.uid) refreshSocial(); }, [sync.uid]);
-  const refresh = <button onClick={() => refreshSocial()} aria-label="Refresh" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: so.loading ? 0.5 : 1 }}>{so.loading ? 'Loading…' : 'Refresh'}</button>;
-  if (!sync.uid) return page(
+  const refresh = sync.uid ? <button onClick={() => refreshSocial()} aria-label="Refresh" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: so.loading ? 0.5 : 1 }}>{so.loading ? 'Loading…' : 'Refresh'}</button> : undefined;
+  const openDebts = (d.debts ?? []).filter(isOpen).length;
+  const newFriends = so.friends.filter(f => f.status === 'pending' && f.incoming).length > 0 || so.dms.some(x => hasUnread(x.key));
+  const signIn = (title: string, body: string) => (
     <div style={card}>
-      <span style={{ fontSize: 17, fontWeight: 700 }}>Share trips with friends</span>
-      <span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Add friends by email, create a trip, and everyone adds what they paid. Pockets works out who owes whom so everyone ends up even. You need a Pockets account for this.</span>
+      <span style={{ fontSize: 17, fontWeight: 700 }}>{title}</span>
+      <span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{body}</span>
       <button onClick={() => openSheet({ name: 'cloud' })} style={{ height: 48, borderRadius: 999, border: 0, background: TEXT, color: 'var(--surface)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Sign in or create an account</button>
-    </div>, 'Trips & friends', () => setUI({ page: null }));
+    </div>
+  );
   return page(<>
-    <VerifyBanner />
-    <Segmented items={[['trips', `Trips${so.trips.length ? ` · ${so.trips.length}` : ''}`], ['friends', `Friends${so.friends.filter(f => f.status === 'pending' && f.incoming).length || so.dms.some(x => hasUnread(x.key)) ? ' · new' : ''}`]]} value={tab} onPick={setTab} mt={0} />
-    {so.error && <div role="alert" style={{ background: 'var(--color-accent-100)', color: 'var(--color-accent-900)', borderRadius: 16, padding: '10px 12px', fontSize: 13 }}>{so.error}</div>}
-    {tab === 'trips' ? <TripList /> : <FriendList />}
-  </>, 'Trips & friends', () => setUI({ page: null }), refresh);
+    {sync.uid && <VerifyBanner />}
+    <MoneyBetween />
+    <Segmented items={[
+      ['debts', openDebts ? `Debts · ${openDebts}` : 'Debts'],
+      ['trips', so.trips.length ? `Trips · ${so.trips.length}` : 'Trips'],
+      ['friends', newFriends ? 'Friends · new' : 'Friends']
+    ]} value={tab} onPick={setTab} mt={0} />
+    {so.error && sync.uid && <div role="alert" style={{ background: 'var(--color-accent-100)', color: 'var(--color-accent-900)', borderRadius: 16, padding: '10px 12px', fontSize: 13 }}>{so.error}</div>}
+    {tab === 'debts' && <DebtList />}
+    {tab === 'trips' && <>
+      <Purpose icon="🧳">For a group that shares costs: a trip, a dinner, a shared apartment. Everyone adds what they paid and Pockets says who pays whom, in the fewest payments.</Purpose>
+      {sync.uid ? <TripList /> : signIn('Share trips with friends', 'Trips are shared with your friends, so you need a Pockets account. Debts with one person work without one.')}
+    </>}
+    {tab === 'friends' && <>
+      <Purpose icon="👋">People with a Pockets account. Add them by email to share trips, send messages, and link them to your debts.</Purpose>
+      {sync.uid ? <FriendList /> : signIn('Add your friends', 'Friends are people with a Pockets account. Sign in to add them by email.')}
+    </>}
+  </>, 'Friends & trips', () => setUI({ page: null }), refresh);
 }
 
 function VerifyBanner() {
@@ -82,18 +102,19 @@ function VerifyBanner() {
 
 function FriendList() {
   const so = useSocial();
+  const { data: d } = useApp();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const incoming = so.friends.filter(f => f.status === 'pending' && f.incoming), outgoing = so.friends.filter(f => f.status === 'pending' && !f.incoming), friends = so.friends.filter(f => f.status === 'accepted');
   const add = async () => { setBusy(true); setMsg(null); const e = await addFriendByEmail(email); setBusy(false); if (e) setMsg(e); else { flash('Friend request sent'); setEmail(''); } };
   const uidOf = new Map(so.friends.map(f => [f.id, f.uid]));
-  const row = (key: string, name: string, sub: string, actions: React.ReactNode, last: boolean) => (
+  const row = (key: string, name: string, sub: string, actions: React.ReactNode, last: boolean, subColor?: string) => (
     <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: `1px solid ${last ? 'transparent' : LINE}` }}>
       <Avatar name={name} uid={uidOf.get(key)} />
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 15, fontWeight: 600 }}>{name}</span>
-        <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</span>
+        <span style={{ fontSize: 12, color: subColor ?? 'var(--color-neutral-700)', fontWeight: subColor ? 700 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</span>
       </span>
       {actions}
     </div>
@@ -132,7 +153,15 @@ function FriendList() {
       {incoming.map((f, i) => row(f.id, f.name, f.email || 'Wants to be your friend', <div style={{ display: 'flex', gap: 6 }}>{small('Accept', async () => { const e = await acceptFriend(f.id); flash(e ?? `${f.name} is now your friend`); }, true)}{small('Decline', async () => { await removeFriend(f.id); })}</div>, i === incoming.length - 1))}</div>}
     <div style={card}>
       <span style={{ fontSize: 15, fontWeight: 700 }}>Friends{friends.length ? ` · ${friends.length}` : ''}</span>
-      {friends.map((f, i) => row(f.id, f.name, f.email, <div style={{ display: 'flex', gap: 6 }}>{small('Message', () => setUI({ page: `dm:${f.uid}` }), true)}{small('Remove', async () => { if (confirm(`Remove ${f.name} from your friends? Shared trips stay.`)) await removeFriend(f.id); })}</div>, i === friends.length - 1 && !outgoing.length))}
+      {friends.map((f, i) => {
+        const owes = friendDebt(d, f.uid);
+        const sub = owes > 0.004 ? `Owes you ${fmt(owes)}` : owes < -0.004 ? `You owe ${fmt(-owes)}` : f.email;
+        return row(f.id, f.name, sub, <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {small('Debt', () => openSheet({ name: 'debt', id: null, friend: { uid: f.uid, name: f.name } }))}
+          {small('Message', () => setUI({ page: `dm:${f.uid}` }), true)}
+          <button onClick={async () => { if (confirm(`Remove ${f.name} from your friends? Shared trips and debts stay.`)) await removeFriend(f.id); }} aria-label={`Remove ${f.name}`} style={{ width: 30, height: 30, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-neutral-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}><I.X size={15} /></button>
+        </div>, i === friends.length - 1 && !outgoing.length, owes > 0.004 ? GREEN : owes < -0.004 ? RED : undefined);
+      })}
       {outgoing.map((f, i) => row(f.id, f.name, `Request sent${f.email ? ` · ${f.email}` : ''}`, small('Cancel', async () => { await removeFriend(f.id); }), i === outgoing.length - 1))}
       {!friends.length && !outgoing.length && <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>No friends yet. Add one by email above.</span>}
     </div>

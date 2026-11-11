@@ -1,5 +1,6 @@
 // Data for the Insights reports: categories, accounts and budgets, over a period or over time.
 import type { Data, Income } from './types';
+import { debtsWorthAt } from './debts';
 import { addDays, daysInMonth, inRange, makeCtx, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
 import { acctTxns, catOf, ctxOf, daysOf, halfOf, isHalf, monthStats, pocketStats, myExpenses, weekdayOf, weekShare } from './derive';
 import { cdtView, cdtsOf } from './cdt';
@@ -111,7 +112,8 @@ export const stocksAt = (d: Data, date: string) => holdings({ ...d, investments:
 /** Net worth on a date, with the same rules as the Accounts tab: investments unless excluded, and counted groups at today's value. */
 export const netWorthAt = (d: Data, date: string) => d.accounts.filter(a => !a.notMine).reduce((a, x) => a + worthAt(d, x.id, date), 0)
   + (d.settings.excludeInvestments ? 0 : cdtWorthAt(d, date) + stocksAt(d, date))
-  + (d.groups ?? []).filter(g => g.inNetWorth).reduce((a, g) => a + groupValue(g), 0);
+  + (d.groups ?? []).filter(g => g.inNetWorth).reduce((a, g) => a + groupValue(g), 0)
+  + debtsWorthAt(d, date);
 export const netWorthSeries = (d: Data, months: string[], c: Ctx) => months.map(m => netWorthAt(d, monthEnd(m, c)));
 export const balanceSeries = (d: Data, acctId: string, months: string[], c: Ctx) => months.map(m => worthAt(d, acctId, monthEnd(m, c)));
 

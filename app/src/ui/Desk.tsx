@@ -54,7 +54,7 @@ export function Sidebar({ tabs }: { tabs: [Tab, string, (p: { size?: number; sw?
       <span style={{ margin: '18px 12px 6px', fontSize: 11.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-neutral-600)' }}>More</span>
       <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {item('inv', 'Investments', <I.TrendUp size={19} />, onPage('investments'), () => setUI({ page: 'investments' }))}
-        {item('social', 'Trips and friends', <People />, onPage('social'), () => setUI({ page: 'social' }), chat ? <span aria-label="New messages" style={{ width: 8, height: 8, borderRadius: 99, background: 'var(--color-accent)' }} /> : null)}
+        {item('social', 'Friends & trips', <People />, onPage('social'), () => setUI({ page: 'social' }), chat ? <span aria-label="New messages" style={{ width: 8, height: 8, borderRadius: 99, background: 'var(--color-accent)' }} /> : null)}
         {item('search', 'Search', <I.Search size={19} />, false, () => openSheet({ name: 'search' }))}
         {item('eye', moneyHidden() ? 'Show amounts' : 'Hide amounts', <EyeIcon off={moneyHidden()} />, false, () => setMoneyHidden(!moneyHidden()))}
         {item('notif', 'Notifications', <I.Bell size={19} />, false, () => openSheet({ name: 'notifications' }), unread ? <span style={{ minWidth: 20, height: 20, padding: '0 6px', borderRadius: 99, background: 'var(--color-accent)', color: '#fff', fontSize: 11.5, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{unread > 9 ? '9+' : unread}</span> : null)}

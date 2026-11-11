@@ -70,6 +70,10 @@ export function sampleData(today = todayISO()): Data {
       { id: 's2', ts: 2, from: 'a1', to: 'c1', amt: 1800000, date: `${prev}-15` },
       { id: 's3', ts: 3, from: 'a1', to: 'c2', amt: 900000, date: `${prev}-22` }
     ],
+    debts: [
+      { id: 'dj', ts: 5, dir: 'owed', name: 'Juan', amt: 78000, date: addDays(today, -2), due: addDays(today, 24), acct: 'c1', note: 'Concert tickets', pays: [] },
+      { id: 'dm', ts: 6, dir: 'owe', name: 'Mamá', amt: 300000, date: addDays(today, -20), due: addDays(today, 40), acct: 'a1', note: 'Help with rent', pays: [{ id: 'dmp', ts: 7, amt: 100000, date: addDays(today, -5), acct: 'a1' }] }
+    ],
     bills: [
       { id: 'i1', name: 'Salary', kind: 'Income', amt: 4800000, dueDay: 1, hue: 150, paidMonths: [], acct: 'a1', auto: true, start: today },
       { id: 'b1', name: 'Netflix', kind: 'Subscription', amt: 44900, dueDay: 8, hue: 25, paidMonths: [], acct: 'c1', auto: true, start: today, cat: 'Entertainment', sub: 'Movies' },

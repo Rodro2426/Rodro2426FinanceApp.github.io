@@ -12,6 +12,7 @@ import { BillBadge, Fill, ExpRow, ListCard, SectionHead, expView } from '../ui/b
 import * as I from '../ui/icons';
 import { netWorth } from '../lib/networth';
 import { Blocks } from '../ui/Blocks';
+import { FriendsHomeCard } from './Debts';
 import { monthSummary } from '../lib/plan';
 import { billAmount } from '../lib/schedule';
 
@@ -67,7 +68,7 @@ export default function Home() {
           <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>Hi, {d.settings.name}</span>
         </div>
         <div className="desk-hide" style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setUI({ page: 'social' })} aria-label="Trips and friends" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--surface)', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+          <button onClick={() => setUI({ page: 'social' })} aria-label="Friends and trips" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--surface)', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><circle cx="17" cy="9" r="2.6" /><path d="M16.5 14.6c2.6.2 4.5 1.9 5 4.9" /></svg>
           </button>
           <button data-tour="bell" onClick={() => openSheet({ name: 'notifications' })} aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'} className="hv-n200" style={{ position: 'relative', width: 44, height: 44, borderRadius: 999, background: 'var(--surface)', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
@@ -98,7 +99,7 @@ export default function Home() {
         <div onClick={() => setUI({ tab: 'accounts' })} className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Net worth</span>
           <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{fmt(assets - debt)}</span>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{d.accounts.length} accounts{nw.includeInvestments && nw.investments ? ' + investments' : ''}{nw.groups.some(x => x.counted) ? ' + groups' : ''}</span>
+          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{d.accounts.length} accounts{nw.includeInvestments && nw.investments ? ' + investments' : ''}{nw.groups.some(x => x.counted) ? ' + groups' : ''}{nw.includeOwed && nw.owedToMe > 0 ? ' + owed to you' : ''}</span>
         </div>
         <div onClick={() => setUI({ tab: 'insights' })} className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Spent in {monthName(c.month)}</span>
@@ -108,6 +109,7 @@ export default function Home() {
       </div>
 
       </> },
+        { id: 'friends', name: 'Friends & trips', desc: 'Who owes you, what you owe, and shared trips', node: <FriendsHomeCard /> },
         { id: 'pockets', name: 'Pockets', desc: 'What is left in each pocket', node: <>
       <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={pocketPage === 0 ? 'Today' : pocketPage === 1 ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
       {all.length > 0 && <Pager label="Pockets" names={['today', 'this week', 'this month']} initial={1} onPage={setPocketPage} pages={[

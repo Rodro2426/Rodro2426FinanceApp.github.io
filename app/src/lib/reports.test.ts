@@ -3,14 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { sampleData } from './seed';
 import { makeCtx, addDays } from './dates';
 import { acctTxns } from './derive';
+import { debtTotals } from './debts';
 import { balanceAt, breakdown, cashflow, catOverTime, compareBudgets, expenseCats, incCatOf, monthsIn, netWorthAt, worthAt } from './reports';
 
 const d = sampleData();
 const c = makeCtx(d.settings.weeks);
 
 describe('reports', () => {
-  it('net worth today equals accounts minus card debt', () => {
-    const direct = d.accounts.reduce((a, x) => a + (x.type === 'card' ? -x.bal : x.bal), 0);
+  it('net worth today equals accounts minus card debt, minus what you owe people', () => {
+    const direct = d.accounts.reduce((a, x) => a + (x.type === 'card' ? -x.bal : x.bal), 0) - debtTotals(d).iOwe;
     expect(netWorthAt(d, c.today)).toBeCloseTo(direct, 6);
   });
   it('rebuilding a balance before every transaction gives the opening balance', () => {
@@ -67,7 +68,7 @@ describe('net worth with investments and groups', () => {
     const g = { id: 'g1', name: 'Real estate', emoji: '🏠', hue: 30, inNetWorth: true, items: [{ id: 'a', name: 'Apartment', value: 300000000, updated: '2026-11-05' }, { id: 'm', name: 'Mortgage', value: 120000000, debt: true, updated: '2026-11-05' }] };
     const base = sampleData();
     const d2 = { ...base, groups: [g], investments: { ...base.investments, trades: [{ id: 't', ts: 1, ticker: 'VOO', name: 'VOO', currency: 'USD' as const, side: 'buy' as const, qty: 2, price: 500, fee: 0, date: '2026-10-01' }], quotes: {}, usdRate: 4000 } };
-    const accounts = base.accounts.reduce((a, x) => a + (x.type === 'card' ? -x.bal : x.bal), 0);
+    const accounts = base.accounts.reduce((a, x) => a + (x.type === 'card' ? -x.bal : x.bal), 0) - debtTotals(base).iOwe;
     const nw = netWorth(d2);
     expect(nw.investments).toBe(4000000);
     expect(nw.total).toBe(accounts + 4000000 + 180000000);

@@ -3,6 +3,7 @@ import type { Data, Income, Move } from './types';
 import { makeCtx, monthKey, type Ctx } from './dates';
 import { incomeMoves, monthPlanOf, monthStats, moveMonth, num, pocketStats, uid, weeksLeft } from './derive';
 import { largestRemainder, unitsFor } from './split';
+import { debtOutlook } from './debts';
 
 const scale = (d: Data) => unitsFor(d.settings.currency);
 const sum = (xs: number[]) => xs.reduce((a, x) => a + x, 0);
@@ -23,7 +24,8 @@ export interface MonthSummary {
   /** Weekly budgets × weeks + extra income split into pockets. */ plan: number;
   /** income − plan: positive is free money, negative is planned beyond your income. */ planGap: number;
   /** What's still left to spend in all pockets this month. */ toSpend: number;
-  /** Debit, savings and cash accounts minus what you owe on cards. */ balance: number;
+  /** Debit, savings and cash accounts minus what you owe on cards, plus debts that come back in time, minus debts due this month. */ balance: number;
+  /** The debts' part of `balance` (see debtOutlook). */ debts: number;
   /** toSpend − balance: how much more your pockets promise than you actually have. > 0 is a real shortfall. */ real: number;
 }
 
@@ -32,9 +34,10 @@ export function monthSummary(d: Data, c: Ctx): MonthSummary {
   const extra = sum(extraIncomes(d, c).map(t => t.amt));
   const plan = sum(d.pockets.map(p => monthPlanOf(p, c))) + sum(incomeSplits(d, c).map(m => m.amt));
   const toSpend = sum(d.pockets.map(p => Math.max(0, monthStats(d, p.id, c).left)));
-  const balance = sum(d.accounts.filter(a => !a.notMine).map(a => (a.type === 'card' ? -a.bal : a.bal)));
+  const debts = debtOutlook(d, c.today).net;
+  const balance = sum(d.accounts.filter(a => !a.notMine).map(a => (a.type === 'card' ? -a.bal : a.bal))) + debts;
   const income = base + extra;
-  return { base, extra, income, plan, planGap: income - plan, toSpend, balance, real: toSpend - balance };
+  return { base, extra, income, plan, planGap: income - plan, toSpend, balance, debts, real: toSpend - balance };
 }
 
 /* ---------------- Registering extra income ---------------- */

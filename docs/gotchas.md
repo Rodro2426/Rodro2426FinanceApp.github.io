@@ -14,6 +14,8 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - **Trips split with a `scale`.** `sharesOf`, `balances`, `settleUp`, `personTotals` and `tripSpending` default to whole units; app code must pass `moneyScale()` (1 in pesos, 100 in $, € and £). Before Nov 2026 nothing passed it, so €10 split three ways became 4 + 3 + 3.
 - **Editing an account balance** uses `editedBalance`: the old exact balance is kept only if the box still shows it unchanged (interest adds tiny fractions). It used to ignore any change smaller than 1, which blocked cent edits in euros.
 - **Don't parse `fmt()` output assuming peso style** (dots for thousands). In $, € and £ it's `1,234.56`. Format from the number instead, or check `isCOP()`.
+- **Debts touch account balances.** Always go through `saveDebt` / `deleteDebt` / `addDebtPay` in `lib/debts.ts`: they undo the old effect before applying the new one. Never edit `d.debts` and `d.accounts` separately.
+- **`monthSummary().balance` includes debts** (`debtOutlook`). The sample data has two debts, so sample net worth is accounts minus cards minus what Sofía still owes her mom.
 - **Don't round money with `Math.round` unless the amount is surely in pesos.** Use `roundAmt` (whole pesos, or cents in other currencies). Card payments in euros used to drop the cents.
 - **Inputs need a font size of at least 16px**, or iOS zooms in when they're focused.
 - **The keyboard resizes the visual viewport.** `main.tsx` sets `--app-h` and the `kb` class, and the tab bar hides while typing. Don't use `100vh`.

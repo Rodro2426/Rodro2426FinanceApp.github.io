@@ -43,6 +43,7 @@ import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestShe
 import { CdtInfoSheet, CdtSheet } from './sheets/CdtSheets';
 import { FundInfoSheet, FundMoveSheet, FundSheet } from './sheets/FundSheets';
 import { ReconcileSheet } from './sheets/ReconcileSheet';
+import { DebtPaySheet, DebtSheet } from './sheets/DebtSheets';
 import { GroupItemSheet, GroupSheet } from './sheets/GroupSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
@@ -80,6 +81,8 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'acct': return <AcctSheet id={sheet.id} />;
     case 'editAcct': return <EditAcctSheet id={sheet.id} />;
     case 'addAcct': return <AddAcctSheet />;
+    case 'debt': return <DebtSheet id={sheet.id} dir={sheet.dir} friend={sheet.friend} />;
+    case 'debtPay': return <DebtPaySheet id={sheet.id} />;
     case 'pay': return <PaySheet id={sheet.id} />;
     case 'goal': return <GoalSheet id={sheet.id} />;
     case 'newGoal': return <NewGoalSheet />;

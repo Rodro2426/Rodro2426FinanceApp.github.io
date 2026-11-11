@@ -56,7 +56,7 @@ export interface AssetItem { id: string; name: string; value: number; debt?: boo
 /** A custom group in Accounts, like Real estate or Vehicles. */
 export interface AssetGroup { id: string; name: string; emoji: string; hue: number; inNetWorth: boolean; items: AssetItem[] }
 
-export interface Settings { name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean; /** Leave stocks and CDTs out of net worth. */ excludeInvestments?: boolean; /** Appearance: follow the iPhone, or always light/dark. */ theme?: 'system' | 'light' | 'dark'; /** Edit layout: block order and hidden blocks per page. */ layouts?: Record<string, { order: string[]; hidden: string[] }>; /** Folded section titles (e.g. on Accounts). */ folded?: string[]; /** Background color chosen by the user, one for light and one for dark mode (hex). */ bg?: { light?: string; dark?: string }; /** Your own GIPHY key for GIF search in trip chats. */ giphyKey?: string }
+export interface Settings { /** Count what people owe you in net worth (Friends & trips → Debts). */ owedInNetWorth?: boolean; name: string; currency: Currency; weeks: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean; /** Leave stocks and CDTs out of net worth. */ excludeInvestments?: boolean; /** Appearance: follow the iPhone, or always light/dark. */ theme?: 'system' | 'light' | 'dark'; /** Edit layout: block order and hidden blocks per page. */ layouts?: Record<string, { order: string[]; hidden: string[] }>; /** Folded section titles (e.g. on Accounts). */ folded?: string[]; /** Background color chosen by the user, one for light and one for dark mode (hex). */ bg?: { light?: string; dark?: string }; /** Your own GIPHY key for GIF search in trip chats. */ giphyKey?: string }
 
 /** One buy or sell of a stock/ETF. Prices are in the stock's own currency. */
 export interface Trade { id: string; ts: number; ticker: string; name: string; currency: 'USD' | 'COP'; side: 'buy' | 'sell'; qty: number; price: number; fee: number; date: string }
@@ -89,6 +89,15 @@ export interface Fund {
 }
 export interface Investments { funds?: Fund[]; cdts?: Cdt[]; trades: Trade[]; quotes: Record<string, Quote>; usdRate: number; usdRateAt: number; usdManual?: boolean; sim?: { amt: string; rate: string; months: string; deposit: string } }
 
+/** A payment back on a debt: money into your account (they paid you) or out of it (you paid them). */
+export interface DebtPay { id: string; ts: number; amt: number; date: string; acct?: string }
+/**
+ * Money between you and one person. `owed`: they owe you (you lent it, or paid for them). `owe`: you owe them.
+ * `acct` is the account the money left (owed) or arrived in (owe); none = no account changes.
+ * `due` is when it should be paid back. `friend` links a friend with a Pockets account (their uid).
+ */
+export interface Debt { id: string; ts: number; dir: 'owed' | 'owe'; name: string; friend?: string; amt: number; date: string; due?: string; acct?: string; note?: string; pays: DebtPay[] }
+
 export interface Data {
   version: 1;
   settings: Settings;
@@ -101,6 +110,8 @@ export interface Data {
   investments: Investments;
   /** Custom groups of assets and debts. */
   groups?: AssetGroup[];
+  /** Money between you and one person (Friends & trips → Debts). */
+  debts?: Debt[];
   /** Trip expenses already added to your budget ("tripId:itemId"). */
   tripLogged?: string[];
   /** TRM per date (COP per USD), and dates whose lookup failed. */
@@ -133,6 +144,8 @@ export type Sheet =
   | { name: 'acct'; id: string }
   | { name: 'editAcct'; id: string }
   | { name: 'addAcct' }
+  | { name: 'debt'; id: string | null; dir?: 'owed' | 'owe'; friend?: { uid: string; name: string } }
+  | { name: 'debtPay'; id: string }
   | { name: 'pay'; id: string }
   | { name: 'goal'; id: string }
   | { name: 'newGoal' }

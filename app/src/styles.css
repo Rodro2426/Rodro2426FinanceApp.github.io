@@ -3,6 +3,10 @@
   --surface: #fff;
   --page: #f7f5f3;
   --on-text: #fff;
+  /* Money people owe you, and notes that say all is well / be careful. */
+  --money-in: oklch(0.45 0.11 150);
+  --ok-bg: oklch(0.95 0.045 155); --ok-ink: oklch(0.36 0.08 155);
+  --warn-bg: oklch(0.96 0.055 85); --warn-ink: oklch(0.38 0.08 70);
   --glass: rgba(255,255,255,.8);
   --tint-l: 0.94; --tint-c: 0.04; --ink-l: 0.42; --ink-c: 0.1; --mid-l: 0.78;
   /* Safe-to-spend card tones */
@@ -144,6 +148,9 @@ input::placeholder { color: var(--color-neutral-500); }
   --surface: #1d1c1b;
   --page: #0e0e0d;
   --on-text: #141312;
+  --money-in: oklch(0.78 0.14 150);
+  --ok-bg: oklch(0.3 0.05 155); --ok-ink: oklch(0.88 0.08 155);
+  --warn-bg: oklch(0.32 0.05 80); --warn-ink: oklch(0.9 0.08 85);
   --glass: rgba(255,255,255,.12);
   --color-bg: #121211;
   --color-surface: #262524;
