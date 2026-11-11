@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp, setData, closeSheet, setUI, flash } from '../lib/store';
 import { RED, TEXT } from '../lib/constants';
-import { chargeAccount, fmt, num, roundAmt, uid as newId } from '../lib/derive';
+import { chargeAccount, fmt, moneyScale, num, roundAmt, uid as newId } from '../lib/derive';
 import { todayISO } from '../lib/dates';
 import { addPeople, createTrip, deleteItem, getSocial, myUid, saveItem, tripMembers } from '../lib/social';
 import { groupWideItems, personTotals, relinkPerson, sharesOf, splitProblem, withMorePeople, type SplitMode, type TripItem } from '../lib/settle';
@@ -75,7 +75,7 @@ export function TripPeopleSheet({ trip }: { trip: string }) {
   const joining = [...sel, ...guests.map((_, i) => `new:${i}`)];
   const wide = groupWideItems(relinked, peopleNow);
   const after = splitPast && joining.length ? relinked.map(i => (wide.includes(i) ? withMorePeople(i, joining) : i)) : relinked;
-  const shareNow = personTotals(me, items).share, shareAfter = personTotals(me, after).share;
+  const shareNow = personTotals(me, items, moneyScale()).share, shareAfter = personTotals(me, after, moneyScale()).share;
   const count = sel.length + guests.length + linked.length;
   const exps = items.filter(i => i.kind === 'expense').length;
   const save = async () => {
@@ -165,9 +165,9 @@ export function TripItemSheet({ trip, id, payment }: { trip: string; id: string 
   const nameOf = (x: string) => (x === me ? 'You' : members.find(m => m.id === x)?.name ?? '?');
   const v = roundAmt(num(amt));
   const values = Object.fromEntries(Object.entries(vals).map(([k, x]) => [k, num(x)]));
-  const problem = kind === 'expense' ? splitProblem(v, mode, among, values) : paidBy === to ? 'Pick two different people.' : null;
+  const problem = kind === 'expense' ? splitProblem(v, mode, among, values, moneyScale() === 1) : paidBy === to ? 'Pick two different people.' : null;
   const draft: TripItem = { id: base?.id ?? 'draft', kind, desc: desc.trim() || (kind === 'payment' ? 'Payment' : 'Expense'), amount: v, date, createdBy: base?.createdBy ?? me, createdAt: base?.createdAt ?? Date.now(), paidBy, ...(kind === 'payment' ? { to } : { split: { mode, among, values: mode === 'equal' ? undefined : values } }) };
-  const myShare = kind === 'expense' && !problem ? sharesOf(draft)[me] ?? 0 : 0;
+  const myShare = kind === 'expense' && !problem ? sharesOf(draft, moneyScale())[me] ?? 0 : 0;
   const key = `${trip}:${base?.id ?? ''}`, alreadyLogged = !!base && (d.tripLogged ?? []).includes(key);
   const cant = !(v > 0) || !!problem || busy || (log && !cat);
 
@@ -211,7 +211,7 @@ export function TripItemSheet({ trip, id, payment }: { trip: string; id: string 
           <Segmented items={[['equal', 'Equally'], ['amounts', 'By amount'], ['percent', 'By %']]} value={mode} onPick={setMode} mt={0} h={36} />
           <div style={{ marginTop: 8, background: 'var(--surface)', borderRadius: 20, padding: '4px 12px' }}>
             {members.map((m, i) => {
-              const on = among.includes(m.id), share = on && !problem ? sharesOf(draft)[m.id] ?? 0 : 0;
+              const on = among.includes(m.id), share = on && !problem ? sharesOf(draft, moneyScale())[m.id] ?? 0 : 0;
               return (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: i ? '1px solid var(--color-neutral-200)' : 0 }}>
                   <button onClick={() => setAmong(s => (on ? s.filter(x => x !== m.id) : [...s, m.id]))} aria-pressed={on} aria-label={`Include ${nameOf(m.id)}`} style={{ width: 26, height: 26, borderRadius: 8, border: on ? 0 : '2px solid var(--color-neutral-300)', background: on ? TEXT : 'transparent', color: 'var(--surface)', fontSize: 14, fontWeight: 800, cursor: 'pointer', flex: 'none' }}>{on ? '✓' : ''}</button>

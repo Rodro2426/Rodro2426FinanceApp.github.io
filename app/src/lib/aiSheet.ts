@@ -1,7 +1,7 @@
 // Builds the "For AI" sheet: one page with every budget and figure of the period,
 // written so an AI assistant given the Excel file can answer questions about it.
 import type { Data } from './types';
-import { catOf, num, periodsInMonth, myExpenses, isHalf } from './derive';
+import { catOf, num, periodsInMonth, myExpenses, isHalf, roundAmt } from './derive';
 import { addDays, daysInMonth, fmtDay, inRange, monthLabel, shortDate, todayISO, weekStart } from './dates';
 
 export type Cell = string | number | { v: number; fmt: 'money' | 'pct' };
@@ -53,7 +53,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
       ['Income received in the period', money(incs.reduce((a, t) => a + t.amt, 0))],
       ['Total spent in the period', money(total)],
       ['Number of expenses', exp.length],
-      ['Average spent per day', money(days ? Math.round(total / days) : 0)],
+      ['Average spent per day', money(days ? roundAmt(total / days) : 0)],
       ['Spent as % of monthly income', pct(income && months.length ? total / months.length / income : 0)],
       ['Card payments in the period (not spending)', money(pays.reduce((a, p) => a + p.amt, 0))]
     ]
@@ -123,7 +123,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
 
   sections.push({
     title: 'Savings goals (current)', header: ['Goal', 'Saved', 'Target', 'Still needed', '% reached', 'Months to go', 'Needed per month'],
-    rows: d.goals.map(g => { const rem = Math.max(0, g.target - g.saved); return [g.name, money(g.saved), money(g.target), money(rem), pct(g.target ? g.saved / g.target : 0), g.months, money(Math.round(rem / Math.max(1, g.months)))]; })
+    rows: d.goals.map(g => { const rem = Math.max(0, g.target - g.saved); return [g.name, money(g.saved), money(g.target), money(rem), pct(g.target ? g.saved / g.target : 0), g.months, money(roundAmt(rem / Math.max(1, g.months)))]; })
   });
 
   sections.push({

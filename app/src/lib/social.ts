@@ -8,6 +8,7 @@ import { addDoc, collection, deleteDoc, deleteField, doc, getDoc, getDocs, limit
 import { auth, db } from './cloud';
 import { notifyThread } from './push';
 import { getData } from './store';
+import { fmtPlain } from './derive';
 import { groupWideItems, relinkPerson, withMorePeople, type Member, type TripItem } from './settle';
 
 export interface Friend { uid: string; name: string; email: string; status: 'pending' | 'accepted'; incoming: boolean; id: string }
@@ -215,8 +216,8 @@ export async function saveItem(tripId: string, item: Omit<TripItem, 'id'> & { id
     await loadItems(tripId);
     if (!id) {
       const t = state.trips.find(x => x.id === tripId), who = (x?: string) => (t ? tripMembers(t).find(m => m.id === x)?.name : undefined) ?? 'someone';
-      const amt = Math.round(item.amount).toLocaleString('es-CO');
-      notifyThread(tripId, { title: `${t?.emoji ?? ''} ${t?.name ?? 'Trip'}`.trim(), body: item.kind === 'payment' ? `${myName()} paid ${who(item.to)} $${amt}` : `${myName()} added ${item.desc} · $${amt}`, url: `#trip:${tripId}`, tag: `item:${tripId}` });
+      const amt = fmtPlain(item.amount);
+      notifyThread(tripId, { title: `${t?.emoji ?? ''} ${t?.name ?? 'Trip'}`.trim(), body: item.kind === 'payment' ? `${myName()} paid ${who(item.to)} ${amt}` : `${myName()} added ${item.desc} · ${amt}`, url: `#trip:${tripId}`, tag: `item:${tripId}` });
     }
     return null;
   } catch (e) { return fail(e); }

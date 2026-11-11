@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useApp, setUI } from '../lib/store';
 import { TEXT } from '../lib/constants';
-import { ctxOf, fmt } from '../lib/derive';
+import { ctxOf, curSymbol, fmt } from '../lib/derive';
 import { fmtDay, shortDate } from '../lib/dates';
 import {
   PERIODS, RANGES, allExpenseCats, allIncomeCats, balanceSeries, breakdown, budgetWeeks, cashflow, catOverTime, compareBudgets,
@@ -83,7 +83,7 @@ function Picker({ label, value, options, onChange }: { label: string; value: str
 }
 const card = (children: ReactNode, label?: string) => <div aria-label={label} style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>;
 /** Short money for wide month-by-month tables: $469K, $1,4M. */
-const short = (n: number) => (n < 0 ? '−$' : '$') + compactNum(Math.abs(n));
+const short = (n: number) => (n < 0 ? '−' : '') + curSymbol() + compactNum(Math.abs(n));
 const pct = (v: number, t: number) => (t ? `${Math.round((v / t) * 100)}%` : '—');
 
 /** One report, full screen. */

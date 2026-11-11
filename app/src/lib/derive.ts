@@ -9,6 +9,14 @@ import { unitsFor, weekShares } from './split';
 export const num = (s: unknown) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
 export const isCOP = () => getData().settings.currency === 'COP';
 export const curSymbol = () => (isCOP() ? '$' : getData().settings.currency);
+/** Units per currency unit for splitting money: whole pesos, or cents in $, € and £. */
+export const moneyScale = () => (isCOP() ? 1 : 100);
+/** Like `fmt`, but never hidden by the eye (for notifications sent to friends). */
+export function fmtPlain(n: number) {
+  const cop = isCOP();
+  const s = curSymbol() + Math.abs(n).toLocaleString(cop ? 'es-CO' : 'en-US', { minimumFractionDigits: cop ? 0 : 2, maximumFractionDigits: cop ? 0 : 2 });
+  return n < 0 ? '−' + s : s;
+}
 export function fmt(n: number, sign?: boolean) {
   const cop = isCOP();
   if (moneyHidden()) return (n < 0 ? '−' : sign && n > 0 ? '+' : '') + curSymbol() + STARS;
@@ -16,6 +24,8 @@ export function fmt(n: number, sign?: boolean) {
   return n < 0 ? '−' + s : sign && n > 0 ? '+' + s : s;
 }
 export const roundAmt = (n: number) => (isCOP() ? Math.round(n) : Math.round(n * 100) / 100);
+/** New account balance after editing it: the old exact balance if the box still shows it (interest adds tiny fractions), else what was typed. */
+export const editedBalance = (typed: number, old: number) => (typed === roundAmt(old) ? old : roundAmt(typed));
 export const pctOf = (a: number, b: number) => (b > 0 ? Math.max(0, Math.min(100, (a / b) * 100)) : 0).toFixed(1) + '%';
 export const uid = (p: string) => p + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
 

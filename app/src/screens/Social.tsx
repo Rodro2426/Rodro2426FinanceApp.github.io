@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useApp, setUI, openSheet, flash } from '../lib/store';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { fmt } from '../lib/derive';
+import { fmt, moneyScale } from '../lib/derive';
 import { shortDate } from '../lib/dates';
 import { auth, checkVerified, resendVerification } from '../lib/cloud';
 import { useSync } from '../sheets/CloudSheet';
@@ -141,7 +141,7 @@ function FriendList() {
 
 /** Your balance in a trip, in words. */
 export function myBalance(t: Trip, items = getSocial().items[t.id] ?? []) {
-  const b = balances(tripMembers(t), items)[myUid()] ?? 0;
+  const b = balances(tripMembers(t), items, moneyScale())[myUid()] ?? 0;
   return { value: b, text: b > 0.004 ? `You're owed ${fmt(b)}` : b < -0.004 ? `You owe ${fmt(-b)}` : 'You\'re even', color: b > 0.004 ? GREEN : b < -0.004 ? RED : 'var(--color-neutral-700)' };
 }
 
@@ -176,8 +176,8 @@ export function TripPage({ id }: { id: string }) {
   if (!t) return page(<div style={card}>{so.loading ? 'Loading…' : 'This trip was deleted or you are no longer in it.'}</div>, 'Trip', () => setUI({ page: 'social' }));
   const items = so.items[t.id] ?? [], members = tripMembers(t), uid = myUid();
   const nameOf = (x: string) => (x === uid ? 'You' : members.find(m => m.id === x)?.name ?? 'Someone');
-  const bal = balances(members, items), plan = settleUp(bal), mb = myBalance(t, items);
-  const mine = personTotals(uid, items), total = items.filter(i => i.kind === 'expense').reduce((a, i) => a + i.amount, 0);
+  const bal = balances(members, items, moneyScale()), plan = settleUp(bal, moneyScale()), mb = myBalance(t, items);
+  const mine = personTotals(uid, items, moneyScale()), total = items.filter(i => i.kind === 'expense').reduce((a, i) => a + i.amount, 0);
   const logged = new Set(d.tripLogged ?? []);
 
   return page(<>
@@ -229,7 +229,7 @@ export function TripPage({ id }: { id: string }) {
     <div style={card}>
       <span style={{ fontSize: 15, fontWeight: 700 }}>Activity</span>
       {items.map((it, i) => {
-        const share = sharesOf(it)[uid] ?? 0, key = `${t.id}:${it.id}`;
+        const share = sharesOf(it, moneyScale())[uid] ?? 0, key = `${t.id}:${it.id}`;
         return (
           <div key={it.id} onClick={() => openSheet({ name: 'tripItem', trip: t.id, id: it.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: i ? `1px solid ${LINE}` : 0, cursor: 'pointer' }}>
             <span style={{ width: 38, height: 38, borderRadius: 12, background: it.kind === 'payment' ? 'oklch(0.95 0.045 155)' : 'var(--color-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flex: 'none' }}>{it.kind === 'payment' ? '🤝' : '🧾'}</span>

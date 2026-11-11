@@ -2,7 +2,7 @@ import { moneyHidden } from '../lib/privacy';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { EMOJIS, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
+import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, isCOP, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
 import { addDays, monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { COVER, NEXT, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, splitAmong, suggestCover, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
@@ -567,14 +567,19 @@ function DayPlanner({ id, hue, ds }: { id: string; hue: number; ds: DayStats }) 
         ))}
       </div>
       <span style={{ padding: '0 4px', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
-        {ds.week.length > 7 ? "The quincena's money is shared only by the days you turn on, and days that are off get $0. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day." : "The week's money is shared only by the days you turn on, and days that are off get $0. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day."}
+        {ds.week.length > 7 ? "The quincena's money is shared only by the days you turn on, and days that are off get nothing. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day." : "The week's money is shared only by the days you turn on, and days that are off get nothing. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day."}
       </span>
     </div>
   );
 }
 const startChip = (on: boolean, hue: number): CSSProperties => ({ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: on ? tint(hue) : 'var(--color-neutral-100)', color: on ? ink(hue) : TEXT, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' });
 /** 18.000 → 18k, 1.250.000 → 1,3M, for the small day tiles. */
-const compactAmt = (n: number) => { const a = Math.abs(n); if (moneyHidden() && n) return '***'; return a >= 1e6 ? `${(n / 1e6).toLocaleString('es-CO', { maximumFractionDigits: 1 })}M` : a >= 1e3 ? `${Math.round(n / 1e3)}k` : String(Math.round(n)); };
+const compactAmt = (n: number) => {
+  const a = Math.abs(n), loc = isCOP() ? 'es-CO' : 'en-US';
+  if (moneyHidden() && n) return '***';
+  // Pesos have no cents; in $, € and £ small amounts keep them (0.60, 12.5).
+  return a >= 1e6 ? `${(n / 1e6).toLocaleString(loc, { maximumFractionDigits: 1 })}M` : a >= 1e3 ? `${Math.round(n / 1e3)}k` : n.toLocaleString(loc, { maximumFractionDigits: isCOP() ? 0 : 2 });
+};
 
 /* ---------------- Saved confirmation ---------------- */
 export function SavedSheet({ id }: { id: string }) {

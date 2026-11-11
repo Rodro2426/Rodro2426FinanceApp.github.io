@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { dateLocale } from '../lib/i18n';
 import { setUI, flash } from '../lib/store';
 import { LINE, TEXT } from '../lib/constants';
-import { fmt } from '../lib/derive';
+import { fmt, moneyScale } from '../lib/derive';
 import { fmtDay, monthLabel, shortDate } from '../lib/dates';
 import { deleteMessage, dmKey, loadItems, loadMessages, loadPhotos, markRead, myUid, sendMessage, tripMembers, type Attachment, type Message } from '../lib/social';
 import { prepGifFile, prepPhoto, type GifHit } from '../lib/chatMedia';
@@ -23,7 +23,7 @@ export function TripStatsPage({ id }: { id: string }) {
   const [period, setPeriod] = useState<string>('all');
   if (!t) return null;
   const me = myUid(), members = tripMembers(t);
-  const s = tripSpending(members, items, me, period);
+  const s = tripSpending(members, items, me, period, moneyScale());
   const mi = months.indexOf(period);
   const label = period === 'all' ? 'All-time spending' : `${monthLabel(period)} spending`;
   // Ring: your share vs everyone else's, with a 2px gap between the two parts.

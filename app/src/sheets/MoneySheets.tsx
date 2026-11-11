@@ -11,7 +11,7 @@ import { BgPicker } from '../ui/BgPicker';
 import { useApp, setData, openSheet, closeSheet, flash, replaceData, setUI, startTour } from '../lib/store';
 import { syncLabel, useSync } from './CloudSheet';
 import { ACCT_KIND, ACCT_TYPE_LABEL, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { acctTxns, fmt, initialOf, num, pctOf, plural, roundAmt, uid } from '../lib/derive';
+import { acctTxns, editedBalance, fmt, initialOf, num, pctOf, plural, roundAmt, uid } from '../lib/derive';
 import { allMonths, downloadCSV, exportData } from '../lib/exportData';
 import { monthLabel, shortDate, todayISO } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
@@ -278,7 +278,7 @@ export function EditAcctSheet({ id }: { id: string }) {
         initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '', cardImg: a.cardImg ?? null, cardText: a.cardText, notMine: a.notMine }}
         onSave={f => {
           const card = f.type === 'card';
-          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: Math.abs(num(f.bal) - y.bal) < 1 ? y.bal : roundAmt(num(f.bal)), limit: card ? num(f.limit) : undefined, due: card ? f.due.trim() || 'Nov 25' : undefined, photo: f.photo, hue: f.hue, cardImg: card ? f.cardImg : undefined, cardText: card && f.cardImg ? f.cardText : undefined, notMine: f.notMine || undefined, ...rateFields(y, f) } : y)) }));
+          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: editedBalance(num(f.bal), y.bal), limit: card ? num(f.limit) : undefined, due: card ? f.due.trim() || 'Nov 25' : undefined, photo: f.photo, hue: f.hue, cardImg: card ? f.cardImg : undefined, cardText: card && f.cardImg ? f.cardText : undefined, notMine: f.notMine || undefined, ...rateFields(y, f) } : y)) }));
           openSheet({ name: 'acct', id }); flash('Account updated');
         }}
         onDelete={() => {

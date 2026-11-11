@@ -29,10 +29,11 @@ export function sharesOf(it: TripItem, scale = 1): Record<string, number> {
 }
 
 /** Whether a split adds up: amounts must total the expense, percents must total 100. */
-export function splitProblem(amount: number, mode: SplitMode, among: string[], values: Record<string, number>): string | null {
+export function splitProblem(amount: number, mode: SplitMode, among: string[], values: Record<string, number>, cop = true): string | null {
+  const loc = cop ? 'es-CO' : 'en-US';
   if (!among.length) return 'Pick at least one person to split with.';
-  if (mode === 'amounts') { const t = among.reduce((a, p) => a + (values[p] ?? 0), 0); return Math.abs(t - amount) > 0.004 ? `The amounts add up to ${t.toLocaleString('es-CO')}, not ${amount.toLocaleString('es-CO')}.` : null; }
-  if (mode === 'percent') { const t = among.reduce((a, p) => a + (values[p] ?? 0), 0); return Math.abs(t - 100) > 0.001 ? `The percentages add up to ${t.toLocaleString('es-CO')}%, not 100%.` : null; }
+  if (mode === 'amounts') { const t = among.reduce((a, p) => a + (values[p] ?? 0), 0); return Math.abs(t - amount) > 0.004 ? `The amounts add up to ${t.toLocaleString(loc)}, not ${amount.toLocaleString(loc)}.` : null; }
+  if (mode === 'percent') { const t = among.reduce((a, p) => a + (values[p] ?? 0), 0); return Math.abs(t - 100) > 0.001 ? `The percentages add up to ${t.toLocaleString(loc)}%, not 100%.` : null; }
   return null;
 }
 

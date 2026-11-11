@@ -1,7 +1,7 @@
 // Turns new activity in shared trips (other people's expenses, payments and messages) into Home notifications.
 import { checkDmActivity, checkTripActivity, dmKey, loadItems, markRead, myUid, type DmActivity, type TripActivity } from './social';
 import { getState, openSheet, setData, setUI } from './store';
-import { fmt } from './derive';
+import { fmt, moneyScale } from './derive';
 import { sharesOf } from './settle';
 import { todayISO } from './dates';
 import type { Notif } from './types';
@@ -20,7 +20,7 @@ export function tripNotifs(acts: TripActivity[], uid: string, today: string, exi
       let body: string;
       if (it.kind === 'payment') body = it.to === uid ? `${who(it.paidBy)} paid you ${fmt(it.amount)}` : `${who(it.paidBy)} paid ${who(it.to ?? '')} ${fmt(it.amount)}`;
       else {
-        const mine = sharesOf(it)[uid];
+        const mine = sharesOf(it, moneyScale())[uid];
         body = `${who(it.createdBy)} added ${it.desc} · ${fmt(it.amount)}${mine ? ` · your share ${fmt(mine)}` : ''}`;
       }
       out.push({ id: `trip:${trip.id}:item:${it.id}`, date: today, ts: now, kind: 'trip', title, body, read: false, dismissed: false, bannered: false, link: { trip: trip.id, item: it.id } });

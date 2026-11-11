@@ -543,7 +543,7 @@ Undo all moves (reset pocket)|Deshacer todos los movimientos (reiniciar bolsillo
 Keep at least one spending day|Deja al menos un día de gasto
 Spending days|Días de gasto
 Tap a day to turn it on or off|Toca un día para activarlo o desactivarlo
-The week's money is shared only by the days you turn on, and days that are off get $0. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day.|El dinero de la semana se reparte solo entre los días activados, y los días apagados reciben $0. Los días pasados muestran lo que gastaste; hoy y los próximos muestran lo que le toca a cada uno. Lo que no gastes hoy pasa al siguiente día de gasto.
+The week's money is shared only by the days you turn on, and days that are off get nothing. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day.|El dinero de la semana se reparte solo entre los días activados, y los días apagados no reciben nada. Los días pasados muestran lo que gastaste; hoy y los próximos muestran lo que le toca a cada uno. Lo que no gastes hoy pasa al siguiente día de gasto.
 spent of|gastado de
 Left in|Queda en
 Type how much goes to each pocket below.|Escribe abajo cuánto va a cada bolsillo.
@@ -1513,7 +1513,7 @@ Days left ·|Días que quedan ·
 Type what you actually have left if it's different.|Escribe lo que de verdad te queda si es diferente.
 Every day. The Today view shares the quincena’s money across the days left.|Todos los días. La vista de Hoy reparte el dinero de la quincena entre los días que quedan.
 Nothing spent here yet this quincena.|Nada gastado aquí esta quincena.
-The quincena's money is shared only by the days you turn on, and days that are off get $0. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day.|El dinero de la quincena se reparte solo entre los días activados, y los días apagados reciben $0. Los días pasados muestran lo que gastaste; hoy y los próximos muestran lo que le toca a cada uno. Lo que no gastes hoy pasa al siguiente día de gasto.
+The quincena's money is shared only by the days you turn on, and days that are off get nothing. Past days show what you spent; today and the days ahead show what each one gets. Whatever you don't spend today moves on to the next spending day.|El dinero de la quincena se reparte solo entre los días activados, y los días apagados no reciben nada. Los días pasados muestran lo que gastaste; hoy y los próximos muestran lo que le toca a cada uno. Lo que no gastes hoy pasa al siguiente día de gasto.
 per week or 15 days|por semana o quincena
 every 15 days|cada 15 días
 This card isn't mine|Esta tarjeta no es mía

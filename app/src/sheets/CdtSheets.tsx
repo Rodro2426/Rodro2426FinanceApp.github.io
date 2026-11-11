@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp, setData, closeSheet, openSheet, flash, getData } from '../lib/store';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { fmt, num } from '../lib/derive';
+import { fmt, num, roundAmt } from '../lib/derive';
 import { addDays, fmtDay, todayISO } from '../lib/dates';
 import { OFFERS, OFFERS_AS_OF, PAYOUT_LABEL, WITHHOLD, addCdt, cashOutCdt, cdtView, cdtsOf, deleteCdt, hueFor, newCdtId, payouts, renewCdt, updateCdt, type Term } from '../lib/cdt';
 import type { Cdt, CdtPayout } from '../lib/types';
@@ -34,7 +34,7 @@ export function CdtSheet({ id }: { id: string | null }) {
   const banks = d.accounts.filter(a => a.type !== 'card');
   const [view, setView] = useState<'popular' | 'custom'>(old ? 'custom' : 'popular');
   const [bank, setBank] = useState(old?.bank ?? '');
-  const [amt, setAmt] = useState(old ? String(Math.round(old.amount)) : '');
+  const [amt, setAmt] = useState(old ? String(roundAmt(old.amount)) : '');
   const [rate, setRate] = useState(old ? String(old.rate).replace('.', ',') : '');
   const [days, setDays] = useState(old?.days ?? 360);
   const [customDays, setCustomDays] = useState(old && !TERMS.includes(old.days) ? String(old.days) : '');

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EyeToggle } from '../ui/EyeToggle';
 import { useApp, setUI, openSheet, setData, flash } from '../lib/store';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
-import { fmt, num } from '../lib/derive';
+import { fmt, isCOP, num } from '../lib/derive';
 import { dailyRate, monthlyRate } from '../lib/interest';
 import { OTHER, colorOf, finnhubKey, holdings, refreshQuotes, refreshUsdRate, type Holding } from '../lib/invest';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -20,11 +20,11 @@ const signed = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(
 const compact = (s: string) => {
   const m = /^([+−]?)(\D*)([\d.,]+)$/.exec(s);
   if (!m || s.length <= 9) return s;
-  const n = Number(m[3].replace(/\./g, '').replace(',', '.'));
+  const cop = isCOP(), n = Number(cop ? m[3].replace(/\./g, '').replace(',', '.') : m[3].replace(/,/g, ''));
   const [v, u] = n >= 1e9 ? [n / 1e9, ' mil M'] : n >= 1e6 ? [n / 1e6, ' M'] : [n / 1e3, ' mil'];
-  return `${m[1]}${m[2]}${v.toLocaleString('es-CO', { maximumFractionDigits: 1 })}${u}`;
+  return `${m[1]}${m[2]}${v.toLocaleString(cop ? 'es-CO' : 'en-US', { maximumFractionDigits: 1 })}${u}`;
 };
-const pctTxt = (p: number) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p * 100).toFixed(2).replace('.', ',')}%`;
+const pctTxt = (p: number) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p * 100).toFixed(2).replace('.', isCOP() ? ',' : '.')}%`;
 const ago = (t: number) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; };
 
 export default function Investments() {
