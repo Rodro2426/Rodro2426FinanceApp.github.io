@@ -112,6 +112,12 @@ input::placeholder { color: var(--color-neutral-500); }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
 .sheet-panel { overscroll-behavior: contain; }
+/* Sheets only scroll up and down: nothing can push them sideways, and pinch-zoom is off
+   (rows that scroll sideways on purpose, like account pills, still can). */
+.sheet-panel { overflow-x: hidden; touch-action: pan-x pan-y; }
+/* iPhone date boxes keep a fixed width of their own unless the native look is turned off. */
+input[type="date"] { -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; box-sizing: border-box; display: block; }
+input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .sheet-panel { animation: sheet-in .28s cubic-bezier(.2, .8, .2, 1); }
 .sheet-scrim { animation: fade-in .2s ease; }
 .dot { animation: pulse 1.2s ease-in-out infinite; }

@@ -1222,6 +1222,10 @@ You owe|Debes
 Include investments|Incluir inversiones
 and your groups|y tus grupos
 Include investments in net worth|Incluir inversiones en el patrimonio
+Include what people owe you|Incluir lo que te deben
+Include what people owe you in net worth|Incluir lo que te deben en el patrimonio
+What people owe you counts in your net worth. Change it in Accounts, next to Include investments.|Lo que te deben cuenta en tu patrimonio. Cámbialo en Cuentas, junto a Incluir inversiones.
+What people owe you is left out of your net worth. To count it, use the switch in Accounts, next to Include investments.|Lo que te deben no cuenta en tu patrimonio. Para contarlo, usa el interruptor en Cuentas, junto a Incluir inversiones.
 Debit and Cash|Débito y efectivo
 Bank, savings and cash accounts|Cuentas bancarias, de ahorro y efectivo
 No bank, savings or cash accounts yet.|Aún no hay cuentas bancarias, de ahorro ni de efectivo.
@@ -1609,6 +1613,8 @@ Borrowed from {0}|Préstamo de {0}
 You paid {0} back in full 🎉|Le pagaste todo a {0} 🎉
 {0} paid you back|{0} te pagó
 Paid back {0}|Pagada el {0}
+The {0} people owe you counts, as if they had already paid|Los {0} que te deben cuentan, como si ya te hubieran pagado
+Left out: the {0} people owe you only counts once they pay|Por fuera: los {0} que te deben solo cuentan cuando te paguen
 You paid {0} back|Le pagaste a {0}
 Saved: you owe {0} to {1}|Guardado: le debes {0} a {1}
 {0} was due to pay you back on {1}: your pockets cover it until {2} pays.|{0} debía pagarte el {1}: tus bolsillos lo cubren hasta que {2} te pague.

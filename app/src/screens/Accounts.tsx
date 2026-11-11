@@ -23,7 +23,9 @@ export default function Accounts() {
     { label: 'Accounts', value: nw.accounts },
     ...(nw.includeInvestments && nw.investments ? [{ label: 'Investments', value: nw.investments }] : []),
     ...nw.groups.filter(x => x.counted && x.value).map(x => ({ label: x.g.name, value: x.value })),
-    ...(nw.cards ? [{ label: 'Cards', value: -nw.cards }] : [])
+    ...(nw.includeOwed && nw.owedToMe ? [{ label: 'Owed to you', value: nw.owedToMe }] : []),
+    ...(nw.cards ? [{ label: 'Cards', value: -nw.cards }] : []),
+    ...(nw.iOwe ? [{ label: 'Debts', value: -nw.iOwe }] : [])
   ];
   const cash = d.accounts.filter(a => a.type !== 'card');
   const cards = d.accounts.filter(a => a.type === 'card');
@@ -76,6 +78,15 @@ export default function Accounts() {
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{nw.includeInvestments ? `Stocks, CDTs and funds (${fmt(inv.total)}) count in your net worth` : `Left out: net worth shows only accounts${nw.groups.some(x => x.counted) ? ' and your groups' : ''}`}</span>
             </span>
             <Toggle on={nw.includeInvestments} onChange={v => setData(x => ({ settings: { ...x.settings, excludeInvestments: !v || undefined } }))} label="Include investments in net worth" />
+          </div>
+        )}
+        {(nw.owedToMe > 0.004 || nw.includeOwed) && (
+          <div style={{ marginTop: 8, paddingTop: 12, borderTop: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>Include what people owe you</span>
+              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{nw.includeOwed ? `The ${fmt(nw.owedToMe)} people owe you counts, as if they had already paid` : `Left out: the ${fmt(nw.owedToMe)} people owe you only counts once they pay`}</span>
+            </span>
+            <Toggle on={nw.includeOwed} onChange={v => setData(x => ({ settings: { ...x.settings, owedInNetWorth: v || undefined } }))} label="Include what people owe you in net worth" />
           </div>
         )}
       </div>

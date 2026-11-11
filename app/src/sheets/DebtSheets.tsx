@@ -42,7 +42,7 @@ function AcctPills({ accts, value, onPick, none }: { accts: Account[]; value: st
 }
 
 const dateInput = (value: string, onChange: (v: string) => void, label: string) => (
-  <input type="date" value={value} onChange={e => onChange(e.target.value)} aria-label={label} style={{ ...textInput, width: '100%', boxSizing: 'border-box', fontWeight: 600, minHeight: 52 }} />
+  <input type="date" value={value} onChange={e => onChange(e.target.value)} aria-label={label} style={{ ...textInput, width: '100%', minWidth: 0, boxSizing: 'border-box', fontWeight: 600, minHeight: 52, padding: '14px 12px', WebkitAppearance: 'none', appearance: 'none' }} />
 );
 
 /* ---------------- Add, edit or see a debt ---------------- */
@@ -107,9 +107,9 @@ function DebtForm({ old, dir0, friend, lastAcct, onDone }: { old?: Debt; dir0?: 
         <FieldLabel>{owed ? 'Paid with' : 'Money went into'}</FieldLabel>
         <AcctPills accts={d.accounts} value={acct} onPick={setAcct} none="No account" />
         {effect && <span style={{ margin: '8px 6px 0', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{effect}</span>}
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}><FieldLabel>When</FieldLabel>{dateInput(date, setDate, 'When')}</div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}><FieldLabel>{owed ? 'Pays you back by' : 'You pay back by'}</FieldLabel>{dateInput(due, setDue, owed ? 'Pays you back by' : 'You pay back by')}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10, width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}><FieldLabel>When</FieldLabel>{dateInput(date, setDate, 'When')}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}><FieldLabel>{owed ? 'Pays you back by' : 'You pay back by'}</FieldLabel>{dateInput(due, setDue, owed ? 'Pays you back by' : 'You pay back by')}</div>
         </div>
         {!!due && due < draft.date && <span style={{ margin: '6px 4px 0', fontSize: 12.5, color: RED }}>The pay-back date is before the debt started.</span>}
         {name.trim() && v > 0 && <div style={{ marginTop: 12 }}><TimingNote d={d} x={draft} today={today} /></div>}

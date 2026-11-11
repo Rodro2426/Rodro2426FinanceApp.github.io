@@ -1,6 +1,6 @@
 // Friends & trips: the Debts tab, the money summary at the top, and the Home block.
 import { useState, type ReactNode } from 'react';
-import { useApp, setUI, openSheet, setData } from '../lib/store';
+import { useApp, setUI, openSheet } from '../lib/store';
 import { LINE, RED, TEXT } from '../lib/constants';
 import { ctxOf, fmt } from '../lib/derive';
 import { shortDate, todayISO } from '../lib/dates';
@@ -8,7 +8,6 @@ import { debtOutlook, debtTiming, debtTotals, debtsOf, isOpen, leftOf, settledOn
 import { monthSummary } from '../lib/plan';
 import { getSocial, myUid } from '../lib/social';
 import type { Data, Debt } from '../lib/types';
-import { Toggle } from '../ui/bits';
 import * as I from '../ui/icons';
 import { Avatar, myBalance, useSocial } from './Social';
 import { GREEN } from '../sheets/DebtSheets';
@@ -126,13 +125,12 @@ export function DebtList() {
       </div>
     )}
 
-    <div style={{ ...card, gap: 6 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ flex: 1, fontSize: 15, fontWeight: 700 }}>Count what people owe you in your net worth</span>
-        <Toggle on={!!d.settings.owedInNetWorth} onChange={v => setData(x => ({ settings: { ...x.settings, owedInNetWorth: v } }))} label="Count what people owe you in your net worth" />
-      </div>
-      <span style={{ fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{d.settings.owedInNetWorth ? `On: the ${fmt(tot.owedToMe)} people owe you counts as yours, as if they had already paid.` : 'Off: money you lent only shows once they pay you back.'} What you owe always counts.</span>
-    </div>
+    {tot.owedToMe > 0.004 && (
+      <button onClick={() => setUI({ page: null, tab: 'accounts' })} className="hv-n100" style={{ ...card, border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT, flexDirection: 'row', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
+        <span style={{ flex: 1, fontSize: 13, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{d.settings.owedInNetWorth ? 'What people owe you counts in your net worth. Change it in Accounts, next to Include investments.' : 'What people owe you is left out of your net worth. To count it, use the switch in Accounts, next to Include investments.'}</span>
+        <I.Chevron size={16} color="var(--color-neutral-500)" />
+      </button>
+    )}
 
     {done.length > 0 && (
       <div style={card}>
