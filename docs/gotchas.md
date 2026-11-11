@@ -16,6 +16,8 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - **Don't parse `fmt()` output assuming peso style** (dots for thousands). In $, € and £ it's `1,234.56`. Format from the number instead, or check `isCOP()`.
 - **Debts touch account balances.** Always go through `saveDebt` / `deleteDebt` / `addDebtPay` in `lib/debts.ts`: they undo the old effect before applying the new one. Never edit `d.debts` and `d.accounts` separately.
 - **`monthSummary().balance` includes debts** (`debtOutlook`). The sample data has two debts, so sample net worth is accounts minus cards minus what Sofía still owes her mom.
+- **Dollar stocks and funds are converted for every app currency** (`convert` / `perUsd` in `lib/invest.ts`): TRM for pesos, `investments.fxPerUsd` (from open.er-api.com) for € and £, with a rough built-in rate until the first update. Before Nov 2026 a US$100 stock counted as €100.
+- **`lib/currencies.test.ts` runs the same month in COP, $, € and £.** Add a case there when you add money logic.
 - **Don't round money with `Math.round` unless the amount is surely in pesos.** Use `roundAmt` (whole pesos, or cents in other currencies). Card payments in euros used to drop the cents.
 - **Sheets are locked sideways** (`.sheet-panel` has `overflow-x: hidden; touch-action: pan-x pan-y` in `styles.css`). Before, one element a bit too wide (an iPhone date box) let the whole sheet slide and zoom. Date boxes also need `appearance: none` (set globally for `input[type=date]`), or iOS keeps its own wider size.
 - **Inputs need a font size of at least 16px**, or iOS zooms in when they're focused.

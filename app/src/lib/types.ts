@@ -87,7 +87,7 @@ export interface Fund {
   minAmount?: number; units?: number; notes?: string;
   start: string; moves: FundMove[]; closed?: string;
 }
-export interface Investments { funds?: Fund[]; cdts?: Cdt[]; trades: Trade[]; quotes: Record<string, Quote>; usdRate: number; usdRateAt: number; usdManual?: boolean; sim?: { amt: string; rate: string; months: string; deposit: string } }
+export interface Investments { funds?: Fund[]; cdts?: Cdt[]; trades: Trade[]; quotes: Record<string, Quote>; usdRate: number; usdRateAt: number; /** Euros and pounds per US dollar (for apps in € or £). */ fxPerUsd?: { EUR: number; GBP: number }; usdManual?: boolean; sim?: { amt: string; rate: string; months: string; deposit: string } }
 
 /** A payment back on a debt: money into your account (they paid you) or out of it (you paid them). */
 export interface DebtPay { id: string; ts: number; amt: number; date: string; acct?: string }

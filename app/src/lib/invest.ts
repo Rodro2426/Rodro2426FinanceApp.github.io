@@ -9,13 +9,22 @@ export interface Holding {
   valueLocal: number; investedLocal: number; gainLocal: number; dayChangeLocal: number;
 }
 
-/** USD amount → app currency (only COP and USD are converted; others are shown as-is). */
-export function toLocal(inv: Investments, amt: number, cur: 'USD' | 'COP') {
-  const app = getData().settings.currency;
-  if (app === 'COP') return cur === 'USD' ? amt * inv.usdRate : amt;
-  if (app === '$') return cur === 'COP' ? amt / inv.usdRate : amt;
-  return amt;
+/** Rough euro and pound rates, used only until the first live update arrives. */
+const FX_FALLBACK = { EUR: 0.92, GBP: 0.79 };
+/** How much of the app's currency one US dollar is worth. */
+export function perUsd(inv: Investments, app: string) {
+  if (app === 'COP') return inv.usdRate || 4000;
+  if (app === '€') return inv.fxPerUsd?.EUR || FX_FALLBACK.EUR;
+  if (app === '£') return inv.fxPerUsd?.GBP || FX_FALLBACK.GBP;
+  return 1;
 }
+/** A dollar or peso amount in the app's currency `app` (dollars go straight; pesos go through dollars). */
+export function convert(inv: Investments, amt: number, cur: 'USD' | 'COP', app: string) {
+  if (cur === 'COP') return app === 'COP' ? amt : (amt / (inv.usdRate || 4000)) * perUsd(inv, app);
+  return amt * perUsd(inv, app);
+}
+/** USD or COP amount → app currency. */
+export const toLocal = (inv: Investments, amt: number, cur: 'USD' | 'COP') => convert(inv, amt, cur, getData().settings.currency);
 
 /** Average-cost holdings, in the order each ticker was first bought (so colors stay put). */
 export function holdings(d: Data): Holding[] {
@@ -91,12 +100,15 @@ export async function refreshUsdRate(force = false) {
   const { fetchTrm } = await import('./trm');
   const { todayISO } = await import('./dates');
   const trm = await fetchTrm(todayISO());
-  if (trm) { setData(x => ({ investments: { ...x.investments, usdRate: trm, usdRateAt: Date.now() }, fx: { ...x.fx, trm: { ...x.fx.trm, [todayISO()]: trm } } })); return; }
+  if (trm) setData(x => ({ investments: { ...x.investments, usdRate: trm, usdRateAt: Date.now() }, fx: { ...x.fx, trm: { ...x.fx.trm, [todayISO()]: trm } } }));
+  // The market service is only needed without a TRM, or for euros and pounds.
+  const app = getData().settings.currency;
+  if (trm && app !== '€' && app !== '£') return;
   try {
     const r = await fetch('https://open.er-api.com/v6/latest/USD');
     const j = await r.json();
-    const cop = j?.rates?.COP;
-    if (cop > 0) setData(x => ({ investments: { ...x.investments, usdRate: cop, usdRateAt: Date.now() } }));
+    const cop = j?.rates?.COP, eur = j?.rates?.EUR, gbp = j?.rates?.GBP;
+    setData(x => ({ investments: { ...x.investments, ...(!trm && cop > 0 ? { usdRate: cop } : {}), ...(eur > 0 && gbp > 0 ? { fxPerUsd: { EUR: eur, GBP: gbp } } : {}), usdRateAt: Date.now() } }));
   } catch { /* keep the last rate */ }
 }
 

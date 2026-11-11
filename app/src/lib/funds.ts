@@ -3,6 +3,7 @@
 import type { Data, Fund, FundKind, FundMove, FundRisk, Payment } from './types';
 import { daysBetween, todayISO } from './dates';
 import { uid } from './derive';
+import { convert } from './invest';
 
 export const FUND_KINDS: [FundKind, string, string][] = [
   ['vista', 'Money market', 'On demand, low risk (a la vista)'],
@@ -66,7 +67,7 @@ export function fundView(f: Fund, today = todayISO()): FundView {
 const addDaysIso = (iso: string, n: number) => { const [y, m, d] = iso.split('-').map(Number); const t = new Date(y, m - 1, d + n); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
 
 /** Value in your own currency (a dollar fund is converted at the app's dollar rate). */
-export const localValue = (d: Data, f: Fund, v: number) => (f.currency === 'USD' && d.settings.currency === 'COP' ? v * (d.investments.usdRate || 4000) : v);
+export const localValue = (d: Data, f: Fund, v: number) => (f.currency === 'USD' ? convert(d.investments, v, 'USD', d.settings.currency) : v);
 export const fundsTotal = (d: Data) => fundsOf(d).filter(f => !f.closed).reduce((a, f) => a + localValue(d, f, fundView(f).value), 0);
 
 /* ---------------- Changes ---------------- */

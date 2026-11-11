@@ -4,7 +4,7 @@ import { useApp, setUI, openSheet, setData, flash } from '../lib/store';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
 import { fmt, isCOP, num } from '../lib/derive';
 import { dailyRate, monthlyRate } from '../lib/interest';
-import { OTHER, colorOf, finnhubKey, holdings, refreshQuotes, refreshUsdRate, type Holding } from '../lib/invest';
+import { OTHER, colorOf, finnhubKey, holdings, perUsd, refreshQuotes, refreshUsdRate, type Holding } from '../lib/invest';
 import { MoneyInput } from '../ui/MoneyInput';
 import { cdtView, cdtsOf, type CdtView } from '../lib/cdt';
 import { CdtBadge } from '../sheets/CdtSheets';
@@ -113,7 +113,7 @@ function Portfolio() {
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', fontSize: 12, color: 'var(--color-neutral-600)', gap: 8 }}>
-          <span>{d.settings.currency === 'COP' ? `1 USD = ${fmt(inv.usdRate)}${inv.usdManual ? ' (typed in)' : ''}` : ''}{lastAt ? ` · prices ${ago(lastAt)}` : ''}</span>
+          <span>{d.settings.currency === 'COP' ? `1 USD = ${fmt(inv.usdRate)}${inv.usdManual ? ' (typed in)' : ''}` : d.settings.currency !== '$' ? `1 USD = ${fmt(perUsd(inv, d.settings.currency))}` : ''}{lastAt ? ` · prices ${ago(lastAt)}` : ''}</span>
           <button onClick={() => refresh()} disabled={busy} aria-label="Refresh prices" style={{ border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, opacity: busy ? 0.5 : 1 }}><I.Refresh size={13} />{busy ? 'Updating…' : 'Refresh'}</button>
         </div>
       </div>
