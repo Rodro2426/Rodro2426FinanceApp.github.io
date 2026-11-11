@@ -1222,6 +1222,8 @@ You owe|Debes
 Include investments|Incluir inversiones
 and your groups|y tus grupos
 Include investments in net worth|Incluir inversiones en el patrimonio
+What counts|Qué cuenta
+What counts in net worth|Qué cuenta en el patrimonio
 Include what people owe you|Incluir lo que te deben
 Include what people owe you in net worth|Incluir lo que te deben en el patrimonio
 What people owe you counts in your net worth. Change it in Accounts, next to Include investments.|Lo que te deben cuenta en tu patrimonio. Cámbialo en Cuentas, junto a Incluir inversiones.

@@ -13,7 +13,12 @@ const EDGE = 28;        // px from the left edge that counts as an edge swipe
 const LOCK = 10;        // px of movement before deciding sideways vs. up-and-down
 const COMMIT = 0.28;    // share of the width past which a released swipe completes
 const FLICK = 0.5;      // px/ms: a quick flick completes even if short
-const MS = 240;         // slide duration after letting go
+const MS = 300;         // longest slide after letting go (a fast flick finishes sooner)
+const EASE = 'cubic-bezier(.22,1,.36,1)'; // quick start, soft landing, like iOS
+
+/** True once after a finger swipe changed the tab (so the App doesn't animate it a second time). */
+let swiped = false;
+export const tookSwipe = () => { const v = swiped; swiped = false; return v; };
 
 export interface Peek { tab: Tab; side: 1 | -1 }
 
@@ -42,9 +47,9 @@ function backLayer(): HTMLElement | null {
   return pages.length ? pages[pages.length - 1] : null;
 }
 
-const slide = (el: HTMLElement | null, x: string, animate: boolean) => {
+const slide = (el: HTMLElement | null, x: string, animate: boolean, ms = MS) => {
   if (!el) return;
-  el.style.transition = animate ? `transform ${MS}ms cubic-bezier(.2,.8,.2,1)` : 'none';
+  el.style.transition = animate ? `transform ${ms}ms ${EASE}` : 'none';
   el.style.transform = x;
 };
 const clear = (el: HTMLElement | null) => { if (el) { el.style.transition = ''; el.style.transform = ''; el.style.boxShadow = ''; } };
@@ -112,6 +117,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
         else if (s.free && !ui.sheet && !ui.page) {
           const side: 1 | -1 = dx < 0 ? 1 : -1, i = tabs.indexOf(ui.tab), to = tabs[i + side];
           if (i >= 0 && to) { s.mode = 'tab'; s.side = side; s.to = to; setPeek({ tab: to, side }); }
+          else if (i >= 0) { s.mode = 'tab'; s.side = side; s.to = null; } // first or last tab: it stretches a little and springs back
           else s.mode = 'none';
         } else s.mode = 'none';
       }
@@ -126,6 +132,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       }
       // tab: only toward the neighbour that was picked; a little resistance past the start
       s.dx = s.side === 1 ? Math.min(0, dx) : Math.max(0, dx);
+      if (!s.to) { slide(scroller.current, `translateX(${s.dx * 0.22}px)`, false); return; }
       slide(scroller.current, `translateX(${s.dx}px)`, false);
       slide(peek.current, `translateX(calc(${s.side * 100}% + ${s.dx}px))`, false);
     };
@@ -138,26 +145,30 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       const ms = Math.max(1, Date.now() - g.t), p = e.changedTouches[0];
       const v = Math.abs((p ? p.clientX - g.x : g.dx) / ms);
       const done = Math.abs(g.dx) > w * COMMIT || (v > FLICK && Math.abs(g.dx) > 30);
+      // The time left depends on how far is left to go and how fast the finger was moving.
+      const rest = done ? w - Math.abs(g.dx) : Math.abs(g.dx);
+      const dur = Math.round(Math.max(170, Math.min(MS, rest / Math.max(v, 0.9) * 1.6)));
       busy = true;
+      if (g.mode === 'tab' && !g.to) { slide(scroller.current, 'translateX(0)', true, 320); setTimeout(() => { clear(scroller.current); busy = false; }, 320); return; }
       if (g.mode === 'back') {
         if (done) {
-          slide(g.layer, `translateX(${w}px)`, true);
-          setTimeout(() => { backButton()?.click(); clear(g.layer); busy = false; }, MS);
+          slide(g.layer, `translateX(${w}px)`, true, dur);
+          setTimeout(() => { const b = backButton(); if (b) { b.dataset.going = '1'; b.click(); delete b.dataset.going; } clear(g.layer); busy = false; }, dur);
         } else {
-          slide(g.layer, 'translateX(0)', true);
-          setTimeout(() => { clear(g.layer); busy = false; }, MS);
+          slide(g.layer, 'translateX(0)', true, dur);
+          setTimeout(() => { clear(g.layer); busy = false; }, dur);
         }
         return;
       }
       if (done && g.to) {
-        slide(scroller.current, `translateX(${-g.side * w}px)`, true);
-        slide(peek.current, 'translateX(0)', true);
+        slide(scroller.current, `translateX(${-g.side * w}px)`, true, dur);
+        slide(peek.current, 'translateX(0)', true, dur);
         // The App resets the scroller's position in the same render that shows the new tab (no flicker).
-        setTimeout(() => { setUI({ tab: g.to! }); setPeek(null); busy = false; }, MS);
+        setTimeout(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); busy = false; }, dur);
       } else {
-        slide(scroller.current, 'translateX(0)', true);
-        slide(peek.current, `translateX(${g.side * 100}%)`, true);
-        setTimeout(() => { clear(scroller.current); setPeek(null); busy = false; }, MS);
+        slide(scroller.current, 'translateX(0)', true, dur);
+        slide(peek.current, `translateX(${g.side * 100}%)`, true, dur);
+        setTimeout(() => { clear(scroller.current); setPeek(null); busy = false; }, dur);
       }
     };
     const cancel = () => {
@@ -168,11 +179,25 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       if (g.mode === 'tab') { clear(scroller.current); setPeek(null); }
     };
 
+    // Tapping a page's back button: the page slides away to the right first, then goes back.
+    const backTap = (e: MouseEvent) => {
+      const b = (e.target as Element | null)?.closest?.<HTMLElement>('[data-back]');
+      const layer = b?.closest<HTMLElement>('.page');
+      if (!b || !layer || b.dataset.going || getState().ui.sheet || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      e.preventDefault(); e.stopPropagation();
+      if (busy) return;
+      busy = true;
+      layer.style.animation = 'none';
+      slide(layer, `translateX(${layer.clientWidth}px)`, true, 260);
+      setTimeout(() => { b.dataset.going = '1'; b.click(); delete b.dataset.going; clear(layer); layer.style.animation = ''; busy = false; }, 250);
+    };
+    window.addEventListener('click', backTap, true);
     window.addEventListener('touchstart', down, { passive: true });
     window.addEventListener('touchmove', move, { passive: false });
     window.addEventListener('touchend', up, { passive: true });
     window.addEventListener('touchcancel', cancel, { passive: true });
     return () => {
+      window.removeEventListener('click', backTap, true);
       window.removeEventListener('touchstart', down);
       window.removeEventListener('touchmove', move);
       window.removeEventListener('touchend', up);

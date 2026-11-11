@@ -100,6 +100,9 @@ input::placeholder { color: var(--color-neutral-500); }
   .hv-green:hover { background: oklch(0.45 0.12 150) !important; }
   .hv-green2:hover { background: oklch(0.9 0.07 150) !important; }
 }
+/* Things you press give way a little and spring back. */
+.pr97, .pr98, .pr92, .tabbar button { transition: transform .22s cubic-bezier(.2, .9, .3, 1.2); }
+.tabbar button:active { transform: scale(.93); }
 .pr97:active { transform: scale(.97); }
 .pr98:active { transform: scale(.98); }
 .pr92:active { transform: scale(.92); }
@@ -120,10 +123,29 @@ input[type="date"] { -webkit-appearance: none; appearance: none; min-width: 0; m
 input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .sheet-panel { animation: sheet-in .28s cubic-bezier(.2, .8, .2, 1); }
 .sheet-scrim { animation: fade-in .2s ease; }
+/* Closing: the sheet drops away instead of vanishing (see closeSheet in lib/store.ts). */
+@keyframes sheet-out { to { transform: translateY(105%); } }
+@keyframes fade-out { to { opacity: 0; } }
+[data-sheet].closing > .sheet-panel { animation: sheet-out .24s cubic-bezier(.4, 0, .8, .4) forwards; }
+[data-sheet].closing > .sheet-scrim { animation: fade-out .24s ease forwards; }
+/* Full pages (Investments, Friends & trips…) slide in from the right like on iPhone; going from one page to another just fades. */
+@keyframes page-in { from { transform: translateX(100%); } to { transform: none; } }
+.shell:not(.desk) .page { animation: page-in .34s cubic-bezier(.22, 1, .36, 1); box-shadow: -12px 0 30px rgba(0,0,0,.10); }
+.shell:not(.desk)[data-nav="swap"] .page { animation: fade-in .2s ease; }
+/* Tapping a tab: the new tab glides in from its side. */
+@keyframes tab-in-r { from { transform: translateX(26px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tab-in-l { from { transform: translateX(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
+.tab-in-r { animation: tab-in-r .3s cubic-bezier(.22, 1, .36, 1); }
+.tab-in-l { animation: tab-in-l .3s cubic-bezier(.22, 1, .36, 1); }
+/* A section that folds open and closed smoothly. */
+.fold { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .3s cubic-bezier(.22, 1, .36, 1), opacity .25s ease; }
+.fold.open { grid-template-rows: 1fr; opacity: 1; }
+.fold > div { overflow: hidden; min-height: 0; }
+.fold:not(.open) > div { visibility: hidden; transition: visibility 0s .3s; }
 .dot { animation: pulse 1.2s ease-in-out infinite; }
 .dot:nth-child(2) { animation-delay: .15s; }
 .dot:nth-child(3) { animation-delay: .3s; }
-@media (prefers-reduced-motion: reduce) { .sheet-panel, .sheet-scrim, .dot, .banner { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sheet-panel, .sheet-scrim, .dot, .banner, .page, .tab-in-r, .tab-in-l, [data-sheet].closing > * { animation: none !important; } .fold { transition: none; } }
 
 /* Brand lockup shown behind the content when pulling down at the top. */
 .brand-reveal {
@@ -229,6 +251,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
     padding: 10px 26px 26px !important; animation: dialog-in .22s cubic-bezier(.2, .8, .2, 1);
   }
   .desk [data-sheet] > .sheet-panel > .grabber { display: none !important; }
+  .desk [data-sheet].closing > .sheet-panel { animation: fade-out .16s ease forwards; }
   .desk [data-sheet] > .sheet-panel { padding-top: 22px !important; }
   /* Notifications and messages appear at the top right. */
   .desk .banner { left: auto !important; right: 28px !important; width: 400px; top: 24px !important; }

@@ -47,7 +47,7 @@ import { DebtPaySheet, DebtSheet } from './sheets/DebtSheets';
 import { GroupItemSheet, GroupSheet } from './sheets/GroupSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
-import { useSwipeNav, type Peek } from './ui/swipe';
+import { tookSwipe, useSwipeNav, type Peek } from './ui/swipe';
 import { EditTxnSheet } from './sheets/EditTxn';
 import { AddSheet, CoverSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
@@ -198,6 +198,18 @@ export default function App() {
   useSwipeNav({ tabs: TABS.map(t => t[0]), enabled: !desk, scroller: scroll, peek: peekRef, setPeek });
   // After a swipe the tab changes while the old one is slid off-screen: put the scroller back before the screen is drawn.
   useLayoutEffect(() => { const el = scroll.current; if (el) { el.style.transition = ''; el.style.transform = ''; } }, [ui.tab]);
+  // A tapped tab glides in from its side; after a finger swipe it's already in place, so no second animation.
+  const lastTab = useRef(ui.tab);
+  const tabAnim = useRef('');
+  if (lastTab.current !== ui.tab) {
+    const order = TABS.map(t => t[0]);
+    tabAnim.current = desk || tookSwipe() ? '' : order.indexOf(ui.tab) > order.indexOf(lastTab.current) ? 'tab-in-r' : 'tab-in-l';
+    lastTab.current = ui.tab;
+  }
+  // Opening a page from a tab slides it in; going from one page to another only fades.
+  const lastPage = useRef(ui.page);
+  const nav = useRef('push');
+  if (lastPage.current !== ui.page) { nav.current = lastPage.current && ui.page ? 'swap' : 'push'; lastPage.current = ui.page; }
   useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
   // Light/dark: follow the setting, or the iPhone when it's "System".
   const theme = data.settings.theme ?? 'system';
@@ -226,7 +238,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className={desk ? 'shell desk' : 'shell'}>
+    <div className={desk ? 'shell desk' : 'shell'} data-nav={nav.current}>
       {desk && <Sidebar tabs={TABS} />}
       <div className="main">
       <div ref={brand} className="brand-reveal" aria-hidden="true">
@@ -234,7 +246,7 @@ export default function App() {
         <span>Pockets</span>
       </div>
       <div ref={scroll} onScroll={onScroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 1 }}>
-        <div className="scroll-body" style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}>
+        <div key={ui.tab} className={`scroll-body ${tabAnim.current}`} style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}>
         <TabView tab={ui.tab} />
         </div>
       </div>

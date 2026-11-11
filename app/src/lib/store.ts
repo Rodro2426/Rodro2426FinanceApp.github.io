@@ -115,6 +115,16 @@ export function flash(t: string) {
   toastTimer = setTimeout(() => setUI({ toast: null }), 2600);
 }
 export const openSheet = (sheet: UI['sheet']) => setUI({ sheet });
-export const closeSheet = () => setUI({ sheet: null });
+/** Closes the open sheet: it drops away first (CSS `.closing`), then leaves. A sheet already slid off by a swipe just leaves. */
+export function closeSheet() {
+  const root = typeof document !== 'undefined' ? document.querySelector<HTMLElement>('[data-sheet]') : null;
+  const panel = root?.querySelector<HTMLElement>('.sheet-panel');
+  const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!root || !panel || panel.style.transform || still) { setUI({ sheet: null }); return; }
+  if (root.classList.contains('closing')) return;
+  root.classList.add('closing');
+  const open = state.ui.sheet;
+  setTimeout(() => { if (state.ui.sheet === open) setUI({ sheet: null }); else root.classList.remove('closing'); }, 220);
+}
 // Development builds only: lets screenshot scripts open a page directly. Not in the live app.
 if (import.meta.env.DEV && typeof window !== 'undefined') Object.assign(window, { __setUI: setUI, __setData: setData });

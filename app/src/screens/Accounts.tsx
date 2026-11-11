@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useApp, openSheet, setUI } from '../lib/store';
 import { EyeToggle } from '../ui/EyeToggle';
 import { earnsInterest } from '../lib/interest';
@@ -30,6 +31,9 @@ export default function Accounts() {
   const cash = d.accounts.filter(a => a.type !== 'card');
   const cards = d.accounts.filter(a => a.type === 'card');
   const { isFolded, toggle } = useFolded();
+  // The "what counts" switches stay folded away until you tap the net worth box.
+  const [nwOpen, setNwOpen] = useState(false);
+  const hasOpts = inv.total > 0 || inv.stocksCount > 0 || inv.cdtCount > 0 || inv.fundCount > 0 || nw.owedToMe > 0.004 || nw.includeOwed;
   const pos = 'oklch(0.62 0.12 160)', neg = 'oklch(0.9 0.05 25)';
 
   return (
@@ -58,8 +62,13 @@ export default function Accounts() {
       </button>
       </>} blocks={[
         { id: 'networth', name: 'Net worth', desc: 'Total you have and owe', node: <>
-      <div style={{ background: 'var(--surface)', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Net worth</span>
+      <div onClick={hasOpts ? () => setNwOpen(o => !o) : undefined} style={{ background: 'var(--surface)', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6, cursor: hasOpts ? 'pointer' : 'default' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Net worth</span>
+          {hasOpts && <button onClick={e => { e.stopPropagation(); setNwOpen(o => !o); }} aria-expanded={nwOpen} aria-label="What counts in net worth" style={{ display: 'flex', alignItems: 'center', gap: 4, border: 0, background: 'transparent', color: 'var(--color-neutral-600)', fontSize: 12, fontWeight: 600, padding: '4px 0 4px 10px', cursor: 'pointer' }}>
+            What counts<span style={{ display: 'flex', transform: nwOpen ? 'rotate(90deg)' : 'none', transition: 'transform .25s cubic-bezier(.2,.8,.2,1)' }}><I.Chevron size={13} color="var(--color-neutral-500)" /></span>
+          </button>}
+        </div>
         <span style={{ fontSize: 38, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05 }}>{fmt(assets - debt)}</span>
         <div style={{ marginTop: 12, height: 10, borderRadius: 999, background: neg, overflow: 'hidden' }}>
           <div style={{ height: 10, borderRadius: 999, width: pctOf(assets, assets + debt), background: pos }} />
@@ -71,6 +80,7 @@ export default function Accounts() {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
           {parts.map(x => <span key={x.label} style={{ fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 999, background: 'var(--color-neutral-100)', color: 'var(--color-neutral-800)', whiteSpace: 'nowrap' }}>{x.label} {fmt(x.value)}</span>)}
         </div>
+        {hasOpts && <div className={nwOpen ? 'fold open' : 'fold'} onClick={e => e.stopPropagation()}><div>
         {(inv.total > 0 || inv.stocksCount > 0 || inv.cdtCount > 0 || inv.fundCount > 0) && (
           <div style={{ marginTop: 8, paddingTop: 12, borderTop: `1px solid ${LINE}`, display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -89,6 +99,7 @@ export default function Accounts() {
             <Toggle on={nw.includeOwed} onChange={v => setData(x => ({ settings: { ...x.settings, owedInNetWorth: v || undefined } }))} label="Include what people owe you in net worth" />
           </div>
         )}
+        </div></div>}
       </div>
       </> },
         { id: 'cash', name: 'Debit and Cash', desc: 'Bank, savings and cash accounts', node: <>
