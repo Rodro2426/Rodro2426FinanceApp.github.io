@@ -8,6 +8,7 @@
   /* ---------- English copy (Spanish lives in the HTML) ---------- */
   var EN = {
     'skip': 'Skip to content',
+    'theme.toDark': 'Switch to dark mode', 'theme.toLight': 'Switch to light mode',
     'nav.features': 'Features', 'nav.friends': 'Friends', 'nav.privacy': 'Privacy', 'nav.install': 'Install',
     'cta.open': 'Open Pockets', 'cta.how': 'How to install',
     'hero.title': 'Money that<br><span>knows its place.</span>',
@@ -82,6 +83,7 @@
   document.querySelectorAll('[data-i18n-html]').forEach(function (el) { ES[el.dataset.i18nHtml] = el.innerHTML; });
   document.querySelectorAll('[data-i18n-alt]').forEach(function (el) { ES[el.dataset.i18nAlt] = el.alt; });
   ES['ins.copied'] = META.es.copied;
+  ES['theme.toDark'] = 'Cambiar a modo oscuro'; ES['theme.toLight'] = 'Cambiar a modo claro';
 
   var lang = root.lang === 'en' ? 'en' : 'es';
   function t(key) { return (lang === 'en' ? EN : ES)[key] || ES[key] || ''; }
@@ -92,9 +94,35 @@
     document.querySelectorAll('[data-i18n]').forEach(function (el) { var v = t(el.dataset.i18n); if (v) el.textContent = v; });
     document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var v = t(el.dataset.i18nHtml); if (v) el.innerHTML = v; });
     document.querySelectorAll('[data-i18n-alt]').forEach(function (el) { var v = t(el.dataset.i18nAlt); if (v) el.alt = v; });
-    document.querySelectorAll('img[data-shot]').forEach(function (img) { img.src = 'screens/' + lang + '/' + img.dataset.shot + '.jpg'; });
+    applyShots();
+    themeLabel();
     document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === lang)); });
   }
+  /* ---------- Light / dark ---------- */
+  var themeBtn = document.getElementById('themeBtn');
+  var themeMeta = document.querySelector('meta[name="theme-color"]');
+  function theme() { return root.dataset.theme === 'dark' ? 'dark' : 'light'; }
+  function applyShots() {
+    var dir = 'screens/' + lang + (theme() === 'dark' ? '-dark' : '') + '/';
+    document.querySelectorAll('img[data-shot]').forEach(function (img) { img.src = dir + img.dataset.shot + '.jpg'; });
+  }
+  function themeLabel() { themeBtn.setAttribute('aria-label', t(theme() === 'dark' ? 'theme.toLight' : 'theme.toDark')); }
+  function setTheme(next, save) {
+    var swap = function () {
+      root.dataset.theme = next;
+      themeMeta.setAttribute('content', next === 'dark' ? '#0e0e0d' : '#f7f5f3');
+      applyShots(); themeLabel();
+    };
+    if (save) { try { localStorage.setItem('pockets-site-theme', next); } catch (e) {} }
+    if (document.startViewTransition && !reduce.matches) document.startViewTransition(swap); else swap();
+  }
+  themeBtn.addEventListener('click', function () { setTheme(theme() === 'dark' ? 'light' : 'dark', true); });
+  // Follow the system while the visitor hasn't picked one.
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+    var saved = null; try { saved = localStorage.getItem('pockets-site-theme'); } catch (err) {}
+    if (saved !== 'light' && saved !== 'dark') setTheme(e.matches ? 'dark' : 'light', false);
+  });
+
   document.querySelectorAll('.lang button').forEach(function (b) {
     b.addEventListener('click', function () {
       if (b.dataset.lang === lang) return;
@@ -180,7 +208,7 @@
     if (i === current) return;
     var dir = i > current ? 1 : -1;
     current = i;
-    tint.style.setProperty('--tint', feats[i].dataset.tint);
+    tint.style.setProperty('--th', feats[i].dataset.hue);
     railItems.forEach(function (li, k) { li.classList.toggle('on', k === i); });
     clearTimeout(swapT);
     if (reduce.matches) { showShot(i); return; }
@@ -190,7 +218,7 @@
     // Swap while the back faces the viewer (about 40% into the 900ms ease-in-out turn).
     swapT = setTimeout(function () { showShot(i); }, 360);
   }
-  tint.style.setProperty('--tint', feats[0].dataset.tint);
+  tint.style.setProperty('--th', feats[0].dataset.hue);
   railItems[0].classList.add('on');
   if (matchMedia('(max-width: 860px)').matches) {
     // Phones: the sticky stage covers the top of the screen, so a scene becomes current only once its

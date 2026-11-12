@@ -252,6 +252,9 @@ The page ground is printed the way a peso bill is, built only from Pockets' own 
 - `billete-tile.svg` (600×140, repeated down the page): four interlaced guilloché wave lines (navy at 5.5%) and one row of 5px microtext (navy at 7%), over a 135° line screen (`--hatch`, 1px navy at 2.8% every 6px).
 The texture lives only on Warm Paper. White sections, cards, the phone and the navy close stay clean. On phones the sticky story stage repeats the tile so it never shows a flat block. Nothing from a real banknote (portrait, issuing bank, denomination, serial numbers) is ever used.
 
+### Dark Mode (website)
+The website follows the visitor's system setting, with a sun/moon switch beside ES/EN that overrides it (saved in localStorage `pockets-site-theme`; the theme is set before first paint, and switching crossfades once with View Transitions where supported). Dark values are the app's own dark mode: ground #0e0e0d, surface #1d1c1b, sunk #262524, ink #f2efea / #b8b3ad / #9c9791, line #302e2d; pocket tints use the app's dark oklch (L 0.31, C 0.055) with ink (L 0.87, C 0.09); navy words and icons become #aab3ea. The bill texture swaps to `billete-hero-dark.svg` / `billete-tile-dark.svg` (lilac ink #c5cbf2 on the dark ground, a deep indigo-to-teal wash). The phone shows the app's real dark screens (`screens/{es,en}-dark/`). The red action, the navy close and the white close button are the same in both themes.
+
 ## Do's and Don'ts
 
 ### Do:

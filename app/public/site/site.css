@@ -33,6 +33,52 @@
   --nav-h: 64px;
   --radius: 24px;
   --hatch: repeating-linear-gradient(135deg, rgba(35, 46, 122, 0.028) 0 1px, transparent 1px 6px);
+  --tex-hero: url("tex/billete-hero.svg");
+  --tex-tile: url("tex/billete-tile.svg");
+
+  /* Theme-dependent roles (light values; dark below) */
+  --brand-ink: var(--navy);        /* navy words, icons, focus ring */
+  --select: #f9cfc7;
+  --scroll-thumb: #cbc6c2;
+  --shadow: 32, 30, 29;            /* rgb of every soft shadow */
+  --app-page: #f7f5f3;             /* the app's own ground, behind the phone status bar */
+  --tl: 0.945; --tc: 0.045;        /* pocket tint lightness and chroma (the app's oklch tint) */
+  --pk-l: 0.42; --pk-c: 0.1;       /* pocket ink */
+  --red-tile: #fde4df;
+  --red-tile-ink: var(--red);
+  --emoji-bg: rgba(255, 255, 255, 0.85);
+  --on-ink: #ffffff;
+  --win-dot: #d8d3cf;
+  --ios-bg: #fbfbfc; --ios-field: #ebebef; --ios-row: #ffffff; --ios-hl: #f3f8ff; --ios-hl-tile: #dcebff; --ios-blue: #0a7aff;
+}
+
+/* Dark: the app's own dark mode (near-black warm ground, dark pocket tints), and the bill texture in lilac ink. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0e0e0d;
+  --surface: #1d1c1b;
+  --sunk: #262524;
+  --ink: #f2efea;
+  --ink-2: #b8b3ad;
+  --ink-3: #9c9791;
+  --line: #302e2d;
+  --navy-deep: #0f1440;
+  --hatch: repeating-linear-gradient(135deg, rgba(197, 203, 242, 0.035) 0 1px, transparent 1px 6px);
+  --tex-hero: url("tex/billete-hero-dark.svg");
+  --tex-tile: url("tex/billete-tile-dark.svg");
+  --brand-ink: #aab3ea;
+  --select: #5a2418;
+  --scroll-thumb: #403d3b;
+  --shadow: 0, 0, 0;
+  --app-page: #0e0e0d;
+  --tl: 0.31; --tc: 0.055;
+  --pk-l: 0.87; --pk-c: 0.09;
+  --red-tile: #3b1711;
+  --red-tile-ink: #ff8f78;
+  --emoji-bg: rgba(255, 255, 255, 0.12);
+  --on-ink: #141312;
+  --win-dot: #403d3b;
+  --ios-bg: #1c1c1e; --ios-field: #2c2c2e; --ios-row: #2c2c2e; --ios-hl: #10243d; --ios-hl-tile: #0f2a4a; --ios-blue: #0a84ff;
 }
 
 * { box-sizing: border-box; }
@@ -43,7 +89,7 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + 1
 body {
   margin: 0;
   background-color: var(--page);
-  background-image: url("tex/billete-hero.svg"), url("tex/billete-tile.svg"), var(--hatch);
+  background-image: var(--tex-hero), var(--tex-tile), var(--hatch);
   background-repeat: no-repeat, repeat, repeat;
   background-position: center top, 0 0, 0 0;
   background-size: 1440px 900px, 600px 140px, auto;
@@ -60,9 +106,9 @@ h1, h2, h3 { text-wrap: balance; letter-spacing: -0.03em; line-height: 1.04; fon
 p { text-wrap: pretty; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
-::selection { background: #f9cfc7; color: var(--ink); }
-:focus-visible { outline: 3px solid var(--navy); outline-offset: 3px; border-radius: 10px; }
-html { scrollbar-color: #cbc6c2 var(--page); }
+::selection { background: var(--select); color: var(--ink); }
+:focus-visible { outline: 3px solid var(--brand-ink); outline-offset: 3px; border-radius: 10px; }
+html { scrollbar-color: var(--scroll-thumb) var(--page); }
 
 .wrap {
   max-width: 1240px;
@@ -72,7 +118,7 @@ html { scrollbar-color: #cbc6c2 var(--page); }
 }
 .skip {
   position: absolute; left: 12px; top: -60px; z-index: 50; padding: 10px 16px; border-radius: 12px;
-  background: var(--ink); color: #fff; text-decoration: none; font-weight: 700;
+  background: var(--ink); color: var(--on-ink); text-decoration: none; font-weight: 700;
 }
 .skip:focus { top: 12px; }
 
@@ -131,13 +177,24 @@ html { scrollbar-color: #cbc6c2 var(--page); }
   font-weight: 800; font-size: 13px; color: var(--ink-3); cursor: pointer;
   transition: background-color 160ms ease, color 160ms ease;
 }
-.lang button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(45, 43, 43, 0.16); }
+.theme-btn {
+  position: relative; width: 38px; height: 38px; border-radius: 999px; border: 0; background: var(--sunk); color: var(--ink);
+  display: grid; place-items: center; cursor: pointer; flex: none;
+  transition: transform 160ms var(--ease-out), background-color 160ms ease;
+}
+.theme-btn:active { transform: scale(0.94); }
+.theme-btn svg { position: absolute; width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out), filter 200ms var(--ease-out); }
+.theme-btn .moon, :root[data-theme="dark"] .theme-btn .sun { opacity: 0; transform: scale(0.6) rotate(-40deg); filter: blur(2px); }
+:root[data-theme="dark"] .theme-btn .moon { opacity: 1; transform: none; filter: none; }
+@media (hover: hover) and (pointer: fine) { .theme-btn:hover { background: var(--line); } }
+.lang button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(var(--shadow), 0.16); }
 
 /* ---------- Hero ---------- */
 .hero { padding-block: 40px 24px; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: center; min-height: min(760px, calc(100svh - var(--nav-h))); }
 .h-hero { font-size: clamp(3.1rem, 6.6vw, 5.75rem); font-weight: 900; letter-spacing: -0.04em; line-height: 0.95; }
-.h-hero span { color: var(--navy); }
+.h-hero span { color: var(--brand-ink); }
 .lede { font-size: clamp(1.08rem, 1.45vw, 1.3rem); color: var(--ink-2); font-weight: 600; max-width: 34ch; margin-top: 22px; }
 .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; margin-top: 32px; }
 .facts-line { margin-top: 26px; color: var(--ink-3); font-weight: 700; font-size: 15px; }
@@ -150,29 +207,29 @@ html { scrollbar-color: #cbc6c2 var(--page); }
 }
 .floor-shadow {
   position: absolute; left: 50%; bottom: 4%; width: 300px; height: 44px; translate: -50% 0; border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(32, 30, 29, 0.26), transparent); filter: blur(6px);
+  background: radial-gradient(closest-side, rgba(var(--shadow), 0.3), transparent); filter: blur(6px);
 }
 
 /* App fragments floating around the hero phone */
 .frag {
   position: absolute; display: flex; gap: 10px; align-items: center;
   background: var(--surface); border-radius: 20px; padding: 12px 14px;
-  box-shadow: 0 24px 40px -18px rgba(32, 30, 29, 0.35), 0 2px 6px rgba(32, 30, 29, 0.06);
+  box-shadow: 0 24px 40px -18px rgba(var(--shadow), 0.35), 0 2px 6px rgba(var(--shadow), 0.06);
   transform: translateZ(var(--z, 80px));
   font-size: 13px; line-height: 1.3; white-space: nowrap;
 }
 .frag b { display: block; font-weight: 800; font-size: 14px; }
 .frag small { display: block; color: var(--ink-3); font-weight: 600; font-size: 12px; }
-.frag-ico { width: 34px; height: 34px; border-radius: 11px; background: #fde4df; color: var(--red); display: grid; place-items: center; flex: none; }
+.frag-ico { width: 34px; height: 34px; border-radius: 11px; background: var(--red-tile); color: var(--red-tile-ink); display: grid; place-items: center; flex: none; }
 .frag-ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .frag-bill { left: -190px; top: 70px; max-width: 290px; white-space: normal; }
-.frag-pocket { right: -150px; top: 270px; flex-direction: column; align-items: flex-start; gap: 2px; background: #d9e8fb; color: #1c4f87; padding: 14px 18px; min-width: 160px; }
+.frag-pocket { right: -150px; top: 270px; flex-direction: column; align-items: flex-start; gap: 2px; background: oklch(var(--tl) var(--tc) 250); color: oklch(var(--pk-l) var(--pk-c) 250); padding: 14px 18px; min-width: 160px; }
 .frag-pocket strong { font-size: 26px; font-weight: 900; letter-spacing: -0.03em; }
-.frag-pocket small { color: #2c5a8f; }
+.frag-pocket small { color: oklch(var(--pk-l) var(--pk-c) 250); opacity: 0.85; }
 .frag-row { display: flex; align-items: center; gap: 8px; }
-.emoji { width: 30px; height: 30px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); display: grid; place-items: center; font-size: 15px; }
+.emoji { width: 30px; height: 30px; border-radius: 50%; background: var(--emoji-bg); display: grid; place-items: center; font-size: 15px; }
 .frag-settle { left: -120px; bottom: 90px; }
-.av { width: 34px; height: 34px; border-radius: 50%; background: #f6dff3; color: #8b3a7e; display: grid; place-items: center; font-weight: 900; flex: none; }
+.av { width: 34px; height: 34px; border-radius: 50%; background: oklch(var(--tl) var(--tc) 330); color: oklch(var(--pk-l) var(--pk-c) 330); display: grid; place-items: center; font-weight: 900; flex: none; }
 
 /* ---------- The phone ---------- */
 .phone { --w: 300px; --h: 620px; width: var(--w); height: var(--h); position: relative; transform-style: preserve-3d; }
@@ -190,9 +247,9 @@ html { scrollbar-color: #cbc6c2 var(--page); }
 .back .cam i:nth-child(1) { top: 12px; left: 12px; }
 .back .cam i:nth-child(2) { bottom: 12px; left: 12px; }
 .back .cam i:nth-child(3) { top: 36px; right: 12px; width: 22px; height: 22px; box-shadow: 0 0 0 3px #1b2366; }
-.screen { position: relative; width: 100%; height: 100%; border-radius: 44px; overflow: hidden; background: var(--page); }
+.screen { position: relative; width: 100%; height: 100%; border-radius: 44px; overflow: hidden; background: var(--app-page); }
 .island { position: absolute; top: 10px; left: 50%; translate: -50% 0; width: 94px; height: 28px; border-radius: 20px; background: #000; z-index: 3; }
-.status { position: absolute; inset: 0 0 auto; height: 44px; padding: 14px 26px 0; display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; z-index: 2; background: linear-gradient(var(--page) 70%, transparent); }
+.status { position: absolute; inset: 0 0 auto; height: 44px; padding: 14px 26px 0; display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; z-index: 2; color: var(--ink); background: linear-gradient(var(--app-page) 70%, transparent); }
 .status svg { width: 30px; height: 12px; fill: currentColor; margin-top: 2px; }
 .shots { position: absolute; inset: 30px 0 0; }
 .shots img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0; }
@@ -207,7 +264,7 @@ html { scrollbar-color: #cbc6c2 var(--page); }
 }
 .story-stage .stage3d { position: relative; inset: auto; width: 100%; height: 100%; }
 .tint {
-  position: absolute; inset: 6% 4%; border-radius: 48px; background: var(--tint, #dcf3e3);
+  position: absolute; inset: 6% 4%; border-radius: 48px; background: oklch(var(--tl) var(--tc) var(--th, 155));
   transition: background-color 600ms ease;
 }
 .spin { transform-style: preserve-3d; transition: transform 900ms var(--ease-in-out); }
@@ -241,10 +298,10 @@ html:not(.js) .story-stage { display: none; }
 .desk-stage { position: relative; margin-top: 56px; padding-right: 150px; }
 .window {
   margin: 0; border-radius: 16px; overflow: hidden; background: var(--surface);
-  box-shadow: 0 50px 90px -50px rgba(32, 30, 29, 0.45), 0 0 0 1px var(--line);
+  box-shadow: 0 50px 90px -50px rgba(var(--shadow), 0.45), 0 0 0 1px var(--line);
 }
 .window-bar { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: var(--sunk); border-bottom: 1px solid var(--line); }
-.window-bar i { width: 12px; height: 12px; border-radius: 50%; background: #d8d3cf; }
+.window-bar i { width: 12px; height: 12px; border-radius: 50%; background: var(--win-dot); }
 .window-bar span { margin: 0 auto; padding: 4px 16px; border-radius: 8px; background: var(--surface); font-size: 13px; font-weight: 700; color: var(--ink-3); }
 .window img { width: 100%; height: auto; }
 .desk-phone { position: absolute; right: 0; bottom: -40px; perspective: 1400px; }
@@ -256,7 +313,7 @@ html:not(.js) .story-stage { display: none; }
 .details { padding-block: 80px; border-top: 1px solid var(--line); }
 .det-list { list-style: none; padding: 0; margin: 40px 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; }
 .det-list li { display: flex; gap: 18px; align-items: flex-start; padding: 22px 0; border-top: 1px solid var(--line); }
-.det-list svg { width: 28px; height: 28px; flex: none; fill: none; stroke: var(--navy); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; margin-top: 2px; }
+.det-list svg { width: 28px; height: 28px; flex: none; fill: none; stroke: var(--brand-ink); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; margin-top: 2px; }
 .det-list h3 { font-size: 1.3rem; letter-spacing: -0.02em; }
 .det-list p { color: var(--ink-2); font-weight: 600; margin-top: 4px; }
 
@@ -265,17 +322,17 @@ html:not(.js) .story-stage { display: none; }
 .steps { list-style: none; padding: 0; margin: 48px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
 .step h3 { display: flex; align-items: center; gap: 12px; font-size: 1.35rem; margin-top: 22px; }
 .step p { color: var(--ink-2); font-weight: 600; margin-top: 8px; max-width: 32ch; }
-.step-n { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 900; flex: none; letter-spacing: 0; }
+.step-n { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: var(--on-ink); display: grid; place-items: center; font-size: 15px; font-weight: 900; flex: none; letter-spacing: 0; }
 .step-art { height: 200px; border-radius: 28px; background: var(--page); overflow: hidden; position: relative; display: flex; align-items: flex-end; justify-content: center; padding: 0 22px; }
-.ios { width: 100%; background: #fbfbfc; border-radius: 22px 22px 0 0; box-shadow: 0 -10px 30px -18px rgba(32, 30, 29, 0.35); padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 12px; }
-.ios-url { height: 44px; border-radius: 14px; background: #ebebef; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 15px; color: var(--ink); }
+.ios { width: 100%; background: var(--ios-bg); border-radius: 22px 22px 0 0; box-shadow: 0 -10px 30px -18px rgba(var(--shadow), 0.35); padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.ios-url { height: 44px; border-radius: 14px; background: var(--ios-field); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 15px; color: var(--ink); }
 .ios-url svg { width: 14px; height: 14px; fill: none; stroke: var(--ink-3); stroke-width: 2.2; }
 .ios-tools { display: flex; justify-content: space-between; align-items: center; padding: 0 6px; }
-.ios-tools svg { width: 26px; height: 26px; fill: none; stroke: #0a7aff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.ios-tools .hl { width: 52px; height: 52px; margin: -13px; border-radius: 16px; background: #dcebff; display: grid; place-items: center; box-shadow: 0 0 0 3px #0a7aff; }
-.ios-row { display: flex; align-items: center; justify-content: space-between; height: 50px; padding: 0 16px; border-radius: 14px; background: #fff; font-weight: 700; font-size: 16px; color: var(--ink); }
+.ios-tools svg { width: 26px; height: 26px; fill: none; stroke: var(--ios-blue); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ios-tools .hl { width: 52px; height: 52px; margin: -13px; border-radius: 16px; background: var(--ios-hl-tile); display: grid; place-items: center; box-shadow: 0 0 0 3px var(--ios-blue); }
+.ios-row { display: flex; align-items: center; justify-content: space-between; height: 50px; padding: 0 16px; border-radius: 14px; background: var(--ios-row); font-weight: 700; font-size: 16px; color: var(--ink); }
 .ios-row svg { width: 24px; height: 24px; fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.ios-row.hl { box-shadow: 0 0 0 3px #0a7aff; background: #f3f8ff; }
+.ios-row.hl { box-shadow: 0 0 0 3px var(--ios-blue); background: var(--ios-hl); }
 .ios-row.dim { opacity: 0.55; }
 .copy-box {
   margin-top: 48px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -363,7 +420,7 @@ html.js #heroRig .frag-settle { animation-delay: 740ms; }
   .story-grid { grid-template-columns: 1fr; gap: 0; }
   /* The stage is an opaque window above the text: blocks slide under it instead of across the phone. */
   body { background-position: calc(50vw - 772px) 340px, 0 0, 0 0; background-size: 1100px 688px, 600px 140px, auto; }
-  .story-stage { height: 44svh; min-height: 290px; z-index: 3; background: url("tex/billete-tile.svg") 0 0 / 600px 140px, var(--hatch), var(--page); }
+  .story-stage { height: 44svh; min-height: 290px; z-index: 3; background: var(--tex-tile) 0 0 / 600px 140px, var(--hatch), var(--page); }
   .story-stage .rig { scale: 0.5; }
   .story-stage .floor-shadow { display: none; }
   .tint { inset: 4% 0; border-radius: 36px; }
@@ -403,6 +460,8 @@ html.js #heroRig .frag-settle { animation-delay: 740ms; }
   .nav { background: var(--page); }
   .nav .brand span { display: none; }
   .btn-sm { padding: 0 14px; }
+  .nav-end { gap: 8px; }
+  .theme-btn { width: 34px; height: 34px; }
   .lang button { min-width: 34px; }
   .hero-stage { height: 500px; }
   .hero-stage .rig { scale: 0.76; }
@@ -412,8 +471,12 @@ html.js #heroRig .frag-settle { animation-delay: 740ms; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .theme-btn svg { transition: opacity 150ms ease; transform: none !important; filter: none !important; }
   html.js .h-hero, html.js .hero-copy .lede, html.js .hero-copy .cta-row, html.js #heroRig .phone { animation: fade 300ms ease both; }
   .spin { transition: none; }
   .shots img { transition: opacity 200ms ease; }
   html { scroll-behavior: auto; }
 }
+
+/* Switching theme crossfades the whole page once (browsers with View Transitions). */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 260ms; animation-timing-function: var(--ease-out); }
