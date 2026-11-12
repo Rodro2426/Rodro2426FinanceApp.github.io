@@ -8,7 +8,6 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     // The friendship id for two people: their account ids, sorted, joined with _.
     function pairOf(u) { return u[0] < u[1] ? u[0] + '_' + u[1] : u[1] + '_' + u[0]; }
-    function friends(u) { return get(/databases/$(database)/documents/friendships/$(pairOf(u))).data.status == 'accepted'; }
 
     // Your own synced data: only you.
     match /users/{uid}/{document=**} {
@@ -31,17 +30,22 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
 
-    // Friend requests: only the two people involved.
+    // Friend requests: only the two people involved. The id must be the two people's ids (sorted, joined with _),
+    // and accepting can only change the status to accepted.
     match /friendships/{id} {
       allow read: if signedIn() && (resource == null || request.auth.uid in resource.data.users);
       allow create: if signedIn()
         && request.resource.data.from == request.auth.uid
+        && request.resource.data.users is list && request.resource.data.users.size() == 2
         && request.auth.uid in request.resource.data.users
+        && request.resource.data.users[0] != request.resource.data.users[1]
+        && id == pairOf(request.resource.data.users)
         && request.resource.data.status == 'pending';
       allow update: if signedIn()
         && request.auth.uid in resource.data.users
         && request.auth.uid != resource.data.from
-        && request.resource.data.users == resource.data.users;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && request.resource.data.status == 'accepted';
       allow delete: if signedIn() && request.auth.uid in resource.data.users;
     }
 
@@ -81,25 +85,45 @@ service cloud.firestore {
     // Only friends can send one, it starts as a request, the person who sent it can't accept it for the other,
     // and nobody can swap who it's between. Either person can delete their shared copy.
     match /debts/{debtId} {
+      // Only these fields, with the right types and sizes; users sorted; no dates from the future.
+      function debtOk(d) {
+        return d.keys().hasOnly(['users', 'from', 'owedBy', 'owedTo', 'names', 'amt', 'date', 'due', 'note', 'pays', 'status', 'createdAt', 'updatedAt'])
+          && d.users is list && d.users.size() == 2 && d.users[0] < d.users[1]
+          && d.from in d.users
+          && d.owedBy in d.users && d.owedTo in d.users && d.owedBy != d.owedTo
+          && d.names is map && d.names.keys().hasOnly(d.users)
+          && d.names.get(d.users[0], '') is string && d.names.get(d.users[0], '').size() <= 60
+          && d.names.get(d.users[1], '') is string && d.names.get(d.users[1], '').size() <= 60
+          && d.amt is number && d.amt > 0 && d.amt <= 100000000000
+          && d.date is string && d.date.size() <= 10
+          && (d.due == null || (d.due is string && d.due.size() <= 10))
+          && (d.note == null || (d.note is string && d.note.size() <= 300))
+          && d.pays is list && d.pays.size() <= 200
+          && d.status in ['pending', 'accepted', 'declined']
+          && d.createdAt is int && d.updatedAt is int
+          && d.updatedAt <= request.time.toMillis() + 300000;
+      }
       allow read: if signedIn() && request.auth.uid in resource.data.users;
       allow create: if signedIn()
+        && debtOk(request.resource.data)
         && request.resource.data.from == request.auth.uid
-        && request.resource.data.users.size() == 2
-        && request.auth.uid in request.resource.data.users
-        && request.resource.data.owedBy in request.resource.data.users
-        && request.resource.data.owedTo in request.resource.data.users
-        && request.resource.data.owedBy != request.resource.data.owedTo
         && request.resource.data.status == 'pending'
-        && request.resource.data.amt is number && request.resource.data.amt > 0
         && get(/databases/$(database)/documents/friendships/$(request.resource.data.users[0] + '_' + request.resource.data.users[1])).data.status == 'accepted';
+      // Either person can edit amounts, dates, note and payments; nobody can change who it's between or who owes.
+      // Only the person who received it can accept or decline it, and only while it's waiting.
       allow update: if signedIn()
         && request.auth.uid in resource.data.users
+        && debtOk(request.resource.data)
         && request.resource.data.users == resource.data.users
         && request.resource.data.from == resource.data.from
-        && request.resource.data.owedBy in resource.data.users
-        && request.resource.data.owedTo in resource.data.users
-        && request.resource.data.amt is number && request.resource.data.amt > 0
-        && (resource.data.status != 'pending' || request.resource.data.status == 'pending' || request.auth.uid != resource.data.from);
+        && request.resource.data.owedBy == resource.data.owedBy
+        && request.resource.data.owedTo == resource.data.owedTo
+        && request.resource.data.createdAt == resource.data.createdAt
+        && get(/databases/$(database)/documents/friendships/$(resource.data.users[0] + '_' + resource.data.users[1])).data.status == 'accepted'
+        && (request.resource.data.status == resource.data.status
+            || (resource.data.status == 'pending'
+                && request.auth.uid != resource.data.from
+                && request.resource.data.status in ['accepted', 'declined']));
       allow delete: if signedIn() && request.auth.uid in resource.data.users;
     }
 
