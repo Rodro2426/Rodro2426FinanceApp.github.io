@@ -14,7 +14,10 @@
   --tex-hero: url("/tex/billete-hero.svg");
   --tex-tile: url("/tex/billete-tile.svg");
   --hatch: repeating-linear-gradient(135deg, rgba(35,46,122,.028) 0 1px, transparent 1px 6px);
-  --ground: var(--tex-hero) no-repeat center -120px / 1000px 625px, var(--tex-tile) 0 0 / 600px 140px, var(--hatch), var(--page);
+  /* The top fades from the plain page colour into the texture, so it flows on from the iPhone's status bar
+     (time, wifi), which iOS paints in that same plain colour. */
+  --ground-fade: linear-gradient(var(--page) 0, var(--page) env(safe-area-inset-top, 0px), transparent calc(env(safe-area-inset-top, 0px) + 72px)) no-repeat top / 100% calc(env(safe-area-inset-top, 0px) + 72px);
+  --ground: var(--ground-fade), var(--tex-hero) no-repeat center -120px / 1000px 625px, var(--tex-tile) 0 0 / 600px 140px, var(--hatch), var(--page);
   /* The safe-to-spend card is engraved like a banknote, in its own ink. */
   --bill-green: url("/tex/card-green.svg"); --bill-yellow: url("/tex/card-yellow.svg"); --bill-red: url("/tex/card-red.svg");
   /* Motion: strong ease-out for things that respond or arrive; iOS drawer curve for sheets. */
@@ -313,3 +316,21 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   .spent-chip { display: none; }
   .eye-flip .scroll-body { animation: none; }
 }
+
+/* ---------- Swipe a transaction row for Edit / Delete (ui/SwipeRow.tsx) ---------- */
+.swipe-row { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .22s var(--ease-drawer), opacity .18s ease; }
+.swipe-row.gone { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
+.swipe-clip { position: relative; overflow: hidden; min-height: 0; }
+.swipe-front { position: relative; z-index: 1; background: var(--surface); touch-action: pan-y; }
+.swipe-actions { position: absolute; top: 0; right: 0; bottom: 0; display: flex; gap: 6px; align-items: center; padding: 6px 0 6px 6px; }
+.swipe-actions button {
+  width: 70px; height: 100%; max-height: 64px; border: 0; border-radius: 16px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font: inherit; font-size: 12px; font-weight: 700; transition: transform .16s var(--ease-out), width .2s var(--ease-drawer), background-color .15s ease;
+}
+.swipe-actions button:active { transform: scale(.96); }
+.swipe-actions svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.swipe-edit { background: var(--color-neutral-200); color: var(--color-text); }
+.swipe-del { background: var(--color-accent); color: #fff; }
+.swipe-del.ask { width: 146px; }
+@media (prefers-reduced-motion: reduce) { .swipe-row, .swipe-actions button { transition: none; } }

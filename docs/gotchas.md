@@ -111,3 +111,9 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - `.shell` and `.page` get the textured `--ground` with `!important`, because full pages set `background: var(--page)` inline.
 - The safe-to-spend amount is drawn by `RollingMoney`: each digit is a column of 0–9, so `innerText` of the card reads oddly (the real value is in a visually hidden span for screen readers). Scripts that read the amount should read that hidden span, or `fmt()` the number themselves.
 - `closeSheet` waits 220ms; the `.closing` sheet animation is also 220ms. Change them together.
+
+## Swipe rows and the held number
+
+- Transaction rows in Recent, the pocket card, the account card, search, the calendar day and a category are wrapped in `ui/SwipeRow.tsx` (swipe left for Edit / Delete). Delete goes through `deleteTxn` in `sheets/EditTxn.tsx`, the same function the edit sheet uses, so balances and income splits are undone the same way. Interest rows can't be swiped. Rows carry `data-noswipe`, so the tab swipe in `ui/swipe.ts` ignores them.
+- `useSettled` (in `ui/RollingMoney.tsx`) holds the safe-to-spend number and bar while any sheet is open and for 420ms after it closes, so the roll plays where the person can see it. Call it once per number (not with an array: a new array every render loops).
+- The app's ground starts with `--ground-fade`: plain page colour under the status bar, fading into the texture over 72px, because iOS paints the status bar in a flat colour. The website does the same with its phone nav.

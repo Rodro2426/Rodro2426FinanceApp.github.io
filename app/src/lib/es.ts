@@ -402,6 +402,7 @@ Use live price again|Volver al precio en vivo
 Trades|Operaciones
 Tap to delete|Toca para eliminar
 Delete|Eliminar
+Delete?|¿Eliminar?
 Live prices off|Precios en vivo apagados
 Finnhub rejected that key|Finnhub rechazó esa clave
 Key saved. Finnhub says to wait a minute.|Clave guardada. Finnhub pide esperar un minuto.

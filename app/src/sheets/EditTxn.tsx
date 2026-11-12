@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CategoryPicker } from '../ui/CategoryPicker';
-import { useApp, setData, setUI, flash } from '../lib/store';
+import { useApp, setData, setUI, flash, getState } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
 import { catOf, chargeAccount, fmt, incomeMoves, num, roundAmt } from '../lib/derive';
 import type { Sheet } from '../lib/types';
@@ -8,6 +8,24 @@ import { BigAmount, FieldLabel, GhostDanger, PickChip, PrimaryBtn, textInput } f
 import { SheetFrame } from './Sheet';
 import { deleteIncome, editIncomeAmount } from '../lib/plan';
 import { incCatOf, incomeCatList } from '../lib/reports';
+
+/**
+ * Deletes an expense or income and gives the account back what it moved; an income also takes back what it
+ * put into pockets. Used by the edit sheet and by swiping a row. Interest can't be deleted (it's calculated).
+ * Returns false when there was nothing to delete.
+ */
+export function deleteTxn(kind: 'expense' | 'income', id: string): boolean {
+  const d = getState().data;
+  const e = kind === 'expense' ? d.expenses.find(x => x.id === id) : undefined;
+  const inc = kind === 'income' ? d.incomes.find(x => x.id === id) : undefined;
+  const t = e || inc;
+  if (!t || inc?.interest) return false;
+  const splitTotal = inc ? incomeMoves(d.moves, inc).reduce((a, m) => a + m.amt, 0) : 0;
+  if (e) setData(x => ({ accounts: chargeAccount(x.accounts, e.a, -e.amt), expenses: x.expenses.filter(y => y.id !== e.id) }));
+  else if (inc) setData(x => deleteIncome(x, inc.id));
+  flash(splitTotal > 0 ? `${t.note} deleted · ${fmt(splitTotal)} taken back out of your pockets` : `${t.note} deleted`);
+  return true;
+}
 
 const chip = (on: boolean) => ({ background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT });
 const acctBtn = (on: boolean, hue: number) => ({ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${on ? ink(hue) : 'var(--surface)'}`, background: on ? tint(hue) : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }) as const;
@@ -66,9 +84,7 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
   };
   const remove = () => {
     if (!confirmDel) return setConfirmDel(true);
-    if (e) setData(x => ({ accounts: chargeAccount(x.accounts, e.a, -e.amt), expenses: x.expenses.filter(y => y.id !== e.id) }));
-    else if (inc) setData(x => deleteIncome(x, inc.id));
-    flash(splitTotal > 0 ? `${t.note} deleted · ${fmt(splitTotal)} taken back out of your pockets` : `${t.note} deleted`); done();
+    deleteTxn(kind, id); done();
   };
 
   return (

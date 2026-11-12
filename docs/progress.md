@@ -89,6 +89,8 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 **Bill texture and motion in the app** (Nov 2026)
 - The website's "Billete Pockets" ground is behind the app's main screens and full pages, in light and dark; the safe-to-spend card is engraved like a banknote in its green, yellow or red ink.
 - Motion pass with Emil Kowalski's rules: sheets open and close on the iOS drawer curve (close is now immediate), presses are firm (160ms, no bounce), tab switches are shorter, chips no longer animate every property, bars use clip-path instead of width.
+- Swipe a transaction left (Recent, pocket, account, search, calendar, category) for Edit / Delete; delete asks once.
+- The roll waits until the add/edit sheet has closed, so it's visible; income shows a + amount.
 - "La plata se mueve": the safe-to-spend number rolls to its new value and the spent amount lifts off the card (`ui/RollingMoney.tsx`). The eye blurs amounts instead of swapping them.
 
 **Marketing website** (`app/public/site/`, live at `/site/`)

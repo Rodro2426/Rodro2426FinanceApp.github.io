@@ -12,7 +12,8 @@ import { BillBadge, Fill, ExpRow, ListCard, SectionHead, expView } from '../ui/b
 import * as I from '../ui/icons';
 import { netWorth } from '../lib/networth';
 import { Blocks } from '../ui/Blocks';
-import { RollingMoney } from '../ui/RollingMoney';
+import { RollingMoney, useSettled } from '../ui/RollingMoney';
+import { SwipeRow } from '../ui/SwipeRow';
 import { FriendsHomeCard } from './Debts';
 import { monthSummary } from '../lib/plan';
 import { billAmount } from '../lib/schedule';
@@ -143,10 +144,11 @@ export default function Home() {
       <ListCard>
         {recent.map((r, i) => {
           const last = i === recent.length - 1;
-          if (r.kind === 'expense') { const v = expView(d, r.e, c, stats); return <ExpRow key={r.id} v={v} last={last} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: r.id })} />; }
+          if (r.kind === 'expense') { const v = expView(d, r.e, c, stats); return <SwipeRow key={r.id} kind="expense" id={r.id}><ExpRow v={v} last={last} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: r.id })} /></SwipeRow>; }
           const t = r.t, acct = d.accounts.find(a => a.id === t.a)?.name;
-          return <ExpRow key={r.id} last={last} onClick={() => openSheet({ name: 'txn', kind: 'income', id: r.id })}
+          const row = <ExpRow last={last} onClick={() => openSheet({ name: 'txn', kind: 'income', id: r.id })}
             v={{ key: r.id, initial: '💰', photoBg: 'none', tint: 'oklch(0.95 0.045 155)', ink: 'oklch(0.42 0.09 155)', note: t.note, meta: ['Income', acct, relDay(t.date, c.today)].filter(Boolean).join(' · '), amtFmt: '+' + fmt(t.amt), tagLine: '', amtColor: 'oklch(0.45 0.11 150)' }} />;
+          return t.interest ? <div key={r.id}>{row}</div> : <SwipeRow key={r.id} kind="income" id={r.id}>{row}</SwipeRow>;
         })}
         {recent.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing yet. Tap + to add an expense or income.</div>}
       </ListCard>
@@ -183,7 +185,10 @@ function Pager({ pages, label, names, initial = 0, onPage }: { pages: ReactNode[
   );
 }
 
-function SafeCard({ tone, title, left, budget, spent, sub, tour }: { tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string; tour?: boolean }) {
+function SafeCard({ tone, title, left: leftNow, budget, spent: spentNow, sub, tour }: { tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string; tour?: boolean }) {
+  // Number and bar wait for the add/edit sheet to drop away, then move together (see useSettled).
+  const left = useSettled(leftNow);
+  const spent = useSettled(spentNow);
   return (
     <div data-tour={tour ? 'safe' : undefined} className={`bill bill-${tone.key}`} style={{ position: 'relative', flex: 1, backgroundColor: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background-color .4s ease' }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>

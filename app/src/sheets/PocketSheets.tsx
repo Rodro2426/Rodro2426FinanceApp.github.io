@@ -14,6 +14,7 @@ import { MoneyInput } from '../ui/MoneyInput';
 import { HuePicker } from '../ui/HuePicker';
 import { CategoryPicker, type CatPick } from '../ui/CategoryPicker';
 import { SheetFrame } from './Sheet';
+import { SwipeRow } from '../ui/SwipeRow';
 import * as I from '../ui/icons';
 
 const pill = (k: string) => ({ fontSize: 12, fontWeight: 600, color: k, background: 'var(--glass)', padding: '5px 10px', borderRadius: 999, whiteSpace: 'nowrap' }) as const;
@@ -70,7 +71,7 @@ export function SearchSheet({ tag, cat }: { tag?: string | null; cat?: string | 
           <span style={{ fontWeight: 700, whiteSpace: 'nowrap' }}>−{fmt(matches.reduce((a, e) => a + e.amt, 0))}</span>
         </div>
         <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '4px 16px' }}>
-          {shown.map((v, i) => <ExpRow key={v.key} v={v} size={38} last={i === shown.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key, back: { name: 'search', tag: filterTag, cat: filterCat } })} />)}
+          {shown.map((v, i) => <SwipeRow key={v.key} kind="expense" id={v.key} back={{ name: 'search', tag: filterTag, cat: filterCat }}><ExpRow v={v} size={38} last={i === shown.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key, back: { name: 'search', tag: filterTag, cat: filterCat } })} /></SwipeRow>)}
           {matches.length === 0 && <div style={{ padding: '18px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No transactions match.</div>}
           {matches.length > shown.length && <div style={{ padding: '14px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Showing the latest {shown.length}. Refine your search to see more.</div>}
         </div>
@@ -430,14 +431,14 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
 
         <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '4px 16px' }}>
           {items.map((e, i) => (
-            <div key={e.key} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: e.key, back: { name: 'pocket', id, view } })} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === items.length - 1 ? 'transparent' : LINE}`, fontSize: 14, cursor: 'pointer' }}>
+            <SwipeRow key={e.key} kind="expense" id={e.key} back={{ name: 'pocket', id, view }}><div onClick={() => openSheet({ name: 'txn', kind: 'expense', id: e.key, back: { name: 'pocket', id, view } })} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === items.length - 1 ? 'transparent' : LINE}`, fontSize: 14, cursor: 'pointer' }}>
               <span style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontWeight: 600 }}>{e.note}</span>
                 <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{e.meta}</span>
                 {e.tagLine && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-accent-700)' }}>{e.tagLine}</span>}
               </span>
               <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{e.amtFmt}</span>
-            </div>
+            </div></SwipeRow>
           ))}
           {items.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>{empty}</div>}
         </div>

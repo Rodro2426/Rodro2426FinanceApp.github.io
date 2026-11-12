@@ -285,7 +285,7 @@ html { scrollbar-color: var(--scroll-thumb) var(--page); }
 .feat-card { display: flex; flex-direction: column; gap: 16px; max-width: 30rem; }
 .feat h2 { font-size: clamp(2.3rem, 4.2vw, 3.75rem); font-weight: 900; letter-spacing: -0.035em; }
 .feat p { font-size: 1.2rem; color: var(--ink-2); font-weight: 600; max-width: 36ch; }
-.feat-shot { display: none; }
+.feat-shot, .feat-phone { display: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 6px 0 0; }
 .chips li { padding: 7px 14px; border-radius: 999px; background: var(--surface); font-weight: 800; font-size: 14px; box-shadow: inset 0 0 0 1px var(--line); }
 html:not(.js) .feat-shot { display: block; width: 220px; border-radius: 28px; border: 8px solid #0e0d0c; }
@@ -406,7 +406,8 @@ html.js #heroRig .frag-settle { animation-delay: 740ms; }
 @media (max-width: 860px) {
   :root { --nav-h: 58px; }
   .nav-links { display: none; }
-  .nav { background: var(--page); }
+  /* The bar is the status bar's own colour at the top and fades into the textured page below. */
+  .nav { background: linear-gradient(var(--page) 0, var(--page) 62%, transparent); border-bottom: 0 !important; padding-bottom: 14px; }
   .nav-in { gap: 12px; }
   .hero { padding-block: 28px 0; }
   .hero-grid { grid-template-columns: 1fr; min-height: 0; gap: 8px; }
@@ -416,20 +417,29 @@ html.js #heroRig .frag-settle { animation-delay: 740ms; }
   .frag-pocket { right: -70px; top: 300px; }
   .frag-settle { left: -36px; bottom: 50px; }
 
-  .story { padding-block: 0 40px; }
-  .story-grid { grid-template-columns: 1fr; gap: 0; }
-  /* The stage is an opaque window above the text: blocks slide under it instead of across the phone. */
+  /* Phones: no sticky stage. Each scene is its own phone floating on the bill texture, lit from behind by
+     the scene's pocket colour, then the words. The phone turns into place once as it scrolls in. */
   body { background-position: calc(50vw - 772px) 340px, 0 0, 0 0; background-size: 1100px 688px, 600px 140px, auto; }
-  .story-stage { height: 44svh; min-height: 290px; z-index: 3; background: var(--tex-tile) 0 0 / 600px 140px, var(--hatch), var(--page); }
-  .story-stage .rig { scale: 0.5; }
-  .story-stage .floor-shadow { display: none; }
-  .tint { inset: 4% 0; border-radius: 36px; }
-  .feats { position: relative; z-index: 1; }
-  .feat { min-height: 62svh; align-items: flex-end; padding-bottom: 4svh; }
+  .story { padding-block: 8px 24px; }
+  .story-grid { grid-template-columns: 1fr; gap: 0; }
+  .story-stage { display: none; }
+  .feat { min-height: 0; display: block; padding-block: 28px 36px; }
+  .feat-card { max-width: none; gap: 12px; }
+  .feat-phone { display: block; position: relative; height: 430px; margin: 0 -20px 6px; perspective: 1400px; }
+  .feat-phone::before {
+    content: ""; position: absolute; left: 50%; top: 46%; width: 330px; height: 360px; translate: -50% -50%;
+    border-radius: 50%; background: radial-gradient(closest-side, oklch(var(--tl) calc(var(--tc) * 2.2) var(--th, 155)), transparent);
+  }
+  .feat-phone .phone {
+    position: absolute; left: 50%; top: 10px; margin-left: -150px; scale: 0.66; transform-origin: 50% 0;
+    transform: rotateX(5deg) rotateY(-14deg) rotateZ(1.5deg);
+    transition: transform 900ms var(--ease-out);
+  }
+  html.js .feat:not(.in) .feat-phone .phone { transform: translateY(26px) rotateX(10deg) rotateY(-38deg) rotateZ(3deg); }
+  .feat-phone .floor-shadow { bottom: 2px; width: 200px; height: 30px; }
   .feat .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; padding: 0 4px 2px; }
   .feat .chips li { flex: none; }
   .feat .chips::-webkit-scrollbar { display: none; }
-  .feat-card { background: var(--page); border-radius: 24px; padding: 22px 4px 8px; max-width: none; gap: 12px; border-top: 1px solid var(--line); }
   .feat p { font-size: 1.08rem; }
 
   .desk { padding-block: 80px 70px; }
@@ -452,12 +462,12 @@ html.js #heroRig .frag-settle { animation-delay: 740ms; }
   .faq { padding-bottom: 108px; margin-bottom: -36px; }
 }
 @media (max-width: 860px) and (max-height: 700px) {
-  .story-stage .rig { scale: 0.44; }
+  .feat-phone { height: 380px; }
+  .feat-phone .phone { scale: 0.58; }
   .feat h2 { font-size: 2rem; }
   .feat p { font-size: 1rem; }
 }
 @media (max-width: 420px) {
-  .nav { background: var(--page); }
   .nav .brand span { display: none; }
   .btn-sm { padding: 0 14px; }
   .nav-end { gap: 8px; }
@@ -471,6 +481,8 @@ html.js #heroRig .frag-settle { animation-delay: 740ms; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .feat-phone .phone { transition: none; }
+  html.js .feat:not(.in) .feat-phone .phone { transform: rotateX(5deg) rotateY(-14deg) rotateZ(1.5deg); }
   .theme-btn svg { transition: opacity 150ms ease; transform: none !important; filter: none !important; }
   html.js .h-hero, html.js .hero-copy .lede, html.js .hero-copy .cta-row, html.js #heroRig .phone { animation: fade 300ms ease both; }
   .spin { transition: none; }

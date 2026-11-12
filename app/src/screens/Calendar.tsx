@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SwipeRow } from '../ui/SwipeRow';
 import { getLang } from '../lib/i18n';
 import { useApp, openSheet } from '../lib/store';
 import { LINE, TEXT, tint } from '../lib/constants';
@@ -104,24 +105,24 @@ export default function CalendarScreen() {
           );
         })}
         {selIncome.map((t, i) => (
-          <div key={t.id} onClick={() => openSheet({ name: 'txn', kind: 'income', id: t.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selIncome.length - 1 && !selSpent.length ? 'transparent' : LINE}`, cursor: 'pointer' }}>
+          <SwipeRow key={t.id} kind="income" id={t.id}><div onClick={() => openSheet({ name: 'txn', kind: 'income', id: t.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selIncome.length - 1 && !selSpent.length ? 'transparent' : LINE}`, cursor: 'pointer' }}>
             <div style={{ width: 40, height: 40, borderRadius: 999, background: tint(150), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flex: 'none' }}>💰</div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{t.note}</span>
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Income · {d.accounts.find(a => a.id === t.a)?.name || ''}</span>
             </div>
             <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: GREEN_TEXT }}>+{fmt(t.amt)}</span>
-          </div>
+          </div></SwipeRow>
         ))}
         {selSpent.map((v, i) => (
-          <div key={v.key} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selSpent.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
+          <SwipeRow key={v.key} kind="expense" id={v.key}><div onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selSpent.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
             <span style={{ width: 40, height: 40, borderRadius: 999, backgroundColor: v.tint, position: 'relative', overflow: 'hidden', color: v.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{v.initial}<Fill src={v.photoBg} /></span>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{v.note}</span>
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{v.meta}</span>
             </div>
             <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap' }}>{v.amtFmt}</span>
-          </div>
+          </div></SwipeRow>
         ))}
         {!selEvents.length && !selSpent.length && !selIncome.length && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing on this day.</div>}
       </ListCard>

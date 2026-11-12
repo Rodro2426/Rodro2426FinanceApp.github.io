@@ -1,6 +1,7 @@
 // Categories hub: spending by category, and your categories: create, rename (or merge), delete, and move
 // transactions between them.
 import { useState } from 'react';
+import { SwipeRow } from '../ui/SwipeRow';
 import { useApp, openSheet, setData, setUI, flash } from '../lib/store';
 import { HUES, LINE, RED, TEXT, ink, mid, tint } from '../lib/constants';
 import { byDateDesc, catOf, ctxOf, fmt, monthExpenses, pctOf, plural, myExpenses } from '../lib/derive';
@@ -384,7 +385,7 @@ export function CategoryTable() {
           {active.length === 1 && <span onClick={() => openSheet({ name: 'search', cat: active[0] })} style={{ fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 700, cursor: 'pointer' }}>Search in {active[0]}</span>}
         </div>
         <div style={{ margin: '-4px 0 0' }}>
-          {list.slice(0, 40).map((e, i) => <ExpRow key={e.id} v={expView(d, e, c)} size={36} last={i === Math.min(list.length, 40) - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: e.id })} />)}
+          {list.slice(0, 40).map((e, i) => <SwipeRow key={e.id} kind="expense" id={e.id}><ExpRow v={expView(d, e, c)} size={36} last={i === Math.min(list.length, 40) - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: e.id })} /></SwipeRow>)}
           {list.length > 40 && <span style={{ display: 'block', padding: '10px 0 0', fontSize: 12, color: 'var(--color-neutral-600)' }}>Showing the latest 40.</span>}
         </div>
       </>}

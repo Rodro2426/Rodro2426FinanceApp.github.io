@@ -145,7 +145,7 @@
       var img = document.createElement('img');
       img.dataset.shot = n; img.alt = ''; img.decoding = 'async';
       if (i === 0) img.className = 'on';
-      else img.loading = 'lazy';
+      if (i > 0 || ph.closest('.feat-phone')) img.loading = 'lazy';
       shots.appendChild(img);
     });
     ph.appendChild(frag);
@@ -221,6 +221,11 @@
   tint.style.setProperty('--th', feats[0].dataset.hue);
   railItems[0].classList.add('on');
   if (matchMedia('(max-width: 860px)').matches) {
+    // Phones: each scene's phone turns into place once, as it scrolls into view.
+    var turnIn = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); turnIn.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -18% 0px' });
+    feats.forEach(function (f) { turnIn.observe(f); });
     // Phones: the sticky stage covers the top of the screen, so a scene becomes current only once its
     // whole text block is visible in the space below the stage.
     var stage = document.querySelector('.story-stage');
