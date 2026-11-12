@@ -4,6 +4,7 @@ import { LINE, TEXT, ink, tint } from '../lib/constants';
 import { catOf, curSymbol, fmt, fxText, initialOf, isCOP, pocketStats, type PocketStats } from '../lib/derive';
 import { relDay, type Ctx } from '../lib/dates';
 import { MoneyInput } from './MoneyInput';
+import { tr } from '../lib/i18n';
 
 export const s = (o: CSSProperties) => o;
 
@@ -12,7 +13,7 @@ export function SectionHead({ title, right, onRight, muted }: { title: string; r
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0' }}>
       <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{title}</span>
       {right != null && (
-        <span onClick={onRight} style={onRight && !muted ? { fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 600, cursor: 'pointer' } : { fontSize: 13, color: 'var(--color-neutral-700)' }}>{right}</span>
+        <span onClick={onRight} className={onRight && !muted ? 'sec-link' : undefined} style={onRight && !muted ? { fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 600, cursor: 'pointer' } : { fontSize: 13, color: 'var(--color-neutral-700)' }}>{right}</span>
       )}
     </div>
   );
@@ -110,7 +111,7 @@ export function expView(d: Data, e: Expense, c: Ctx, stats?: Map<string, PocketS
   const p = stats?.get(e.p) || pocketStats(d, e.p, c), a = d.accounts.find(x => x.id === e.a);
   return {
     key: e.id, initial: p ? p.initial : initialOf(e.note), photoBg: p ? p.photoBg : 'none', tint: tint(p ? p.hue : 0), ink: ink(p ? p.hue : 0), note: e.note,
-    meta: [e.split ? `${catOf(e)[0]} (split)` : catOf(e)[0], p ? p.name : e.ruleId ? 'Scheduled' : 'No pocket', a && a.name, relDay(e.date, c.today), fxText(e.orig) || ''].filter(Boolean).join(' · '), amtFmt: '−' + fmt(e.amt),
+    meta: [e.split ? `${catOf(e)[0]} (split)` : catOf(e)[0], p ? (tr(p.name) === tr(catOf(e)[0]) ? '' : p.name) : e.ruleId ? 'Scheduled' : 'No pocket', a && a.name, relDay(e.date, c.today), fxText(e.orig) || ''].filter(Boolean).join(' · '), amtFmt: '−' + fmt(e.amt),
     tagLine: (e.tags || []).map(t => '#' + t).join('  ')
   };
 }
@@ -122,7 +123,7 @@ export function ExpRow({ v, last, size = 40, onClick }: { v: ExpView; last: bool
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <span translate="no" style={{ fontSize: 15, fontWeight: 600 }}>{v.note}</span>
         <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v.meta}</span>
-        {v.tagLine && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-accent-700)' }}>{v.tagLine}</span>}
+        {v.tagLine && <span className="tagline" style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-accent-700)' }}>{v.tagLine}</span>}
       </div>
       <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', color: v.amtColor }}>{v.amtFmt}</span>
     </div>

@@ -45,8 +45,8 @@ export default function CalendarScreen() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ padding: '4px 4px 0', display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Income, bills and spending by day</span>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Calendar</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Income, bills and spending by day</span>
       </div>
 
       <div style={{ background: 'var(--surface)', borderRadius: 28, padding: '16px 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>

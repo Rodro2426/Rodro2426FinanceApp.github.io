@@ -16,6 +16,6 @@ export function billRows(d: Data, c: Ctx, withIncome = false): BillRow[] {
     if (others) return { ...b, due, inDays, paid: false, auto: false, acctName, dueLabel: shortDate(due), dueColor: 'var(--color-neutral-600)', others };
     const when = paid ? 'Paid' : inDays < 0 ? `Overdue ${shortDate(due)}` : inDays === 0 ? 'Today' : inDays === 1 ? 'Tomorrow' : shortDate(due);
     const dueLabel = [when, acctName].filter(Boolean).join(' · ');
-    return { ...b, due, inDays, paid, auto, acctName, dueLabel, dueColor: !paid && inDays <= 7 ? RED : 'var(--color-neutral-700)', others };
+    return { ...b, due, inDays, paid, auto, acctName, dueLabel, dueColor: !paid && inDays < 0 ? RED : !paid && inDays <= 2 ? 'var(--warn-ink)' : 'var(--color-neutral-700)', others };
   });
 }

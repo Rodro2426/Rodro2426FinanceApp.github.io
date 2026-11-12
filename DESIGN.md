@@ -280,3 +280,14 @@ The website follows the visitor's system setting, with a sun/moon switch beside 
 - **Signature, "la plata se mueve":** when the safe-to-spend amount changes, its digits roll to the new value (700ms ease-out, `ui/RollingMoney.tsx`) and, when it goes down, the amount spent lifts off the card. Quiet on first load, while amounts are hidden, and with Reduce Motion.
 - **Eye:** hiding or showing amounts blurs the screen's content in for 200ms (`.eye-flip`) instead of swapping in one frame.
 
+### Desktop app: "Tu semana" (2026-11-12)
+On a computer (≥1024px wide and ≥560px tall) the logged-in app reads like the week's report, top to bottom, in one calm column. It replaces the sidebar, the two-column masonry of phone cards and the centred modal sheets. Direction contract: `.impeccable/surfaces/app-src-ui-desk-tsx.md`.
+- **Top bar** (`TopBar` in `ui/Desk.tsx`), 68px, on the textured ground with a hairline below: mark and wordmark; Inicio, Cuentas, Presupuesto, Análisis, Calendario as text links, the current one in heavier ink with a 2.5px ink underline; Más opens a small menu (Inversiones, Amigos y viajes, Categorías, Reportes). Right: search pill with ⌘K, eye, bell with count, red "+ Agregar", avatar.
+- **Column:** 1000px (`--col`) for every tab and page; sections stack with 26–30px between them; nothing flows into uneven columns. Pairs are allowed only for two lists of the same kind, aligned to the top (Próximamente beside Recientes).
+- **Home:** the verdict sentence as H1 (46px, 850, −0.032em: "Vas bien, Sofía." / "Con calma esta semana…" / "Esta semana está apretada…", by the week's tone), date and week under it; the engraved safe panel full width (72px number, Hoy / Esta semana / Este mes switch that drives the panel and the pocket lines together); a figures line on hairlines (Patrimonio, Gastado, Ingreso mensual); pocket lines (dot, name and period, a long bar in the pocket's tint and ink, amount and "quedan de"); Próximamente | Recientes; Amigos y viajes as a figures line.
+- **Figures, not tiles:** summary numbers sit on hairline rules (`.dh-figs`), never in nested tinted boxes.
+- **Side panel:** every sheet opens as a 480px panel on the right (drawer curve, 320ms in / 220ms out) over a light scrim; the page stays in view.
+- **Red on desktop:** only "+ Agregar", destructive actions and overdue dates. Section links and small actions are ink with an underline; tags are neutral; due dates are amber at two days or less.
+- **Type:** the rounded stack now includes a self-hosted Nunito (`app/public/fonts/`) after SF Pro Rounded, so browsers other than Safari also get rounded headings.
+- **Ground:** on desktop the page plate is `billete-hero-desk(.dark).svg`, the same plate without the corner rosette.
+

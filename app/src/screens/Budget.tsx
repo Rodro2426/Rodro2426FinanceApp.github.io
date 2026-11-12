@@ -45,8 +45,8 @@ export default function Budget() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ padding: '4px 4px 0', display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{monthLabel(c.month)}</span>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Budget</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{monthLabel(c.month)}</span>
       </div>
       <Blocks page="budget" title="Budget" blocks={[
         { id: 'income', name: 'Income', desc: 'Your monthly income', node: <>

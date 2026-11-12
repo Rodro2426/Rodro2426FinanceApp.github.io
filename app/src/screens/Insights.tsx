@@ -88,7 +88,7 @@ export default function Insights() {
       </div>
       </> },
         { id: 'hubs', name: 'Categories and reports', desc: 'Open the categories hub or the charts', node: <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12 }}>
+      <div className="hubs" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12 }}>
         {hubCard('Categories', topCat ? `Top: ${topCat[0]}` : plural(d.cats.length, 'category', 'categories'), <ReportIcon icon="pie" tone="#e5484d" />, () => setUI({ page: 'categories' }))}
         {hubCard('Reports', `${REPORTS.length} charts`, <ReportIcon icon="bars" tone="#30a46c" />, () => setUI({ page: 'reports' }))}
       </div>

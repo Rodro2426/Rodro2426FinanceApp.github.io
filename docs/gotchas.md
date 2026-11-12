@@ -117,3 +117,9 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - Transaction rows in Recent, the pocket card, the account card, search, the calendar day and a category are wrapped in `ui/SwipeRow.tsx` (swipe left for Edit / Delete). Delete goes through `deleteTxn` in `sheets/EditTxn.tsx`, the same function the edit sheet uses, so balances and income splits are undone the same way. Interest rows can't be swiped. Rows carry `data-noswipe`, so the tab swipe in `ui/swipe.ts` ignores them.
 - `useSettled` (in `ui/RollingMoney.tsx`) holds the safe-to-spend number and bar while any sheet is open and for 420ms after it closes, so the roll plays where the person can see it. Call it once per number (not with an array: a new array every render loops).
 - The app's ground starts with `--ground-fade`: plain page colour under the status bar, fading into the texture over 72px, because iOS paints the status bar in a flat colour. The website does the same with its phone nav.
+
+## Desktop layout ("Tu semana")
+
+- Desktop is `useDesk()` (≥1024px wide and ≥560px tall). Home has its own desktop branch in `screens/Home.tsx` (`if (desk)`); other tabs reuse their phone components inside the 1000px column. Hidden blocks from Edit layout are respected on desktop Home; the order is not.
+- Desktop-only restyling of shared components goes through small class hooks with `.desk` rules in `styles.css` (`.sec-link`, `.d-ink`, `.tagline`, `.hubs`, `.inv-stat`, `.inv-add`, `.phone-only`), so the phone keeps its look.
+- `scripts/es-gaps.cjs` takes `--size=desktop` to check the desktop layout in Spanish.

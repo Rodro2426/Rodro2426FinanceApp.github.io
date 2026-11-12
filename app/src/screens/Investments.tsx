@@ -106,7 +106,7 @@ function Portfolio() {
         </Donut>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 8, width: '100%' }}>
           {[['Invested', compact(fmt(invested)), TEXT], ['Total return', compact(signed(gain)), gain >= 0 ? UP : DOWN], ['Today', compact(signed(day)), day >= 0 ? UP : DOWN]].map(([l, v, col]) => (
-            <div key={l} style={{ background: 'var(--color-neutral-100)', borderRadius: 16, padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+            <div key={l} className="inv-stat" style={{ background: 'var(--color-neutral-100)', borderRadius: 16, padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
               <span style={{ fontSize: 11.5, color: 'var(--color-neutral-700)' }}>{l}</span>
               <span style={{ fontSize: 14, fontWeight: 700, color: col, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v}</span>
             </div>
@@ -114,7 +114,7 @@ function Portfolio() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', fontSize: 12, color: 'var(--color-neutral-600)', gap: 8 }}>
           <span>{d.settings.currency === 'COP' ? `1 USD = ${fmt(inv.usdRate)}${inv.usdManual ? ' (typed in)' : ''}` : d.settings.currency !== '$' ? `1 USD = ${fmt(perUsd(inv, d.settings.currency))}` : ''}{lastAt ? ` · prices ${ago(lastAt)}` : ''}</span>
-          <button onClick={() => refresh()} disabled={busy} aria-label="Refresh prices" style={{ border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, opacity: busy ? 0.5 : 1 }}><I.Refresh size={13} />{busy ? 'Updating…' : 'Refresh'}</button>
+          <button onClick={() => refresh()} disabled={busy} aria-label="Refresh prices" className="d-ink" style={{ border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, opacity: busy ? 0.5 : 1 }}><I.Refresh size={13} />{busy ? 'Updating…' : 'Refresh'}</button>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ function Portfolio() {
         {sorted.map((h, i) => <HoldingRow key={h.ticker} h={h} color={colorOf(all, h.ticker)} last={i === sorted.length - 1} total={total} />)}
         {all.length === 0 && <div style={{ padding: '16px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No stocks yet. Add your first buy, for example AAPL or VOO, or a Colombian stock from Trii.</div>}
       </ListCard>
-      <button onClick={() => openSheet({ name: 'trade', side: 'buy' })} className="hv-acc600" style={{ height: 54, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <button onClick={() => openSheet({ name: 'trade', side: 'buy' })} className="hv-acc600 inv-add" style={{ height: 54, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <I.Plus size={18} sw={2.5} />Add buy or sell
       </button>
 

@@ -86,6 +86,10 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - **Spanish** (Profile → Language, or the switch on the welcome screen).
 - Photos are drawn as `<img>` (fixes logos that didn't refresh until a restart).
 
+**Desktop redesign, "Tu semana"** (Nov 2026)
+- On a computer the app has a top bar instead of the sidebar, one 1000px reading column for every tab, a Home that reads like the week's report (verdict sentence, engraved safe panel with Hoy/Semana/Mes, figures line, pocket lines, Próximamente | Recientes, Amigos y viajes), and sheets that open as a panel on the right. ⌘K opens search. The phone layout is unchanged.
+- Sample data is created with Spanish pocket names when the app is in Spanish; transaction details no longer repeat category and pocket, and recent weekdays show the day number.
+
 **Bill texture and motion in the app** (Nov 2026)
 - The website's "Billete Pockets" ground is behind the app's main screens and full pages, in light and dark; the safe-to-spend card is engraved like a banknote in its green, yellow or red ink.
 - Motion pass with Emil Kowalski's rules: sheets open and close on the iOS drawer curve (close is now immediate), presses are firm (160ms, no bounce), tab switches are shorter, chips no longer animate every property, bars use clip-path instead of width.

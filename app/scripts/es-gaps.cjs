@@ -14,8 +14,8 @@ const ALL = [
 const KEEP = /^(Pockets|Excel|English|Español|Netflix|Spotify|Internet|Bancolombia|Nu Cajita|Visa Gold|Mastercard Black|Sofía|Uber|Rappi|DiDi|Cabify|TuLlave recarga|Terpel gas|Éxito|Carulla|Juan Valdez|GIPHY|Finnhub|TRM|CDT|CDTs|COP|USD|E\.A\.|Fiducuenta|Trii|iPhone|Face ID|Touch ID|Google|OK|Total|General|Manual|Chat|GIF|Gas|Color|Normal)$/;
 
 (async () => {
-  const a = args({ places: ALL.join(','), url: 'http://localhost:5199/' });
-  const { browser, page, errors } = await openApp({ url: a.url, lang: 'es' });
+  const a = args({ places: ALL.join(','), url: 'http://localhost:5199/', size: 'phone' });
+  const { browser, page, errors } = await openApp({ url: a.url, lang: 'es', size: a.size });
   const seen = new Map();
   for (const where of a.places.split(',')) {
     try { await go(page, where); } catch (e) { console.log('could not open', where); continue; }

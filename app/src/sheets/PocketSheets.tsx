@@ -435,7 +435,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
               <span style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontWeight: 600 }}>{e.note}</span>
                 <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{e.meta}</span>
-                {e.tagLine && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-accent-700)' }}>{e.tagLine}</span>}
+                {e.tagLine && <span className="tagline" style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-accent-700)' }}>{e.tagLine}</span>}
               </span>
               <span style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{e.amtFmt}</span>
             </div></SwipeRow>

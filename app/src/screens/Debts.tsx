@@ -9,6 +9,7 @@ import { monthSummary } from '../lib/plan';
 import { getSocial, myUid } from '../lib/social';
 import type { Data, Debt } from '../lib/types';
 import * as I from '../ui/icons';
+import { SectionHead } from '../ui/bits';
 import { Avatar, myBalance, useSocial } from './Social';
 import { GREEN } from '../sheets/DebtSheets';
 
@@ -25,10 +26,16 @@ export function tripTotals() {
 export const friendDebt = (d: Data, uid: string) => debtsOf(d).filter(x => x.friend === uid && isOpen(x)).reduce((a, x) => a + (x.dir === 'owed' ? leftOf(x) : -leftOf(x)), 0);
 
 /** A short explanation of what a tab is for. */
-export function Purpose({ icon, children }: { icon: string; children: ReactNode }) {
+const PURPOSE_ICONS: Record<string, ReactNode> = {
+  debts: <><path d="M7 7h11l-3-3M17 17H6l3 3" /></>,
+  trips: <><rect x="4" y="8" width="16" height="12" rx="3" /><path d="M9 8V5h6v3M4 13h16" /></>,
+  friends: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.7.8 2.8 2.6 3 5.2" /></>
+};
+/** A short line that says what a section is for, with a small drawn icon (debts, trips or friends). */
+export function Purpose({ icon, children }: { icon: 'debts' | 'trips' | 'friends'; children: ReactNode }) {
   return (
     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '2px 6px' }}>
-      <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1.2 }}>{icon}</span>
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-neutral-700)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none', marginTop: 1 }}>{PURPOSE_ICONS[icon]}</svg>
       <span style={{ fontSize: 13, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{children}</span>
     </div>
   );
@@ -103,7 +110,7 @@ export function DebtList() {
   );
   const affects = out.late > 0.004 || out.oweSoon > 0.004;
   return <>
-    <Purpose icon="🤝">Money between you and one person: you lent it, paid for them, or borrowed. Only you see these, and they don't count as spending.</Purpose>
+    <Purpose icon="debts">Money between you and one person: you lent it, paid for them, or borrowed. Only you see these, and they don't count as spending.</Purpose>
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
       {addBtn('owed', 'Someone owes me')}
       {addBtn('owe', 'I owe someone')}
@@ -176,5 +183,37 @@ export function FriendsHomeCard() {
         </span>
       )}
     </button>
+  );
+}
+
+/** Desktop Home: friends and trips as a line of figures under a section title (no nested boxes). */
+export function DeskFriends() {
+  const { data: d } = useApp();
+  const so = useSocial();
+  const dt = debtTotals(d), tt = tripTotals();
+  const owed = dt.owedToMe + tt.owedToMe, owe = dt.iOwe + tt.iOwe;
+  const friends = so.friends.filter(f => f.status === 'accepted' && f.uid !== myUid()).length;
+  const open = () => setUI({ page: 'social' });
+  return (
+    <section className="dh-sec">
+      <SectionHead title="Friends & trips" right="Open" onRight={open} />
+      <div className="dh-figs">
+        <button onClick={open}>
+          <span className="dh-fig-l">People owe you</span>
+          <span className="dh-fig-n" style={{ color: owed > 0.004 ? GREEN : undefined }}>{fmt(owed)}</span>
+          <span className="dh-fig-s">{dt.owedCount === 1 ? '1 debt' : `${dt.owedCount} debts`}</span>
+        </button>
+        <button onClick={open}>
+          <span className="dh-fig-l">You owe</span>
+          <span className="dh-fig-n">{fmt(owe)}</span>
+          <span className="dh-fig-s">{dt.oweCount === 1 ? '1 debt' : `${dt.oweCount} debts`}</span>
+        </button>
+        <button onClick={open}>
+          <span className="dh-fig-l">Shared trips</span>
+          <span className="dh-fig-n">{tt.trips}</span>
+          <span className="dh-fig-s">{friends === 1 ? '1 friend' : `${friends} friends`}</span>
+        </button>
+      </div>
+    </section>
   );
 }

@@ -8,13 +8,14 @@ import { daysBetween, daysInMonth, relDay } from '../lib/dates';
 import type { PocketView } from '../lib/types';
 import { fmtDay, monthName, shortDate } from '../lib/dates';
 import { billRows } from '../lib/bills';
-import { BillBadge, Fill, ExpRow, ListCard, SectionHead, expView } from '../ui/bits';
+import { BillBadge, Fill, ExpRow, ListCard, SectionHead, Segmented, expView } from '../ui/bits';
 import * as I from '../ui/icons';
 import { netWorth } from '../lib/networth';
 import { Blocks } from '../ui/Blocks';
 import { RollingMoney, useSettled } from '../ui/RollingMoney';
 import { SwipeRow } from '../ui/SwipeRow';
-import { FriendsHomeCard } from './Debts';
+import { useDesk } from '../ui/Desk';
+import { DeskFriends, FriendsHomeCard } from './Debts';
 import { monthSummary } from '../lib/plan';
 import { billAmount } from '../lib/schedule';
 
@@ -61,6 +62,105 @@ export default function Home() {
   const monthTone = toneOf(monthBudget > 0 ? monthLeft / monthBudget : 0);
   const monthDaysLeft = daysBetween(c.today, `${c.month}-${String(daysInMonth(c.month)).padStart(2, '0')}`) + 1;
   const [pocketPage, setPocketPage] = useState(1);
+  const desk = useDesk();
+  const [view, setView] = useState<'day' | 'week' | 'month'>('week');
+  const comingList = (
+      <ListCard>
+        {upcoming.map((b, i) => (
+          <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === upcoming.length - 1 ? 'transparent' : LINE}` }}>
+            <BillBadge b={b} />
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
+              <span style={{ fontSize: 12, color: b.dueColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.dueLabel}</span>
+            </div>
+            <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap' }}>{billAmount(b)}</span>
+          </div>
+        ))}
+        {upcoming.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>All bills paid for {monthName(c.month)}.</div>}
+      </ListCard>
+  );
+  const recentList = (
+      <ListCard>
+        {recent.map((r, i) => {
+          const last = i === recent.length - 1;
+          if (r.kind === 'expense') { const v = expView(d, r.e, c, stats); return <SwipeRow key={r.id} kind="expense" id={r.id}><ExpRow v={v} last={last} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: r.id })} /></SwipeRow>; }
+          const t = r.t, acct = d.accounts.find(a => a.id === t.a)?.name;
+          const row = <ExpRow last={last} onClick={() => openSheet({ name: 'txn', kind: 'income', id: r.id })}
+            v={{ key: r.id, initial: '💰', photoBg: 'none', tint: 'oklch(0.95 0.045 155)', ink: 'oklch(0.42 0.09 155)', note: t.note, meta: ['Income', acct, relDay(t.date, c.today)].filter(Boolean).join(' · '), amtFmt: '+' + fmt(t.amt), tagLine: '', amtColor: 'oklch(0.45 0.11 150)' }} />;
+          return t.interest ? <div key={r.id}>{row}</div> : <SwipeRow key={r.id} kind="income" id={r.id}>{row}</SwipeRow>;
+        })}
+        {recent.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing yet. Tap + to add an expense or income.</div>}
+      </ListCard>
+  );
+
+  if (desk) {
+    // "Tu semana": the week as a short report, top to bottom (see .impeccable/surfaces/app-src-ui-desk-tsx.md).
+    const hidden = d.settings.layouts?.home?.hidden ?? [];
+    const safe = view === 'day'
+      ? { tone: todayTone, title: 'Safe to spend today', left: todayLeft, budget: todayBudget, spent: todaySpent, sub: todayActive.length ? `of ${fmt(todayBudget)} for ${todayActive.length === all.length ? 'all your pockets' : todayActive.length === 1 ? '1 pocket' : `${todayActive.length} pockets`} today` : 'No pocket has today as a spending day' }
+      : view === 'week'
+        ? { tone, title: 'Safe to spend this week', left: weekLeft, budget: weekBudget, spent: weekSpent, sub: `of ${fmt(weekBudget)} · ${c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left` }
+        : { tone: monthTone, title: `Left to spend in ${monthName(c.month)}`, left: monthLeft, budget: monthBudget, spent: monthBudget - monthLeft, sub: `of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in ${monthName(c.month)}` };
+    const name = d.settings.name.trim();
+    const verdict = tone === SAFE_TONES.green ? (name ? `You're on track, ${name}.` : "You're on track.")
+      : tone === SAFE_TONES.yellow ? (name ? `Go easy this week, ${name}.` : 'Go easy this week.')
+        : (name ? `This week is tight, ${name}.` : 'This week is tight.');
+    const lines = all.map((p, i) => view === 'day'
+      ? { p, left: days[i].left, budget: days[i].allowance, off: !days[i].active ? (days[i].spentToday > 0 ? `Spent ${fmt(days[i].spentToday)} today` : 'Not a spending day') : '' }
+      : view === 'week' ? { p, left: p.left, budget: p.budget, off: '' } : { p, left: months[i].left, budget: months[i].budget, off: '' });
+    return (
+      <div className="dh">
+        <header className="dh-head">
+          <h1 className="dh-verdict">{verdict}</h1>
+          <p className="dh-date"><span>{fmtDay(c.today, { weekday: 'long', month: 'long', day: 'numeric' })}</span><span aria-hidden="true">·</span><span>{`Week ${c.weekNo} of ${c.weeks}`}</span></p>
+        </header>
+
+        {!hidden.includes('safe') && <DeskSafe view={view} setView={setView} {...safe} />}
+
+        {!hidden.includes('stats') && <div className="dh-figs">
+          <button onClick={() => setUI({ tab: 'accounts' })}>
+            <span className="dh-fig-l">Net worth</span>
+            <span className="dh-fig-n">{fmt(assets - debt)}</span>
+            <span className="dh-fig-s">{`${d.accounts.length} accounts${nw.includeInvestments && nw.investments ? ' + investments' : ''}${nw.groups.some(x => x.counted) ? ' + groups' : ''}${nw.includeOwed && nw.owedToMe > 0 ? ' + owed to you' : ''}`}</span>
+          </button>
+          <button onClick={() => setUI({ tab: 'insights' })}>
+            <span className="dh-fig-l">Spent in {monthName(c.month)}</span>
+            <span className="dh-fig-n">{fmt(spent)}</span>
+            <span className="dh-fig-s">{income > 0 ? Math.round(spent / income * 100) + '%' : '—'} of income</span>
+          </button>
+          <button onClick={() => setUI({ tab: 'budget' })}>
+            <span className="dh-fig-l">Monthly income</span>
+            <span className="dh-fig-n">{fmt(income)}</span>
+            <span className="dh-fig-s">{`${all.length} pockets`}</span>
+          </button>
+        </div>}
+
+        {!hidden.includes('pockets') && <section className="dh-sec">
+          <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={view === 'day' ? 'Today' : view === 'week' ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
+          {all.length > 0 ? <div className="dh-lines">
+            {lines.map(({ p, left, budget, off }) => {
+              const pct = budget > 0 ? Math.max(0, Math.min(100, (left / budget) * 100)) : 0;
+              return (
+                <button key={p.id} className="dh-line" onClick={() => openSheet({ name: 'pocket', id: p.id, view })}>
+                  <span className="dh-dot" style={{ backgroundColor: tint(p.hue), color: ink(p.hue) }}>{p.initial}<Fill src={p.photoBg} /></span>
+                  <span className="dh-name"><b>{p.name}</b><small>{off || (p.period === 'half' ? 'Every 15 days' : 'Every week')}</small></span>
+                  <span className="dh-track" style={{ backgroundColor: tint(p.hue) }}><span className="bar-fill" style={{ background: ink(p.hue), clipPath: `inset(0 ${100 - pct}% 0 0 round 999px)` }} /></span>
+                  <span className="dh-amt"><b style={{ color: left < 0 ? RED : undefined }}>{fmt(left)}</b><small>left of {fmt(budget)}</small></span>
+                </button>
+              );
+            })}
+          </div> : <EmptyHint text="No pockets yet. Create them in the Budget tab." onClick={() => setUI({ tab: 'budget' })} />}
+        </section>}
+
+        <div className="dh-two">
+          {!hidden.includes('coming') && <section className="dh-sec"><SectionHead title="Coming up" right="All payments" onRight={() => setUI({ tab: 'insights' })} />{comingList}</section>}
+          {!hidden.includes('recent') && <section className="dh-sec"><SectionHead title="Recent" right="Search" onRight={() => openSheet({ name: 'search' })} />{recentList}</section>}
+        </div>
+
+        {!hidden.includes('friends') && <DeskFriends />}
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -123,35 +223,13 @@ export default function Home() {
 
       </> },
         { id: 'coming', name: 'Coming up', desc: 'Bills due soon', node: <>
-      <SectionHead title="Coming up" right="All bills" onRight={() => setUI({ tab: 'insights' })} />
-      <ListCard>
-        {upcoming.map((b, i) => (
-          <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === upcoming.length - 1 ? 'transparent' : LINE}` }}>
-            <BillBadge b={b} />
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: 15, fontWeight: 600 }}>{b.name}</span>
-              <span style={{ fontSize: 12, color: b.dueColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.dueLabel}</span>
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap' }}>{billAmount(b)}</span>
-          </div>
-        ))}
-        {upcoming.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>All bills paid for {monthName(c.month)}.</div>}
-      </ListCard>
+      <SectionHead title="Coming up" right="All payments" onRight={() => setUI({ tab: 'insights' })} />
+      {comingList}
 
       </> },
         { id: 'recent', name: 'Recent', desc: 'Latest expenses and income', node: <>
       <SectionHead title="Recent" right="Search" onRight={() => openSheet({ name: 'search' })} />
-      <ListCard>
-        {recent.map((r, i) => {
-          const last = i === recent.length - 1;
-          if (r.kind === 'expense') { const v = expView(d, r.e, c, stats); return <SwipeRow key={r.id} kind="expense" id={r.id}><ExpRow v={v} last={last} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: r.id })} /></SwipeRow>; }
-          const t = r.t, acct = d.accounts.find(a => a.id === t.a)?.name;
-          const row = <ExpRow last={last} onClick={() => openSheet({ name: 'txn', kind: 'income', id: r.id })}
-            v={{ key: r.id, initial: '💰', photoBg: 'none', tint: 'oklch(0.95 0.045 155)', ink: 'oklch(0.42 0.09 155)', note: t.note, meta: ['Income', acct, relDay(t.date, c.today)].filter(Boolean).join(' · '), amtFmt: '+' + fmt(t.amt), tagLine: '', amtColor: 'oklch(0.45 0.11 150)' }} />;
-          return t.interest ? <div key={r.id}>{row}</div> : <SwipeRow key={r.id} kind="income" id={r.id}>{row}</SwipeRow>;
-        })}
-        {recent.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing yet. Tap + to add an expense or income.</div>}
-      </ListCard>
+      {recentList}
       </> }
       ]} />
     </div>
@@ -236,4 +314,22 @@ function PocketGrid({ items, tour, view }: { items: { p: PocketStats; left: numb
 
 function EmptyHint({ text, onClick }: { text: string; onClick: () => void }) {
   return <div onClick={onClick} style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, fontSize: 14, color: 'var(--color-neutral-700)', cursor: 'pointer' }}>{text}</div>;
+}
+
+/** The desktop safe-to-spend panel: the engraved card, wide, with a Today / Week / Month switch instead of swiping. */
+function DeskSafe({ view, setView, tone, title, left: leftNow, budget, spent: spentNow, sub }: { view: 'day' | 'week' | 'month'; setView: (v: 'day' | 'week' | 'month') => void; tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string }) {
+  const left = useSettled(leftNow);
+  const spent = useSettled(spentNow);
+  return (
+    <section data-tour="safe" className={`dh-safe bill bill-${tone.key}`} style={{ backgroundColor: tone.bg, color: tone.label }}>
+      <div className="dh-safe-top">
+        <span className="dh-safe-title">{title}</span>
+        <div className="dh-switch"><Segmented items={[['day', 'Today'], ['week', 'This week'], ['month', 'This month']]} value={view} onPick={setView} h={34} mt={0} /></div>
+        <EyeToggle size={38} tone={tone.label} />
+      </div>
+      <div className="dh-safe-num" style={{ color: tone.amount }}><RollingMoney value={left} /></div>
+      <span className="dh-safe-sub">{sub}</span>
+      <div className="dh-safe-track"><div className="bar-fill" style={{ height: '100%', borderRadius: 999, width: '100%', clipPath: `inset(0 calc(100% - ${pctOf(spent, budget)}) 0 0 round 999px)`, background: tone.bar }} /></div>
+    </section>
+  );
 }

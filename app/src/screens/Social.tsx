@@ -73,11 +73,11 @@ export default function SocialPage() {
     {so.error && sync.uid && <div role="alert" style={{ background: 'var(--color-accent-100)', color: 'var(--color-accent-900)', borderRadius: 16, padding: '10px 12px', fontSize: 13 }}>{so.error}</div>}
     {tab === 'debts' && <DebtList />}
     {tab === 'trips' && <>
-      <Purpose icon="🧳">For a group that shares costs: a trip, a dinner, a shared apartment. Everyone adds what they paid and Pockets says who pays whom, in the fewest payments.</Purpose>
+      <Purpose icon="trips">For a group that shares costs: a trip, a dinner, a shared apartment. Everyone adds what they paid and Pockets says who pays whom, in the fewest payments.</Purpose>
       {sync.uid ? <TripList /> : signIn('Share trips with friends', 'Trips are shared with your friends, so you need a Pockets account. Debts with one person work without one.')}
     </>}
     {tab === 'friends' && <>
-      <Purpose icon="👋">People with a Pockets account. Add them by email to share trips, send messages, and link them to your debts.</Purpose>
+      <Purpose icon="friends">People with a Pockets account. Add them by email to share trips, send messages, and link them to your debts.</Purpose>
       {sync.uid ? <FriendList /> : signIn('Add your friends', 'Friends are people with a Pockets account. Sign in to add them by email.')}
     </>}
   </>, 'Friends & trips', () => setUI({ page: null }), refresh);

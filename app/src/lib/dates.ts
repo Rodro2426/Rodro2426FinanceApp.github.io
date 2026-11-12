@@ -24,7 +24,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 export function relDay(s: string, today: string) {
   const diff = daysBetween(s, today);
   if (diff === 0) return 'Today';
-  if (diff > 0 && diff < 7) return fmtDay(s, { weekday: 'short' });
+  if (diff > 0 && diff < 7) return fmtDay(s, { weekday: 'short', day: 'numeric' });
   return shortDate(s);
 }
 

@@ -1,6 +1,14 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+All payments|Todos los pagos
+Shared trips|Viajes compartidos
+You're on track.|Vas bien.
+Go easy this week.|Con calma esta semana.
+This week is tight.|Esta semana está apretada.
+Not a spending day|No es día de gasto
+Pockets, home|Pockets, inicio
+Sections|Secciones
 Carry over to next week|Pasar a la próxima semana
 Carry over to next quincena|Pasar a la próxima quincena
 What you don't spend is added to the next one, and overspending is taken from it.|Lo que no gastes se suma a la siguiente, y lo que te pases se descuenta de ella.
@@ -1608,6 +1616,10 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+1 USD = {0} (typed in)|1 USD = {0} (escrito a mano)
+You're on track, {0}.|Vas bien, {0}.
+Go easy this week, {0}.|Con calma esta semana, {0}.
+This week is tight, {0}.|Esta semana está apretada, {0}.
 · pays you back by {0}|· te paga el {0}
 · you pay back by {0}|· pagas el {0}
 Lent to {0}|Prestado a {0}

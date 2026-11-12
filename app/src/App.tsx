@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { getLang } from './lib/i18n';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud, syncNow } from './lib/cloud';
-import { Sidebar, useDesk } from './ui/Desk';
+import { TopBar, useDesk } from './ui/Desk';
 import { applyBg } from './lib/bg';
 import { registerSW, syncReminders } from './lib/push';
 import { LockGate } from './ui/LockScreen';
@@ -239,7 +239,7 @@ export default function App() {
 
   return (
     <div className={desk ? 'shell desk' : 'shell'} data-nav={nav.current}>
-      {desk && <Sidebar tabs={TABS} />}
+      {desk && <TopBar tabs={TABS} />}
       <div className="main">
       <div ref={brand} className="brand-reveal" aria-hidden="true">
         <img src="./pockets-mark.svg" alt="" width={50} height={61} />

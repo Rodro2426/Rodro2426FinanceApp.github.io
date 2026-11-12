@@ -1,6 +1,9 @@
 import type { Data, Expense } from './types';
 import { CATS, MERCHANT_CAT, POCKET_CAT } from './constants';
 import { addDays, daysInMonth, prevMonthKey, todayISO } from './dates';
+import { getLang } from './i18n';
+
+const ES_NAMES: Record<string, string> = { Groceries: 'Mercado', Transport: 'Transporte', 'Eating out': 'Comer fuera', Fun: 'Diversión', 'Personal care': 'Cuidado personal', Cash: 'Efectivo' };
 
 /** ~60 sample transactions spread over the previous calendar month. */
 function makeHistory(month: string): Expense[] {
@@ -33,7 +36,14 @@ function makeHistory(month: string): Expense[] {
   return out;
 }
 
+/** Sample data; in Spanish, pocket and cash-account names are stored in Spanish (they show in edit boxes as typed). */
 export function sampleData(today = todayISO()): Data {
+  const d = sampleDataRaw(today);
+  if (getLang() !== 'es') return d;
+  return { ...d, pockets: d.pockets.map(p => ({ ...p, name: ES_NAMES[p.name] ?? p.name })), accounts: d.accounts.map(a => ({ ...a, name: ES_NAMES[a.name] ?? a.name })) };
+}
+
+function sampleDataRaw(today: string): Data {
   const prev = prevMonthKey(today.slice(0, 7));
   const now = Date.now();
   return {
