@@ -177,6 +177,31 @@ export function suggestCover(d: Data, c: Ctx): Record<string, number> {
   return out;
 }
 
+/* ---------------- Refilling an over-budget pocket from the others ---------------- */
+/** How far over budget a pocket is this period (0 if it isn't). */
+export const overBy = (d: Data, c: Ctx, id: string) => whole(d, Math.max(0, -(pocketStats(d, id, c)?.left ?? 0)));
+
+/** A suggestion: take from the other pockets with the most left until the overspend is covered (or they run out). */
+export function suggestRefill(d: Data, c: Ctx, id: string): Record<string, number> {
+  let need = overBy(d, c, id);
+  const out: Record<string, number> = {};
+  for (const x of leftovers(d, c)) { if (need <= 0) break; if (x.id === id) continue; const take = Math.min(x.left, need); out[x.id] = take; need = whole(d, need - take); }
+  return out;
+}
+
+/** Moves leftover from several pockets into pocket `id` (per pocket, never more than it has left). Only this period changes. */
+export function refillFrom(d: Data, c: Ctx, id: string, parts: Record<string, number>): Partial<Data> | null {
+  if (!d.pockets.some(p => p.id === id)) return null;
+  let cur = d; let any = false;
+  for (const [from, v] of Object.entries(parts)) {
+    if (!(v > 0)) continue;
+    const p = from === id ? null : transferLeftover(cur, c, from, { [id]: v });
+    if (!p) return null;
+    cur = { ...cur, ...p }; any = true;
+  }
+  return any ? { moves: cur.moves } : null;
+}
+
 /** Gives up leftover from several pockets at once (per pocket, never more than it has left this week). */
 export function coverWith(d: Data, c: Ctx, parts: Record<string, number>): Partial<Data> | null {
   let cur = d; let any = false;

@@ -50,7 +50,7 @@ import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleShe
 import { CropperHost } from './ui/Cropper';
 import { tookSwipe, useSwipeNav, type Peek } from './ui/swipe';
 import { EditTxnSheet } from './sheets/EditTxn';
-import { AddSheet, CoverSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
+import { AddSheet, CoverSheet, RefillSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
 import * as I from './ui/icons';
 
@@ -74,6 +74,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'saved': return <SavedSheet id={sheet.id} />;
     case 'move': return <MoveSheet id={sheet.id} to={sheet.to} />;
     case 'cover': return <CoverSheet />;
+    case 'refill': return <RefillSheet id={sheet.id} />;
     case 'fund': return <FundSheet id={sheet.id} />;
     case 'fundInfo': return <FundInfoSheet id={sheet.id} />;
     case 'fundMove': return <FundMoveSheet id={sheet.id} kind={sheet.kind} />;

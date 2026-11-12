@@ -1261,6 +1261,14 @@ You owe|Debes
 Include investments|Incluir inversiones
 and your groups|y tus grupos
 Include investments in net worth|Incluir inversiones en el patrimonio
+Cover it|Cubrirlo
+Suggested|Sugerido
+Take money from pockets that still have some left.|Toma plata de los bolsillos a los que todavía les queda.
+Only a transfer between pockets for this period: your accounts and your month total don't change, and next period every pocket starts again from its own budget.|Solo es un traslado entre bolsillos para este periodo: tus cuentas y el total del mes no cambian, y el próximo periodo cada bolsillo vuelve a empezar con su presupuesto.
+No other pocket has money left right now.|Ningún otro bolsillo tiene plata disponible ahora.
+Choose how much to move|Elige cuánto mover
+After this: covered ✓|Después de esto: cubierto ✓
+This pocket was deleted.|Este bolsillo fue eliminado.
 What counts|Qué cuenta
 What counts in net worth|Qué cuenta en el patrimonio
 Include what people owe you|Incluir lo que te deben
@@ -1670,6 +1678,16 @@ Borrowed from {0}|Préstamo de {0}
 You paid {0} back in full 🎉|Le pagaste todo a {0} 🎉
 {0} paid you back|{0} te pagó
 Paid back {0}|Pagada el {0}
+{0} is over budget by|{0} se pasó del presupuesto por
+{0} isn't over budget|{0} no se ha pasado del presupuesto
+After this: still {0} over|Después de esto: todavía {0} por encima
+After this: covered, with {0} to spare|Después de esto: cubierto, y sobran {0}
+{0} left → {1}|Quedan {0} → {1}
+{0} left|Quedan {0}
+That's more than {0} has left.|Eso es más de lo que le queda a {0}.
+Move {0} into {1}|Mover {0} a {1}
+{0} moved · {1} is still {2} over|{0} movidos · {1} sigue {2} por encima
+{0} is covered with {1} from other pockets|{0} quedó cubierto con {1} de otros bolsillos
 The {0} people owe you counts, as if they had already paid|Los {0} que te deben cuentan, como si ya te hubieran pagado
 Left out: the {0} people owe you only counts once they pay|Por fuera: los {0} que te deben solo cuentan cuando te paguen
 You paid {0} back|Le pagaste a {0}

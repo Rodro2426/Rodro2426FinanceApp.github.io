@@ -5,7 +5,7 @@ import { EMOJIS, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, isCOP, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
 import { addDays, monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
-import { COVER, NEXT, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, splitAmong, suggestCover, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
+import { COVER, NEXT, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, overBy, refillFrom, splitAmong, suggestCover, suggestRefill, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
 import { incomeCatList } from '../lib/reports';
 import type { Data, Move, PocketView } from '../lib/types';
@@ -446,9 +446,10 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
           <I.Pencil size={15} />Edit pocket
         </button>
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-          <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          {s.left < -0.004 ? <button onClick={() => openSheet({ name: 'refill', id })} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><I.Swap size={17} />Cover it</button>
+          : <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <I.Swap size={17} />Move leftover
-          </button>
+          </button>}
           <button onClick={() => openSheet({ name: 'add', pocket: id })} className="hv-acc600" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Add expense</button>
         </div>
       </div>
@@ -598,7 +599,8 @@ export function SavedSheet({ id }: { id: string }) {
           <span style={{ marginTop: 8, fontSize: 13, color: k }}>{fmt(s.spent)} spent of {fmt(s.budget)}</span>
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-          <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1 }}>Move leftover</button>
+          {s.left < -0.004 ? <button onClick={() => openSheet({ name: 'refill', id })} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Cover it</button>
+          : <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1 }}>Move leftover</button>}
           <button onClick={closeSheet} style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: TEXT, color: 'var(--on-text)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Done</button>
         </div>
       </div>
@@ -751,6 +753,66 @@ export function CoverSheet() {
         </div>
         {over && <span style={{ margin: '8px 6px 0', fontSize: 12.5, color: RED }}>That's more than {all.find(a => a.id === over.id)?.name} has left this week.</span>}
         <PrimaryBtn onClick={confirm} disabled={!patch}>{total > 0 && patch ? `Use ${fmt(total)} of leftovers` : 'Choose how much to use'}</PrimaryBtn>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Refill an over-budget pocket from the others ---------------- */
+export function RefillSheet({ id }: { id: string }) {
+  const { data: d } = useApp();
+  const c = ctxOf(d);
+  const all = allStats(d, c), me = all.find(x => x.id === id);
+  const left = leftovers(d, c).filter(x => x.id !== id);
+  const [parts, setParts] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(suggestRefill(d, c, id)).map(([k, v]) => [k, String(v)])));
+  if (!me) return <SheetFrame title="Cover it"><span style={{ fontSize: 14 }}>This pocket was deleted.</span></SheetFrame>;
+  const nums = Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, roundAmt(num(v))]));
+  const total = roundAmt(Object.values(nums).reduce((a, n) => a + n, 0));
+  const over = overBy(d, c, id), after = roundAmt(over - total);
+  const tooMuch = left.find(x => (nums[x.id] || 0) > x.left + 0.004);
+  const patch = total > 0 && !tooMuch ? refillFrom(d, c, id, nums) : null;
+  const fill = (m: Record<string, number>) => setParts(Object.fromEntries(Object.entries(m).map(([k, v]) => [k, String(v)])));
+  const confirm = () => {
+    if (!patch) return;
+    setData(x => refillFrom(x, ctxOf(x), id, nums) ?? {});
+    openSheet({ name: 'pocket', id });
+    flash(after > 0.004 ? `${fmt(total)} moved · ${me.name} is still ${fmt(after)} over` : `${me.name} is covered with ${fmt(total)} from other pockets`);
+  };
+  const ok = over <= 0.004 || after <= 0.004;
+  return (
+    <SheetFrame title="Cover it">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: ok ? 'var(--ok-bg)' : 'var(--color-accent-100)', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: ok ? 'var(--ok-ink)' : 'var(--color-accent-800)' }}>{over > 0.004 ? `${me.name} is over budget by` : `${me.name} isn't over budget`}</span>
+          <span style={{ fontSize: 34, fontWeight: 700, letterSpacing: '-0.03em', color: ok ? 'var(--ok-ink)' : 'var(--color-accent-900)' }}>{fmt(over)}</span>
+          <span style={{ fontSize: 13, color: ok ? 'var(--ok-ink)' : 'var(--color-accent-800)' }}>{total > 0 ? (after > 0.004 ? `After this: still ${fmt(after)} over` : after < -0.004 ? `After this: covered, with ${fmt(-after)} to spare` : 'After this: covered ✓') : 'Take money from pockets that still have some left.'}</span>
+        </div>
+        <span style={{ margin: '12px 6px 0', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Only a transfer between pockets for this period: your accounts and your month total don't change, and next period every pocket starts again from its own budget.</span>
+        <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '10px 12px 4px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', gap: 6, paddingBottom: 8 }}>
+            <button onClick={() => fill(suggestRefill(d, c, id))} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Suggested</button>
+            <button onClick={() => setParts({})} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Clear</button>
+          </div>
+          {left.map(x => {
+            const st = all.find(a => a.id === x.id)!;
+            return (
+              <div key={x.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: `1px solid ${LINE}` }}>
+                <PocketDot st={st} size={32} fs={15} bg={tint(st.hue)} color={ink(st.hue)} />
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{st.name}</span>
+                  <span style={{ fontSize: 12, color: (nums[x.id] || 0) > x.left + 0.004 ? RED : 'var(--color-neutral-700)' }}>{nums[x.id] ? `${fmt(x.left)} left → ${fmt(Math.max(0, x.left - nums[x.id]))}` : `${fmt(x.left)} left`}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(st.hue), borderRadius: 14, padding: '8px 10px', width: 116, flex: 'none' }}>
+                  <span style={{ fontSize: 14, color: ink(st.hue) }}>{curSymbol()}</span>
+                  <MoneyInput value={parts[x.id] || ''} onChange={v => setParts(p0 => ({ ...p0, [x.id]: v }))} ariaLabel={`From ${st.name}`} style={{ width: '100%', minWidth: 0, border: 0, background: 'transparent', fontSize: 16, fontWeight: 700, color: ink(st.hue), padding: 0, outline: 'none' }} />
+                </div>
+              </div>
+            );
+          })}
+          {!left.length && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '8px 0 10px' }}>No other pocket has money left right now.</span>}
+        </div>
+        {tooMuch && <span style={{ margin: '8px 6px 0', fontSize: 12.5, color: RED }}>{`That's more than ${all.find(a => a.id === tooMuch.id)?.name} has left.`}</span>}
+        <PrimaryBtn onClick={confirm} disabled={!patch}>{patch ? `Move ${fmt(total)} into ${me.name}` : 'Choose how much to move'}</PrimaryBtn>
       </div>
     </SheetFrame>
   );

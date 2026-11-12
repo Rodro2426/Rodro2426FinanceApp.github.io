@@ -5,7 +5,7 @@ import { makeCtx } from './dates';
 import { emptyData, sampleData } from './seed';
 import { monthStats, pocketStats } from './derive';
 import { largestRemainder, weekShares } from './split';
-import { addExtraIncome, COVER, coverFirst, coverWith, deleteIncome, editIncomeAmount, findMismatches, markIncluded, monthSummary, splitAmong, suggestCover, transferLeftover, undoMoves, type ExtraIncome } from './plan';
+import { overBy, refillFrom, suggestRefill, addExtraIncome, COVER, coverFirst, coverWith, deleteIncome, editIncomeAmount, findMismatches, markIncluded, monthSummary, splitAmong, suggestCover, transferLeftover, undoMoves, type ExtraIncome } from './plan';
 
 /** November 2026, week 1 (Nov 2–8), today Wednesday Nov 4: 4 weeks in the month, 4 left. */
 const c = makeCtx(4, '2026-11-04');
@@ -221,5 +221,94 @@ describe('covering the shortfall with leftovers', () => {
   });
   it('no shortfall, no suggestion', () => {
     expect(suggestCover(short(900000), c)).toEqual({});
+  });
+});
+
+describe('covering an over-budget pocket from the others', () => {
+  it('takes from the pockets with the most left, and the total of all pockets stays the same', async () => {
+    const { sampleData } = await import('./seed');
+    const { makeCtx } = await import('./dates');
+    const { pocketStats } = await import('./derive');
+    const { overBy, refillFrom, suggestRefill } = await import('./plan');
+    const TODAY = '2026-11-11', c = makeCtx(4, TODAY), base: Data = { ...sampleData(TODAY), moves: [] };
+    const d: Data = { ...base, expenses: [{ id: 'big', ts: 9, p: 'fun', a: 'a1', amt: 200000, note: 'Concert', date: TODAY, tags: [], cat: 'Entertainment', sub: '' }, ...base.expenses] };
+    const left = (x: Data, id: string) => pocketStats(x, id, c)!.left;
+    const total = (x: Data) => x.pockets.reduce((a, p) => a + left(x, p.id), 0);
+    const over = overBy(d, c, 'fun');
+    expect(over).toBe(-left(d, 'fun'));
+    expect(over).toBeGreaterThan(0);
+    const sug = suggestRefill(d, c, 'fun');
+    expect(Object.values(sug).reduce((a, v) => a + v, 0)).toBe(over);
+    expect(sug.fun).toBeUndefined();
+    const after = { ...d, ...refillFrom(d, c, 'fun', sug)! };
+    expect(left(after, 'fun')).toBe(0);
+    expect(total(after)).toBe(total(d));
+    expect(after.accounts).toEqual(d.accounts);
+    // Never more than a pocket has left, and never from itself.
+    expect(refillFrom(d, c, 'fun', { groc: left(d, 'groc') + 1 })).toBeNull();
+    expect(refillFrom(d, c, 'fun', { fun: 10 })).toBeNull();
+    expect(overBy(d, c, 'groc')).toBe(0);
+  });
+});
+
+describe('refilling across pocket kinds, mid-period start and cents', () => {
+  // Wed 18 Nov 2026: week Mon 16 Nov, second quincena (16th-30th). Hand-built data.
+  const T = '2026-11-18', cc = makeCtx(4, T);
+  const exp = (id: string, p: string, amt: number) => ({ id, ts: 1, p, a: 'bank', amt, note: id, date: T, tags: [], cat: 'Other', sub: '' });
+  const mk = (pockets: Data['pockets'], expenses: Data['expenses'], cur: Data['settings']['currency'] = 'COP'): Data => {
+    const e = emptyData(sampleData(T));
+    return { ...e, settings: { ...e.settings, currency: cur, weeks: 4 }, pockets, expenses, moves: [], incomes: [], accounts: [{ id: 'bank', name: 'B', kind: 'Checking', type: 'bank', bal: 1000000, hue: 85 }] };
+  };
+  const left = (d: Data, id: string) => pocketStats(d, id, cc)!.left;
+  const total = (d: Data) => d.pockets.reduce((a, p) => a + left(d, p.id), 0);
+  const sum = (m: Record<string, number>) => Object.values(m).reduce((a, v) => a + v, 0);
+
+  it('weekly pocket over by 30000 is refilled from a 15-day pocket (matched by day)', () => {
+    // wk 100000 - 130000 = -30000; half 200000 - 50000 = 150000 left
+    const d = mk([{ id: 'w', name: 'W', weeklyStr: '100000', hue: 1 }, { id: 'h', name: 'H', weeklyStr: '200000', hue: 2, period: 'half' }], [exp('a', 'w', 130000), exp('b', 'h', 50000)]);
+    expect(overBy(d, cc, 'w')).toBe(30000);
+    const sug = suggestRefill(d, cc, 'w');
+    expect(sug).toEqual({ h: 30000 });
+    const a = { ...d, ...refillFrom(d, cc, 'w', sug)! };
+    expect(left(a, 'w')).toBe(0); expect(left(a, 'h')).toBe(120000); expect(total(a)).toBe(total(d));
+    expect(a.accounts).toEqual(d.accounts);
+  });
+
+  it('15-day pocket over budget is refilled from weekly pockets; next week the weekly source starts fresh', () => {
+    const d = mk([{ id: 'h', name: 'H', weeklyStr: '100000', hue: 2, period: 'half' }, { id: 'w', name: 'W', weeklyStr: '70000', hue: 1 }, { id: 'v', name: 'V', weeklyStr: '40000', hue: 3 }], [exp('b', 'h', 160000)]);
+    expect(overBy(d, cc, 'h')).toBe(60000);
+    const sug = suggestRefill(d, cc, 'h'); // w has 70000 -> takes 60000 from the biggest
+    expect(sug).toEqual({ w: 60000 });
+    const a = { ...d, ...refillFrom(d, cc, 'h', sug)! };
+    expect(left(a, 'h')).toBe(0); expect(left(a, 'w')).toBe(10000); expect(total(a)).toBe(total(d));
+    const nextWeek = makeCtx(4, '2026-11-25');
+    expect(pocketStats(a, 'w', nextWeek)!.left).toBe(70000);
+  });
+
+  it('a mid-period start counts: only what the new pocket really has can be taken', () => {
+    const d = mk([{ id: 'o', name: 'O', weeklyStr: '50000', hue: 1 }, { id: 'n', name: 'N', weeklyStr: '140000', hue: 2, start: { from: '2026-11-16', amt: 80000 } }], [exp('a', 'o', 90000)]);
+    expect(left(d, 'n')).toBe(80000);
+    expect(suggestRefill(d, cc, 'o')).toEqual({ n: 40000 });
+    expect(refillFrom(d, cc, 'o', { n: 80001 })).toBeNull();
+    const a = { ...d, ...refillFrom(d, cc, 'o', { n: 40000 })! };
+    expect(left(a, 'n')).toBe(40000); expect(left(a, 'o')).toBe(0);
+  });
+
+  it('euro cents: the suggestion adds up exactly to the overspend', () => {
+    const d = mk([{ id: 'o', name: 'O', weeklyStr: '10.10', hue: 1 }, { id: 'x', name: 'X', weeklyStr: '3.33', hue: 2 }, { id: 'y', name: 'Y', weeklyStr: '13.34', hue: 3 }], [exp('a', 'o', 17.07)], '€');
+    const over = overBy(d, cc, 'o');
+    expect(over).toBe(6.97);
+    const sug = suggestRefill(d, cc, 'o');
+    expect(Math.round(sum(sug) * 100)).toBe(697);
+    expect(sug.o).toBeUndefined();
+    const p = refillFrom(d, cc, 'o', sug);
+    expect(p).not.toBeNull();
+    expect(Math.abs(left({ ...d, ...p! }, 'o'))).toBeLessThan(0.005);
+  });
+
+  it('not over budget -> empty suggestion; sources run out -> partial', () => {
+    const d = mk([{ id: 'o', name: 'O', weeklyStr: '1000', hue: 1 }, { id: 'x', name: 'X', weeklyStr: '300', hue: 2 }], [exp('a', 'o', 1900)]);
+    expect(suggestRefill(d, cc, 'x')).toEqual({});
+    expect(suggestRefill(d, cc, 'o')).toEqual({ x: 300 });
   });
 });
