@@ -246,6 +246,12 @@ A CSS-built iPhone (slice, front with bezel and island, navy back with the logo 
 ### App Fragment (signature, website)
 A real piece of the app UI (a bill alert, a pocket tile with its emoji and remaining amount, a settle-up line with an initial avatar) floating in front of the phone at its own depth. Fragments are the only illustration: no invented objects.
 
+### Ground Texture "Billete Pockets" (signature, website)
+The page ground is printed the way a peso bill is, built only from Pockets' own pieces (owner's choice, 2026-11-11). Two files in `app/public/site/tex/`:
+- `billete-hero.svg` (1440×900, once at the top, centred; on phones 1100px wide and centred on the phone): a lilac-to-mint colour wash (#e6e1fa → #dcf3e3 at 55%), a watermark of 13 nested outlines of the logo's pocket shape behind the phone (navy at 8%), a microprinted ring reading "CADA PESO EN SU BOLSILLO · POCKETS" (7px, navy at 11%), and an engraved guilloché rosette in the lower-left corner (navy at 6%).
+- `billete-tile.svg` (600×140, repeated down the page): four interlaced guilloché wave lines (navy at 5.5%) and one row of 5px microtext (navy at 7%), over a 135° line screen (`--hatch`, 1px navy at 2.8% every 6px).
+The texture lives only on Warm Paper. White sections, cards, the phone and the navy close stay clean. On phones the sticky story stage repeats the tile so it never shows a flat block. Nothing from a real banknote (portrait, issuing bank, denomination, serial numbers) is ever used.
+
 ## Do's and Don'ts
 
 ### Do:

@@ -32,13 +32,21 @@
   --gutter-r: max(20px, env(safe-area-inset-right, 0px));
   --nav-h: 64px;
   --radius: 24px;
+  --hatch: repeating-linear-gradient(135deg, rgba(35, 46, 122, 0.028) 0 1px, transparent 1px 6px);
 }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + 12px); }
+/* Ground texture ("Billete Pockets"): printed like a peso bill, built only from Pockets' own pieces.
+   The hero plate (colour wash, pocket watermark, microtext ring, rosette) sits once at the top;
+   the tile (wave lines and microtext) and a fine diagonal line screen run down the whole page. */
 body {
   margin: 0;
-  background: var(--page);
+  background-color: var(--page);
+  background-image: url("tex/billete-hero.svg"), url("tex/billete-tile.svg"), var(--hatch);
+  background-repeat: no-repeat, repeat, repeat;
+  background-position: center top, 0 0, 0 0;
+  background-size: 1440px 900px, 600px 140px, auto;
   color: var(--ink);
   font-family: var(--font);
   font-size: 17px;
@@ -354,7 +362,8 @@ html.js #heroRig .frag-settle { animation-delay: 740ms; }
   .story { padding-block: 0 40px; }
   .story-grid { grid-template-columns: 1fr; gap: 0; }
   /* The stage is an opaque window above the text: blocks slide under it instead of across the phone. */
-  .story-stage { height: 44svh; min-height: 290px; z-index: 3; background: var(--page); }
+  body { background-position: calc(50vw - 772px) 340px, 0 0, 0 0; background-size: 1100px 688px, 600px 140px, auto; }
+  .story-stage { height: 44svh; min-height: 290px; z-index: 3; background: url("tex/billete-tile.svg") 0 0 / 600px 140px, var(--hatch), var(--page); }
   .story-stage .rig { scale: 0.5; }
   .story-stage .floor-shadow { display: none; }
   .tint { inset: 4% 0; border-radius: 36px; }
