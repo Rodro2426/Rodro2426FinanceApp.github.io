@@ -3,6 +3,7 @@
 Personal-finance web app for one person in Colombia (COP) and their friends. It runs as an **iPhone home-screen app (PWA)** and as a **desktop website** from the same code.
 
 - **Live:** https://rodro2426.github.io/Rodro2426FinanceApp.github.io/
+- **Website:** https://rodro2426.github.io/Rodro2426FinanceApp.github.io/site/ (static files in `app/public/site/`, Spanish first with an English switch). `PRODUCT.md` and `DESIGN.md` at the root describe the product and its look.
 - **Repo:** Rodro2426/Rodro2426FinanceApp.github.io. Pushing to `main` deploys automatically (`.github/workflows/pages.yml` builds `app/` and publishes `app/dist`).
 - **Owner:** a non-developer who wants to learn. After each change, explain in plain words what was built and how it works.
 

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pockets · Tu plata, en su lugar</title>
+  <meta name="description" content="Pockets divide tu sueldo en bolsillos y te dice cuánto puedes gastar hoy. Gratis, en pesos, por quincenas y en tu iPhone.">
+  <meta name="theme-color" content="#f7f5f3">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pockets · Tu plata, en su lugar">
+  <meta property="og:description" content="Divide tu sueldo en bolsillos y mira cada mañana cuánto puedes gastar hoy. Gratis, sin App Store.">
+  <meta property="og:image" content="https://rodro2426.github.io/Rodro2426FinanceApp.github.io/site/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://rodro2426.github.io/Rodro2426FinanceApp.github.io/site/">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../icon-full.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../icon-180.png">
+  <link rel="preload" href="fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="site.css">
+  <script>
+    // Pick the language before paint: saved choice, else Spanish unless the browser is set to another language.
+    (function () {
+      var l = null;
+      try { l = localStorage.getItem('pockets-site-lang'); } catch (e) {}
+      if (l !== 'es' && l !== 'en') l = /^es\b/i.test(navigator.language || 'es') ? 'es' : 'en';
+      document.documentElement.lang = l;
+      document.documentElement.className = 'js';
+    })();
+  </script>
+</head>
+<body>
+
+<a class="skip" href="#main" data-i18n="skip">Saltar al contenido</a>
+
+<header class="nav" id="nav">
+  <div class="nav-in">
+    <a class="brand" href="#top" aria-label="Pockets">
+      <img src="../pockets-mark.svg" alt="" width="26" height="32">
+      <span>Pockets</span>
+    </a>
+    <nav class="nav-links" aria-label="Secciones">
+      <a href="#funciones" data-i18n="nav.features">Funciones</a>
+      <a href="#amigos" data-i18n="nav.friends">Amigos</a>
+      <a href="#privacidad" data-i18n="nav.privacy">Privacidad</a>
+      <a href="#instalar" data-i18n="nav.install">Instalar</a>
+    </nav>
+    <div class="nav-end">
+      <div class="lang" role="group" aria-label="Idioma / Language">
+        <button type="button" data-lang="es" aria-pressed="true">ES</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn btn-sm" href="../" data-i18n="cta.open">Abrir Pockets</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- Hero -->
+  <section class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1 class="h-hero" data-i18n-html="hero.title">Tu plata,<br><span>en su lugar.</span></h1>
+        <p class="lede" data-i18n="hero.lede">Divide tu sueldo en bolsillos y mira cada mañana cuánto puedes gastar hoy. En pesos, por quincenas y en tu iPhone.</p>
+        <div class="cta-row">
+          <a class="btn" href="../" data-i18n="cta.open">Abrir Pockets</a>
+          <a class="link-arrow" href="#instalar"><span data-i18n="cta.how">Cómo instalarla</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4"/></svg></a>
+        </div>
+        <p class="facts-line" data-i18n="hero.facts">Gratis · Sin App Store · Español e inglés</p>
+      </div>
+
+      <div class="hero-stage" id="heroStage">
+        <div class="stage3d">
+          <div class="rig" id="heroRig">
+            <div class="phone" data-shot="s0"></div>
+            <div class="frag frag-bill" style="--z:90px">
+              <span class="frag-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></span>
+              <span><b data-i18n="frag.bill.t">Spotify vence mañana</b><small data-i18n="frag.bill.s">$16.900 se pagará automáticamente desde Visa Gold.</small></span>
+            </div>
+            <div class="frag frag-pocket" style="--z:130px">
+              <span class="frag-row"><span class="emoji" aria-hidden="true">🚌</span><b data-i18n="frag.pocket">Transporte</b></span>
+              <strong>$72.000</strong>
+              <small data-i18n="frag.pocket.s">quedan de $120.000</small>
+            </div>
+            <div class="frag frag-settle" style="--z:60px">
+              <span class="av">L</span>
+              <span><b data-i18n="frag.settle.t">Laura te paga</b><small>$190.000 · Cartagena</small></span>
+            </div>
+          </div>
+          <div class="floor-shadow" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Story: one phone, eight features -->
+  <section class="story" id="funciones" aria-label="Funciones">
+    <div class="wrap story-grid">
+      <div class="story-stage" aria-hidden="true">
+        <div class="tint" id="tint"></div>
+        <div class="stage3d">
+          <div class="rig" id="storyRig">
+            <div class="spin" id="spin">
+              <div class="phone" id="storyPhone" data-shot="s0" data-multi></div>
+            </div>
+          </div>
+          <div class="floor-shadow"></div>
+        </div>
+        <ol class="rail" id="rail">
+          <li data-i18n="rail.0">Hoy</li><li data-i18n="rail.1">Bolsillos</li><li data-i18n="rail.2">Cuentas</li><li data-i18n="rail.3">Calendario</li>
+          <li data-i18n="rail.4">Análisis</li><li data-i18n="rail.5">Inversiones</li><li data-i18n="rail.6">Amigos</li><li data-i18n="rail.7">Privacidad</li>
+        </ol>
+      </div>
+
+      <div class="feats">
+        <article class="feat" data-i="0" data-tint="#dcf3e3">
+          <div class="feat-card">
+            <img class="feat-shot" data-shot="s0" src="screens/es/s0.jpg" alt="" loading="lazy">
+            <h2 data-i18n="f0.h">Un número. Cada mañana.</h2>
+            <p data-i18n="f0.p">Abre la app y ves cuánto puedes gastar hoy, esta semana y este mes. Sin hojas de cálculo y sin adivinar.</p>
+            <ul class="chips"><li data-i18n="f0.c0">Hoy</li><li data-i18n="f0.c1">Esta semana</li><li data-i18n="f0.c2">Este mes</li></ul>
+          </div>
+        </article>
+        <article class="feat" data-i="1" data-tint="#d9e8fb">
+          <div class="feat-card">
+            <img class="feat-shot" data-shot="s1" src="screens/es/s1.jpg" alt="" loading="lazy">
+            <h2 data-i18n="f1.h">Tu sueldo, ya repartido.</h2>
+            <p data-i18n="f1.p">Reparte cada pago en bolsillos: mercado, transporte, salidas, ahorro. Cada uno vuelve a empezar cada semana o cada quincena.</p>
+            <ul class="chips"><li data-i18n="f1.c0">Lunes a domingo</li><li data-i18n="f1.c1">Del 1 al 15 y del 16 al fin</li><li data-i18n="f1.c2">Lo que sobra pasa</li></ul>
+          </div>
+        </article>
+        <article class="feat" data-i="2" data-tint="#ece3fb">
+          <div class="feat-card">
+            <img class="feat-shot" data-shot="s2" src="screens/es/s2.jpg" alt="" loading="lazy">
+            <h2 data-i18n="f2.h">Todas tus cuentas, juntas.</h2>
+            <p data-i18n="f2.p">Bancos, ahorros, efectivo y tarjetas de crédito en un solo lugar, con tu patrimonio al día y el interés en % E.A.</p>
+            <ul class="chips"><li data-i18n="f2.c0">Tarjetas de crédito</li><li data-i18n="f2.c1">Ahorros con interés</li><li data-i18n="f2.c2">“Esta no es mía”</li></ul>
+          </div>
+        </article>
+        <article class="feat" data-i="3" data-tint="#fbeec9">
+          <div class="feat-card">
+            <img class="feat-shot" data-shot="s3" src="screens/es/s3.jpg" alt="" loading="lazy">
+            <h2 data-i18n="f3.h">Ninguna cuenta te coge por sorpresa.</h2>
+            <p data-i18n="f3.p">Ingresos, recibos, suscripciones y pagos de tarjeta se repiten solos. Pockets mueve la plata y te avisa en la pantalla de bloqueo.</p>
+            <ul class="chips"><li data-i18n="f3.c0">Avisos reales</li><li data-i18n="f3.c1">Pagos automáticos</li><li data-i18n="f3.c2">Calendario del mes</li></ul>
+          </div>
+        </article>
+        <article class="feat" data-i="4" data-tint="#dfeaf8">
+          <div class="feat-card">
+            <img class="feat-shot" data-shot="s4" src="screens/es/s4.jpg" alt="" loading="lazy">
+            <h2 data-i18n="f4.h">Mira en qué se te fue.</h2>
+            <p data-i18n="f4.p">Categorías, presupuestos y reportes del mes. Exporta todo a Excel, con una hoja lista para pasársela a una IA.</p>
+            <ul class="chips"><li data-i18n="f4.c0">Categorías</li><li data-i18n="f4.c1">13 reportes</li><li data-i18n="f4.c2">Excel con hoja para IA</li></ul>
+          </div>
+        </article>
+        <article class="feat" data-i="5" data-tint="#e6e1fa">
+          <div class="feat-card">
+            <img class="feat-shot" data-shot="s5" src="screens/es/s5.jpg" alt="" loading="lazy">
+            <h2 data-i18n="f5.h">De CDTs a acciones, en una vista.</h2>
+            <p data-i18n="f5.p">CDTs, fondos de inversión, pensión voluntaria y cesantías junto a tus acciones, convertidas con la TRM del día.</p>
+            <ul class="chips"><li>CDT</li><li>FIC</li><li data-i18n="f5.c2">Cesantías</li><li data-i18n="f5.c3">Acciones en USD</li></ul>
+          </div>
+        </article>
+        <article class="feat" data-i="6" data-tint="#fde0dc" id="amigos">
+          <div class="feat-card">
+            <img class="feat-shot" data-shot="s6" src="screens/es/s6.jpg" alt="" loading="lazy">
+            <h2 data-i18n="f6.h">Viajes sin hacer cuentas.</h2>
+            <p data-i18n="f6.p">Agrega amigos por correo, comparte un viaje y anota quién pagó. Pockets calcula quién le debe a quién, con chat, fotos y GIFs.</p>
+            <ul class="chips"><li data-i18n="f6.c0">Viajes compartidos</li><li data-i18n="f6.c1">Saldar cuentas</li><li data-i18n="f6.c2">Chat del viaje</li></ul>
+          </div>
+        </article>
+        <article class="feat" data-i="7" data-tint="#e3e6f7" id="privacidad">
+          <div class="feat-card">
+            <img class="feat-shot" data-shot="s7" src="screens/es/s7.jpg" alt="" loading="lazy">
+            <h2 data-i18n="f7.h">Tuya. Solo tuya.</h2>
+            <p data-i18n="f7.p">Ciérrala con Face ID y esconde los montos con un toque. Tus datos viven en tu teléfono; la nube es solo una copia, si la quieres.</p>
+            <ul class="chips"><li>Face ID</li><li data-i18n="f7.c1">Ocultar montos</li><li data-i18n="f7.c2">Copia en la nube</li></ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Desktop -->
+  <section class="desk" id="computador">
+    <div class="wrap">
+      <div class="desk-head">
+        <h2 class="h-section" data-i18n="desk.h">También en tu computador.</h2>
+        <p class="lede" data-i18n="desk.p">Abre el mismo enlace en tu computador y Pockets se acomoda a la pantalla grande, con menú al lado. Con una cuenta, todo se sincroniza entre los dos.</p>
+      </div>
+      <div class="desk-stage" id="deskStage">
+        <figure class="window">
+          <div class="window-bar" aria-hidden="true"><i></i><i></i><i></i><span>rodro2426.github.io/…/</span></div>
+          <img data-shot="desktop" src="screens/es/desktop.jpg" alt="Pockets en el computador: inicio con bolsillos, próximos pagos y gastos recientes" data-i18n-alt="desk.alt" width="1920" height="1200" loading="lazy">
+        </figure>
+        <div class="desk-phone"><div class="phone" data-shot="s0"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Details -->
+  <section class="details" id="detalles">
+    <div class="wrap">
+      <h2 class="h-section" data-i18n="det.h">Y los detalles.</h2>
+      <ul class="det-list">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M9 9v1M15 9v1M12 9v4h-1M9 16c1.6 1.2 4.4 1.2 6 0"/></svg>
+          <div><h3>Face ID</h3><p data-i18n="det.0">Solo se abre para ti.</p></div></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg>
+          <div><h3 data-i18n="det.1.h">Ocultar montos</h3><p data-i18n="det.1">Un toque antes de mostrarle la pantalla a alguien.</p></div></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4l2-2zM10 21h4"/></svg>
+          <div><h3 data-i18n="det.2.h">Avisos de verdad</h3><p data-i18n="det.2">Recibos, día de pago y tarjetas, en la pantalla de bloqueo.</p></div></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <div><h3 data-i18n="det.3.h">Modo oscuro</h3><p data-i18n="det.3">Y el color de fondo que tú quieras.</p></div></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h8M8 3v2M6 5c0 4 3 7 6 8M10 5c0 3-3 7-6 8M13 21l4-10 4 10M14.5 17h5"/></svg>
+          <div><h3 data-i18n="det.4.h">Español o inglés</h3><p data-i18n="det.4">Cambia de idioma cuando quieras.</p></div></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a5 5 0 0 1-.6-10A6 6 0 0 1 18 9a4.5 4.5 0 0 1-1 9H7z"/><path d="M12 11v5M10 14l2 2 2-2"/></svg>
+          <div><h3 data-i18n="det.5.h">Copia y sincronización</h3><p data-i18n="det.5">Una copia en la nube, o guardada en un archivo.</p></div></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="8" height="7" rx="2"/><rect x="13" y="4" width="8" height="12" rx="2"/><rect x="3" y="13" width="8" height="7" rx="2"/><path d="M13 19h8"/></svg>
+          <div><h3 data-i18n="det.6.h">Tu propio Inicio</h3><p data-i18n="det.6">Mueve y esconde los bloques que ves primero.</p></div></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+          <div><h3 data-i18n="det.7.h">Tour de práctica</h3><p data-i18n="det.7">Aprende a usarla con datos de ejemplo, sin tocar los tuyos.</p></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section class="install" id="instalar">
+    <div class="wrap">
+      <h2 class="h-section" data-i18n="ins.h">Instálala en tres pasos.</h2>
+      <p class="lede" data-i18n="ins.p">Pockets no está en el App Store. Se instala desde Safari y se actualiza sola.</p>
+      <ol class="steps">
+        <li class="step">
+          <div class="step-art" aria-hidden="true">
+            <div class="ios"><div class="ios-url"><svg viewBox="0 0 16 16"><rect x="3" y="7" width="10" height="7" rx="2"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>rodro2426.github.io</div><div class="ios-tools"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg><svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg><svg viewBox="0 0 24 24"><path d="M4 6h16v13H4z"/><path d="M8 3v3M16 3v3"/></svg><svg viewBox="0 0 24 24"><rect x="4" y="4" width="11" height="11" rx="2"/><path d="M9 20h11V9"/></svg></div></div>
+          </div>
+          <h3><span class="step-n">1</span><span data-i18n="ins.s0">Abre el enlace en Safari</span></h3>
+          <p data-i18n="ins.s0p">En tu iPhone, abre la dirección de abajo en Safari.</p>
+        </li>
+        <li class="step">
+          <div class="step-art" aria-hidden="true">
+            <div class="ios"><div class="ios-url">rodro2426.github.io</div><div class="ios-tools"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg><span class="hl"><svg viewBox="0 0 24 24"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M6 11H5v10h14V11h-1"/></svg></span><svg viewBox="0 0 24 24"><path d="M4 6h16v13H4z"/><path d="M8 3v3M16 3v3"/></svg><svg viewBox="0 0 24 24"><rect x="4" y="4" width="11" height="11" rx="2"/><path d="M9 20h11V9"/></svg></div></div>
+          </div>
+          <h3><span class="step-n">2</span><span data-i18n="ins.s1">Toca Compartir</span></h3>
+          <p data-i18n="ins.s1p">Es el cuadrado con la flecha hacia arriba, abajo en la pantalla.</p>
+        </li>
+        <li class="step">
+          <div class="step-art" aria-hidden="true">
+            <div class="ios"><div class="ios-row dim"><span data-i18n="ins.s2a">Copiar</span><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V5a1 1 0 0 1 1-1h11"/></svg></div><div class="ios-row hl"><span data-i18n="ins.s2b">Agregar a inicio</span><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg></div></div>
+          </div>
+          <h3><span class="step-n">3</span><span data-i18n="ins.s2">Toca “Agregar a inicio”</span></h3>
+          <p data-i18n="ins.s2p">Pockets queda en tu pantalla de inicio y se abre como cualquier app.</p>
+        </li>
+      </ol>
+      <div class="copy-box">
+        <code id="appUrl">https://rodro2426.github.io/<wbr>Rodro2426FinanceApp.github.io/</code>
+        <button type="button" class="btn btn-ghost" id="copyBtn" data-i18n="ins.copy">Copiar enlace</button>
+      </div>
+      <p class="note" data-i18n="ins.note">¿Android o computador? Ábrela en el navegador; funciona igual.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq" id="preguntas">
+    <div class="wrap faq-grid">
+      <h2 class="h-section" data-i18n="faq.h">Lo que todos preguntan.</h2>
+      <div class="faq-list">
+        <details><summary data-i18n="faq.0q">¿Cuesta algo?</summary><p data-i18n="faq.0a">No. Pockets es gratis y no tiene versión de pago.</p></details>
+        <details><summary data-i18n="faq.1q">¿Se conecta a mi banco?</summary><p data-i18n="faq.1a">No. Tú anotas tus gastos e ingresos, o los programas para que se repitan solos. Pockets nunca te pide las claves de tu banco.</p></details>
+        <details><summary data-i18n="faq.2q">¿Dónde quedan mis datos?</summary><p data-i18n="faq.2a">En tu teléfono. Si creas una cuenta, se guarda una copia en la nube para verla en otros dispositivos. También puedes guardar una copia en un archivo.</p></details>
+        <details><summary data-i18n="faq.3q">¿Necesito una cuenta?</summary><p data-i18n="faq.3a">Para empezar, no. La cuenta (con correo o con Google) solo hace falta para sincronizar y para los viajes con amigos.</p></details>
+        <details><summary data-i18n="faq.4q">¿Puedo probarla sin poner mis datos?</summary><p data-i18n="faq.4a">Sí. Al abrirla, toca “Más formas de empezar” y luego “Probar con datos de ejemplo”.</p></details>
+        <details><summary data-i18n="faq.5q">¿Por qué no está en el App Store?</summary><p data-i18n="faq.5a">Es una app web: se instala desde Safari, se actualiza sola y no necesita pasar por la tienda.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Close -->
+  <section class="close">
+    <div class="wrap close-in">
+      <img src="../pockets-mark.svg" alt="" width="84" height="102" class="close-mark">
+      <h2 class="h-close" data-i18n-html="close.h">Cada peso,<br><span>en su bolsillo.</span></h2>
+      <p data-i18n="close.p">Gratis, en español y lista para tu próxima quincena.</p>
+      <a class="btn btn-light" href="../" data-i18n="cta.open">Abrir Pockets</a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span class="brand"><img src="../pockets-mark.svg" alt="" width="20" height="24"> Pockets</span>
+    <p data-i18n="foot.p">Hecha en Colombia para pesos, quincenas y la TRM. Las pantallas muestran la app real con datos de ejemplo.</p>
+    <nav aria-label="Pie de página"><a href="../" data-i18n="foot.app">Abrir la app</a><a href="#instalar" data-i18n="nav.install">Instalar</a><a href="#preguntas" data-i18n="foot.faq">Preguntas</a></nav>
+  </div>
+</footer>
+
+<template id="phoneTpl">
+  <div class="slice"></div>
+  <div class="back"><div class="cam"><i></i><i></i><i></i></div><img src="../pockets-mark.svg" alt=""></div>
+  <div class="front"><div class="screen">
+    <div class="island"></div>
+    <div class="status"><span>9:41</span><svg viewBox="0 0 34 12" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="18" y="1" width="14" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="19.8" y="2.8" width="10.4" height="6.4" rx="1.6"/></svg></div>
+    <div class="shots"></div>
+  </div></div>
+</template>
+
+<script src="site.js" defer></script>
+</body>
+</html>

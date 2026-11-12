@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "app/public/site/index.html"
+        ],
+        "createdAt": "2026-11-12T03:03:53.459Z",
+        "reason": "false positive: sections take side padding from their inner .wrap and only padding-block on the section; mini-safari centers its label in a 48px pill"
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "app/public/site/index.html"
+        ],
+        "createdAt": "2026-11-12T03:12:14.517Z",
+        "reason": "intentional: the install step art draws the iPhone Safari toolbar and share sheet (iOS UI pieces) inside its illustration frame; not a layout card"
+      }
+    ]
+  }
+}

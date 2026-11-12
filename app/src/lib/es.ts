@@ -1660,6 +1660,14 @@ Paid with {0}|Pagado con {0}
 Went into {0}|Entró a {0}
 All of it · {0}|Todo · {0}
 Save {0}|Guardar {0}
+{0} accounts + investments + groups + owed to you|{0} cuentas + inversiones + grupos + lo que te deben
+{0} accounts + investments + groups|{0} cuentas + inversiones + grupos
+{0} accounts + investments + owed to you|{0} cuentas + inversiones + lo que te deben
+{0} accounts + groups + owed to you|{0} cuentas + grupos + lo que te deben
+{0} accounts + investments|{0} cuentas + inversiones
+{0} accounts + groups|{0} cuentas + grupos
+{0} accounts + owed to you|{0} cuentas + lo que te deben
+{0} accounts|{0} cuentas
 {0} categories|{0} categorías
 {0} already exists. Merging moves everything from {1} into it.|{0} ya existe. Al combinar, todo lo de {1} pasa a esa categoría.
 Name of {0}|Nombre de {0}

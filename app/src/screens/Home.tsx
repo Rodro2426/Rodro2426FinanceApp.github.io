@@ -99,7 +99,7 @@ export default function Home() {
         <div onClick={() => setUI({ tab: 'accounts' })} className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Net worth</span>
           <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{fmt(assets - debt)}</span>
-          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{d.accounts.length} accounts{nw.includeInvestments && nw.investments ? ' + investments' : ''}{nw.groups.some(x => x.counted) ? ' + groups' : ''}{nw.includeOwed && nw.owedToMe > 0 ? ' + owed to you' : ''}</span>
+          <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{`${d.accounts.length} accounts${nw.includeInvestments && nw.investments ? ' + investments' : ''}${nw.groups.some(x => x.counted) ? ' + groups' : ''}${nw.includeOwed && nw.owedToMe > 0 ? ' + owed to you' : ''}`}</span>
         </div>
         <div onClick={() => setUI({ tab: 'insights' })} className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Spent in {monthName(c.month)}</span>

@@ -1,0 +1,540 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-11T22:30:00-05:00",
+  "title": "Design System: Pockets",
+  "extensions": {
+    "colorMeta": {
+      "page": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "tonalRamp": [
+          "#201e1d",
+          "#444141",
+          "#57534f",
+          "#6b6764",
+          "#9b9797",
+          "#d7d3d3",
+          "#efecea",
+          "#f7f5f3"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Card White",
+        "tonalRamp": [
+          "#201e1d",
+          "#444141",
+          "#57534f",
+          "#6b6764",
+          "#9b9797",
+          "#d7d3d3",
+          "#efecea",
+          "#f7f5f3"
+        ]
+      },
+      "sunk": {
+        "role": "neutral",
+        "displayName": "Sunk",
+        "tonalRamp": [
+          "#201e1d",
+          "#444141",
+          "#57534f",
+          "#6b6764",
+          "#9b9797",
+          "#d7d3d3",
+          "#efecea",
+          "#f7f5f3"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "#201e1d",
+          "#444141",
+          "#57534f",
+          "#6b6764",
+          "#9b9797",
+          "#d7d3d3",
+          "#efecea",
+          "#f7f5f3"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Ink 2",
+        "tonalRamp": [
+          "#201e1d",
+          "#444141",
+          "#57534f",
+          "#6b6764",
+          "#9b9797",
+          "#d7d3d3",
+          "#efecea",
+          "#f7f5f3"
+        ]
+      },
+      "ink-3": {
+        "role": "neutral",
+        "displayName": "Ink 3",
+        "tonalRamp": [
+          "#201e1d",
+          "#444141",
+          "#57534f",
+          "#6b6764",
+          "#9b9797",
+          "#d7d3d3",
+          "#efecea",
+          "#f7f5f3"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "#201e1d",
+          "#444141",
+          "#57534f",
+          "#6b6764",
+          "#9b9797",
+          "#d7d3d3",
+          "#efecea",
+          "#f7f5f3"
+        ]
+      },
+      "red": {
+        "role": "primary",
+        "displayName": "Pockets Red",
+        "tonalRamp": [
+          "#4d170e",
+          "#7c1405",
+          "#ae1800",
+          "#d42a10",
+          "#ec3013",
+          "#ff9783",
+          "#ffc4b8",
+          "#fde4df"
+        ]
+      },
+      "red-press": {
+        "role": "primary",
+        "displayName": "Red Press",
+        "tonalRamp": [
+          "#4d170e",
+          "#7c1405",
+          "#ae1800",
+          "#d42a10",
+          "#ec3013",
+          "#ff9783",
+          "#ffc4b8",
+          "#fde4df"
+        ]
+      },
+      "red-wash": {
+        "role": "primary",
+        "displayName": "Red Wash",
+        "tonalRamp": [
+          "#4d170e",
+          "#7c1405",
+          "#ae1800",
+          "#d42a10",
+          "#ec3013",
+          "#ff9783",
+          "#ffc4b8",
+          "#fde4df"
+        ]
+      },
+      "navy": {
+        "role": "secondary",
+        "displayName": "Pocket Navy",
+        "tonalRamp": [
+          "#0b0d1c",
+          "#161d55",
+          "#1b2366",
+          "#232e7a",
+          "#2e3a8f",
+          "#3a47a8",
+          "#c3c9f2",
+          "#eef0fb"
+        ]
+      },
+      "navy-deep": {
+        "role": "secondary",
+        "displayName": "Navy Deep",
+        "tonalRamp": [
+          "#0b0d1c",
+          "#161d55",
+          "#1b2366",
+          "#232e7a",
+          "#2e3a8f",
+          "#3a47a8",
+          "#c3c9f2",
+          "#eef0fb"
+        ]
+      },
+      "lilac": {
+        "role": "secondary",
+        "displayName": "Card Lilac",
+        "tonalRamp": [
+          "#0b0d1c",
+          "#161d55",
+          "#1b2366",
+          "#232e7a",
+          "#2e3a8f",
+          "#3a47a8",
+          "#c3c9f2",
+          "#eef0fb"
+        ]
+      },
+      "tint-green": {
+        "role": "tertiary",
+        "displayName": "Mint",
+        "canonical": "oklch(0.94 0.04 155)",
+        "tonalRamp": [
+          "oklch(0.15 0.026 155)",
+          "oklch(0.27 0.057 155)",
+          "oklch(0.39 0.088 155)",
+          "oklch(0.51 0.1 155)",
+          "oklch(0.63 0.1 155)",
+          "oklch(0.75 0.078 155)",
+          "oklch(0.86 0.049 155)",
+          "oklch(0.95 0.026 155)"
+        ]
+      },
+      "tint-blue": {
+        "role": "tertiary",
+        "displayName": "Sky",
+        "canonical": "oklch(0.94 0.04 250)",
+        "tonalRamp": [
+          "oklch(0.15 0.026 250)",
+          "oklch(0.27 0.057 250)",
+          "oklch(0.39 0.088 250)",
+          "oklch(0.51 0.1 250)",
+          "oklch(0.63 0.1 250)",
+          "oklch(0.75 0.078 250)",
+          "oklch(0.86 0.049 250)",
+          "oklch(0.95 0.026 250)"
+        ]
+      },
+      "tint-lilac": {
+        "role": "tertiary",
+        "displayName": "Lavender",
+        "canonical": "oklch(0.94 0.04 300)",
+        "tonalRamp": [
+          "oklch(0.15 0.026 300)",
+          "oklch(0.27 0.057 300)",
+          "oklch(0.39 0.088 300)",
+          "oklch(0.51 0.1 300)",
+          "oklch(0.63 0.1 300)",
+          "oklch(0.75 0.078 300)",
+          "oklch(0.86 0.049 300)",
+          "oklch(0.95 0.026 300)"
+        ]
+      },
+      "tint-butter": {
+        "role": "tertiary",
+        "displayName": "Butter",
+        "canonical": "oklch(0.94 0.04 90)",
+        "tonalRamp": [
+          "oklch(0.15 0.026 90)",
+          "oklch(0.27 0.057 90)",
+          "oklch(0.39 0.088 90)",
+          "oklch(0.51 0.1 90)",
+          "oklch(0.63 0.1 90)",
+          "oklch(0.75 0.078 90)",
+          "oklch(0.86 0.049 90)",
+          "oklch(0.95 0.026 90)"
+        ]
+      },
+      "tint-sky": {
+        "role": "tertiary",
+        "displayName": "Pale Sky",
+        "canonical": "oklch(0.94 0.04 245)",
+        "tonalRamp": [
+          "oklch(0.15 0.026 245)",
+          "oklch(0.27 0.057 245)",
+          "oklch(0.39 0.088 245)",
+          "oklch(0.51 0.1 245)",
+          "oklch(0.63 0.1 245)",
+          "oklch(0.75 0.078 245)",
+          "oklch(0.86 0.049 245)",
+          "oklch(0.95 0.026 245)"
+        ]
+      },
+      "tint-violet": {
+        "role": "tertiary",
+        "displayName": "Violet Mist",
+        "canonical": "oklch(0.94 0.04 290)",
+        "tonalRamp": [
+          "oklch(0.15 0.026 290)",
+          "oklch(0.27 0.057 290)",
+          "oklch(0.39 0.088 290)",
+          "oklch(0.51 0.1 290)",
+          "oklch(0.63 0.1 290)",
+          "oklch(0.75 0.078 290)",
+          "oklch(0.86 0.049 290)",
+          "oklch(0.95 0.026 290)"
+        ]
+      },
+      "tint-rose": {
+        "role": "tertiary",
+        "displayName": "Rose",
+        "canonical": "oklch(0.94 0.04 25)",
+        "tonalRamp": [
+          "oklch(0.15 0.026 25)",
+          "oklch(0.27 0.057 25)",
+          "oklch(0.39 0.088 25)",
+          "oklch(0.51 0.1 25)",
+          "oklch(0.63 0.1 25)",
+          "oklch(0.75 0.078 25)",
+          "oklch(0.86 0.049 25)",
+          "oklch(0.95 0.026 25)"
+        ]
+      },
+      "tint-mist": {
+        "role": "tertiary",
+        "displayName": "Indigo Mist",
+        "canonical": "oklch(0.94 0.04 275)",
+        "tonalRamp": [
+          "oklch(0.15 0.026 275)",
+          "oklch(0.27 0.057 275)",
+          "oklch(0.39 0.088 275)",
+          "oklch(0.51 0.1 275)",
+          "oklch(0.63 0.1 275)",
+          "oklch(0.75 0.078 275)",
+          "oklch(0.86 0.049 275)",
+          "oklch(0.95 0.026 275)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero and closing headlines only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings; feature headings run at clamp(2.3rem, 4.2vw, 3.75rem)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "List item and install step headings."
+      },
+      "lede": {
+        "displayName": "Lede",
+        "purpose": "The one sentence under a headline, Ink 2, max 34ch."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Paragraphs at weight 600; 17px on the website, 15px in the app."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, chips, nav, rail and toggles, 13 to 15px, sentence case."
+      }
+    },
+    "shadows": [
+      {
+        "name": "red-lift",
+        "value": "0 10px 24px -12px rgba(236, 48, 19, 0.7)",
+        "purpose": "Under the primary button only."
+      },
+      {
+        "name": "fragment-float",
+        "value": "0 24px 40px -18px rgba(32, 30, 29, 0.35), 0 2px 6px rgba(32, 30, 29, 0.06)",
+        "purpose": "App fragments floating around the phone."
+      },
+      {
+        "name": "window",
+        "value": "0 50px 90px -50px rgba(32, 30, 29, 0.45), 0 0 0 1px #e2dedb",
+        "purpose": "The desktop browser window."
+      },
+      {
+        "name": "light-button",
+        "value": "0 16px 40px -14px rgba(0, 0, 0, 0.5)",
+        "purpose": "The white button on the navy close."
+      },
+      {
+        "name": "toggle-knob",
+        "value": "0 1px 3px rgba(45, 43, 43, 0.16)",
+        "purpose": "Selected segment of a toggle."
+      },
+      {
+        "name": "app-sm",
+        "value": "0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent)",
+        "purpose": "App: small lift."
+      },
+      {
+        "name": "app-md",
+        "value": "0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent)",
+        "purpose": "App: medium lift."
+      },
+      {
+        "name": "app-lg",
+        "value": "0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent)",
+        "purpose": "App: sheets and large lifts."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Entrances, presses (160ms scale 0.97), arrow nudge, FAQ chevron."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.77, 0, 0.175, 1)",
+        "purpose": "The 900ms 360-degree phone turn between features."
+      },
+      {
+        "name": "tint-crossfade",
+        "value": "600ms ease",
+        "purpose": "Stage tint change to the scene's pocket colour."
+      },
+      {
+        "name": "hero-rise",
+        "value": "600-700ms ease-out, 18-22px rise, staggered 0/110/180ms",
+        "purpose": "Hero entrance, once."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "200-300ms opacity crossfade",
+        "purpose": "Replaces spin, rise and settle when Reduce Motion is on."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "rail",
+        "value": "1080px"
+      },
+      {
+        "name": "single-column",
+        "value": "860px"
+      },
+      {
+        "name": "small-phone",
+        "value": "420px"
+      },
+      {
+        "name": "app-framed",
+        "value": "560px wide and 700px tall"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one red action: Open Pockets.",
+      "html": "<a class=\"ds-btn\" href=\"#\">Abrir Pockets</a>",
+      "css": ":host{--page:#f7f5f3;--surface:#fff;--sunk:#efecea;--ink:#201e1d;--ink-2:#57534f;--ink-3:#6b6764;--line:#e2dedb;--red:#ec3013;--red-press:#d42a10;--navy:#232e7a;--navy-deep:#161d55;--lilac:#c3c9f2;--ease-out:cubic-bezier(0.23,1,0.32,1);--ease-in-out:cubic-bezier(0.77,0,0.175,1);} .ds-btn{font-family:ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border-radius:999px;border:0;background:var(--red);color:#fff;text-decoration:none;font-weight:800;font-size:19px;letter-spacing:-0.01em;box-shadow:0 10px 24px -12px rgba(236,48,19,0.7);transition:transform 160ms var(--ease-out),background-color 160ms ease;cursor:pointer;} .ds-btn:hover{background:var(--red-press);} .ds-btn:active{transform:scale(0.97);} .ds-btn:focus-visible{outline:3px solid var(--navy);outline-offset:3px;}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action on paper, e.g. Copy link.",
+      "html": "<button class=\"ds-btn-ghost\" type=\"button\">Copiar enlace</button>",
+      "css": ":host{--page:#f7f5f3;--surface:#fff;--sunk:#efecea;--ink:#201e1d;--ink-2:#57534f;--ink-3:#6b6764;--line:#e2dedb;--red:#ec3013;--red-press:#d42a10;--navy:#232e7a;--navy-deep:#161d55;--lilac:#c3c9f2;--ease-out:cubic-bezier(0.23,1,0.32,1);--ease-in-out:cubic-bezier(0.77,0,0.175,1);} .ds-btn-ghost{font-family:ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;display:inline-flex;align-items:center;min-height:52px;padding:0 26px;border-radius:999px;border:0;background:var(--surface);color:var(--ink);font-weight:800;font-size:19px;box-shadow:inset 0 0 0 1.5px var(--line);transition:transform 160ms var(--ease-out),background-color 160ms ease;cursor:pointer;} .ds-btn-ghost:hover{background:var(--sunk);} .ds-btn-ghost:active{transform:scale(0.97);} .ds-btn-ghost:focus-visible{outline:3px solid var(--navy);outline-offset:3px;}"
+    },
+    {
+      "name": "Light Button",
+      "kind": "button",
+      "refersTo": "button-light",
+      "description": "The action on the navy close.",
+      "html": "<div class=\"ds-navy\"><a class=\"ds-btn-light\" href=\"#\">Abrir Pockets</a></div>",
+      "css": ":host{--page:#f7f5f3;--surface:#fff;--sunk:#efecea;--ink:#201e1d;--ink-2:#57534f;--ink-3:#6b6764;--line:#e2dedb;--red:#ec3013;--red-press:#d42a10;--navy:#232e7a;--navy-deep:#161d55;--lilac:#c3c9f2;--ease-out:cubic-bezier(0.23,1,0.32,1);--ease-in-out:cubic-bezier(0.77,0,0.175,1);} .ds-navy{padding:32px;border-radius:24px;background:radial-gradient(70% 60% at 50% 0%,#3a47a8 0%,var(--navy) 45%,var(--navy-deep) 100%);text-align:center;} .ds-btn-light{font-family:ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;display:inline-flex;align-items:center;min-height:52px;padding:0 26px;border-radius:999px;background:#fff;color:var(--navy);text-decoration:none;font-weight:800;font-size:19px;box-shadow:0 16px 40px -14px rgba(0,0,0,0.5);transition:transform 160ms var(--ease-out),background-color 160ms ease;} .ds-btn-light:hover{background:#eef0fb;} .ds-btn-light:active{transform:scale(0.97);} .ds-btn-light:focus-visible{outline:3px solid #fff;outline-offset:3px;}"
+    },
+    {
+      "name": "Arrow Link",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Quiet partner of the primary button.",
+      "html": "<a class=\"ds-link\" href=\"#\">Cómo instalarla <svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M5 10h10M11 6l4 4-4 4\"/></svg></a>",
+      "css": ":host{--page:#f7f5f3;--surface:#fff;--sunk:#efecea;--ink:#201e1d;--ink-2:#57534f;--ink-3:#6b6764;--line:#e2dedb;--red:#ec3013;--red-press:#d42a10;--navy:#232e7a;--navy-deep:#161d55;--lilac:#c3c9f2;--ease-out:cubic-bezier(0.23,1,0.32,1);--ease-in-out:cubic-bezier(0.77,0,0.175,1);} .ds-link{font-family:ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;display:inline-flex;align-items:center;gap:6px;min-height:44px;font-weight:800;text-decoration:none;color:var(--ink);} .ds-link svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform 200ms var(--ease-out);} .ds-link:hover svg{transform:translateX(3px);} .ds-link:focus-visible{outline:3px solid var(--navy);outline-offset:3px;border-radius:10px;}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "lang-toggle",
+      "description": "Sticky nav: mark, pill links, language toggle, small red button.",
+      "html": "<nav class=\"ds-nav\"><b class=\"ds-brand\">Pockets</b><a href=\"#\">Funciones</a><a href=\"#\">Instalar</a><span class=\"ds-lang\"><button aria-pressed=\"true\">ES</button><button aria-pressed=\"false\">EN</button></span><a class=\"ds-sm\" href=\"#\">Abrir Pockets</a></nav>",
+      "css": ":host{--page:#f7f5f3;--surface:#fff;--sunk:#efecea;--ink:#201e1d;--ink-2:#57534f;--ink-3:#6b6764;--line:#e2dedb;--red:#ec3013;--red-press:#d42a10;--navy:#232e7a;--navy-deep:#161d55;--lilac:#c3c9f2;--ease-out:cubic-bezier(0.23,1,0.32,1);--ease-in-out:cubic-bezier(0.77,0,0.175,1);} .ds-nav{font-family:ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;display:flex;align-items:center;gap:4px;height:64px;padding:0 20px;background:color-mix(in srgb,var(--page) 92%,transparent);border-bottom:1px solid var(--line);} .ds-brand{font-weight:900;font-size:20px;letter-spacing:-0.02em;margin-right:20px;color:var(--ink);} .ds-nav>a:not(.ds-sm){padding:8px 12px;border-radius:999px;text-decoration:none;font-weight:700;font-size:15px;color:var(--ink-2);transition:background-color 150ms ease,color 150ms ease;} .ds-nav>a:not(.ds-sm):hover{background:var(--sunk);color:var(--ink);} .ds-lang{display:inline-flex;padding:3px;border-radius:999px;background:var(--sunk);margin-left:auto;} .ds-lang button{font-family:ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;border:0;background:transparent;min-width:40px;height:32px;border-radius:999px;font-weight:800;font-size:13px;color:var(--ink-3);cursor:pointer;} .ds-lang button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(45,43,43,0.16);} .ds-sm{display:inline-flex;align-items:center;min-height:40px;padding:0 18px;margin-left:12px;border-radius:999px;background:var(--red);color:#fff;text-decoration:none;font-weight:800;font-size:15px;} .ds-sm:hover{background:var(--red-press);} .ds-nav a:focus-visible,.ds-lang button:focus-visible{outline:3px solid var(--navy);outline-offset:3px;}"
+    },
+    {
+      "name": "Fact Chips",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Static facts under a feature heading.",
+      "html": "<ul class=\"ds-chips\"><li>Hoy</li><li>Esta semana</li><li>Este mes</li></ul>",
+      "css": ":host{--page:#f7f5f3;--surface:#fff;--sunk:#efecea;--ink:#201e1d;--ink-2:#57534f;--ink-3:#6b6764;--line:#e2dedb;--red:#ec3013;--red-press:#d42a10;--navy:#232e7a;--navy-deep:#161d55;--lilac:#c3c9f2;--ease-out:cubic-bezier(0.23,1,0.32,1);--ease-in-out:cubic-bezier(0.77,0,0.175,1);} .ds-chips{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:0;} .ds-chips li{font-family:ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;padding:7px 14px;border-radius:999px;background:var(--surface);color:var(--ink);font-weight:800;font-size:14px;box-shadow:inset 0 0 0 1px var(--line);}"
+    },
+    {
+      "name": "Bill Alert Fragment",
+      "kind": "card",
+      "refersTo": "fragment-card",
+      "description": "A real app notification floated in front of the phone.",
+      "html": "<div class=\"ds-frag\"><span class=\"ds-ico\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"4\" y=\"5\" width=\"16\" height=\"15\" rx=\"3\"/><path d=\"M4 10h16M9 3v4M15 3v4\"/></svg></span><span><b>Spotify vence mañana</b><small>$16.900 se pagará automáticamente desde Visa Gold.</small></span></div>",
+      "css": ":host{--page:#f7f5f3;--surface:#fff;--sunk:#efecea;--ink:#201e1d;--ink-2:#57534f;--ink-3:#6b6764;--line:#e2dedb;--red:#ec3013;--red-press:#d42a10;--navy:#232e7a;--navy-deep:#161d55;--lilac:#c3c9f2;--ease-out:cubic-bezier(0.23,1,0.32,1);--ease-in-out:cubic-bezier(0.77,0,0.175,1);} .ds-frag{font-family:ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;display:flex;gap:10px;align-items:center;max-width:290px;background:var(--surface);border-radius:20px;padding:12px 14px;box-shadow:0 24px 40px -18px rgba(32,30,29,0.35),0 2px 6px rgba(32,30,29,0.06);font-size:13px;line-height:1.3;color:var(--ink);} .ds-frag b{display:block;font-weight:800;font-size:14px;} .ds-frag small{display:block;color:var(--ink-3);font-weight:600;font-size:12px;} .ds-ico{width:34px;height:34px;border-radius:11px;background:#fde4df;color:var(--red);display:grid;place-items:center;flex:none;} .ds-ico svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}"
+    },
+    {
+      "name": "Pocket Tile",
+      "kind": "custom",
+      "refersTo": "pocket-tile",
+      "description": "A pocket in its own tint with the deep ink of its hue.",
+      "html": "<div class=\"ds-pocket\"><span class=\"ds-row\"><span class=\"ds-em\" aria-hidden=\"true\">🚌</span><b>Transporte</b></span><strong>$72.000</strong><small>quedan de $120.000</small></div>",
+      "css": ":host{--page:#f7f5f3;--surface:#fff;--sunk:#efecea;--ink:#201e1d;--ink-2:#57534f;--ink-3:#6b6764;--line:#e2dedb;--red:#ec3013;--red-press:#d42a10;--navy:#232e7a;--navy-deep:#161d55;--lilac:#c3c9f2;--ease-out:cubic-bezier(0.23,1,0.32,1);--ease-in-out:cubic-bezier(0.77,0,0.175,1);} .ds-pocket{font-family:ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif;display:inline-flex;flex-direction:column;gap:2px;min-width:160px;padding:14px 18px;border-radius:20px;background:#d9e8fb;color:#1c4f87;box-shadow:0 24px 40px -18px rgba(32,30,29,0.35),0 2px 6px rgba(32,30,29,0.06);font-size:13px;} .ds-row{display:flex;align-items:center;gap:8px;font-size:14px;} .ds-row b{font-weight:800;} .ds-em{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.85);display:grid;place-items:center;font-size:15px;} .ds-pocket strong{font-size:26px;font-weight:900;letter-spacing:-0.03em;} .ds-pocket small{color:#2c5a8f;font-weight:600;font-size:12px;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Pocket on the Kitchen Table",
+    "overview": "Pockets looks like the app it is: a warm off-white page, white cards that sit on it like slips of paper, near-black ink, and one red voice that says \"do this\". The website (`app/public/site/`) deliberately inherits the app's own surfaces (`app/src/styles.css`) rather than inventing a marketing skin; it adds a stage for the real app to perform on: a 3D iPhone, pastel stage tints that wash behind each feature, and a deep navy close taken from the lock screen and the logo.\n\nDensity is relaxed and friendly. Type is rounded and heavy, headlines are short and balanced, and every claim is shown on a real app screen with sample data. Colour carries meaning, not decoration: pocket hues identify pockets, red marks the primary action, navy marks the brand and the ending.\n\nThe system serves two surfaces from one core. The app (phone-sized column, 15px body, oklch pocket tints computed from a hue) and the website (wide 1240px container, 17px body, the same tints frozen as hex stage washes) share ground, ink, red, rounded type, pastel pocket colour, white cards and navy.",
+    "keyCharacteristics": [
+      "Warm off-white ground, white cards, near-black ink; never pure grey or pure black text.",
+      "One red, reserved for the primary action.",
+      "Rounded system type at heavy weights (800 to 900) for every heading.",
+      "Pastel pocket tints, each paired with a deep ink of the same hue.",
+      "Pill shapes for everything you tap; large soft radii for everything you look at.",
+      "Real app fragments as the only illustration."
+    ],
+    "rules": [
+      {
+        "name": "The One Red Rule",
+        "body": "Red belongs to the primary action. If two red things compete on a screen, one of them is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Same Hue Rule",
+        "body": "A pastel tint never carries text in plain ink alone; it takes the deep ink of its own hue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Heavy Rounded Rule",
+        "body": "Headings are 800 or 900 with negative tracking (-0.02em to -0.04em). Body text is 600, not 400; the rounded face looks thin at regular weight.",
+        "section": "typography"
+      },
+      {
+        "name": "The Warm Shadow Rule",
+        "body": "Shadows are ink or red tinted, offset downward, and blurred. No hard offset shadows, no neutral black glows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** set the page on Warm Paper (#f7f5f3) with white cards; it is the iPhone theme colour and the app's own ground.",
+      "**Do** keep Pockets Red (#ec3013) for the one primary action in view.",
+      "**Do** pair every pastel tint with the deep ink of its own hue.",
+      "**Do** use the rounded stack at 800 to 900 for headings and 600 for body text.",
+      "**Do** make tappable things pills (999px) at least 44px tall.",
+      "**Do** show real app screens and fragments, labelled as sample data.",
+      "**Do** ease with `cubic-bezier(0.23, 1, 0.32, 1)` for entrances and presses, `cubic-bezier(0.77, 0, 0.175, 1)` for the phone turn, and honour Reduce Motion."
+    ],
+    "donts": [
+      "**Don't** use red for decoration, headings or icons that aren't the main action or a bill alert.",
+      "**Don't** put plain ink on a pocket tint, or text on a tint without its hue's deep ink.",
+      "**Don't** use hard offset shadows or neutral black glows; shadows are warm and blurred.",
+      "**Don't** set body text at 400 weight or headings below 800.",
+      "**Don't** draw stock or invented objects on the website or in the app when a real app fragment can show the point. (The video ads' lavender clay world is a separate marketing medium and is not banned by this rule.)"
+    ]
+  }
+}

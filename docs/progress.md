@@ -86,6 +86,12 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - **Spanish** (Profile → Language, or the switch on the welcome screen).
 - Photos are drawn as `<img>` (fixes logos that didn't refresh until a restart).
 
+**Marketing website** (`app/public/site/`, live at `/site/`)
+- A static page (HTML, CSS, JS, no build step) that Vite copies into `dist/site/`. Spanish by default, with an ES/EN switch saved in localStorage `pockets-site-lang`.
+- Built from the Pockets Launch Film: a 3D iPhone running the real app turns around between eight features while you scroll. Then: on your computer too, the little things, three install steps with a copy-link box, FAQ, and a navy close.
+- Screens in `site/screens/{es,en}/` are real app screenshots with sample data (Sofía, plus demo investments and a Cartagena trip). `og.jpg` is the WhatsApp link preview. To retake them, see `docs/gotchas.md`.
+- Design record: `PRODUCT.md`, `DESIGN.md`, and `.impeccable/` (the site's direction contract and detector settings).
+
 ## Waiting on the owner (not confirmed yet)
 
 Nothing right now. Scheduled reminders and the Face ID lock were confirmed on the phone, and the Firestore rules are saved in `docs/firestore.rules` (Nov 2026).
