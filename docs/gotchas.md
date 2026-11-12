@@ -123,3 +123,10 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - Desktop is `useDesk()` (≥1024px wide and ≥560px tall). Home has its own desktop branch in `screens/Home.tsx` (`if (desk)`); other tabs reuse their phone components inside the 1000px column. Hidden blocks from Edit layout are respected on desktop Home; the order is not.
 - Desktop-only restyling of shared components goes through small class hooks with `.desk` rules in `styles.css` (`.sec-link`, `.d-ink`, `.tagline`, `.hubs`, `.inv-stat`, `.inv-add`, `.phone-only`), so the phone keeps its look.
 - `scripts/es-gaps.cjs` takes `--size=desktop` to check the desktop layout in Spanish.
+
+## The website is the front door (smart main address)
+
+- `app/src/lib/handoff.ts`: when the app finds no saved data, it sends the browser to `site/` instead of showing its own welcome, except for the installed Home Screen app (standalone), automated browsers (`navigator.webdriver`, so Playwright scripts still start on the app's welcome), links with `?app`, and a fresh hand-off note.
+- The website's sign-in panel (`site/site.js`) loads Firebase 11.10.0 from gstatic, the same project and version as the app, so signing in on the site signs the app in too (same origin). It then writes `localStorage["pockets-handoff"] = { kind: 'signedin' | 'sample' | 'welcome', created, name, at }` and opens `../`; the app's Welcome reads it once (10-minute limit) and brings back the cloud data, starts the tour, or loads sample data. Nothing personal goes in the URL. Keep the Firebase version in `site.js` in step with `app/package.json`.
+- To install on iPhone the person must be on the app, not the website: the site's install box shows the address with `?app`.
+- To see the website's redirect in Playwright, add an init script that makes `navigator.webdriver` false.

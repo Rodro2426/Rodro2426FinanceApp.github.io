@@ -18,7 +18,7 @@
   <link rel="icon" href="../icon-full.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="../icon-180.png">
   <link rel="preload" href="fonts/nunito-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="site.css?v=20261111c">
+  <link rel="stylesheet" href="site.css?v=20261112a">
   <script>
     // Pick the language before paint: saved choice, else Spanish unless the browser is set to another language.
     (function () {
@@ -61,7 +61,7 @@
         <button type="button" data-lang="es" aria-pressed="true">ES</button>
         <button type="button" data-lang="en" aria-pressed="false">EN</button>
       </div>
-      <a class="btn btn-sm" href="../" data-i18n="cta.open">Abrir Pockets</a>
+      <button type="button" class="btn btn-sm" data-auth="signin" data-i18n="cta.signin">Entrar</button>
     </div>
   </div>
 </header>
@@ -75,7 +75,9 @@
         <h1 class="h-hero" data-i18n-html="hero.title">Tu plata,<br><span>en su lugar.</span></h1>
         <p class="lede" data-i18n="hero.lede">Divide tu sueldo en bolsillos y mira todos los días cuánto puedes gastar hoy. En pesos, por quincenas y en tu iPhone.</p>
         <div class="cta-row">
-          <a class="btn" href="../" data-i18n="cta.open">Abrir Pockets</a>
+          <button type="button" class="btn" data-auth="create" data-i18n="cta.start">Empezar gratis</button>
+          <button type="button" class="link-arrow" data-auth="signin"><span data-i18n="cta.have">Ya tengo cuenta</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4"/></svg></button>
           <a class="link-arrow" href="#instalar"><span data-i18n="cta.how">Cómo instalarla</span>
             <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4"/></svg></a>
         </div>
@@ -273,7 +275,7 @@
         </li>
       </ol>
       <div class="copy-box">
-        <code id="appUrl">https://rodro2426.github.io/<wbr>Rodro2426FinanceApp.github.io/</code>
+        <code id="appUrl">https://rodro2426.github.io/<wbr>Rodro2426FinanceApp.github.io/?app</code>
         <button type="button" class="btn btn-ghost" id="copyBtn" data-i18n="ins.copy">Copiar enlace</button>
       </div>
       <p class="note" data-i18n="ins.note">¿Android o computador? Ábrela en el navegador; funciona igual.</p>
@@ -301,7 +303,7 @@
       <img src="../pockets-mark.svg" alt="" width="84" height="102" class="close-mark">
       <h2 class="h-close" data-i18n-html="close.h">Cada peso,<br><span>en su bolsillo.</span></h2>
       <p data-i18n="close.p">Gratis, en español y lista para tu próxima quincena.</p>
-      <a class="btn btn-light" href="../" data-i18n="cta.open">Abrir Pockets</a>
+      <button type="button" class="btn btn-light" data-auth="create" data-i18n="cta.start">Empezar gratis</button>
     </div>
   </section>
 </main>
@@ -310,9 +312,48 @@
   <div class="wrap foot-in">
     <span class="brand"><img src="../pockets-mark.svg" alt="" width="20" height="24"> Pockets</span>
     <p data-i18n="foot.p">Hecha en Colombia para pesos, quincenas y la TRM. Las pantallas muestran la app real con datos de ejemplo.</p>
-    <nav aria-label="Pie de página"><a href="../" data-i18n="foot.app">Abrir la app</a><a href="#instalar" data-i18n="nav.install">Instalar</a><a href="#preguntas" data-i18n="foot.faq">Preguntas</a></nav>
+    <nav aria-label="Pie de página"><a href="../?app" data-i18n="foot.app">Abrir la app</a><a href="#instalar" data-i18n="nav.install">Instalar</a><a href="#preguntas" data-i18n="foot.faq">Preguntas</a></nav>
   </div>
 </footer>
+
+<div class="auth" id="auth" hidden>
+  <div class="auth-scrim" data-close></div>
+  <section class="auth-panel" id="authPanel" role="dialog" aria-modal="true" aria-labelledby="authTitle" tabindex="-1">
+    <header class="auth-head">
+      <img src="../pockets-mark.svg" alt="" width="30" height="36">
+      <h2 id="authTitle" data-i18n="auth.title">Entra a Pockets</h2>
+      <button type="button" class="auth-x" data-close aria-label="Cerrar" data-i18n-label="auth.close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </header>
+    <div class="auth-tabs" role="tablist" aria-label="Cuenta">
+      <button type="button" role="tab" id="tabSignin" data-tab="signin" aria-selected="true" data-i18n="auth.signin">Iniciar sesión</button>
+      <button type="button" role="tab" id="tabCreate" data-tab="create" aria-selected="false" data-i18n="auth.create">Crear cuenta</button>
+    </div>
+    <form class="auth-form" id="authForm" novalidate>
+      <label class="auth-field" data-only="create"><span data-i18n="auth.name">Tu nombre</span><input id="aName" name="name" autocomplete="given-name" placeholder="Sofía"></label>
+      <label class="auth-field"><span data-i18n="auth.email">Correo</span><input id="aEmail" name="email" type="email" autocomplete="email" inputmode="email" placeholder="tu@correo.com" data-i18n-ph="auth.emailPh" required></label>
+      <label class="auth-field"><span data-i18n="auth.pass">Contraseña</span><input id="aPass" name="password" type="password" autocomplete="current-password" placeholder="Al menos 6 caracteres" data-i18n-ph="auth.passPh" required minlength="6"></label>
+      <p class="auth-msg" id="authMsg" role="alert" hidden></p>
+      <button type="submit" class="btn auth-submit" id="authSubmit" data-i18n="auth.signin">Iniciar sesión</button>
+      <button type="button" class="auth-link" id="authForgot" data-only="signin" data-i18n="auth.forgot">¿Olvidaste tu contraseña?</button>
+    </form>
+    <div class="auth-or"><span data-i18n="auth.or">o</span></div>
+    <button type="button" class="btn btn-ghost auth-google" id="authGoogle">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.6 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-1.9 3.3-4.8 3.3-8.1z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7c-1 .7-2.2 1.1-3.7 1.1-2.9 0-5.3-1.9-6.2-4.5H2.1v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.2a6.6 6.6 0 0 1 0-4.3V7.1H2.1a11 11 0 0 0 0 9.9l3.7-2.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.6 4.2 1.7l3.2-3.2A11 11 0 0 0 2.1 7.1l3.7 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>
+      <span data-i18n="auth.google">Continuar con Google</span>
+    </button>
+    <div class="auth-alt">
+      <button type="button" class="auth-row" id="authSample">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/></svg>
+        <span><b data-i18n="auth.sample">Probar con datos de ejemplo</b><small data-i18n="auth.sampleSub">Cuentas y gastos inventados, sin crear cuenta</small></span>
+      </button>
+      <a class="auth-row" href="../?app">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        <span><b data-i18n="auth.more">Más formas de empezar</b><small data-i18n="auth.moreSub">Sin cuenta, o con una copia guardada</small></span>
+      </a>
+    </div>
+    <p class="auth-note" data-i18n="auth.note">Usa la misma cuenta que en tu iPhone y tus datos vuelven. Solo tú puedes verlos.</p>
+  </section>
+</div>
 
 <template id="phoneTpl">
   <div class="slice"></div>
@@ -324,6 +365,6 @@
   </div></div>
 </template>
 
-<script src="site.js?v=20261111c" defer></script>
+<script src="site.js?v=20261112a" defer></script>
 </body>
 </html>

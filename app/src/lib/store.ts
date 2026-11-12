@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { SITE_URL, shouldShowSite } from './handoff';
 import { get, set } from 'idb-keyval';
 import type { Data, UI } from './types';
 import { emptyData, sampleData } from './seed';
@@ -59,7 +60,11 @@ export async function loadData() {
   try {
     const saved = await get<Data>(KEY);
     if (saved && saved.version === 1) state = { ...state, data: normalize(saved) };
-    else { persistOn = false; state = { ...state, ui: { ...state.ui, welcome: true } }; }
+    else {
+      // Nobody uses Pockets in this browser yet: show them the website (it has sign in and sample data).
+      if (shouldShowSite()) { location.replace(SITE_URL); return new Promise<void>(() => {}); }
+      persistOn = false; state = { ...state, ui: { ...state.ui, welcome: true } };
+    }
   } catch (err) { console.warn('Could not load saved data', err); }
   const d = state.data;
   state.ui.lastAdd = { pocket: d.pockets[0]?.id ?? '', acct: (d.accounts.find(a => a.type === 'bank') || d.accounts[0])?.id ?? '' };

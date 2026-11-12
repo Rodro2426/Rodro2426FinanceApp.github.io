@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { pullForWelcome, withoutMarking } from '../lib/cloud';
+import { useEffect, useState } from 'react';
+import { getSync, pullForWelcome, subscribeSync, withoutMarking } from '../lib/cloud';
+import { takeHandoff } from '../lib/handoff';
 import { SignInForm } from '../sheets/CloudSheet';
 import { finishWelcome, flash, normalize, startTour } from '../lib/store';
 import { emptyData, sampleData } from '../lib/seed';
@@ -43,6 +44,22 @@ export default function Welcome() {
     } catch (e) { flash((e as Error).message); }
     setBusy(null);
   };
+
+  // Coming from the website: finish what was started there (sign-in, or sample data).
+  useEffect(() => {
+    const h = takeHandoff();
+    if (!h) return;
+    if (h.kind === 'sample') { sample(); return; }
+    if (h.kind !== 'signedin') return;
+    setBusy('Bringing back your data…');
+    let done = false;
+    const go = () => { if (done || !getSync().uid) return; done = true; stop(); clearTimeout(t); afterSignIn({ created: h.created, name: h.name }); };
+    const stop = subscribeSync(go);
+    // If the sign-in didn't carry over, show the normal welcome so they can sign in here.
+    const t = setTimeout(() => { if (done) return; done = true; stop(); setBusy(null); flash('Sign in again to continue'); }, 12000);
+    go();
+    // No cleanup on purpose: the note is read once, so the wait must survive React's dev double-run.
+  }, []);
 
   const option = (icon: string, title: string, sub: string, onClick: () => void) => (
     <button onClick={onClick} disabled={!!busy} style={{ width: '100%', textAlign: 'left', border: 0, borderRadius: 22, padding: '14px 16px', background: 'var(--surface)', color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.12)' }}>

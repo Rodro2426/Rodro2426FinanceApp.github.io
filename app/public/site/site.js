@@ -10,7 +10,19 @@
     'skip': 'Skip to content',
     'theme.toDark': 'Switch to dark mode', 'theme.toLight': 'Switch to light mode',
     'nav.features': 'Features', 'nav.friends': 'Friends', 'nav.privacy': 'Privacy', 'nav.install': 'Install',
-    'cta.open': 'Open Pockets', 'cta.how': 'How to install',
+    'cta.open': 'Open Pockets', 'cta.how': 'How to install', 'cta.signin': 'Sign in', 'cta.start': 'Start free', 'cta.have': 'I already have an account',
+    'auth.title': 'Get into Pockets', 'auth.close': 'Close', 'auth.signin': 'Sign in', 'auth.create': 'Create account',
+    'auth.name': 'Your name', 'auth.email': 'Email', 'auth.emailPh': 'you@email.com', 'auth.pass': 'Password', 'auth.passPh': 'At least 6 characters',
+    'auth.forgot': 'Forgot your password?', 'auth.or': 'or', 'auth.google': 'Continue with Google',
+    'auth.sample': 'Try it with sample data', 'auth.sampleSub': 'Made-up accounts and expenses, no account needed',
+    'auth.more': 'More ways to start', 'auth.moreSub': 'Without an account, or from a saved backup',
+    'auth.note': 'Use the same account as on your iPhone and your data comes right back. Only you can see it.',
+    'auth.busySignin': 'Signing in…', 'auth.busyCreate': 'Creating your account…', 'auth.busyGoogle': 'Opening Google…', 'auth.opening': 'Opening Pockets…',
+    'auth.needEmail': 'Write your email first.', 'auth.needPass': 'Write your password.', 'auth.resetSent': 'We sent you an email to choose a new password.',
+    'err.wrong': 'Wrong email or password.', 'err.exists': 'There is already an account with that email. Sign in instead.',
+    'err.weak': 'Use at least 6 characters for the password.', 'err.email': "That email doesn't look right.",
+    'err.network': "No internet connection. Try again when you're online.", 'err.popup': 'The Google window was closed or blocked. Try email and password instead.',
+    'err.many': 'Too many tries. Wait a minute and try again.', 'err.other': "Something went wrong. Try again.",
     'hero.title': 'Money that<br><span>knows its place.</span>',
     'hero.lede': "Split your pay into pockets and see each morning what's safe to spend today. In pesos, by quincena, on your iPhone.",
     'hero.facts': 'Free · No app store · English and Spanish',
@@ -83,6 +95,15 @@
   document.querySelectorAll('[data-i18n-html]').forEach(function (el) { ES[el.dataset.i18nHtml] = el.innerHTML; });
   document.querySelectorAll('[data-i18n-alt]').forEach(function (el) { ES[el.dataset.i18nAlt] = el.alt; });
   ES['ins.copied'] = META.es.copied;
+  // Spanish for messages that only appear from code (the rest is the HTML itself).
+  ES['auth.signin'] = 'Iniciar sesión'; ES['auth.create'] = 'Crear cuenta'; ES['auth.close'] = 'Cerrar';
+  ES['auth.busySignin'] = 'Entrando…'; ES['auth.busyCreate'] = 'Creando tu cuenta…'; ES['auth.busyGoogle'] = 'Abriendo Google…'; ES['auth.opening'] = 'Abriendo Pockets…';
+  ES['auth.needEmail'] = 'Escribe primero tu correo.'; ES['auth.needPass'] = 'Escribe tu contraseña.'; ES['auth.resetSent'] = 'Te enviamos un correo para elegir una contraseña nueva.';
+  ES['auth.emailPh'] = 'tu@correo.com'; ES['auth.passPh'] = 'Al menos 6 caracteres';
+  ES['err.wrong'] = 'El correo o la contraseña no coinciden.'; ES['err.exists'] = 'Ya hay una cuenta con ese correo. Inicia sesión.';
+  ES['err.weak'] = 'Usa al menos 6 caracteres en la contraseña.'; ES['err.email'] = 'Ese correo no parece correcto.';
+  ES['err.network'] = 'No hay conexión a internet. Intenta de nuevo cuando tengas.'; ES['err.popup'] = 'La ventana de Google se cerró o se bloqueó. Prueba con correo y contraseña.';
+  ES['err.many'] = 'Demasiados intentos. Espera un minuto e intenta de nuevo.'; ES['err.other'] = 'Algo salió mal. Intenta de nuevo.';
   ES['theme.toDark'] = 'Cambiar a modo oscuro'; ES['theme.toLight'] = 'Cambiar a modo claro';
 
   var lang = root.lang === 'en' ? 'en' : 'es';
@@ -94,6 +115,9 @@
     document.querySelectorAll('[data-i18n]').forEach(function (el) { var v = t(el.dataset.i18n); if (v) el.textContent = v; });
     document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var v = t(el.dataset.i18nHtml); if (v) el.innerHTML = v; });
     document.querySelectorAll('[data-i18n-alt]').forEach(function (el) { var v = t(el.dataset.i18nAlt); if (v) el.alt = v; });
+    document.querySelectorAll('[data-i18n-ph]').forEach(function (el) { var v = t(el.dataset.i18nPh); if (v) el.placeholder = v; });
+    document.querySelectorAll('[data-i18n-label]:not(#themeBtn)').forEach(function (el) { var v = t(el.dataset.i18nLabel); if (v) el.setAttribute('aria-label', v); });
+    if (window.__authLang) window.__authLang();
     applyShots();
     themeLabel();
     document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === lang)); });
@@ -263,6 +287,131 @@
       swayQueued = false;
     });
   }, { passive: true });
+
+
+  /* ---------- Sign in (the website is the front door; the app finishes the job) ----------
+     Same Firebase project and version as the app, in the same browser, so signing in here signs the app in too.
+     After signing in, a short note in localStorage ("pockets-handoff") tells the app to bring back the data;
+     nothing personal goes in the URL. See app/src/lib/handoff.ts. */
+  var FB = 'https://www.gstatic.com/firebasejs/11.10.0/';
+  var CONFIG = {
+    apiKey: 'AIzaSyBSxMmcFuvYlDA4LKRnCRg-1uRnKosWdgk', authDomain: 'pockets-rodar.firebaseapp.com', projectId: 'pockets-rodar',
+    storageBucket: 'pockets-rodar.firebasestorage.app', messagingSenderId: '223677884702', appId: '1:223677884702:web:ec5dda45af414d2e3ec10f'
+  };
+  var fbReady = null;
+  function firebase() {
+    if (!fbReady) fbReady = Promise.all([import(FB + 'firebase-app.js'), import(FB + 'firebase-auth.js')]).then(function (m) {
+      var app = m[0].initializeApp(CONFIG);
+      return { a: m[1], auth: m[1].getAuth(app) };
+    });
+    return fbReady;
+  }
+  var authEl = document.getElementById('auth'), panel = document.getElementById('authPanel');
+  var form = document.getElementById('authForm'), msg = document.getElementById('authMsg'), submit = document.getElementById('authSubmit');
+  var nameIn = document.getElementById('aName'), emailIn = document.getElementById('aEmail'), passIn = document.getElementById('aPass');
+  var mode = 'signin', opener = null, busy = false;
+
+  function say(key, good) { msg.textContent = t(key) || key; msg.hidden = false; msg.classList.toggle('good', !!good); }
+  function quiet() { msg.hidden = true; }
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll('.auth-tabs [role=tab]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === m)); });
+    document.querySelectorAll('.auth [data-only]').forEach(function (el) { el.hidden = el.dataset.only !== m; });
+    passIn.autocomplete = m === 'create' ? 'new-password' : 'current-password';
+    submit.textContent = t(m === 'create' ? 'auth.create' : 'auth.signin');
+    quiet();
+  }
+  window.__authLang = function () { if (!busy) submit.textContent = t(mode === 'create' ? 'auth.create' : 'auth.signin'); };
+  function openAuth(m, from) {
+    opener = from || document.activeElement;
+    setMode(m);
+    authEl.hidden = false;
+    document.documentElement.classList.add('auth-open');
+    requestAnimationFrame(function () { authEl.classList.add('on'); (m === 'create' ? nameIn : emailIn).focus({ preventScroll: true }); });
+    firebase().catch(function () {}); // start loading while they type
+  }
+  function closeAuth() {
+    if (busy) return;
+    authEl.classList.remove('on');
+    document.documentElement.classList.remove('auth-open');
+    setTimeout(function () { authEl.hidden = true; }, reduce.matches ? 0 : 230);
+    if (opener && opener.focus) opener.focus({ preventScroll: true });
+  }
+  document.querySelectorAll('[data-auth]').forEach(function (b) { b.addEventListener('click', function () { openAuth(b.dataset.auth, b); }); });
+  authEl.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', closeAuth); });
+  document.querySelectorAll('.auth-tabs [role=tab]').forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.tab); }); });
+  document.addEventListener('keydown', function (e) {
+    if (authEl.hidden) return;
+    if (e.key === 'Escape') closeAuth();
+    if (e.key === 'Tab') { // keep focus inside the panel
+      var f = [].slice.call(panel.querySelectorAll('button:not([hidden]):not([disabled]), input:not([hidden]), a[href]')).filter(function (x) { return x.offsetParent; });
+      if (!f.length) return;
+      if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+    }
+  });
+
+  function friendly(err) {
+    var c = (err && err.code) || '';
+    if (/wrong-password|invalid-credential|user-not-found|invalid-login/.test(c)) return 'err.wrong';
+    if (/email-already-in-use/.test(c)) return 'err.exists';
+    if (/weak-password/.test(c)) return 'err.weak';
+    if (/invalid-email/.test(c)) return 'err.email';
+    if (/network/.test(c)) return 'err.network';
+    if (/popup/.test(c)) return 'err.popup';
+    if (/too-many-requests/.test(c)) return 'err.many';
+    return 'err.other';
+  }
+  function working(on, key) {
+    busy = on;
+    panel.classList.toggle('busy', on);
+    panel.querySelectorAll('button, input').forEach(function (x) { x.disabled = on; });
+    submit.textContent = on ? t(key) : t(mode === 'create' ? 'auth.create' : 'auth.signin');
+  }
+  /** Leave the note for the app, keep the language they read the site in, and open the app. */
+  function handOff(note) {
+    try {
+      note.at = Date.now();
+      localStorage.setItem('pockets-handoff', JSON.stringify(note));
+      if (!localStorage.getItem('pockets-lang')) localStorage.setItem('pockets-lang', lang);
+    } catch (e) {}
+    location.href = '../';
+  }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = emailIn.value.trim(), pass = passIn.value, name = nameIn.value.trim();
+    if (!email) { say('auth.needEmail'); emailIn.focus(); return; }
+    if (!pass) { say('auth.needPass'); passIn.focus(); return; }
+    quiet(); working(true, mode === 'create' ? 'auth.busyCreate' : 'auth.busySignin');
+    firebase().then(function (f) {
+      if (mode === 'signin') return f.a.signInWithEmailAndPassword(f.auth, email, pass).then(function () { return { created: false, name: '' }; });
+      return f.a.createUserWithEmailAndPassword(f.auth, email, pass).then(function (c) {
+        // Friends find you by email, so the app asks to confirm it (same as signing up in the app).
+        return Promise.all([name ? f.a.updateProfile(c.user, { displayName: name }).catch(function () {}) : null, f.a.sendEmailVerification(c.user).catch(function () {})])
+          .then(function () { return { created: true, name: name }; });
+      });
+    }).then(function (r) { submit.textContent = t('auth.opening'); handOff({ kind: 'signedin', created: r.created, name: r.name }); })
+      .catch(function (err) { working(false); say(friendly(err)); });
+  });
+  document.getElementById('authGoogle').addEventListener('click', function () {
+    quiet(); working(true, 'auth.busyGoogle');
+    firebase().then(function (f) { return f.a.signInWithPopup(f.auth, new f.a.GoogleAuthProvider()).then(function (c) { return { f: f, c: c }; }); })
+      .then(function (r) {
+        var info = r.f.a.getAdditionalUserInfo(r.c);
+        var first = ((r.c.user && r.c.user.displayName) || '').split(' ')[0];
+        submit.textContent = t('auth.opening');
+        handOff({ kind: 'signedin', created: !!(info && info.isNewUser), name: first });
+      })
+      .catch(function (err) { working(false); say(friendly(err)); });
+  });
+  document.getElementById('authForgot').addEventListener('click', function () {
+    var email = emailIn.value.trim();
+    if (!email) { say('auth.needEmail'); emailIn.focus(); return; }
+    firebase().then(function (f) { return f.a.sendPasswordResetEmail(f.auth, email); })
+      .then(function () { say('auth.resetSent', true); })
+      .catch(function (err) { say(friendly(err)); });
+  });
+  document.getElementById('authSample').addEventListener('click', function () { handOff({ kind: 'sample' }); });
 
   /* ---------- Copy the app link ---------- */
   var copyBtn = document.getElementById('copyBtn');
