@@ -12,6 +12,7 @@ import { BillBadge, Fill, ExpRow, ListCard, SectionHead, expView } from '../ui/b
 import * as I from '../ui/icons';
 import { netWorth } from '../lib/networth';
 import { Blocks } from '../ui/Blocks';
+import { RollingMoney } from '../ui/RollingMoney';
 import { FriendsHomeCard } from './Debts';
 import { monthSummary } from '../lib/plan';
 import { billAmount } from '../lib/schedule';
@@ -20,9 +21,9 @@ const C = 100.53; // ring circumference (r=16)
 
 /** Light tones for the "Safe to spend" card: >50% left green, 30–50% yellow, under 30% red. */
 const SAFE_TONES = {
-  green: { bg: 'var(--safe-g-bg)', label: 'var(--safe-g-label)', amount: 'var(--safe-g-amt)', bar: 'var(--safe-g-bar)' },
-  yellow: { bg: 'var(--safe-y-bg)', label: 'var(--safe-y-label)', amount: 'var(--safe-y-amt)', bar: 'var(--safe-y-bar)' },
-  red: { bg: 'var(--color-accent-100)', label: 'var(--color-accent-800)', amount: 'var(--color-accent-900)', bar: 'var(--color-accent)' }
+  green: { key: 'green', bg: 'var(--safe-g-bg)', label: 'var(--safe-g-label)', amount: 'var(--safe-g-amt)', bar: 'var(--safe-g-bar)' },
+  yellow: { key: 'yellow', bg: 'var(--safe-y-bg)', label: 'var(--safe-y-label)', amount: 'var(--safe-y-amt)', bar: 'var(--safe-y-bar)' },
+  red: { key: 'red', bg: 'var(--color-accent-100)', label: 'var(--color-accent-800)', amount: 'var(--color-accent-900)', bar: 'var(--color-accent)' }
 };
 
 export default function Home() {
@@ -184,15 +185,15 @@ function Pager({ pages, label, names, initial = 0, onPage }: { pages: ReactNode[
 
 function SafeCard({ tone, title, left, budget, spent, sub, tour }: { tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string; tour?: boolean }) {
   return (
-    <div data-tour={tour ? 'safe' : undefined} style={{ flex: 1, background: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background .4s ease' }}>
+    <div data-tour={tour ? 'safe' : undefined} className={`bill bill-${tone.key}`} style={{ position: 'relative', flex: 1, backgroundColor: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background-color .4s ease' }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
         <span style={{ fontSize: 14, color: tone.label, fontWeight: 600 }}>{title}</span>
         <EyeToggle size={34} tone={tone.label} />
       </span>
-      <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: tone.amount }}>{fmt(left)}</span>
+      <span style={{ fontSize: 44, fontWeight: 700, letterSpacing: '-0.035em', lineHeight: 1.05, color: tone.amount }}><RollingMoney value={left} /></span>
       <span style={{ fontSize: 13, color: tone.label }}>{sub}</span>
       <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: 'var(--surface)', overflow: 'hidden' }}>
-        <div style={{ height: 10, borderRadius: 999, width: pctOf(spent, budget), background: tone.bar, transition: 'width .5s ease, background .4s ease' }} />
+        <div className="bar-fill" style={{ height: 10, borderRadius: 999, width: '100%', clipPath: `inset(0 calc(100% - ${pctOf(spent, budget)}) 0 0 round 999px)`, background: tone.bar }} />
       </div>
     </div>
   );

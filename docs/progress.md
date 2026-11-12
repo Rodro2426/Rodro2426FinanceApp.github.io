@@ -86,6 +86,11 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - **Spanish** (Profile → Language, or the switch on the welcome screen).
 - Photos are drawn as `<img>` (fixes logos that didn't refresh until a restart).
 
+**Bill texture and motion in the app** (Nov 2026)
+- The website's "Billete Pockets" ground is behind the app's main screens and full pages, in light and dark; the safe-to-spend card is engraved like a banknote in its green, yellow or red ink.
+- Motion pass with Emil Kowalski's rules: sheets open and close on the iOS drawer curve (close is now immediate), presses are firm (160ms, no bounce), tab switches are shorter, chips no longer animate every property, bars use clip-path instead of width.
+- "La plata se mueve": the safe-to-spend number rolls to its new value and the spent amount lifts off the card (`ui/RollingMoney.tsx`). The eye blurs amounts instead of swapping them.
+
 **Marketing website** (`app/public/site/`, live at `/site/`)
 - A static page (HTML, CSS, JS, no build step) that Vite copies into `dist/site/`. Spanish by default, with an ES/EN switch saved in localStorage `pockets-site-lang`.
 - Built from the Pockets Launch Film: a 3D iPhone running the real app turns around between eight features while you scroll. Then: on your computer too, the little things, three install steps with a copy-link box, FAQ, and a navy close.

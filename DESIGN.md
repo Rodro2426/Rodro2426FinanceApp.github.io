@@ -272,3 +272,11 @@ The website follows the visitor's system setting, with a sun/moon switch beside 
 - **Don't** use hard offset shadows or neutral black glows; shadows are warm and blurred.
 - **Don't** set body text at 400 weight or headings below 800.
 - **Don't** draw stock or invented objects on the website or in the app when a real app fragment can show the point. (The video ads' lavender clay world is a separate marketing medium and is not banned by this rule.)
+
+### In the app (2026-11-11)
+- **Ground:** the app uses the same "Billete Pockets" ground as the website on its main screens and full pages (`--ground` in `app/src/styles.css`: the hero plate at the top, the tile and the line screen, over `--page`, so a custom background colour still shows). Sheets, cards and the welcome and lock screens stay as they were. Files: `app/public/tex/`.
+- **Engraved safe-to-spend card:** the "Puedes gastar" card carries a banknote engraving (wave lines, a rosette beside the amount, one microtext row) in its own ink, one file per mood: `card-green`, `card-yellow`, `card-red`, each with a `-dark` twin. Class `bill bill-<tone>`.
+- **Motion tokens:** `--ease-out: cubic-bezier(.23,1,.32,1)` for presses and arrivals; `--ease-drawer: cubic-bezier(.32,.72,0,1)` for sheets (open 320ms, close 220ms). Presses 160ms with no overshoot; tab switch 8px over 180ms; chips animate only colour and press; bars fill with `clip-path`, never `width`.
+- **Signature, "la plata se mueve":** when the safe-to-spend amount changes, its digits roll to the new value (700ms ease-out, `ui/RollingMoney.tsx`) and, when it goes down, the amount spent lifts off the card. Quiet on first load, while amounts are hidden, and with Reduce Motion.
+- **Eye:** hiding or showing amounts blurs the screen's content in for 200ms (`.eye-flip`) instead of swapping in one frame.
+

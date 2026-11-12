@@ -104,3 +104,10 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - There are four screenshot sets: `screens/es`, `screens/en`, `screens/es-dark`, `screens/en-dark`. Retake all four together so light and dark show the same data (set the app's `settings.theme` to `dark` for the dark ones).
 - GitHub Pages lets browsers cache files for about 10 minutes. `index.html` loads `site.css?v=…` and `site.js?v=…`: change that `v` value whenever you edit either file, or returning visitors can get the new page with the old styles and script.
 - Colours in `site.css` are tokens with a light block on `:root` and a dark block on `:root[data-theme="dark"]`. Don't add a fixed colour; add a token to both blocks.
+
+## App texture and rolling number
+
+- The texture files live in `app/public/tex/` and are referenced as `url("/tex/…")` in `styles.css`. Vite rewrites them to `../tex/…` from `assets/`, which works under the GitHub Pages sub-path (checked by serving `dist/` under `/Rodro2426FinanceApp.github.io/`). Keep the leading `/`.
+- `.shell` and `.page` get the textured `--ground` with `!important`, because full pages set `background: var(--page)` inline.
+- The safe-to-spend amount is drawn by `RollingMoney`: each digit is a column of 0–9, so `innerText` of the card reads oddly (the real value is in a visually hidden span for screen readers). Scripts that read the amount should read that hidden span, or `fmt()` the number themselves.
+- `closeSheet` waits 220ms; the `.closing` sheet animation is also 220ms. Change them together.

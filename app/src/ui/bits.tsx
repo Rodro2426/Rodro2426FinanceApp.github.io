@@ -29,7 +29,7 @@ export const FieldLabel = ({ children, m = '16px 4px 8px' }: { children: ReactNo
 export function Bar({ pct, h = 10, track = 'var(--surface)', fill, ease = '.5s' }: { pct: string; h?: number; track?: string; fill: string; ease?: string }) {
   return (
     <div style={{ height: h, borderRadius: 999, background: track, overflow: 'hidden' }}>
-      <div style={{ height: h, borderRadius: 999, width: pct, background: fill, transition: `width ${ease} ease` }} />
+      <div className="bar-fill" style={{ height: h, borderRadius: 999, width: '100%', clipPath: `inset(0 calc(100% - ${pct}) 0 0 round 999px)`, background: fill, transition: `clip-path ${ease} var(--ease-out)` }} />
     </div>
   );
 }
@@ -88,7 +88,7 @@ export function PocketDot({ st, size, fs, bg, color, radius = 999 }: { st: { ini
 /** Rounded pill used to pick a pocket or goal. */
 export function PickChip({ st, on, hue, onClick, icon }: { st: { name: string; initial?: string; photoBg?: string }; on: boolean; hue: number; onClick: () => void; icon?: ReactNode }) {
   return (
-    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 8px', borderRadius: 999, border: `2px solid ${on ? ink(hue) : 'var(--surface)'}`, background: on ? ink(hue) : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, cursor: 'pointer', transition: 'all .15s' }}>
+    <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 8px', borderRadius: 999, border: `2px solid ${on ? ink(hue) : 'var(--surface)'}`, background: on ? ink(hue) : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, cursor: 'pointer', transition: 'background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease' }}>
       <span style={{ width: 24, height: 24, borderRadius: 999, backgroundColor: on ? 'rgba(255,255,255,.25)' : tint(hue), position: 'relative', overflow: 'hidden', color: on ? 'var(--on-text)' : ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{icon ?? st.initial}<Fill src={st.photoBg} /></span>
       <span style={{ fontSize: 14, fontWeight: 600 }}>{st.name}</span>
     </button>
@@ -99,7 +99,7 @@ export function Segmented<K extends string>({ items, value, onPick, h = 38, mt =
   return (
     <div style={{ display: 'flex', gap: 4, marginTop: mt, background: 'var(--color-neutral-200)', borderRadius: 999, padding: 4 }}>
       {items.map(([k, label]) => (
-        <button key={k} onClick={() => onPick(k)} style={{ flex: 1, height: h, borderRadius: 999, border: 0, background: value === k ? 'var(--surface)' : 'transparent', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: value === k ? 'var(--shadow-sm)' : 'none', transition: 'all .15s' }}>{label}</button>
+        <button key={k} onClick={() => onPick(k)} style={{ flex: 1, height: h, borderRadius: 999, border: 0, background: value === k ? 'var(--surface)' : 'transparent', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: value === k ? 'var(--shadow-sm)' : 'none', transition: 'background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease' }}>{label}</button>
       ))}
     </div>
   );

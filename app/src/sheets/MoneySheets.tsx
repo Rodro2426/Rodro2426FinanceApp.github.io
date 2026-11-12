@@ -62,13 +62,13 @@ export function ExportSheet({ acct }: { acct: string }) {
         <FieldLabel m="6px 4px 8px">Month</FieldLabel>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {[...allMonths(d).reverse(), 'all'].map(m => (
-            <button key={m} onClick={() => setMonth(m)} style={{ height: 38, padding: '0 15px', borderRadius: 999, border: 0, ...chip(m === month), fontSize: 14, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>{monthLabel(m)}</button>
+            <button key={m} onClick={() => setMonth(m)} style={{ height: 38, padding: '0 15px', borderRadius: 999, border: 0, ...chip(m === month), fontSize: 14, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease' }}>{monthLabel(m)}</button>
           ))}
         </div>
         <FieldLabel>Accounts</FieldLabel>
         <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
           {[{ id: 'all', name: 'All accounts' }, ...d.accounts].map(a => (
-            <button key={a.id} onClick={() => setAcctId(a.id)} style={{ flex: 'none', height: 36, padding: '0 14px', borderRadius: 999, border: 0, ...chip(a.id === acctId), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>{a.name}</button>
+            <button key={a.id} onClick={() => setAcctId(a.id)} style={{ flex: 'none', height: 36, padding: '0 14px', borderRadius: 999, border: 0, ...chip(a.id === acctId), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease' }}>{a.name}</button>
           ))}
         </div>
         <div style={{ marginTop: 16, background: 'var(--surface)', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>

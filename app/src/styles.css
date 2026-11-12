@@ -9,6 +9,17 @@
   --warn-bg: oklch(0.96 0.055 85); --warn-ink: oklch(0.38 0.08 70);
   --glass: rgba(255,255,255,.8);
   --tint-l: 0.94; --tint-c: 0.04; --ink-l: 0.42; --ink-c: 0.1; --mid-l: 0.78;
+  /* "Billete Pockets" ground: printed like a peso bill (colour wash, pocket watermark, microtext, wave lines,
+     fine line screen), the same as the website. Dark values are in the dark block. */
+  --tex-hero: url("/tex/billete-hero.svg");
+  --tex-tile: url("/tex/billete-tile.svg");
+  --hatch: repeating-linear-gradient(135deg, rgba(35,46,122,.028) 0 1px, transparent 1px 6px);
+  --ground: var(--tex-hero) no-repeat center -120px / 1000px 625px, var(--tex-tile) 0 0 / 600px 140px, var(--hatch), var(--page);
+  /* The safe-to-spend card is engraved like a banknote, in its own ink. */
+  --bill-green: url("/tex/card-green.svg"); --bill-yellow: url("/tex/card-yellow.svg"); --bill-red: url("/tex/card-red.svg");
+  /* Motion: strong ease-out for things that respond or arrive; iOS drawer curve for sheets. */
+  --ease-out: cubic-bezier(.23, 1, .32, 1);
+  --ease-drawer: cubic-bezier(.32, .72, 0, 1);
   /* Safe-to-spend card tones */
   --safe-g-bg: oklch(0.95 0.045 155); --safe-g-label: oklch(0.42 0.09 155); --safe-g-amt: oklch(0.3 0.07 155); --safe-g-bar: oklch(0.68 0.13 155);
   --safe-y-bg: oklch(0.96 0.055 92); --safe-y-label: oklch(0.46 0.09 75); --safe-y-amt: oklch(0.33 0.07 70); --safe-y-bar: oklch(0.8 0.14 82);
@@ -101,7 +112,7 @@ input::placeholder { color: var(--color-neutral-500); }
   .hv-green2:hover { background: oklch(0.9 0.07 150) !important; }
 }
 /* Things you press give way a little and spring back. */
-.pr97, .pr98, .pr92, .tabbar button { transition: transform .22s cubic-bezier(.2, .9, .3, 1.2); }
+.pr97, .pr98, .pr92, .tabbar button { transition: transform .16s var(--ease-out); }
 .tabbar button:active { transform: scale(.93); }
 .pr97:active { transform: scale(.97); }
 .pr98:active { transform: scale(.98); }
@@ -121,22 +132,22 @@ input::placeholder { color: var(--color-neutral-500); }
 /* iPhone date boxes keep a fixed width of their own unless the native look is turned off. */
 input[type="date"] { -webkit-appearance: none; appearance: none; min-width: 0; max-width: 100%; box-sizing: border-box; display: block; }
 input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
-.sheet-panel { animation: sheet-in .28s cubic-bezier(.2, .8, .2, 1); }
+.sheet-panel { animation: sheet-in .32s var(--ease-drawer); }
 .sheet-scrim { animation: fade-in .2s ease; }
 /* Closing: the sheet drops away instead of vanishing (see closeSheet in lib/store.ts). */
 @keyframes sheet-out { to { transform: translateY(105%); } }
 @keyframes fade-out { to { opacity: 0; } }
-[data-sheet].closing > .sheet-panel { animation: sheet-out .24s cubic-bezier(.4, 0, .8, .4) forwards; }
-[data-sheet].closing > .sheet-scrim { animation: fade-out .24s ease forwards; }
+[data-sheet].closing > .sheet-panel { animation: sheet-out .22s var(--ease-drawer) forwards; }
+[data-sheet].closing > .sheet-scrim { animation: fade-out .22s ease forwards; }
 /* Full pages (Investments, Friends & trips…) slide in from the right like on iPhone; going from one page to another just fades. */
 @keyframes page-in { from { transform: translateX(100%); } to { transform: none; } }
 .shell:not(.desk) .page { animation: page-in .34s cubic-bezier(.22, 1, .36, 1); box-shadow: -12px 0 30px rgba(0,0,0,.10); }
 .shell:not(.desk)[data-nav="swap"] .page { animation: fade-in .2s ease; }
 /* Tapping a tab: the new tab glides in from its side. */
-@keyframes tab-in-r { from { transform: translateX(26px); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes tab-in-l { from { transform: translateX(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
-.tab-in-r { animation: tab-in-r .3s cubic-bezier(.22, 1, .36, 1); }
-.tab-in-l { animation: tab-in-l .3s cubic-bezier(.22, 1, .36, 1); }
+@keyframes tab-in-r { from { transform: translateX(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes tab-in-l { from { transform: translateX(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.tab-in-r { animation: tab-in-r .18s var(--ease-out); }
+.tab-in-l { animation: tab-in-l .18s var(--ease-out); }
 /* A section that folds open and closed smoothly. */
 .fold { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .3s cubic-bezier(.22, 1, .36, 1), opacity .25s ease; }
 .fold.open { grid-template-rows: 1fr; opacity: 1; }
@@ -204,6 +215,10 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
   --shadow-md: 0 3px 10px rgba(0,0,0,.5);
   --shadow-lg: 0 12px 32px rgba(0,0,0,.6);
+  --tex-hero: url("/tex/billete-hero-dark.svg");
+  --tex-tile: url("/tex/billete-tile-dark.svg");
+  --hatch: repeating-linear-gradient(135deg, rgba(197,203,242,.035) 0 1px, transparent 1px 6px);
+  --bill-green: url("/tex/card-green-dark.svg"); --bill-yellow: url("/tex/card-yellow-dark.svg"); --bill-red: url("/tex/card-red-dark.svg");
 }
 /* Brand screens (welcome, install guide) keep their cream look in both modes. */
 .force-light {
@@ -271,3 +286,30 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .tabbar nav .tab-pill { position: absolute; left: 0; top: 5px; width: 70px; height: 52px; border-radius: 999px; background: var(--color-accent-100); opacity: .9; transform-origin: center; pointer-events: none; z-index: 0; box-shadow: 0 4px 14px rgba(0,0,0,.08); }
 .tabbar nav.dragging > button { background: transparent !important; }
 .tabbar nav.dragging > button[data-hover] { color: var(--color-accent-700) !important; }
+
+/* ---------- "Billete Pockets" ground and the engraved safe-to-spend card ---------- */
+.shell, .shell .page { background: var(--ground) !important; }
+@media (min-width: 1024px) and (min-height: 560px) { .shell.desk { background: var(--ground) !important; } }
+.bill { background-repeat: no-repeat; background-size: cover; background-position: right center; }
+.bill-green { background-image: var(--bill-green); }
+.bill-yellow { background-image: var(--bill-yellow); }
+.bill-red { background-image: var(--bill-red); }
+
+/* ---------- Money moves: the safe-to-spend number rolls to its new value ---------- */
+.roll { display: inline-flex; font-variant-numeric: tabular-nums; position: relative; }
+.roll-d { display: inline-block; height: 1.05em; overflow: hidden; }
+.roll-d > span { display: flex; flex-direction: column; transition: transform .7s var(--ease-out); }
+.roll-d > span > i { font-style: normal; height: 1.05em; line-height: 1.05; text-align: center; }
+.roll.still .roll-d > span { transition: none; }
+@keyframes spent-off { 0% { opacity: 0; transform: translateY(4px); } 18% { opacity: 1; transform: none; } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-16px); } }
+.spent-chip { position: absolute; right: 24px; top: 64px; font-size: 16px; font-weight: 700; pointer-events: none; animation: spent-off .9s var(--ease-out) forwards; }
+/* Bars fill with clip-path (no layout work, rounded ends stay round). */
+.bar-fill { transition: clip-path .6s var(--ease-out), background-color .4s ease; }
+/* The eye: amounts blur into $***** instead of swapping. */
+@keyframes eye-flip { from { filter: blur(4px); opacity: .55; } to { filter: none; opacity: 1; } }
+.eye-flip .scroll-body { animation: eye-flip .2s var(--ease-out); }
+@media (prefers-reduced-motion: reduce) {
+  .roll-d > span, .bar-fill { transition: none; }
+  .spent-chip { display: none; }
+  .eye-flip .scroll-body { animation: none; }
+}

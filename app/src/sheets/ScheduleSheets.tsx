@@ -106,7 +106,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 4, marginTop: 6, background: 'var(--color-neutral-200)', borderRadius: 22, padding: 4 }}>
           {KIND_ITEMS.map(([k, label]) => (
-            <button key={k} onClick={() => pickKind(k)} style={{ height: 38, borderRadius: 18, border: 0, background: kind === k ? 'var(--surface)' : 'transparent', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: kind === k ? 'var(--shadow-sm)' : 'none', transition: 'all .15s' }}>{label}</button>
+            <button key={k} onClick={() => pickKind(k)} style={{ height: 38, borderRadius: 18, border: 0, background: kind === k ? 'var(--surface)' : 'transparent', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: kind === k ? 'var(--shadow-sm)' : 'none', transition: 'background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease' }}>{label}</button>
           ))}
         </div>
         {cardPay ? <>

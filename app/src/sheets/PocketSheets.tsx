@@ -62,7 +62,7 @@ export function SearchSheet({ tag, cat }: { tag?: string | null; cat?: string | 
         </div>
         <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '8px -20px 0', padding: '0 20px' }}>
           {chips.map(g => (
-            <button key={g.key} onClick={g.pick} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: g.on ? (g.hue != null ? ink(g.hue) : TEXT) : 'var(--surface)', color: g.on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>{g.label}</button>
+            <button key={g.key} onClick={g.pick} style={{ flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: g.on ? (g.hue != null ? ink(g.hue) : TEXT) : 'var(--surface)', color: g.on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease' }}>{g.label}</button>
           ))}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', margin: '16px 4px 8px', fontSize: 13 }}>
@@ -351,7 +351,7 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
           {d.tags.map(t => {
             const on = tagSel.includes(t);
-            return <button key={t} onClick={() => setTagSel(s => (s.includes(t) ? s.filter(y => y !== t) : [...s, t]))} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? ink(tagHue(t)) : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s' }}>#{t}</button>;
+            return <button key={t} onClick={() => setTagSel(s => (s.includes(t) ? s.filter(y => y !== t) : [...s, t]))} style={{ height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: on ? ink(tagHue(t)) : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease' }}>#{t}</button>;
           })}
           <div style={{ display: 'flex', alignItems: 'center', height: 34, borderRadius: 999, background: 'var(--surface)', border: '2px dashed var(--color-neutral-300)', padding: '0 4px 0 12px' }}>
             <input placeholder="New tag" value={newTag} onChange={e => setNewTag(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }} style={{ width: 92, border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: TEXT, padding: 0, outline: 'none' }} />

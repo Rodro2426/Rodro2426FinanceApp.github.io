@@ -37,7 +37,7 @@ export function CardFace({ a, onClick, action }: { a: CardLook; onClick?: () => 
         <span style={{ marginTop: a.cardImg ? 0 : 10, fontSize: 13, color: k }}>{a.notMine ? 'Balance owed · not yours' : 'Balance owed'}</span>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em', color: k, lineHeight: 1.1 }}>{fmt(a.bal)}</span>
         <div style={{ marginTop: 8, height: 10, borderRadius: 999, background: glass, overflow: 'hidden' }}>
-          <div style={{ height: 10, borderRadius: 999, width: pctOf(a.bal, lim), background: k, transition: 'width .5s ease' }} />
+          <div className="bar-fill" style={{ height: 10, borderRadius: 999, width: '100%', clipPath: `inset(0 calc(100% - ${pctOf(a.bal, lim)}) 0 0 round 999px)`, background: k }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, gap: 10 }}>
           <span style={{ fontSize: 12, color: k }}>{Math.round(lim ? a.bal / lim * 100 : 0)}% of {fmt(lim)} used</span>
