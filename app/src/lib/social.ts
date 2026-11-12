@@ -7,7 +7,9 @@
 import { addDoc, collection, deleteDoc, deleteField, doc, getDoc, getDocs, limit, orderBy, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore/lite';
 import { auth, db } from './cloud';
 import { notifyThread } from './push';
-import { getData } from './store';
+import { getData, setData, flash } from './store';
+import { debtsOf, saveDebt } from './debts';
+import { debtFromDoc, planDebtSync, type DebtDoc } from './debtShare';
 import { fmtPlain } from './derive';
 import { groupWideItems, relinkPerson, withMorePeople, type Member, type TripItem } from './settle';
 
@@ -31,8 +33,8 @@ export interface Message {
   /** A GIF from GIPHY. */
   gif?: { url: string; w: number; h: number; big?: string };
 }
-interface SocialState { /** Direct-message conversations, newest first. */ dms: Dm[]; /** Friends' profile pictures (small), by account id; null = no picture. */ photos: Record<string, string | null>; friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; messages: Record<string, Message[]>; latest: Record<string, number>; loading: boolean; error: string | null; loadedAt: number }
-let state: SocialState = { dms: [], photos: {}, friends: [], trips: [], items: {}, messages: {}, latest: {}, loading: false, error: null, loadedAt: 0 };
+interface SocialState { /** Debts friends sent you, waiting for Accept or Decline. */ debtRequests: DebtDoc[]; /** Direct-message conversations, newest first. */ dms: Dm[]; /** Friends' profile pictures (small), by account id; null = no picture. */ photos: Record<string, string | null>; friends: Friend[]; trips: Trip[]; items: Record<string, TripItem[]>; messages: Record<string, Message[]>; latest: Record<string, number>; loading: boolean; error: string | null; loadedAt: number }
+let state: SocialState = { debtRequests: [], dms: [], photos: {}, friends: [], trips: [], items: {}, messages: {}, latest: {}, loading: false, error: null, loadedAt: 0 };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach(l => l());
 export const getSocial = () => state;
@@ -150,6 +152,7 @@ export async function refreshSocial() {
     await loadDms().catch(() => {});
     await Promise.all(state.trips.map(t => Promise.all([loadItems(t.id), loadLatest(t.id).catch(() => {})])));
     setS({ loading: false, loadedAt: Date.now() });
+    syncDebts().catch(() => {});
     loadPhotos([...state.friends.map(f => f.uid), ...state.trips.flatMap(t => t.members), ...state.dms.map(t => t.other)]).catch(() => {});
   } catch (e) { fail(e); }
 }
@@ -381,4 +384,61 @@ export async function checkTripActivity(): Promise<TripActivity[]> {
     if (items.length || messages.length) out.push({ trip, items, messages });
   }));
   return out;
+}
+
+/* ---------------- Shared debts (lib/debtShare.ts decides; this reads and writes Firestore) ---------------- */
+let debtSyncing = false;
+/**
+ * Sends new debts with friends as requests, sends your changes, takes your friends' changes, and lists the
+ * requests waiting for you. Runs when the app opens, after you change a shared debt, and on Friends & trips.
+ */
+export async function syncDebts(): Promise<void> {
+  const u = me();
+  if (!u || debtSyncing) return;
+  debtSyncing = true;
+  try {
+    if (!state.loadedAt && !state.friends.length) await loadFriends().catch(() => {});
+    const snap = await getDocs(query(collection(db, 'debts'), where('users', 'array-contains', u.uid)));
+    const docs = snap.docs.map(x => ({ ...(x.data() as Partial<DebtDoc>), id: x.id }));
+    const friends = state.friends.filter(f => f.status === 'accepted').map(f => ({ uid: f.uid, name: f.name }));
+    const now = Date.now();
+    const plan = planDebtSync(debtsOf(getData()), docs, u.uid, myName(), friends, now);
+    const failed = new Set<string>();
+    const run = async (id: string, job: () => Promise<unknown>) => { try { await job(); } catch (e) { failed.add(id); fail(e); } };
+    for (const o of plan.creates) { const { id, ...body } = o; await run(id, () => setDoc(doc(db, 'debts', id), body)); }
+    for (const up of plan.updates) await run(up.id, () => updateDoc(doc(db, 'debts', up.id), { ...up.fields, updatedAt: now }));
+    // Only mark as shared what Firestore really saved, so a failed send is tried again next time.
+    const local = plan.local.filter(x => !failed.has(x.id));
+    // Replaced as they are: a friend's change never moves your account balances (see lib/debtShare.ts).
+    if (local.length) setData(x => { const by = new Map(local.map(y => [y.id, y])); return { debts: debtsOf(x).map(y => by.get(y.id) ?? y) }; });
+    setS({ debtRequests: plan.requests });
+  } catch (e) { fail(e); } finally { debtSyncing = false; }
+}
+
+/** Accept a debt a friend sent you: it appears in your Debts, from your side, without moving your accounts. */
+export async function acceptDebt(o: DebtDoc): Promise<string | null> {
+  const u = me(); if (!u) return 'Sign in first';
+  const now = Date.now();
+  try {
+    await updateDoc(doc(db, 'debts', o.id), { status: 'accepted', updatedAt: now });
+    setData(x => saveDebt(x, debtFromDoc({ ...o, status: 'accepted', updatedAt: now }, u.uid, now)));
+    setS({ debtRequests: state.debtRequests.filter(r => r.id !== o.id) });
+    return null;
+  } catch (e) { return fail(e); }
+}
+
+/** You deleted a shared debt: remove the shared copy (your friend keeps theirs, marked as no longer shared). */
+export async function unshareDebt(id: string) {
+  if (!me()) return;
+  try { await deleteDoc(doc(db, 'debts', id)); } catch { /* already gone, or offline: nothing else to undo */ }
+}
+
+/** Decline a debt a friend sent you: they see that you declined, and it never reaches your Debts. */
+export async function declineDebt(o: DebtDoc): Promise<string | null> {
+  try {
+    await updateDoc(doc(db, 'debts', o.id), { status: 'declined', updatedAt: Date.now() });
+    setS({ debtRequests: state.debtRequests.filter(r => r.id !== o.id) });
+    flash('Request declined');
+    return null;
+  } catch (e) { return fail(e); }
 }

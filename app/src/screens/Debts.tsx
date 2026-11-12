@@ -1,12 +1,13 @@
 // Friends & trips: the Debts tab, the money summary at the top, and the Home block.
 import { useState, type ReactNode } from 'react';
-import { useApp, setUI, openSheet } from '../lib/store';
+import { useApp, setUI, openSheet, flash } from '../lib/store';
 import { LINE, RED, TEXT } from '../lib/constants';
 import { ctxOf, fmt } from '../lib/derive';
 import { shortDate, todayISO } from '../lib/dates';
 import { debtOutlook, debtTiming, debtTotals, debtsOf, isOpen, leftOf, settledOn } from '../lib/debts';
 import { monthSummary } from '../lib/plan';
-import { getSocial, myUid } from '../lib/social';
+import { acceptDebt, declineDebt, getSocial, myUid } from '../lib/social';
+import type { DebtDoc } from '../lib/debtShare';
 import type { Data, Debt } from '../lib/types';
 import * as I from '../ui/icons';
 import { SectionHead } from '../ui/bits';
@@ -64,9 +65,57 @@ export function MoneyBetween() {
 }
 
 /* ---------------- Debts tab ---------------- */
+/** How a debt with a friend is shared: waiting for them, accepted, declined, or no longer shared. */
+export function shareLabel(x: Debt): { text: string; color: string } | null {
+  if (!x.friend || !x.share) return null;
+  if (x.share === 'pending') return { text: `Waiting for ${x.name} to accept`, color: 'oklch(0.55 0.12 70)' };
+  if (x.share === 'accepted') return { text: `Shared with ${x.name}`, color: GREEN };
+  if (x.share === 'declined') return { text: `${x.name} declined it. Only you see it.`, color: RED };
+  return { text: `${x.name} removed it. Only you see it now.`, color: 'var(--color-neutral-600)' };
+}
+
+/** Debts friends sent you: accept to add it to your Debts (from your side), or decline. */
+function DebtRequests() {
+  const so = useSocial();
+  const [busy, setBusy] = useState<string | null>(null);
+  const me = myUid();
+  if (!so.debtRequests.length) return null;
+  const act = async (o: DebtDoc, yes: boolean) => {
+    setBusy(o.id);
+    const err = yes ? await acceptDebt(o) : await declineDebt(o);
+    setBusy(null);
+    if (!err && yes) flash(`Added to your debts`);
+  };
+  return (
+    <div style={{ ...card, boxShadow: 'inset 0 0 0 2px var(--color-accent-300)' }}>
+      <span style={{ fontSize: 15, fontWeight: 700 }}>{so.debtRequests.length === 1 ? 'A friend sent you a debt' : `Friends sent you ${so.debtRequests.length} debts`}</span>
+      {so.debtRequests.map(o => {
+        const name = o.names[o.from] ?? 'A friend', youOwe = o.owedBy === me;
+        return (
+          <div key={o.id} style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, borderTop: `1px solid ${LINE}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Avatar name={name} uid={o.from} />
+              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: 14.5, fontWeight: 600 }}>{youOwe ? `${name} says you owe them ${fmt(o.amt)}` : `${name} says they owe you ${fmt(o.amt)}`}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{[o.note ? `"${o.note}"` : '', shortDate(o.date), o.due ? `Pay back by ${shortDate(o.due)}` : ''].filter(Boolean).join(' · ')}</span>
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <button onClick={() => act(o, false)} disabled={busy === o.id} className="hv-n200" style={{ height: 42, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Decline</button>
+              <button onClick={() => act(o, true)} disabled={busy === o.id} className="hv-acc600" style={{ height: 42, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Accept</button>
+            </div>
+          </div>
+        );
+      })}
+      <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Accepting adds it to your debts without moving your accounts. You can pick an account later by editing it.</span>
+    </div>
+  );
+}
+
 function DebtRow({ x, last, d, today }: { x: Debt; last: boolean; d: Data; today: string }) {
   const left = leftOf(x), owed = x.dir === 'owed', t = debtTiming(d, x, today), done = !isOpen(x);
   const sub = done ? `Paid back ${shortDate(settledOn(x) ?? x.date)}` : x.due ? `${owed ? 'Pays you back by' : 'Pay back by'} ${shortDate(x.due)}` : 'No pay-back date';
+  const share = shareLabel(x);
   return (
     <button onClick={() => openSheet({ name: 'debt', id: x.id })} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 6px', margin: '0 -6px', border: 0, borderBottom: `1px solid ${last ? 'transparent' : LINE}`, borderRadius: 12, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
       <Avatar name={x.name} uid={x.friend} />
@@ -76,6 +125,7 @@ function DebtRow({ x, last, d, today }: { x: Debt; last: boolean; d: Data; today
           {!done && <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 99, flex: 'none', background: t.tone === 'ok' ? GREEN : 'oklch(0.7 0.14 70)' }} />}
           <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</span>
         </span>
+        {share && <span style={{ fontSize: 11.5, fontWeight: 600, color: share.color, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{share.text}</span>}
       </span>
       <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
         <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: done ? 'var(--color-neutral-600)' : owed ? GREEN : RED }}>{fmt(done ? x.amt : left)}</span>
@@ -110,7 +160,8 @@ export function DebtList() {
   );
   const affects = out.late > 0.004 || out.oweSoon > 0.004;
   return <>
-    <Purpose icon="debts">Money between you and one person: you lent it, paid for them, or borrowed. Only you see these, and they don't count as spending.</Purpose>
+    <Purpose icon="debts">Money between you and one person: you lent it, paid for them, or borrowed. It doesn't count as spending. With a friend who uses Pockets, they get a request to accept it and you both see changes and payments.</Purpose>
+    <DebtRequests />
     <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
       {addBtn('owed', 'Someone owes me')}
       {addBtn('owe', 'I owe someone')}

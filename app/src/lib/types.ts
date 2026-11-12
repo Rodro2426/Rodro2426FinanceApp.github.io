@@ -96,7 +96,13 @@ export interface DebtPay { id: string; ts: number; amt: number; date: string; ac
  * `acct` is the account the money left (owed) or arrived in (owe); none = no account changes.
  * `due` is when it should be paid back. `friend` links a friend with a Pockets account (their uid).
  */
-export interface Debt { id: string; ts: number; dir: 'owed' | 'owe'; name: string; friend?: string; amt: number; date: string; due?: string; acct?: string; note?: string; pays: DebtPay[] }
+export interface Debt {
+  id: string; ts: number; dir: 'owed' | 'owe'; name: string; friend?: string; amt: number; date: string; due?: string; acct?: string; note?: string; pays: DebtPay[];
+  /** Shared with `friend` (lib/debtShare.ts): waiting for them, accepted, declined, or no longer shared (they deleted it). */
+  share?: 'pending' | 'accepted' | 'declined' | 'gone';
+  /** When this phone last matched the shared copy (its updatedAt). */
+  sync?: number;
+}
 
 export interface Data {
   version: 1;

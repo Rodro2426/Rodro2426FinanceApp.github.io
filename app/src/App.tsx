@@ -7,7 +7,7 @@ import { applyBg } from './lib/bg';
 import { registerSW, syncReminders } from './lib/push';
 import { LockGate } from './ui/LockScreen';
 import { openTripLink, pollTrips } from './lib/tripNotify';
-import { publishPhoto } from './lib/social';
+import { publishPhoto, syncDebts } from './lib/social';
 import { useSync } from './sheets/CloudSheet';
 import { CloudSheet, ConflictChoice } from './sheets/CloudSheet';
 import { runSchedule, trmNeeded } from './lib/schedule';
@@ -192,6 +192,19 @@ export default function App() {
   const patchNotif = (id: string, p: { dismissed?: boolean; bannered?: boolean }) => setData(x => ({ notifications: x.notifications.map(n => (n.id === id ? { ...n, ...p } : n)) }));
 
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
+  // Shared debts: send and receive changes when the app opens or comes back, and shortly after a shared debt changes.
+  const debtKey = sync.uid ? JSON.stringify((data.debts ?? []).filter(x => x.friend).map(x => [x.id, x.dir, x.amt, x.date, x.due, x.note, x.pays.map(p => [p.id, p.amt, p.date])])) : '';
+  useEffect(() => {
+    if (!sync.uid || ui.tour) return;
+    const t = setTimeout(() => { syncDebts().catch(() => {}); }, 1200);
+    return () => clearTimeout(t);
+  }, [debtKey, sync.uid, ui.tour]);
+  useEffect(() => {
+    if (!sync.uid) return;
+    const run = () => { if (document.visibilityState === 'visible') syncDebts().catch(() => {}); };
+    document.addEventListener('visibilitychange', run);
+    return () => document.removeEventListener('visibilitychange', run);
+  }, [sync.uid]);
   // Phone swipes: left edge → back; left/right on a main tab → next/previous tab.
   const [peek, setPeek] = useState<Peek | null>(null);
   const peekRef = useRef<HTMLDivElement>(null);

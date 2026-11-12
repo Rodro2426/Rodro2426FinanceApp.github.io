@@ -4,6 +4,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 
 ## Done
 
+- **Shared debts with friends (2026-11-12):** a debt with a Pockets friend is sent as a request (`debts/{id}` in Firestore); they accept or decline, and then changes and payments sync both ways (`lib/debtShare.ts`, `syncDebts` in `lib/social.ts`). Accounts stay private and a friend's change never moves your balances. **Waiting on the owner:** paste the updated `docs/firestore.rules` into the Firebase console (it also ties friend requests and DMs to their two people).
 **Core budget**
 - Monthly income split into pockets, with Home showing what's safe to spend today, this week and this month.
 - Spending days per pocket, with a daily allowance.

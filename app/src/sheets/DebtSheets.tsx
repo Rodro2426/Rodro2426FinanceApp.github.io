@@ -5,11 +5,12 @@ import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { fmt, num, roundAmt, uid } from '../lib/derive';
 import { shortDate, todayISO } from '../lib/dates';
 import { addDebtPay, debtTiming, deleteDebt, deleteDebtPay, leftOf, paidOf, saveDebt } from '../lib/debts';
+import { shareLabel } from '../screens/Debts';
 import type { Account, Data, Debt } from '../lib/types';
 import { BigAmount, Bar, FieldLabel, GhostDanger, PrimaryBtn, Segmented, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import { Avatar, useSocial } from '../screens/Social';
-import { myUid } from '../lib/social';
+import { myUid, unshareDebt } from '../lib/social';
 
 export const GREEN = 'var(--money-in)';
 const OK_BG = 'var(--ok-bg)', OK_INK = 'var(--ok-ink)', WARN_BG = 'var(--warn-bg)', WARN_INK = 'var(--warn-ink)';
@@ -85,7 +86,8 @@ function DebtForm({ old, dir0, friend, lastAcct, onDone }: { old?: Debt; dir0?: 
   return (
     <SheetFrame title={old ? 'Edit debt' : owed ? 'Someone owes me' : 'I owe someone'}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <Segmented items={[['owed', 'They owe me'], ['owe', 'I owe them']]} value={dir} onPick={setDir} mt={0} />
+        {old?.share ? <span style={{ margin: '0 4px', fontSize: 13, color: 'var(--color-neutral-700)' }}>{`Shared with ${old.name}: who owes whom can't change. Delete it and make a new one if it's the other way around.`}</span>
+          : <Segmented items={[['owed', 'They owe me'], ['owe', 'I owe them']]} value={dir} onPick={setDir} mt={0} />}
         <FieldLabel>{owed ? 'Who owes you' : 'Who you owe'}</FieldLabel>
         {friends.length > 0 && (
           <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px 8px', padding: '0 20px' }}>
@@ -99,6 +101,7 @@ function DebtForm({ old, dir0, friend, lastAcct, onDone }: { old?: Debt; dir0?: 
             })}
           </div>
         )}
+        {fr && !old?.share && <span style={{ margin: '0 4px 8px', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{`${name} gets a request to accept it, with the amount, dates and note. Then you both see changes and payments.`}</span>}
         <input value={name} onChange={e => { setName(e.target.value); if (fr) setFr(undefined); }} placeholder={friends.length ? 'Or type any name, like Juan' : 'Name, like Juan'} aria-label="Name" style={textInput} />
         <BigAmount value={amt} onChange={setAmt} mt={12} />
         {old && paid > 0 && v < paid - 0.004 && <span style={{ margin: '6px 4px 0', fontSize: 12.5, color: RED }}>{`It can't be less than the ${fmt(paid)} already paid back.`}</span>}
@@ -128,6 +131,7 @@ function DebtView({ x, onEdit }: { x: Debt; onEdit: () => void }) {
   const del = () => {
     if (!confirm(`Delete this debt with ${x.name}? Any account changes it made are undone.`)) return;
     setData(y => deleteDebt(y, x.id)); closeSheet(); flash('Debt deleted');
+    if (x.friend && x.share && x.share !== 'gone') unshareDebt(x.id);
   };
   return (
     <SheetFrame title={owed ? `${x.name} owes you` : `You owe ${x.name}`}>
@@ -146,6 +150,7 @@ function DebtView({ x, onEdit }: { x: Debt; onEdit: () => void }) {
           <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>{`${fmt(paid)} of ${fmt(x.amt)} paid back`}{x.due && left > 0.004 ? ` · ${owed ? 'pays you back by' : 'you pay back by'} ${shortDate(x.due)}` : ''}</span>
           {x.acct && <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>{owed ? `Paid with ${acctName(x.acct) ?? 'a deleted account'}` : `Went into ${acctName(x.acct) ?? 'a deleted account'}`}</span>}
         </div>
+        {shareLabel(x) && <span style={{ margin: '0 4px', fontSize: 12.5, fontWeight: 600, color: shareLabel(x)!.color }}>{shareLabel(x)!.text}</span>}
         <TimingNote d={d} x={x} today={today} />
         {left > 0.004 && <PrimaryBtn mt={0} onClick={() => openSheet({ name: 'debtPay', id: x.id })}>{owed ? `${x.name} paid me back` : `I paid ${x.name} back`}</PrimaryBtn>}
         <div style={{ display: 'grid', gridTemplateColumns: x.friend ? '1fr 1fr' : '1fr', gap: 8 }}>

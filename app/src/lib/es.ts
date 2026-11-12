@@ -113,6 +113,11 @@ Rotate 90°|Girar 90°
 Reset tilt|Quitar inclinación
 Background|Fondo
 Clear|Borrar
+A friend sent you a debt|Un amigo te envió una deuda
+Added to your debts|Agregada a tus deudas
+Request declined|Solicitud rechazada
+Accepting adds it to your debts without moving your accounts. You can pick an account later by editing it.|Al aceptarla se agrega a tus deudas sin mover tus cuentas. Puedes elegir una cuenta después, editándola.
+Money between you and one person: you lent it, paid for them, or borrowed. It doesn't count as spending. With a friend who uses Pockets, they get a request to accept it and you both see changes and payments.|Plata entre tú y una persona: le prestaste, pagaste por ella o te prestó. No cuenta como gasto. Con un amigo que usa Pockets, le llega una solicitud para aceptarla y los dos ven los cambios y los pagos.
 Merge|Combinar
 Subcategories|Subcategorías
 Tap a subcategory to rename it.|Toca una subcategoría para cambiarle el nombre.
@@ -1616,6 +1621,15 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+Waiting for {0} to accept|Esperando a que {0} la acepte
+Shared with {0}|Compartida con {0}
+{0} declined it. Only you see it.|{0} la rechazó. Solo tú la ves.
+{0} removed it. Only you see it now.|{0} la eliminó. Ahora solo tú la ves.
+Friends sent you {0} debts|Tus amigos te enviaron {0} deudas
+{0} says you owe them {1}|{0} dice que le debes {1}
+{0} says they owe you {1}|{0} dice que te debe {1}
+{0} gets a request to accept it, with the amount, dates and note. Then you both see changes and payments.|{0} recibe una solicitud para aceptarla, con el monto, las fechas y la nota. Luego los dos ven los cambios y los pagos.
+Shared with {0}: who owes whom can't change. Delete it and make a new one if it's the other way around.|Compartida con {0}: no se puede cambiar quién le debe a quién. Elimínala y crea una nueva si es al revés.
 1 USD = {0} (typed in)|1 USD = {0} (escrito a mano)
 You're on track, {0}.|Vas bien, {0}.
 Go easy this week, {0}.|Con calma esta semana, {0}.
