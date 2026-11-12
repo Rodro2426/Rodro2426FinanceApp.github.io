@@ -45,7 +45,9 @@ export interface Bill {
   /** Lock-screen notifications for this event: a time ("HH:MM") the day before and on the day; null = off. Missing = 09:00 the day before and 08:00 on the day. */
   notify?: { before?: string | null; day?: string | null };
 }
-export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup' | 'trip' | 'dm';
+export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup' | 'trip' | 'dm' | 'reminder';
+/** Your own reminder (lib/customReminders.ts). `time` is "HH:MM"; `days` are weekdays, 0 = Monday … 6 = Sunday. */
+export interface CustomReminder { id: string; title: string; body: string; time: string; days: number[]; on: boolean }
 /** `id` is a stable key, so the same event never notifies twice. */
 export interface Notif { id: string; date: string; ts: number; kind: NotifKind; title: string; body: string; read: boolean; dismissed: boolean; bannered: boolean; /** Trip or direct-message activity: tapping opens the chat, the expense or the conversation (dm = friend's id). */ link?: { trip?: string; chat?: boolean; item?: string; dm?: string } }
 export interface Goal { id: string; name: string; saved: number; target: number; months: number; hue: number }
@@ -118,6 +120,8 @@ export interface Data {
   groups?: AssetGroup[];
   /** Money between you and one person (Friends & trips → Debts). */
   debts?: Debt[];
+  /** Your own reminders (Calendar → Reminders). */
+  reminders?: CustomReminder[];
   /** Trip expenses already added to your budget ("tripId:itemId"). */
   tripLogged?: string[];
   /** TRM per date (COP per USD), and dates whose lookup failed. */
@@ -156,6 +160,7 @@ export type Sheet =
   | { name: 'goal'; id: string }
   | { name: 'newGoal' }
   | { name: 'settings' }
+  | { name: 'reminder'; id: string | null }
   | { name: 'schedule'; id: string | null; day?: number; kind?: ScheduleKind }
   | { name: 'notifications' }
   | { name: 'trade'; ticker?: string; side?: 'buy' | 'sell' }

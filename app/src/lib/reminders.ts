@@ -5,6 +5,7 @@ import type { Bill, Data } from './types';
 import { addDays, monthKey, todayISO } from './dates';
 import { billAmount, dueDate, isAuto, isCardPay, isIncome, notMine, parseShortDate } from './schedule';
 import { fmt } from './derive';
+import { customLockReminders } from './customReminders';
 
 export interface Reminder { at: number; title: string; body: string; url: string; tag: string }
 /** A time of day (local) on this date. */
@@ -69,5 +70,7 @@ export function upcomingReminders(d: Data, today = todayISO(), days = 35): Remin
       if (nineAm(iso) > now && (!d.settings.lastBackup || d.settings.lastBackup < iso)) { out.push({ at: nineAm(iso), title: 'Time for your monthly backup', body: 'Open Pockets and tap Back up now.', url: '#backup', tag: `backup:${iso.slice(0, 7)}` }); break; }
     }
   }
+  // Your own reminders ("Add today's expenses" and so on), two weeks ahead.
+  out.push(...customLockReminders(d, today, 14, now));
   return out.sort((a, b) => a.at - b.at).slice(0, 60).map(r => ({ ...r, title: tr(r.title), body: tr(r.body) }));
 }

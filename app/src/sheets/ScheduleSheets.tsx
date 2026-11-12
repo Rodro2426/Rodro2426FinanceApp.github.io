@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { openTripLink } from '../lib/tripNotify';
-import { useApp, setData, closeSheet, flash } from '../lib/store';
+import { useApp, setData, closeSheet, flash, openSheet } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
 import { fmt, num, roundAmt, uid } from '../lib/derive';
 import { relDay, todayISO } from '../lib/dates';
@@ -245,10 +245,11 @@ export const NOTIF_TONE: Record<NotifKind, { bg: string; fg: string }> = {
   card: { bg: 'oklch(0.94 0.04 250)', fg: 'oklch(0.42 0.1 250)' },
   backup: { bg: 'var(--color-neutral-200)', fg: 'var(--color-neutral-800)' },
   trip: { bg: 'oklch(0.94 0.045 300)', fg: 'oklch(0.42 0.11 300)' },
-  dm: { bg: 'oklch(0.94 0.04 240)', fg: 'oklch(0.42 0.11 240)' }
+  dm: { bg: 'oklch(0.94 0.04 240)', fg: 'oklch(0.42 0.11 240)' },
+  reminder: { bg: 'oklch(0.95 0.05 60)', fg: 'oklch(0.45 0.1 55)' }
 };
 export const NotifIcon = ({ kind, size = 18 }: { kind: NotifKind; size?: number }) =>
-  kind === 'income' ? <I.Plus size={size} /> : kind === 'budget' ? <I.Alert size={size} /> : kind === 'card' ? <I.Card size={size} /> : kind === 'backup' ? <I.Download size={size} /> : kind === 'dm' ? <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg> : kind === 'trip' ? <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><circle cx="17" cy="9" r="2.6" /><path d="M16.5 14.6c2.6.2 4.5 1.9 5 4.9" /></svg> : <I.Calendar size={size} />;
+  kind === 'reminder' ? <I.Bell size={size} /> : kind === 'income' ? <I.Plus size={size} /> : kind === 'budget' ? <I.Alert size={size} /> : kind === 'card' ? <I.Card size={size} /> : kind === 'backup' ? <I.Download size={size} /> : kind === 'dm' ? <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z" /></svg> : kind === 'trip' ? <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><circle cx="17" cy="9" r="2.6" /><path d="M16.5 14.6c2.6.2 4.5 1.9 5 4.9" /></svg> : <I.Calendar size={size} />;
 
 /** One tap: opens the share sheet with the backup file, then clears the reminder. */
 export function BackupNowButton({ id }: { id: string }) {
@@ -281,7 +282,7 @@ export function NotificationsSheet() {
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {list.map(n => (
-            <div key={n.id} onClick={n.link ? () => { dismiss(n.id); openTripLink(n.link!); } : undefined} style={{ background: 'var(--surface)', borderRadius: 20, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'flex-start', gap: 12, cursor: n.link ? 'pointer' : 'default' }}>
+            <div key={n.id} onClick={n.kind === 'reminder' ? () => { dismiss(n.id); openSheet({ name: 'add' }); } : n.link ? () => { dismiss(n.id); openTripLink(n.link!); } : undefined} style={{ background: 'var(--surface)', borderRadius: 20, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'flex-start', gap: 12, cursor: n.link ? 'pointer' : 'default' }}>
               <div style={{ width: 38, height: 38, borderRadius: 999, background: NOTIF_TONE[n.kind].bg, color: NOTIF_TONE[n.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={n.kind} /></div>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: 15, fontWeight: 700 }}>{n.title}</span>

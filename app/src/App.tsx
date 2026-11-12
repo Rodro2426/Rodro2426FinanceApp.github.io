@@ -8,6 +8,7 @@ import { registerSW, syncReminders } from './lib/push';
 import { LockGate } from './ui/LockScreen';
 import { openTripLink, pollTrips } from './lib/tripNotify';
 import { publishPhoto, syncDebts } from './lib/social';
+import { ReminderSheet } from './sheets/ReminderSheet';
 import { useSync } from './sheets/CloudSheet';
 import { CloudSheet, ConflictChoice } from './sheets/CloudSheet';
 import { runSchedule, trmNeeded } from './lib/schedule';
@@ -87,6 +88,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'goal': return <GoalSheet id={sheet.id} />;
     case 'newGoal': return <NewGoalSheet />;
     case 'settings': return <SettingsSheet />;
+    case 'reminder': return <ReminderSheet id={sheet.id} />;
     case 'schedule': return <ScheduleSheet id={sheet.id} day={sheet.day} kind={sheet.kind} />;
     case 'notifications': return <NotificationsSheet />;
     case 'trade': return <TradeSheet ticker={sheet.ticker} side={sheet.side} />;
@@ -137,6 +139,7 @@ export default function App() {
       if (/^(dm|trip|tripchat|tripstats):/.test(h)) setUI({ sheet: null, page: h as never });
       else if (h === 'calendar' || h === 'accounts') setUI({ sheet: null, page: null, tab: h });
       else if (h === 'backup') setUI({ sheet: { name: 'settings' } });
+      else if (h === 'add') setUI({ sheet: { name: 'add' } });
       else return false;
       return true;
     };
@@ -289,7 +292,7 @@ export default function App() {
       )}
 
       {banner && !ui.sheet && !ui.tour && (
-        <div className="banner" role="alert" onClick={() => { if (banner.link) { patchNotif(banner.id, { bannered: true, dismissed: true }); openTripLink(banner.link); } else { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); } }}
+        <div className="banner" role="alert" onClick={() => { if (banner.kind === 'reminder') { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'add' }); } else if (banner.link) { patchNotif(banner.id, { bannered: true, dismissed: true }); openTripLink(banner.link); } else { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); } }}
           style={{ position: 'absolute', left: 12, right: 12, top: 'calc(var(--top) - 10px)', zIndex: 35, background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 22, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 10px 30px rgba(45,43,43,.18),0 0 0 1px rgba(45,43,43,.05)', cursor: 'pointer' }}>
           <div style={{ width: 38, height: 38, borderRadius: 999, background: NOTIF_TONE[banner.kind].bg, color: NOTIF_TONE[banner.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={banner.kind} /></div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>

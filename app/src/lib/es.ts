@@ -113,6 +113,31 @@ Rotate 90°|Girar 90°
 Reset tilt|Quitar inclinación
 Background|Fondo
 Clear|Borrar
+Add today's expenses|Agrega los gastos de hoy
+Open Pockets and log what you spent today.|Abre Pockets y anota lo que gastaste hoy.
+New reminder|Nuevo recordatorio
+Edit reminder|Editar recordatorio
+Title|Título
+Repeat on|Se repite
+Every day|Todos los días
+Weekdays|Entre semana
+Weekends|Fines de semana
+Pick at least one day.|Elige al menos un día.
+Reminder on|Recordatorio activado
+It arrives on your lock screen (with notifications on) and in the notification center. Tapping it opens New expense.|Llega a tu pantalla de bloqueo (con las notificaciones activadas) y al centro de notificaciones. Al tocarlo se abre Nuevo gasto.
+Save reminder|Guardar recordatorio
+Create reminder|Crear recordatorio
+Delete reminder|Eliminar recordatorio
+Reminder saved|Recordatorio guardado
+Reminder deleted|Recordatorio eliminado
+Reminders|Recordatorios
+A daily nudge makes it easy to log what you spend before you forget.|Un recordatorio diario te ayuda a anotar lo que gastas antes de que se te olvide.
+Remind me every night at 9:00|Recordarme todas las noches a las 9:00
+Lock-screen notifications are off, so reminders only show inside Pockets. Turn them on in Settings.|Las notificaciones en la pantalla de bloqueo están apagadas, así que los recordatorios solo se ven dentro de Pockets. Actívalas en Ajustes.
+Notification center|Centro de notificaciones
+See all|Ver todo
+New|Nueva
+You're all caught up. Bills, money that moves on its own, budget warnings, trips and your reminders show up here.|Estás al día. Aquí aparecen las facturas, la plata que se mueve sola, los avisos del presupuesto, los viajes y tus recordatorios.
 A friend sent you a debt|Un amigo te envió una deuda
 Added to your debts|Agregada a tus deudas
 Request declined|Solicitud rechazada
@@ -1621,6 +1646,9 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+Reminder set for {0}|Recordatorio a las {0}
+Notification center · {0} new|Centro de notificaciones · {0} nuevas
+{0} on|{0} activado
 Waiting for {0} to accept|Esperando a que {0} la acepte
 Shared with {0}|Compartida con {0}
 {0} declined it. Only you see it.|{0} la rechazó. Solo tú la ves.

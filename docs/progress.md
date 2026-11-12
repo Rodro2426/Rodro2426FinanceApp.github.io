@@ -4,6 +4,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 
 ## Done
 
+- **Custom reminders and notification center (2026-11-12):** Calendar → Reminders lets you create your own reminders (title, message, time, weekdays; one tap for "Add today's expenses" every night at 9:00). They go to the lock screen with the other reminders (two weeks ahead, re-sent when the app opens) and into the in-app notification center when their time comes; tapping opens New expense (`lib/customReminders.ts`, `sheets/ReminderSheet.tsx`, link `#add`). Calendar → Notification center shows the latest four with a See all.
 - **Shared debts with friends (2026-11-12):** a debt with a Pockets friend is sent as a request (`debts/{id}` in Firestore); they accept or decline, and then changes and payments sync both ways (`lib/debtShare.ts`, `syncDebts` in `lib/social.ts`). Accounts stay private and a friend's change never moves your balances. The updated `docs/firestore.rules` (also tying friend requests and DMs to their two people) was published by the owner on 2026-11-12. Confirmed working between two real phones on 2026-11-12.
 **Core budget**
 - Monthly income split into pockets, with Home showing what's safe to spend today, this week and this month.

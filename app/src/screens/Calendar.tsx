@@ -1,12 +1,18 @@
 import { useState } from 'react';
 import { SwipeRow } from '../ui/SwipeRow';
 import { getLang } from '../lib/i18n';
-import { useApp, openSheet } from '../lib/store';
+import { useApp, openSheet, setData, flash } from '../lib/store';
+import { ALL_WEEK, WEEKDAYS, WEEKEND, nightly, remindersOf } from '../lib/customReminders';
+import { DAY_LETTERS, uid } from '../lib/derive';
+import { pushOn } from '../lib/push';
+import { NOTIF_TONE, NotifIcon } from '../sheets/ScheduleSheets';
+import { openTripLink } from '../lib/tripNotify';
+import type { Notif } from '../lib/types';
 import { LINE, TEXT, tint } from '../lib/constants';
 import { ctxOf, fmt, myExpenses } from '../lib/derive';
-import { daysInMonth, fmtDay, monthLabel, parse, prevMonthKey, relDay } from '../lib/dates';
+import { daysInMonth, fmtDay, monthLabel, parse, prevMonthKey, relDay, todayISO } from '../lib/dates';
 import { dueDate, eventsOn } from '../lib/schedule';
-import { BillBadge, Fill, ListCard, SectionHead, expView } from '../ui/bits';
+import { BillBadge, Fill, ListCard, SectionHead, Toggle, expView } from '../ui/bits';
 import * as I from '../ui/icons';
 import { approxLocal, billAmount } from '../lib/schedule';
 
@@ -150,6 +156,80 @@ export default function CalendarScreen() {
         <I.Plus size={18} />
         Add income, bill or subscription
       </button>
+
+      <RemindersBlock />
+      <NotificationCenter />
     </div>
   );
+}
+
+const dayText = (days: number[]) => same(days, ALL_WEEK) ? 'Every day' : same(days, WEEKDAYS) ? 'Weekdays' : same(days, WEEKEND) ? 'Weekends' : [...days].sort().map(k => DAY_LETTERS[k]).join(' ');
+const same = (a: number[], b: number[]) => a.length === b.length && a.every(x => b.includes(x));
+
+/** Your own reminders, like "Add today's expenses" every night. */
+function RemindersBlock() {
+  const { data: d } = useApp();
+  const list = remindersOf(d);
+  const flip = (id: string, on: boolean) => setData(x => ({ reminders: remindersOf(x).map(r => (r.id === id ? { ...r, on } : r)) }));
+  return <>
+    <SectionHead title="Reminders" right="Add" onRight={() => openSheet({ name: 'reminder', id: null })} />
+    <ListCard>
+      {list.map((r, i) => (
+        <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i === list.length - 1 ? 0 : `1px solid ${LINE}` }}>
+          <button onClick={() => openSheet({ name: 'reminder', id: r.id })} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 12, border: 0, background: 'transparent', color: TEXT, textAlign: 'left', cursor: 'pointer', padding: 0, font: 'inherit', opacity: r.on ? 1 : 0.5 }}>
+            <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', flex: 'none' }}>{r.time}</span>
+            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.title}</span>
+              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{dayText(r.days)}</span>
+            </span>
+          </button>
+          <Toggle on={r.on} onChange={v => flip(r.id, v)} label={`${r.title} on`} />
+        </div>
+      ))}
+      {!list.length && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 0' }}>
+          <span style={{ fontSize: 14, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>A daily nudge makes it easy to log what you spend before you forget.</span>
+          <button onClick={() => { setData(x => ({ reminders: [...remindersOf(x), nightly(uid('rem'))] })); flash('Reminder set for 21:00'); }} className="hv-acc600" style={{ alignSelf: 'flex-start', height: 40, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Remind me every night at 9:00</button>
+        </div>
+      )}
+    </ListCard>
+    {list.length > 0 && !pushOn() && (
+      <button onClick={() => openSheet({ name: 'settings' })} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 10, border: 0, background: 'var(--surface)', borderRadius: 18, padding: '12px 14px', color: TEXT, textAlign: 'left', cursor: 'pointer' }}>
+        <I.Bell size={18} />
+        <span style={{ flex: 1, fontSize: 13, lineHeight: 1.4 }}>Lock-screen notifications are off, so reminders only show inside Pockets. Turn them on in Settings.</span>
+        <I.Chevron size={16} color="var(--color-neutral-500)" />
+      </button>
+    )}
+  </>;
+}
+
+/** The latest notifications: bills, money in and out, budget warnings, trips, messages and your reminders. */
+function NotificationCenter() {
+  const { data: d } = useApp();
+  const today = todayISO();
+  const list = d.notifications.filter(n => !n.dismissed);
+  const unread = list.filter(n => !n.read).length;
+  const open = (n: Notif) => {
+    setData(x => ({ notifications: x.notifications.map(y => (y.id === n.id ? { ...y, read: true, bannered: true } : y)) }));
+    if (n.kind === 'reminder') openSheet({ name: 'add' });
+    else if (n.link) openTripLink(n.link);
+    else openSheet({ name: 'notifications' });
+  };
+  return <>
+    <SectionHead title={unread ? `Notification center · ${unread} new` : 'Notification center'} right={list.length ? 'See all' : undefined} onRight={() => openSheet({ name: 'notifications' })} />
+    <ListCard>
+      {list.slice(0, 4).map((n, i, arr) => (
+        <button key={n.id} onClick={() => open(n)} style={{ width: '100%', display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 0', border: 0, borderBottom: i === arr.length - 1 ? 0 : `1px solid ${LINE}`, background: 'transparent', color: TEXT, textAlign: 'left', cursor: 'pointer', font: 'inherit' }}>
+          <span style={{ width: 36, height: 36, borderRadius: 999, background: NOTIF_TONE[n.kind].bg, color: NOTIF_TONE[n.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={n.kind} /></span>
+          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: 14.5, fontWeight: n.read ? 600 : 800 }}>{n.title}</span>
+            <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', lineHeight: 1.35 }}>{n.body}</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-neutral-500)', marginTop: 2 }}>{relDay(n.date, today)}</span>
+          </span>
+          {!n.read && <span aria-label="New" style={{ width: 8, height: 8, borderRadius: 99, background: 'var(--color-accent)', marginTop: 6, flex: 'none' }} />}
+        </button>
+      ))}
+      {!list.length && <div style={{ padding: '14px 0', fontSize: 14, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>You're all caught up. Bills, money that moves on its own, budget warnings, trips and your reminders show up here.</div>}
+    </ListCard>
+  </>;
 }

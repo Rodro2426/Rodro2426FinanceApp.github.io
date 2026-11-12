@@ -1,4 +1,5 @@
 import { getLang } from './i18n';
+import { ringingToday } from './customReminders';
 // Scheduled income, bills and subscriptions, plus the notifications they produce.
 // `runSchedule` is idempotent: it can run any number of times a day and only
 // applies or notifies what hasn't been handled yet.
@@ -166,6 +167,9 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
   if (d.settings.backupReminder !== false && (d.expenses.length || d.accounts.length) && today >= due && (!last || last < due)) {
     notify(`backup:${monthKey(today)}`, today, 'backup', 'Time for your monthly backup', `${last ? `Last backup: ${shortDate(last)}.` : "You haven't made a backup yet."} Tap Back up now and save it to your folder in Files.`);
   }
+
+  // 6. Your own reminders whose time has come today.
+  for (const r of ringingToday(d, today)) notify(`rem:${r.id}:${today}`, today, 'reminder', r.title, r.body);
 
   // Keep the last ~2 months of notifications.
   const cutoff = prevMonthKey(prevMonthKey(monthKey(today))) + '-01';
