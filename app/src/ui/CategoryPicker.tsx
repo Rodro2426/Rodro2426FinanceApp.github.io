@@ -5,6 +5,7 @@ import { setData, useApp } from '../lib/store';
 import { catOf } from '../lib/derive';
 import { TEXT, ink, tint } from '../lib/constants';
 import * as I from './icons';
+import { INCOME_CATS } from '../lib/reports';
 
 export type CatPick = [string, string];
 /** A steady color per category name, so the same category always looks the same. */
@@ -110,6 +111,77 @@ export function CategoryPicker({ value, onChange, compact }: { value: CatPick; o
         {recent.map((v, i) => row(v, `r${i}`))}
       </> : <>
         {matches.map((v, i) => row(v, `m${i}`))}
+        {!exact && <button onClick={create} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 8px', border: 0, borderRadius: 14, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
+          <span style={{ width: 30, height: 30, borderRadius: 10, border: '2px dashed var(--color-neutral-400)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Plus size={14} sw={2.5} /></span>
+          <span style={{ fontSize: 15, fontWeight: 600 }}>Create “{q.trim()}”</span>
+        </button>}
+      </>}
+    </div>
+  );
+}
+
+/* ---------------- Income: the same picker, without subcategories ---------------- */
+/** The last income categories used (newest first, no repeats); the start of your list fills any gaps. */
+export function recentIncomeCats(incomes: { ts: number; cat?: string }[], list: string[], n = 3): string[] {
+  const out: string[] = [];
+  for (const t of [...incomes].sort((a, b) => b.ts - a.ts)) {
+    if (!t.cat || out.includes(t.cat) || !list.includes(t.cat)) continue;
+    out.push(t.cat);
+    if (out.length >= n) break;
+  }
+  for (const k of list) { if (out.length >= n) break; if (!out.includes(k)) out.push(k); }
+  return out;
+}
+
+export function IncomeCategoryPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { data: d } = useApp();
+  const list = d.incCats ?? INCOME_CATS;
+  const [editing, setEditing] = useState(!value);
+  const [q, setQ] = useState('');
+  const recent = useMemo(() => recentIncomeCats(d.incomes, list), [d.incomes, list]);
+  const qs = q.trim().toLowerCase();
+  const matches = qs ? list.filter(k => k.toLowerCase().includes(qs)).slice(0, 7) : [];
+  const exact = list.find(k => k.toLowerCase() === qs);
+  const pick = (v: string) => { onChange(v); setEditing(false); setQ(''); };
+  const create = () => {
+    const n = q.trim(); if (!n) return;
+    if (exact) { pick(exact); return; }
+    setData(x => ({ incCats: [...(x.incCats ?? INCOME_CATS), n] }));
+    pick(n);
+  };
+  const badge = (k: string, size: number, r: number, fs: number) => {
+    const h = catHue(k);
+    return <span style={{ width: size, height: size, borderRadius: r, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: fs, fontWeight: 800, flex: 'none' }}>{k.charAt(0).toUpperCase()}</span>;
+  };
+  const row = (k: string, key: string) => (
+    <button key={key} onClick={() => pick(k)} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 8px', border: 0, borderRadius: 14, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
+      {badge(k, 30, 10, 13)}
+      <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{k}</span>
+    </button>
+  );
+
+  if (value && !editing) return (
+    <div style={{ background: 'var(--surface)', borderRadius: 20, padding: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+      {badge(value, 36, 12, 15)}
+      <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</span>
+      <button onClick={() => setEditing(true)} style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Change</button>
+    </div>
+  );
+
+  return (
+    <div aria-label="Income category" style={{ background: 'var(--surface)', borderRadius: 20, padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--color-neutral-100)', borderRadius: 14, padding: '0 12px' }}>
+        <I.Search size={16} color="var(--color-neutral-600)" />
+        <input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (matches.length) pick(matches[0]); else create(); } }}
+          placeholder="Search or create a category" aria-label="Search categories" autoFocus={!!value}
+          style={{ flex: 1, minWidth: 0, height: 42, border: 0, background: 'transparent', color: TEXT, fontSize: 16, outline: 'none' }} />
+        {value && <button onClick={() => { setEditing(false); setQ(''); }} style={{ border: 0, background: 'transparent', color: 'var(--color-neutral-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 4 }}>Cancel</button>}
+      </div>
+      {!qs ? <>
+        <span style={{ margin: '4px 8px 0', fontSize: 11.5, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--color-neutral-600)' }}>Recent</span>
+        {recent.map((k, i) => row(k, `r${i}`))}
+      </> : <>
+        {matches.map((k, i) => row(k, `m${i}`))}
         {!exact && <button onClick={create} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 8px', border: 0, borderRadius: 14, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
           <span style={{ width: 30, height: 30, borderRadius: 10, border: '2px dashed var(--color-neutral-400)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Plus size={14} sw={2.5} /></span>
           <span style={{ fontSize: 15, fontWeight: 600 }}>Create “{q.trim()}”</span>

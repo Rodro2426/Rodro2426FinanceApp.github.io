@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CategoryPicker } from '../ui/CategoryPicker';
+import { CategoryPicker, IncomeCategoryPicker } from '../ui/CategoryPicker';
 import { useApp, setData, setUI, flash, getState } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
 import { catOf, chargeAccount, fmt, incomeMoves, num, roundAmt } from '../lib/derive';
@@ -7,7 +7,7 @@ import type { Sheet } from '../lib/types';
 import { BigAmount, FieldLabel, GhostDanger, PickChip, PrimaryBtn, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import { deleteIncome, editIncomeAmount } from '../lib/plan';
-import { incCatOf, incomeCatList } from '../lib/reports';
+import { incCatOf } from '../lib/reports';
 
 /**
  * Deletes an expense or income and gives the account back what it moved; an income also takes back what it
@@ -99,9 +99,7 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
 
         {inc && <>
           <FieldLabel>Category</FieldLabel>
-          <div className="noscroll" style={{ display: 'flex', gap: 6, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
-            {[...new Set([...incomeCatList(d), incCat])].filter(Boolean).map(k => <button key={k} onClick={() => setIncCat(k)} style={{ flex: 'none', height: 34, padding: '0 13px', borderRadius: 999, border: 0, ...chip(k === incCat), fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: 'inset 0 0 0 1px var(--color-neutral-200)' }}>{k}</button>)}
-          </div>
+          <IncomeCategoryPicker value={incCat} onChange={setIncCat} />
         </>}
         {e && <>
           <FieldLabel>Category</FieldLabel>
