@@ -48,6 +48,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 
 **Insights**
 - Category table, by pocket, by tag, and bills.
+- Categories page has an Expenses / Income switch: each side has its own "By category" table (period, filters, totals, %, transactions) and its own list to add, rename, merge, move and delete. Incomes have no subcategories.
 - Reports: compare categories, net worth over time, balances, cashflow, budgets, pie charts.
 - Excel export, including a "For AI" sheet.
 

@@ -1,23 +1,28 @@
 // Categories hub: spending by category, and your categories: create, rename (or merge), delete, and move
 // transactions between them.
 import { useState } from 'react';
+import { getLang } from '../lib/i18n';
 import { SwipeRow } from '../ui/SwipeRow';
 import { useApp, openSheet, setData, setUI, flash } from '../lib/store';
 import { HUES, LINE, RED, TEXT, ink, mid, tint } from '../lib/constants';
 import { byDateDesc, catOf, ctxOf, fmt, monthExpenses, pctOf, plural, myExpenses } from '../lib/derive';
 import { addDays, inRange, monthKey, monthName, prevMonthKey, shortDate } from '../lib/dates';
 import { expenseCatClash, incomeCatClash, moveExpenses, moveIncomes, renameExpenseCat, renameIncomeCat, renameSub } from '../lib/categories';
-import { incCatOf, incomeCatList } from '../lib/reports';
-import { Bar, ExpRow, expView, textInput } from '../ui/bits';
+import { allIncomeCats, incCatOf, incomeCatList } from '../lib/reports';
+import { Bar, ExpRow, Segmented, expView, textInput } from '../ui/bits';
 import * as I from '../ui/icons';
 import { ReportIcon, SubPage } from './Reports';
 
+/** The side you were looking at, so coming back from a transaction returns to it. */
+let lastKind: 'expense' | 'income' = 'expense';
 export default function CategoriesPage() {
+  const [kind, setKindState] = useState(lastKind);
+  const setKind = (k: 'expense' | 'income') => { lastKind = k; setKindState(k); };
   return (
     <SubPage title="Categories" icon={<ReportIcon icon="pie" tone="#e5484d" size={30} />} back={() => setUI({ page: null })} backLabel="Back to insights">
-      <CategoryTable />
-      <ManageCategories />
-      <IncomeCategories />
+      <Segmented items={[['expense', 'Expenses'], ['income', getLang() === 'es' ? 'Ingresos' : 'Income']]} value={kind} onPick={setKind} mt={0} />
+      <CategoryTable key={kind} kind={kind} />
+      {kind === 'expense' ? <ManageCategories /> : <IncomeCategories />}
     </SubPage>
   );
 }
@@ -286,25 +291,28 @@ function ManageCategories() {
   );
 }
 
-/* ---------------- Spending by category: the main table, filterable ---------------- */
+/* ---------------- Spending (or income) by category: the main table, filterable ---------------- */
 type Period = 'week' | 'month' | 'last' | 'all';
-export function CategoryTable() {
+export function CategoryTable({ kind = 'expense' }: { kind?: 'expense' | 'income' }) {
   const { data: d } = useApp();
+  const inc = kind === 'income';
   const c = ctxOf(d);
   const [period, setPeriod] = useState<Period>('month');
   const [sel, setSel] = useState<string[]>([]);
   const inPeriod = (date: string) => period === 'week' ? inRange(date, c.weekStart, addDays(c.weekStart, 6))
     : period === 'month' ? monthKey(date) === c.month : period === 'last' ? monthKey(date) === prevMonthKey(c.month) : true;
-  const exps = myExpenses(d).filter(e => inPeriod(e.date));
-  const total = exps.reduce((a, e) => a + e.amt, 0);
-  const order = d.cats.map(k => k.name);
+  const exps = inc ? [] : myExpenses(d).filter(e => inPeriod(e.date));
+  const incs = inc ? d.incomes.filter(t => inPeriod(t.date)) : [];
+  // One shape for both: amount, category and subcategory (incomes have no subcategories).
+  const items = inc ? incs.map(t => ({ amt: t.amt, k: incCatOf(d, t), sub: '' })) : exps.map(e => ({ amt: e.amt, k: catOf(e)[0], sub: catOf(e)[1] || '—' }));
+  const total = items.reduce((a, e) => a + e.amt, 0);
+  const order = inc ? allIncomeCats(d) : d.cats.map(k => k.name);
   const hueOf = (k: string) => HUES[(order.indexOf(k) < 0 ? order.length : order.indexOf(k)) % HUES.length];
   const groups = new Map<string, { n: number; sum: number; subs: Map<string, { n: number; sum: number }> }>();
-  exps.forEach(e => {
-    const [k, sub] = catOf(e);
+  items.forEach(({ amt, k, sub }) => {
     const g = groups.get(k) ?? { n: 0, sum: 0, subs: new Map() };
-    g.n++; g.sum += e.amt;
-    const sg = g.subs.get(sub || '—') ?? { n: 0, sum: 0 }; sg.n++; sg.sum += e.amt; g.subs.set(sub || '—', sg);
+    g.n++; g.sum += amt;
+    if (sub) { const sg = g.subs.get(sub) ?? { n: 0, sum: 0 }; sg.n++; sg.sum += amt; g.subs.set(sub, sg); }
     groups.set(k, g);
   });
   const rows = [...groups.entries()].map(([k, g]) => ({ k, ...g })).sort((a, b) => b.sum - a.sum);
@@ -312,13 +320,15 @@ export function CategoryTable() {
   const shownRows = active.length ? rows.filter(r => active.includes(r.k)) : rows;
   const shownTotal = shownRows.reduce((a, r) => a + r.sum, 0), shownN = shownRows.reduce((a, r) => a + r.n, 0);
   const list = active.length ? exps.filter(e => active.includes(catOf(e)[0])).sort(byDateDesc) : [];
+  const incList = active.length ? incs.filter(t => active.includes(incCatOf(d, t))).sort(byDateDesc) : [];
+  const acctName = (id: string) => d.accounts.find(a => a.id === id)?.name ?? '';
   const toggle = (k: string) => setSel(s0 => (s0.includes(k) ? s0.filter(x => x !== k) : [...s0, k]));
   const label = { week: 'this week', month: monthName(c.month), last: monthName(prevMonthKey(c.month)), all: 'all time' }[period];
   const th = { fontSize: 11.5, fontWeight: 700, color: 'var(--color-neutral-600)', textTransform: 'uppercase' as const, letterSpacing: '.04em' };
   const chip = (on: boolean) => ({ flex: 'none' as const, height: 34, padding: '0 12px', borderRadius: 999, border: 0, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' as const });
 
   return (
-    <div aria-label="Spending by category" style={{ background: 'var(--surface)', borderRadius: 26, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div aria-label={inc ? 'Income by category' : 'Spending by category'} style={{ background: 'var(--surface)', borderRadius: 26, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
         <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>By category</span>
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{label}</span>
@@ -367,7 +377,7 @@ export function CategoryTable() {
             </div>
           );
         })}
-        {rows.length === 0 && <span style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No expenses {period === 'all' ? 'yet' : `in ${label}`}.</span>}
+        {rows.length === 0 && <span style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>{inc ? (period === 'all' ? 'No income yet.' : `No income in ${label}.`) : (period === 'all' ? 'No expenses yet.' : `No expenses in ${label}.`)}</span>}
         {rows.length > 0 && (
           <div role="row" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 34px 96px 40px', gap: 8, padding: '10px 0 0', fontSize: 14, fontWeight: 800 }}>
             <span role="cell">{active.length ? 'Selected' : 'Total'}</span>
@@ -377,16 +387,27 @@ export function CategoryTable() {
           </div>
         )}
       </div>
-      {!active.length && rows.length > 0 && <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Tap a category to see its subcategories and transactions. You can pick several.</span>}
+      {!active.length && rows.length > 0 && <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>{inc ? 'Tap a category to see its incomes. You can pick several.' : 'Tap a category to see its subcategories and transactions. You can pick several.'}</span>}
 
       {active.length > 0 && <>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
-          <span style={{ fontSize: 15, fontWeight: 700 }}>{plural(list.length, 'transaction')}</span>
-          {active.length === 1 && <span onClick={() => openSheet({ name: 'search', cat: active[0] })} style={{ fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 700, cursor: 'pointer' }}>Search in {active[0]}</span>}
+          <span style={{ fontSize: 15, fontWeight: 700 }}>{plural(inc ? incList.length : list.length, 'transaction')}</span>
+          {!inc && active.length === 1 && <span onClick={() => openSheet({ name: 'search', cat: active[0] })} style={{ fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 700, cursor: 'pointer' }}>Search in {active[0]}</span>}
         </div>
         <div style={{ margin: '-4px 0 0' }}>
           {list.slice(0, 40).map((e, i) => <SwipeRow key={e.id} kind="expense" id={e.id}><ExpRow v={expView(d, e, c)} size={36} last={i === Math.min(list.length, 40) - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: e.id })} /></SwipeRow>)}
-          {list.length > 40 && <span style={{ display: 'block', padding: '10px 0 0', fontSize: 12, color: 'var(--color-neutral-600)' }}>Showing the latest 40.</span>}
+          {incList.slice(0, 40).map((t, i) => (
+            <SwipeRow key={t.id} kind="income" id={t.id}>
+              <div onClick={() => openSheet({ name: 'txn', kind: 'income', id: t.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: `1px solid ${i === Math.min(incList.length, 40) - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
+                <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                  <span translate="no" style={{ fontSize: 14.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.note || incCatOf(d, t)}</span>
+                  <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{[incCatOf(d, t), acctName(t.a), shortDate(t.date)].filter(Boolean).join(' · ')}</span>
+                </span>
+                <span style={{ fontSize: 14.5, fontWeight: 700, whiteSpace: 'nowrap', color: 'var(--money-in)' }}>+{fmt(t.amt)}</span>
+              </div>
+            </SwipeRow>
+          ))}
+          {(inc ? incList.length : list.length) > 40 && <span style={{ display: 'block', padding: '10px 0 0', fontSize: 12, color: 'var(--color-neutral-600)' }}>Showing the latest 40.</span>}
         </div>
       </>}
     </div>

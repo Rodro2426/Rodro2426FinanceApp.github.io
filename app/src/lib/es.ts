@@ -147,6 +147,10 @@ Merge|Combinar
 Subcategories|Subcategorías
 Tap a subcategory to rename it.|Toca una subcategoría para cambiarle el nombre.
 No expenses in this category yet.|Aún no hay gastos en esta categoría.
+No income yet.|Aún no hay ingresos.
+No expenses yet.|Aún no hay gastos.
+Tap a category to see its incomes. You can pick several.|Toca una categoría para ver sus ingresos. Puedes elegir varias.
+Income by category|Ingresos por categoría
 No incomes in this category yet.|Aún no hay ingresos en esta categoría.
 1 income|1 ingreso
 Select all|Seleccionar todo
@@ -1678,6 +1682,8 @@ Borrowed from {0}|Préstamo de {0}
 You paid {0} back in full 🎉|Le pagaste todo a {0} 🎉
 {0} paid you back|{0} te pagó
 Paid back {0}|Pagada el {0}
+No income in {0}.|Sin ingresos en {0}.
+No expenses in {0}.|Sin gastos en {0}.
 {0} is over budget by|{0} se pasó del presupuesto por
 {0} isn't over budget|{0} no se ha pasado del presupuesto
 After this: still {0} over|Después de esto: todavía {0} por encima
