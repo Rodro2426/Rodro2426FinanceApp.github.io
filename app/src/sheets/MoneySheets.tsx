@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { cardCycle, payDayOf } from '../lib/cards';
 import { getLang, setLang, type Lang } from '../lib/i18n';
 import { dateLocale } from '../lib/i18n';
 import { LockSetting } from '../ui/LockSetting';
@@ -18,7 +19,8 @@ import { pickPhoto } from '../lib/photo';
 import { makeBackup, pickBackupFile, readBackup, restoreBackup } from '../lib/backup';
 import { dailyRate, earnsInterest, perDay } from '../lib/interest';
 import { emptyData, sampleData } from '../lib/seed';
-import type { AcctType, Currency } from '../lib/types';
+import type { Account, AcctType, Currency } from '../lib/types';
+import type { CSSProperties } from 'react';
 import { AcctBadge, Fill, Bar, BigAmount, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import { SwipeRow } from '../ui/SwipeRow';
@@ -96,6 +98,34 @@ export function ExportSheet({ acct }: { acct: string }) {
   );
 }
 
+/** A card's billing cycle in plain words: what's due and by when, the minimum, and what waits for the next statement. */
+function CardCycleBox({ a }: { a: Account }) {
+  const { data: d } = useApp();
+  const today = todayISO(), cy = cardCycle(d, a, today);
+  if (!cy.due && !(a.minPay ?? 0)) return (
+    <button onClick={() => openSheet({ name: 'editAcct', id: a.id })} className="hv-n100" style={{ marginTop: 12, border: 0, background: 'var(--surface)', borderRadius: 20, padding: '12px 16px', color: 'var(--color-neutral-700)', fontSize: 13, lineHeight: 1.45, textAlign: 'left', cursor: 'pointer' }}>Add the card's cutoff day and pay-by day to see what's due each month.</button>
+  );
+  const line = (label: string, value: string, sub?: string, color?: string) => (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '9px 0' }}>
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: 14, fontWeight: 600 }}>{label}</span>
+        {sub && <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{sub}</span>}
+      </span>
+      <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color }}>{value}</span>
+    </div>
+  );
+  const nothing = cy.cycle && cy.statement <= 0.004;
+  return (
+    <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 20, padding: '4px 16px' }}>
+      {nothing
+        ? line('Nothing to pay this cycle', fmt(0), cy.due ? `Next payment by ${shortDate(cy.due)}` : undefined, 'var(--money-in)')
+        : line(cy.overdue ? 'Overdue' : 'To pay', fmt(cy.statement), cy.due ? (cy.overdue ? `It was due ${shortDate(cy.due)}` : `Pay by ${shortDate(cy.due)}`) : undefined, cy.overdue ? RED : undefined)}
+      {cy.min > 0.004 && <div style={{ borderTop: `1px solid ${LINE}` }}>{line('Minimum payment', fmt(cy.min))}</div>}
+      {cy.cycle && <div style={{ borderTop: `1px solid ${LINE}` }}>{line('After the cutoff', fmt(cy.later), cy.nextCut ? `Goes on the next statement · cutoff ${shortDate(cy.nextCut)}` : undefined)}</div>}
+    </div>
+  );
+}
+
 /* ---------------- Account detail + history ---------------- */
 export function AcctSheet({ id }: { id: string }) {
   const { data: d } = useApp();
@@ -131,10 +161,11 @@ export function AcctSheet({ id }: { id: string }) {
           {card && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
               <Bar pct={pctOf(a.bal, lim)} track="var(--glass)" fill={k} ease="0s" />
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12, color: k }}><span style={{ whiteSpace: 'nowrap' }}>Limit {fmt(lim)}</span><span style={{ whiteSpace: 'nowrap' }}>{fmt(lim - a.bal)} available · due {a.due || '—'}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12, color: k }}><span style={{ whiteSpace: 'nowrap' }}>Limit {fmt(lim)}</span><span style={{ whiteSpace: 'nowrap' }}>{fmt(lim - a.bal)} available</span></div>
             </div>
           )}
         </div>
+        {card && <CardCycleBox a={a} />}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 12 }}>
           <button onClick={() => openSheet({ name: 'editAcct', id })} className="hv-n200" style={{ height: 50, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <I.Pencil size={16} />Edit
@@ -197,8 +228,17 @@ function rateFields(prev: { rate?: number; accruedTo?: string; earned?: number }
   return { rate: r, accruedTo: prev?.rate ? prev.accruedTo : todayISO(), earned: prev?.earned ?? 0 };
 }
 
+/** A day of the month typed by hand: digits only, 1 to 31. */
+const dayText = (v: string) => { const n = Number(v.replace(/\D/g, '').slice(0, 2)); return n ? String(Math.min(31, n)) : ''; };
+/** The card's cycle fields from the form: days of the month and the minimum payment (empty ones are left out). */
+const cycleFields = (f: { cutDay?: string; payDay?: string; minPay?: string; due: string }) => ({
+  cutDay: num(f.cutDay) || undefined, payDay: num(f.payDay) || undefined, minPay: roundAmt(num(f.minPay)) || undefined,
+  // The old free-text date is only kept while no pay-by day has been typed.
+  due: num(f.payDay) ? undefined : f.due.trim() || undefined
+});
+
 function AcctForm({ initial, isNew, onSave, onDelete }: {
-  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; photo: string | null; hue: number; rate: string; cardImg?: string | null; cardText?: 'light' | 'dark'; notMine?: boolean };
+  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; cutDay?: string; payDay?: string; minPay?: string; photo: string | null; hue: number; rate: string; cardImg?: string | null; cardText?: 'light' | 'dark'; notMine?: boolean };
   isNew: boolean; onSave: (v: typeof initial) => void; onDelete?: () => void;
 }) {
   const [f, setF] = useState(initial);
@@ -230,9 +270,20 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
             <MoneyInput value={f.limit} onChange={set('limit')} style={{ ...textInput, fontWeight: 600 }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Payment due</span>
-            <input placeholder="Nov 25" value={f.due} onChange={e => set('due')(e.target.value)} style={{ ...textInput, fontWeight: 600 }} />
+            <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Minimum payment</span>
+            <MoneyInput value={f.minPay ?? ''} onChange={set('minPay')} ariaLabel="Minimum payment" style={{ ...textInput, fontWeight: 600 }} />
           </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Cutoff day</span>
+            <input type="text" inputMode="numeric" placeholder="25" aria-label="Cutoff day" value={f.cutDay ?? ''} onChange={e => set('cutDay')(dayText(e.target.value))} style={{ ...textInput, fontWeight: 600 }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Pay-by day</span>
+            <input type="text" inputMode="numeric" placeholder="10" aria-label="Pay-by day" value={f.payDay ?? ''} onChange={e => set('payDay')(dayText(e.target.value))} style={{ ...textInput, fontWeight: 600 }} />
+          </div>
+          <span style={{ gridColumn: '1 / -1', margin: '0 4px', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>
+            {num(f.cutDay) && num(f.payDay) ? `Your billing cycle ends on day ${num(f.cutDay)} of each month (fecha de corte) and you pay by day ${num(f.payDay)}. What you buy after the cutoff is paid the month after.` : 'The cutoff day is when your billing cycle ends (fecha de corte); the pay-by day is your payment deadline. Both are days of the month, like 25 and 10.'}
+          </span>
         </div>
       )}
       {isCard && (
@@ -283,10 +334,10 @@ export function EditAcctSheet({ id }: { id: string }) {
   return (
     <SheetFrame title="Edit account">
       <AcctForm isNew={false}
-        initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '', cardImg: a.cardImg ?? null, cardText: a.cardText, notMine: a.notMine }}
+        initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', cutDay: a.cutDay ? String(a.cutDay) : '', payDay: payDayOf(a) ? String(payDayOf(a)) : '', minPay: a.minPay ? String(a.minPay) : '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '', cardImg: a.cardImg ?? null, cardText: a.cardText, notMine: a.notMine }}
         onSave={f => {
           const card = f.type === 'card';
-          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: editedBalance(num(f.bal), y.bal), limit: card ? num(f.limit) : undefined, due: card ? f.due.trim() || 'Nov 25' : undefined, photo: f.photo, hue: f.hue, cardImg: card ? f.cardImg : undefined, cardText: card && f.cardImg ? f.cardText : undefined, notMine: f.notMine || undefined, ...rateFields(y, f) } : y)) }));
+          setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: editedBalance(num(f.bal), y.bal), limit: card ? num(f.limit) : undefined, ...(card ? cycleFields(f) : { cutDay: undefined, payDay: undefined, minPay: undefined, due: undefined }), photo: f.photo, hue: f.hue, cardImg: card ? f.cardImg : undefined, cardText: card && f.cardImg ? f.cardText : undefined, notMine: f.notMine || undefined, ...rateFields(y, f) } : y)) }));
           openSheet({ name: 'acct', id }); flash('Account updated');
         }}
         onDelete={() => {
@@ -305,7 +356,7 @@ export function AddAcctSheet() {
       <AcctForm isNew initial={{ name: '', type: 'bank', bal: '', limit: '', due: '', photo: null, hue: HUES[d.accounts.length % HUES.length], rate: '' }}
         onSave={f => {
           const card = f.type === 'card';
-          const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card && f.cardImg ? { cardImg: f.cardImg, cardText: f.cardText } : {}), ...(card ? { limit: num(f.limit), due: f.due.trim() || 'Nov 25' } : {}), ...(f.notMine ? { notMine: true } : {}), ...rateFields(null, f) };
+          const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card && f.cardImg ? { cardImg: f.cardImg, cardText: f.cardText } : {}), ...(card ? { limit: num(f.limit), ...cycleFields(f) } : {}), ...(f.notMine ? { notMine: true } : {}), ...rateFields(null, f) };
           setData(x => ({ accounts: [...x.accounts, a] }));
           setUI({ sheet: null, tab: 'accounts' }); flash(`${a.name} added`);
         }} />
@@ -314,11 +365,14 @@ export function AddAcctSheet() {
 }
 
 /* ---------------- Pay card ---------------- */
+const payChip: CSSProperties = { flex: 'none', height: 34, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' };
 export function PaySheet({ id }: { id: string }) {
   const { data: d } = useApp();
   const pc = d.accounts.find(x => x.id === id);
   const sources = d.accounts.filter(a => a.type !== 'card');
-  const [amt, setAmt] = useState(String(pc?.bal ?? ''));
+  const today = todayISO(), cy = pc ? cardCycle(d, pc, today) : null;
+  // Starts with what's due; if nothing is due this cycle, with everything owed.
+  const [amt, setAmt] = useState(String(cy ? (cy.statement > 0.004 ? cy.statement : pc!.bal) : ''));
   const [from, setFrom] = useState(sources[0]?.id);
   if (!pc) return null;
   const pFrom = d.accounts.find(x => x.id === from), v = num(amt);
@@ -336,8 +390,13 @@ export function PaySheet({ id }: { id: string }) {
   return (
     <SheetFrame title={`Pay ${pc.name}`}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ margin: '0 4px', fontSize: 13, color: 'var(--color-neutral-700)' }}>{fmt(pc.bal)} owed · due {pc.due || '—'}</span>
+        <span style={{ margin: '0 4px', fontSize: 13, color: 'var(--color-neutral-700)' }}>{cy?.cycle && cy.statement <= 0.004 ? `Nothing is due this cycle. You owe ${fmt(pc.bal)} in total.` : cy?.due ? `${fmt(cy.statement)} to pay by ${shortDate(cy.due)}` : `${fmt(pc.bal)} owed`}</span>
         <BigAmount value={amt} onChange={setAmt} />
+        <div className="noscroll" style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto' }}>
+          {cy && cy.cycle && cy.statement > 0.004 && <button onClick={() => setAmt(String(cy.statement))} style={payChip}>{`What's due · ${fmt(cy.statement)}`}</button>}
+          {cy && cy.min > 0.004 && <button onClick={() => setAmt(String(cy.min))} style={payChip}>{`Minimum · ${fmt(cy.min)}`}</button>}
+          <button onClick={() => setAmt(String(roundAmt(pc.bal)))} style={payChip}>{`Everything · ${fmt(pc.bal)}`}</button>
+        </div>
         <FieldLabel m="18px 4px 8px">Pay from</FieldLabel>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {sources.map(a => (

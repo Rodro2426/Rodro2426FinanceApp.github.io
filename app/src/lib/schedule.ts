@@ -7,13 +7,14 @@ import type { Account, Bill, Data, Expense, FxOrig, Income, Notif, NotifKind } f
 import { allStats, ctxOf, fmt, roundAmt, uid } from './derive';
 import { addDays, daysInMonth, monthKey, prevMonthKey, shortDate, todayISO } from './dates';
 import { fmtUsd, isUsd, latestRate, trmFor } from './trm';
+import { cardCycle } from './cards';
 
 /**
  * Local amount for one occurrence. Dollar items use the TRM of `date`; if that
  * lookup failed, the newest known rate. Returns null while the TRM is still loading.
  */
 export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig?: FxOrig } | null {
-  if (isCardPay(b)) return { amt: roundAmt(cardPayAmount(d, b)) };
+  if (isCardPay(b)) return { amt: roundAmt(cardPayAmount(d, b, date)) };
   if (!isUsd(b)) return { amt: b.amt };
   const trm = trmFor(d, date);
   if (!trm && !d.fx?.tried[date]) return null;
@@ -21,7 +22,7 @@ export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig
   return { amt: Math.round(b.amt * rate), orig: { amt: b.amt, cur: 'USD', rate, official: !!trm } };
 }
 /** Text for a bill's amount: "$44.900" or "US$20,00". */
-export const billAmount = (b: Bill) => (isCardPay(b) && b.payMode !== 'fixed' ? 'Full balance' : isUsd(b) ? fmtUsd(b.amt) : fmt(b.amt));
+export const billAmount = (b: Bill) => (isCardPay(b) && b.payMode === 'min' ? 'Minimum payment' : isCardPay(b) && b.payMode !== 'fixed' ? 'Full balance' : isUsd(b) ? fmtUsd(b.amt) : fmt(b.amt));
 /** Approximate local value for totals and previews. */
 export const approxLocal = (d: Data, b: Bill) => (isCardPay(b) ? cardPayAmount(d, b) : isUsd(b) ? b.amt * latestRate(d) : b.amt);
 
@@ -35,10 +36,12 @@ export const KIND_LABEL: Record<Bill['kind'], string> = { Income: 'Income', Bill
 export const notMine = (b: Bill) => !!b.notMine && b.kind !== 'Income' && b.kind !== 'CardPayment';
 export const isAuto = (b: Bill, d: Data) => !notMine(b) && !!(b.auto && b.acct && d.accounts.some(a => a.id === b.acct) && (!isCardPay(b) || d.accounts.some(a => a.id === b.toCard && a.type === 'card')));
 /** How much a card payment would pay right now: the full balance owed, or the fixed amount (never more than owed or than the account has). */
-export function cardPayAmount(d: Data, b: Bill) {
+export function cardPayAmount(d: Data, b: Bill, date = todayISO()) {
   const card = d.accounts.find(a => a.id === b.toCard), from = d.accounts.find(a => a.id === b.acct);
   if (!card) return 0;
-  const want = b.payMode === 'fixed' ? Math.min(b.amt, Math.max(0, card.bal)) : Math.max(0, card.bal);
+  // "Full" pays what's due: the last statement. What was bought after the cutoff waits for the next one.
+  const cy = cardCycle(d, card, date);
+  const want = b.payMode === 'fixed' ? Math.min(b.amt, Math.max(0, card.bal)) : b.payMode === 'min' ? cy.min : cy.statement;
   return Math.max(0, Math.min(want, from ? Math.max(0, from.bal) : want));
 }
 const nextMonth = (m: string) => { const [y, mo] = m.split('-').map(Number); return mo === 12 ? `${y + 1}-01` : `${y}-${pad(mo + 1)}`; };
@@ -145,9 +148,10 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
   // 3. Credit card payment dates.
   for (const a of d.accounts) {
     if (a.type !== 'card' || a.bal <= 0) continue;
-    const due = parseShortDate(a.due, today);
-    if (due === tomorrow) notify(`card:${a.id}:${due}`, today, 'card', `${a.name} payment is due tomorrow`, `You owe ${fmt(a.bal)}.`);
-    if (due === today) notify(`card0:${a.id}:${due}`, today, 'card', `${a.name} payment is due today`, `You owe ${fmt(a.bal)}.`);
+    const cy = cardCycle(d, a, today), due = cy.due;
+    if (cy.statement <= 0.004) continue; // nothing from the last statement is left to pay
+    if (due === tomorrow) notify(`card:${a.id}:${due}`, today, 'card', `${a.name} payment is due tomorrow`, `You owe ${fmt(cy.statement)}.`);
+    if (due === today) notify(`card0:${a.id}:${due}`, today, 'card', `${a.name} payment is due today`, `You owe ${fmt(cy.statement)}.`);
   }
 
   // 4. Budget warnings for this week.

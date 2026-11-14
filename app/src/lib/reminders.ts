@@ -1,9 +1,10 @@
 // The reminders a phone hands to the notification server, so they arrive even when Pockets is closed:
 // the same "due tomorrow" messages as the in-app notifications, at 9:00 the day before.
+import { cardCycle } from './cards';
 import { tr } from './i18n';
 import type { Bill, Data } from './types';
 import { addDays, monthKey, todayISO } from './dates';
-import { billAmount, dueDate, isAuto, isCardPay, isIncome, notMine, parseShortDate } from './schedule';
+import { billAmount, dueDate, isAuto, isCardPay, isIncome, notMine } from './schedule';
 import { fmt } from './derive';
 import { customLockReminders } from './customReminders';
 
@@ -37,8 +38,10 @@ export function upcomingReminders(d: Data, today = todayISO(), days = 35): Remin
       out.push({ at: when, ...r, url: '#calendar', tag: `soon:${b.id}:${due}` });
     }
     for (const a of d.accounts) {
-      if (remind < now || a.type !== 'card' || a.bal <= 0 || parseShortDate(a.due, due) !== due) continue;
-      out.push({ at: remind, title: `${a.name} payment is due tomorrow`, body: `You owe ${fmt(a.bal)}.`, url: '#accounts', tag: `card:${a.id}:${due}` });
+      if (remind < now || a.type !== 'card' || a.bal <= 0) continue;
+      const cy = cardCycle(d, a, due);
+      if (cy.due !== due || cy.statement <= 0.004) continue;
+      out.push({ at: remind, title: `${a.name} payment is due tomorrow`, body: `You owe ${fmt(cy.statement)}.`, url: '#accounts', tag: `card:${a.id}:${due}` });
     }
   }
   // On the day itself, at 8:00: every scheduled event in the calendar (what arrives, what's charged, what to pay).
@@ -57,8 +60,10 @@ export function upcomingReminders(d: Data, today = todayISO(), days = 35): Remin
       out.push({ at: when, ...r, url: '#calendar', tag: `day:${b.id}:${day}` });
     }
     for (const a of d.accounts) {
-      if (eight < now || a.type !== 'card' || a.bal <= 0 || parseShortDate(a.due, day) !== day) continue;
-      out.push({ at: eight, title: `${a.name} payment is due today`, body: `You owe ${fmt(a.bal)}.`, url: '#accounts', tag: `card0:${a.id}:${day}` });
+      if (eight < now || a.type !== 'card' || a.bal <= 0) continue;
+      const cy = cardCycle(d, a, day);
+      if (cy.due !== day || cy.statement <= 0.004) continue;
+      out.push({ at: eight, title: `${a.name} payment is due today`, body: `You owe ${fmt(cy.statement)}.`, url: '#accounts', tag: `card0:${a.id}:${day}` });
     }
   }
   // Monthly backup reminder on the chosen day, at 9:00 (only when there's something to back up).

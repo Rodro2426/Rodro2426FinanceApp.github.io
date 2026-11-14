@@ -1,5 +1,6 @@
 // Builds the "For AI" sheet: one page with every budget and figure of the period,
 // written so an AI assistant given the Excel file can answer questions about it.
+import { cardDueLabel } from './cards';
 import type { Data } from './types';
 import { catOf, num, periodsInMonth, myExpenses, isHalf, roundAmt } from './derive';
 import { addDays, daysInMonth, fmtDay, inRange, monthLabel, shortDate, todayISO, weekStart } from './dates';
@@ -114,7 +115,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
     title: 'Accounts and credit cards (current)', note: 'For credit cards, the balance is the amount owed.',
     header: ['Account', 'Type', 'Balance', 'Credit limit', 'Available credit', 'Payment due'],
     rows: d.accounts.map(a => a.type === 'card'
-      ? [a.name, 'Credit card', money(a.bal), money(a.limit || 0), money((a.limit || 0) - a.bal), a.due || '']
+      ? [a.name, 'Credit card', money(a.bal), money(a.limit || 0), money((a.limit || 0) - a.bal), cardDueLabel(d, a, new Date().toISOString().slice(0, 10))]
       : [a.name, a.kind, money(a.bal), '', '', ''])
   });
   const assets = d.accounts.filter(a => a.type !== 'card').reduce((x, a) => x + a.bal, 0);

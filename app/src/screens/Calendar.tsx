@@ -38,7 +38,7 @@ export default function CalendarScreen() {
   const billTotal = scheduled.filter(b => (b.kind === 'Bill' || b.kind === 'Subscription') && !b.notMine).reduce((a, b) => a + approxLocal(d, b), 0);
   // Card payments: what was actually paid this month, otherwise what it would pay now.
   const cardTotal = scheduled.filter(b => b.kind === 'CardPayment').reduce((a, b) => a + (d.payments.find(p => p.ruleId === b.id && p.ruleMonth === month)?.amt ?? approxLocal(d, b)), 0);
-  const amountText = (b: typeof d.bills[number]) => (b.kind === 'CardPayment' && b.payMode !== 'fixed' ? 'Full balance' : `${b.kind === 'Income' ? '+' : '−'}${billAmount(b)}`);
+  const amountText = (b: typeof d.bills[number]) => (b.kind === 'CardPayment' && b.payMode !== 'fixed' ? billAmount(b) : `${b.kind === 'Income' ? '+' : '−'}${billAmount(b)}`);
 
   const selEvents = eventsOn(d, sel);
   const selSpent = spentOn(sel).sort((x, y) => y.ts - x.ts).map(e => expView(d, e, c));

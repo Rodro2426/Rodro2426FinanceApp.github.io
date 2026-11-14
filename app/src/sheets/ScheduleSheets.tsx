@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { cardCycle, cardDueLabel, payDayOf } from '../lib/cards';
 import { openTripLink } from '../lib/tripNotify';
 import { useApp, setData, closeSheet, flash, openSheet } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
@@ -18,7 +19,6 @@ const KIND_ITEMS: [ScheduleKind, string][] = [['Income', 'Income'], ['Bill', 'Bi
 const PLACEHOLDER: Record<ScheduleKind, string> = { Income: 'Salary', Bill: 'Rent', Subscription: 'Netflix', CardPayment: 'Card payment' };
 const DEFAULT_CAT: Record<ScheduleKind, string> = { Income: '', Bill: 'Home', Subscription: 'Entertainment', CardPayment: '' };
 /** "Nov 15" → 15 */
-const dayOf = (s?: string) => { const m = /(\d{1,2})\s*$/.exec(s || ''); return m ? Math.min(31, Math.max(1, Number(m[1]))) : null; };
 const chip = (on: boolean) => ({ background: on ? TEXT : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT });
 
 /* ---------------- Add / edit scheduled income, bill or subscription ---------------- */
@@ -44,7 +44,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const [photo, setPhoto] = useState<string | null>(base?.photo ?? null);
   const cards = d.accounts.filter(a => a.type === 'card');
   const [toCard, setToCard] = useState(base?.toCard ?? cards[0]?.id ?? '');
-  const [payMode, setPayMode] = useState<'full' | 'fixed'>(base?.payMode ?? 'full');
+  const [payMode, setPayMode] = useState<'full' | 'min' | 'fixed'>(base?.payMode ?? 'full');
   // Lock-screen notifications for this event: the day before and on the day, each at its own time (or off).
   const [before, setBefore] = useState<string | null>(base ? notifyTime(base, 'before') : DEFAULT_BEFORE);
   const [onDay, setOnDay] = useState<string | null>(base ? notifyTime(base, 'day') : DEFAULT_DAY);
@@ -55,6 +55,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const card = cards.find(c => c.id === toCard);
   const v = num(amt);
   const notMineOn = others && !income && !cardPay;
+  const cy = card ? cardCycle(d, card, todayISO()) : null;
   const cant = cardPay ? !card || !acctOk || (payMode === 'fixed' && !(v > 0)) : !name.trim() || !(v > 0) || (auto && !notMineOn && !acctOk);
   const acctName = accounts.find(a => a.id === acct)?.name;
   const hue = base?.hue ?? (income ? 150 : HUES[d.bills.length % HUES.length]);
@@ -63,7 +64,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
     setKind(k);
     if (!base) setCat(DEFAULT_CAT[k]);
     if ((k === 'Income' || k === 'CardPayment') && !d.accounts.some(a => a.id === acct && a.type !== 'card')) setAcct(d.accounts.find(a => a.type !== 'card')?.id ?? '');
-    if (k === 'CardPayment' && !base && card) setDueDay(dayOf(card.due) ?? dueDay);
+    if (k === 'CardPayment' && !base && card) setDueDay(payDayOf(card) || dueDay);
   };
 
   const save = () => {
@@ -113,18 +114,18 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           <FieldLabel m="14px 4px 6px">Card to pay</FieldLabel>
           <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
             {cards.map(c => (
-              <button key={c.id} onClick={() => { setToCard(c.id); if (!base) setDueDay(dayOf(c.due) ?? dueDay); }} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${c.id === toCard ? ink(c.hue) : 'var(--surface)'}`, background: c.id === toCard ? tint(c.hue) : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+              <button key={c.id} onClick={() => { setToCard(c.id); if (!base) setDueDay(payDayOf(c) || dueDay); }} style={{ flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, padding: '10px 14px', borderRadius: 18, border: `2px solid ${c.id === toCard ? ink(c.hue) : 'var(--surface)'}`, background: c.id === toCard ? tint(c.hue) : 'var(--surface)', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
                 <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap' }}>{c.name}</span>
-                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{fmt(c.bal)} owed{c.due ? ` · due ${c.due}` : ''}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{cardDueLabel(d, c, todayISO()) ? `${fmt(c.bal)} owed · due ${cardDueLabel(d, c, todayISO())}` : `${fmt(c.bal)} owed`}</span>
               </button>
             ))}
             {cards.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add a credit card first, in the Accounts tab.</span>}
           </div>
           <FieldLabel m="14px 4px 0">How much</FieldLabel>
-          <Segmented items={[['full', 'Full balance'], ['fixed', 'Fixed amount']]} value={payMode} onPick={setPayMode} mt={6} />
+          <Segmented items={[['full', "What's due"], ['min', 'Minimum'], ['fixed', 'Fixed amount']]} value={payMode} onPick={setPayMode} mt={6} />
           {payMode === 'fixed' && <div style={{ marginTop: 8 }}><SmallAmount value={amt} onChange={setAmt} /></div>}
           <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
-            {payMode === 'full' ? `Pays whatever the card owes that day${card ? ` (now ${fmt(card.bal)})` : ''}.` : 'Never more than the card owes.'} If the account doesn't have enough, it pays what's there.
+            {payMode === 'full' ? (cy?.cycle ? `Pays the last statement (now ${fmt(cy.statement)}). What you buy after the cutoff waits for the next one.` : `Pays whatever the card owes that day${card ? ` (now ${fmt(card.bal)})` : ''}.`) : payMode === 'min' ? (cy && cy.min > 0 ? `Pays the card's minimum payment (now ${fmt(cy.min)}).` : 'Set the minimum payment on the card first (Accounts → the card → Edit).') : 'Never more than the card owes.'} If the account doesn't have enough, it pays what's there.
           </span>
         </> : <>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 12, marginTop: 12 }}>
@@ -199,7 +200,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 600 }}>{income ? 'Add to my balance automatically' : 'Pay automatically'}</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
-              {auto && acctName ? (cardPay ? `${payMode === 'full' ? 'Full balance' : fmt(v)} from ${acctName} to ${card?.name || 'the card'} on the ${ordinal(dueDay)}` : `${income ? '+' : '−'}${usd ? fmtUsd(v) + ' in pesos' : fmt(v)} ${income ? 'into' : 'from'} ${acctName} on the ${ordinal(dueDay)}`) : "Just remind me, I'll tick it off myself"}
+              {auto && acctName ? (cardPay ? `${payMode === 'full' ? "What's due" : payMode === 'min' ? 'Minimum payment' : fmt(v)} from ${acctName} to ${card?.name || 'the card'} on the ${ordinal(dueDay)}` : `${income ? '+' : '−'}${usd ? fmtUsd(v) + ' in pesos' : fmt(v)} ${income ? 'into' : 'from'} ${acctName} on the ${ordinal(dueDay)}`) : "Just remind me, I'll tick it off myself"}
             </span>
           </div>
           <Toggle on={auto} onChange={setAuto} label="Automatic" />

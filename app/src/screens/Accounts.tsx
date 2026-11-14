@@ -14,7 +14,8 @@ import { Toggle } from '../ui/bits';
 import { Blocks, FoldHead, useFolded } from '../ui/Blocks';
 import { CardFace, cardInk } from '../ui/CardFace';
 import type { AssetGroup } from '../lib/types';
-import { shortDate } from '../lib/dates';
+import { shortDate, todayISO } from '../lib/dates';
+import { cardDueLabel } from '../lib/cards';
 
 export default function Accounts() {
   const { data: d } = useApp();
@@ -132,7 +133,7 @@ export default function Accounts() {
       <FoldHead title="Credit cards" open={!isFolded('cards')} onToggle={() => toggle('cards')} summary={`${plural(cards.length, 'card')} · ${fmt(cards.filter(x => !x.notMine).reduce((a, x) => a + x.bal, 0))} owed`} />
       {!isFolded('cards') && cards.map(a => {
         const { k } = cardInk(a);
-        return <CardFace key={a.id} a={a} onClick={() => openSheet({ name: 'acct', id: a.id })}
+        return <CardFace key={a.id} a={{ ...a, due: cardDueLabel(d, a, todayISO()) }} onClick={() => openSheet({ name: 'acct', id: a.id })}
           action={<button onClick={e => { e.stopPropagation(); openSheet({ name: 'pay', id: a.id }); }} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: a.cardImg ? '#141414' : k, fontSize: 14, fontWeight: 700, cursor: 'pointer', textShadow: 'none' }}>Pay</button>} />;
       })}
       </> }

@@ -4,7 +4,7 @@
 // switch) and the pockets' real shortfall, depending on whether the money comes back before you need it.
 import type { Account, Data, Debt, DebtPay } from './types';
 import { daysInMonth, shortDate } from './dates';
-import { parseShortDate } from './schedule';
+import { cardDueFor } from './cards';
 
 const sum = (xs: number[]) => xs.reduce((a, x) => a + x, 0);
 const EPS = 0.004;
@@ -103,7 +103,7 @@ export const monthEndOf = (today: string) => `${today.slice(0, 7)}-${pad(daysInM
  */
 export function neededBy(d: Data, x: Debt, today: string) {
   const a = d.accounts.find(y => y.id === x.acct);
-  return (a?.type === 'card' ? parseShortDate(a.due, today) : null) ?? monthEndOf(today);
+  return (a?.type === 'card' ? cardDueFor(d, a, x.date, today) : null) ?? monthEndOf(today);
 }
 
 export interface DebtOutlook {

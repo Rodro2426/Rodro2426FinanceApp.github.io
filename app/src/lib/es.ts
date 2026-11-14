@@ -1265,6 +1265,20 @@ You owe|Debes
 Include investments|Incluir inversiones
 and your groups|y tus grupos
 Include investments in net worth|Incluir inversiones en el patrimonio
+Minimum payment|Pago mínimo
+Cutoff day|Día de corte
+Pay-by day|Día límite de pago
+The cutoff day is when your billing cycle ends (fecha de corte); the pay-by day is your payment deadline. Both are days of the month, like 25 and 10.|El día de corte es cuando cierra tu ciclo de facturación; el día límite de pago es tu fecha máxima para pagar. Ambos son días del mes, como 25 y 10.
+Add the card's cutoff day and pay-by day to see what's due each month.|Agrega el día de corte y el día límite de pago de la tarjeta para ver cuánto debes pagar cada mes.
+Nothing to pay this cycle|Nada por pagar en este ciclo
+Overdue|Vencido
+To pay|Por pagar
+After the cutoff|Después del corte
+Goes on the next statement|Va en el próximo extracto
+What's due|Lo que toca pagar
+Minimum|Mínimo
+Everything|Todo
+Set the minimum payment on the card first (Accounts → the card → Edit).|Primero pon el pago mínimo en la tarjeta (Cuentas → la tarjeta → Editar).
 Cover it|Cubrirlo
 Suggested|Sugerido
 Take money from pockets that still have some left.|Toma plata de los bolsillos a los que todavía les queda.
@@ -1682,6 +1696,15 @@ Borrowed from {0}|Préstamo de {0}
 You paid {0} back in full 🎉|Le pagaste todo a {0} 🎉
 {0} paid you back|{0} te pagó
 Paid back {0}|Pagada el {0}
+Your billing cycle ends on day {0} of each month (fecha de corte) and you pay by day {1}. What you buy after the cutoff is paid the month after.|Tu ciclo cierra el día {0} de cada mes (fecha de corte) y pagas hasta el día {1}. Lo que compres después del corte se paga al mes siguiente.
+Next payment by {0}|Próximo pago hasta el {0}
+It was due {0}|Venció el {0}
+Pay by {0}|Paga hasta el {0}
+cutoff {0}|corte el {0}
+Nothing is due this cycle. You owe {0} in total.|No hay nada por pagar en este ciclo. Debes {0} en total.
+{0} to pay by {1}|{0} por pagar hasta el {1}
+Pays the last statement (now {0}). What you buy after the cutoff waits for the next one.|Paga el último extracto (ahora {0}). Lo que compres después del corte espera al siguiente.
+Pays the card's minimum payment (now {0}).|Paga el pago mínimo de la tarjeta (ahora {0}).
 No income in {0}.|Sin ingresos en {0}.
 No expenses in {0}.|Sin gastos en {0}.
 {0} is over budget by|{0} se pasó del presupuesto por
