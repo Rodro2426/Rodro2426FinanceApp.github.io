@@ -31,7 +31,7 @@ export function upcomingReminders(d: Data, today = todayISO(), days = 35): Remin
       if (!t || when < now) continue;
       if (dueDate(b, m) !== due || b.paidMonths.includes(m) || (b.skipMonths || []).includes(m) || (b.start && due < b.start)) continue;
       const auto = isAuto(b, d);
-      const r = isCardPay(b) ? { title: `${acct(b.toCard)} payment tomorrow`, body: b.payMode === 'fixed' ? `${fmt(b.amt)} from ${acct(b.acct)}.` : `The full balance, from ${acct(b.acct)}.` }
+      const r = isCardPay(b) ? { title: `${acct(b.toCard)} payment tomorrow`, body: b.payMode === 'fixed' ? `${fmt(b.amt)} from ${acct(b.acct)}.` : `The minimum payment, from ${acct(b.acct)}.` }
         : isIncome(b) ? { title: `${b.name} arrives tomorrow`, body: `+${billAmount(b)}${auto ? ` to ${acct(b.acct)}` : ''}.` }
         : notMine(b) ? { title: `${b.name} is due tomorrow`, body: `${billAmount(b)}, paid by someone else.` }
         : { title: `${b.name} is due tomorrow`, body: `${billAmount(b)}${auto ? ` will be paid automatically from ${acct(b.acct)}` : '. Remember to pay it'}.` };
@@ -52,7 +52,7 @@ export function upcomingReminders(d: Data, today = todayISO(), days = 35): Remin
       if (!t || when < now) continue;
       if (dueDate(b, m) !== day || b.paidMonths.includes(m) || (b.skipMonths || []).includes(m) || (b.start && day < b.start)) continue;
       const auto = isAuto(b, d);
-      const r = isCardPay(b) ? { title: `${acct(b.toCard)} payment is today`, body: b.payMode === 'fixed' ? `${fmt(b.amt)}${auto ? ` from ${acct(b.acct)}` : '. Remember to pay it'}.` : `The full balance${auto ? `, from ${acct(b.acct)}` : '. Remember to pay it'}.` }
+      const r = isCardPay(b) ? { title: `${acct(b.toCard)} payment is today`, body: b.payMode === 'fixed' ? `${fmt(b.amt)}${auto ? ` from ${acct(b.acct)}` : '. Remember to pay it'}.` : `The minimum payment${auto ? `, from ${acct(b.acct)}` : '. Remember to pay it'}.` }
         : isIncome(b) ? { title: `💰 ${b.name} arrives today`, body: `+${billAmount(b)}${b.acct ? ` to ${acct(b.acct)}` : ''}.` }
         : notMine(b) ? { title: `${b.name} is due today`, body: `${billAmount(b)}, paid by someone else.` }
         : auto ? { title: `${b.name} is charged today`, body: `−${billAmount(b)} from ${acct(b.acct)}.` }

@@ -130,7 +130,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   sections.push({
     title: 'Scheduled income, bills and subscriptions (every month)', note: '"Automatic" items move the money on their day; the others are reminders ticked off by hand.',
     header: ['Name', 'Type', 'Amount', 'Currency', 'Day of month', 'Account', 'Automatic', 'Pocket', ...months.map(m => `Done in ${monthLabel(m)}`)],
-    rows: d.bills.map(b => [b.kind === 'CardPayment' ? `${b.name} (to ${acc(b.toCard || '')?.name || 'card'})` : b.name, b.kind === 'CardPayment' ? 'Card payment' : b.kind, b.kind === 'CardPayment' && b.payMode !== 'fixed' ? 'Full balance' : b.currency === 'USD' ? b.amt : money(b.amt), b.currency === 'USD' ? 'USD (converted with the TRM of the day it runs)' : cur, b.dueDay, acc(b.acct || '')?.name || '', b.notMine ? 'No (paid by someone else)' : b.auto && b.acct ? 'Yes' : 'No', b.pocket ? pocketName(b.pocket) : '', ...months.map(m => (b.paidMonths.includes(m) ? 'Yes' : 'No'))])
+    rows: d.bills.map(b => [b.kind === 'CardPayment' ? `${b.name} (to ${acc(b.toCard || '')?.name || 'card'})` : b.name, b.kind === 'CardPayment' ? 'Card payment' : b.kind, b.kind === 'CardPayment' && b.payMode !== 'fixed' ? 'Minimum payment' : b.currency === 'USD' ? b.amt : money(b.amt), b.currency === 'USD' ? 'USD (converted with the TRM of the day it runs)' : cur, b.dueDay, acc(b.acct || '')?.name || '', b.notMine ? 'No (paid by someone else)' : b.auto && b.acct ? 'Yes' : 'No', b.pocket ? pocketName(b.pocket) : '', ...months.map(m => (b.paidMonths.includes(m) ? 'Yes' : 'No'))])
   });
   sections.push({
     title: 'Income received', header: ['Date', 'Description', 'Account', 'Amount'],

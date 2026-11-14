@@ -41,7 +41,7 @@ describe('reminders for lock-screen notifications', () => {
     expect(by('nf')).toMatchObject({ title: 'Netflix is charged today', body: '−$44.900 from Bancolombia.' });
     expect(by('sal')).toMatchObject({ title: '💰 Salary arrives today', body: '+$1.100.000 to Bancolombia.' });
     expect(by('rp')).toMatchObject({ title: 'Rappi pro is due today', body: '$25.000, paid by someone else.' });
-    expect(by('cp')).toMatchObject({ title: 'RappiCard payment is today', body: 'The full balance, from Bancolombia.' });
+    expect(by('cp')).toMatchObject({ title: 'RappiCard payment is today', body: 'The minimum payment, from Bancolombia.' });
     const t = new Date(by('nf').at);
     expect([t.getDate(), t.getHours()]).toEqual([20, 8]);
   });

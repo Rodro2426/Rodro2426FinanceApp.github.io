@@ -68,6 +68,10 @@ Key choices, with the reason behind each one. Newest topics are near the end of 
 - **What you owe always lowers net worth; what you're owed is a switch** (`settings.owedInNetWorth`, off by default), because the owner wanted to choose whether lent money looks "lost".
 - **Pockets follow the owner's rule:** lent money only hurts the pockets if it comes back after you need it. "Need it" = the card's next due date (`parseShortDate(card.due)`) when lent with a card, else the end of this month. Borrowed money due this month (or with no date) isn't spendable. This enters `monthSummary().balance`, so the existing real shortfall and Cover the shortfall do the adjusting.
 
+## Credit cards
+
+- **"Minimum payment" means what the cycle obliges you to pay**, and the app works it out; it is never typed. It is everything bought up to the last cutoff that isn't paid yet (`cardCycle().statement` in `lib/cards.ts`). The owner asked for this so a monthly scheduled payment charges nothing when nothing was bought last cycle. The app has no installments (cuotas), so it's the whole statement, not a bank's partial minimum. `Account.minPay` and `payMode: 'min'` are leftovers from one day when it was typed; both are ignored.
+
 ## UI
 
 - **Photos are drawn with `<img>` (`Fill` in `ui/bits.tsx`), not CSS backgrounds.** See the gotchas.

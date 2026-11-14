@@ -22,7 +22,7 @@ export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig
   return { amt: Math.round(b.amt * rate), orig: { amt: b.amt, cur: 'USD', rate, official: !!trm } };
 }
 /** Text for a bill's amount: "$44.900" or "US$20,00". */
-export const billAmount = (b: Bill) => (isCardPay(b) && b.payMode === 'min' ? 'Minimum payment' : isCardPay(b) && b.payMode !== 'fixed' ? 'Full balance' : isUsd(b) ? fmtUsd(b.amt) : fmt(b.amt));
+export const billAmount = (b: Bill) => (isCardPay(b) && b.payMode !== 'fixed' ? 'Minimum payment' : isUsd(b) ? fmtUsd(b.amt) : fmt(b.amt));
 /** Approximate local value for totals and previews. */
 export const approxLocal = (d: Data, b: Bill) => (isCardPay(b) ? cardPayAmount(d, b) : isUsd(b) ? b.amt * latestRate(d) : b.amt);
 
@@ -35,13 +35,13 @@ export const KIND_LABEL: Record<Bill['kind'], string> = { Income: 'Income', Bill
 /** Bills or subscriptions someone else pays. */
 export const notMine = (b: Bill) => !!b.notMine && b.kind !== 'Income' && b.kind !== 'CardPayment';
 export const isAuto = (b: Bill, d: Data) => !notMine(b) && !!(b.auto && b.acct && d.accounts.some(a => a.id === b.acct) && (!isCardPay(b) || d.accounts.some(a => a.id === b.toCard && a.type === 'card')));
-/** How much a card payment would pay right now: the full balance owed, or the fixed amount (never more than owed or than the account has). */
+/** How much a card payment would pay on `date`: the minimum payment (what was bought up to the cutoff and isn't paid yet), or the fixed amount. Never more than owed or than the account has. */
 export function cardPayAmount(d: Data, b: Bill, date = todayISO()) {
   const card = d.accounts.find(a => a.id === b.toCard), from = d.accounts.find(a => a.id === b.acct);
   if (!card) return 0;
-  // "Full" pays what's due: the last statement. What was bought after the cutoff waits for the next one.
+  // Pays the minimum payment: what was bought up to the last cutoff and isn't paid yet. Later purchases wait for the next cycle.
   const cy = cardCycle(d, card, date);
-  const want = b.payMode === 'fixed' ? Math.min(b.amt, Math.max(0, card.bal)) : b.payMode === 'min' ? cy.min : cy.statement;
+  const want = b.payMode === 'fixed' ? Math.min(b.amt, Math.max(0, card.bal)) : cy.statement;
   return Math.max(0, Math.min(want, from ? Math.max(0, from.bal) : want));
 }
 const nextMonth = (m: string) => { const [y, mo] = m.split('-').map(Number); return mo === 12 ? `${y + 1}-01` : `${y}-${pad(mo + 1)}`; };
@@ -136,7 +136,7 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
     const tm = monthKey(tomorrow);
     if (dueDate(b, tm) === tomorrow && !handled(tm) && (!b.start || tomorrow >= b.start)) {
       const auto = isAuto(b, d);
-      if (isCardPay(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'card', `${acctName(b.toCard)} payment tomorrow`, `${b.payMode === 'fixed' ? fmt(b.amt) : `The full balance (now ${fmt(d.accounts.find(a => a.id === b.toCard)?.bal || 0)})`}${auto ? ` will be paid from ${acctName(b.acct)}` : ''}.`);
+      if (isCardPay(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'card', `${acctName(b.toCard)} payment tomorrow`, `${b.payMode === 'fixed' ? fmt(b.amt) : `The minimum payment (now ${fmt(cardPayAmount({ ...d, accounts: d.accounts.map(x => (x.id === b.acct ? { ...x, bal: Infinity } : x)) }, b, tomorrow))})`}${auto ? ` will be paid from ${acctName(b.acct)}` : ''}.`);
       else if (isIncome(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'income', `${b.name} arrives tomorrow`, `+${billAmount(b)}${auto ? ` will be added to ${acctName(b.acct)}` : ''}.`);
       else if (notMine(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}, paid by someone else. Nothing is taken from your accounts.`);
       else notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}${isUsd(b) ? ' (converted with that day\'s TRM)' : ''}${auto ? ` will be paid automatically from ${acctName(b.acct)}` : '. Remember to pay it'}.`);

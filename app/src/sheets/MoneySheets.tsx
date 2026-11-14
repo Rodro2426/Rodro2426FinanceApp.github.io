@@ -102,7 +102,7 @@ export function ExportSheet({ acct }: { acct: string }) {
 function CardCycleBox({ a }: { a: Account }) {
   const { data: d } = useApp();
   const today = todayISO(), cy = cardCycle(d, a, today);
-  if (!cy.due && !(a.minPay ?? 0)) return (
+  if (!cy.due) return (
     <button onClick={() => openSheet({ name: 'editAcct', id: a.id })} className="hv-n100" style={{ marginTop: 12, border: 0, background: 'var(--surface)', borderRadius: 20, padding: '12px 16px', color: 'var(--color-neutral-700)', fontSize: 13, lineHeight: 1.45, textAlign: 'left', cursor: 'pointer' }}>Add the card's cutoff day and pay-by day to see what's due each month.</button>
   );
   const line = (label: string, value: string, sub?: string, color?: string) => (
@@ -119,8 +119,8 @@ function CardCycleBox({ a }: { a: Account }) {
     <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 20, padding: '4px 16px' }}>
       {nothing
         ? line('Nothing to pay this cycle', fmt(0), cy.due ? `Next payment by ${shortDate(cy.due)}` : undefined, 'var(--money-in)')
-        : line(cy.overdue ? 'Overdue' : 'To pay', fmt(cy.statement), cy.due ? (cy.overdue ? `It was due ${shortDate(cy.due)}` : `Pay by ${shortDate(cy.due)}`) : undefined, cy.overdue ? RED : undefined)}
-      {cy.min > 0.004 && <div style={{ borderTop: `1px solid ${LINE}` }}>{line('Minimum payment', fmt(cy.min))}</div>}
+        : line(cy.overdue ? 'Minimum payment, overdue' : 'Minimum payment', fmt(cy.statement), cy.due ? (cy.overdue ? `It was due ${shortDate(cy.due)}` : `Pay by ${shortDate(cy.due)}`) : undefined, cy.overdue ? RED : undefined)}
+      {cy.cycle && !nothing && cy.lastCut && <span style={{ display: 'block', padding: '0 0 9px', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{`What you bought up to the cutoff on ${shortDate(cy.lastCut)}, minus what you've paid since.`}</span>}
       {cy.cycle && <div style={{ borderTop: `1px solid ${LINE}` }}>{line('After the cutoff', fmt(cy.later), cy.nextCut ? `Goes on the next statement · cutoff ${shortDate(cy.nextCut)}` : undefined)}</div>}
     </div>
   );
@@ -230,15 +230,15 @@ function rateFields(prev: { rate?: number; accruedTo?: string; earned?: number }
 
 /** A day of the month typed by hand: digits only, 1 to 31. */
 const dayText = (v: string) => { const n = Number(v.replace(/\D/g, '').slice(0, 2)); return n ? String(Math.min(31, n)) : ''; };
-/** The card's cycle fields from the form: days of the month and the minimum payment (empty ones are left out). */
-const cycleFields = (f: { cutDay?: string; payDay?: string; minPay?: string; due: string }) => ({
-  cutDay: num(f.cutDay) || undefined, payDay: num(f.payDay) || undefined, minPay: roundAmt(num(f.minPay)) || undefined,
+/** The card's cycle fields from the form: days of the month (empty ones are left out). */
+const cycleFields = (f: { cutDay?: string; payDay?: string; due: string }) => ({
+  cutDay: num(f.cutDay) || undefined, payDay: num(f.payDay) || undefined, minPay: undefined,
   // The old free-text date is only kept while no pay-by day has been typed.
   due: num(f.payDay) ? undefined : f.due.trim() || undefined
 });
 
 function AcctForm({ initial, isNew, onSave, onDelete }: {
-  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; cutDay?: string; payDay?: string; minPay?: string; photo: string | null; hue: number; rate: string; cardImg?: string | null; cardText?: 'light' | 'dark'; notMine?: boolean };
+  initial: { name: string; type: AcctType; bal: string; limit: string; due: string; cutDay?: string; payDay?: string; photo: string | null; hue: number; rate: string; cardImg?: string | null; cardText?: 'light' | 'dark'; notMine?: boolean };
   isNew: boolean; onSave: (v: typeof initial) => void; onDelete?: () => void;
 }) {
   const [f, setF] = useState(initial);
@@ -265,13 +265,9 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
       <SmallAmount value={f.bal} onChange={set('bal')} />
       {isCard && (
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8, marginTop: 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
             <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Credit limit</span>
             <MoneyInput value={f.limit} onChange={set('limit')} style={{ ...textInput, fontWeight: 600 }} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Minimum payment</span>
-            <MoneyInput value={f.minPay ?? ''} onChange={set('minPay')} ariaLabel="Minimum payment" style={{ ...textInput, fontWeight: 600 }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Cutoff day</span>
@@ -282,7 +278,7 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
             <input type="text" inputMode="numeric" placeholder="10" aria-label="Pay-by day" value={f.payDay ?? ''} onChange={e => set('payDay')(dayText(e.target.value))} style={{ ...textInput, fontWeight: 600 }} />
           </div>
           <span style={{ gridColumn: '1 / -1', margin: '0 4px', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>
-            {num(f.cutDay) && num(f.payDay) ? `Your billing cycle ends on day ${num(f.cutDay)} of each month (fecha de corte) and you pay by day ${num(f.payDay)}. What you buy after the cutoff is paid the month after.` : 'The cutoff day is when your billing cycle ends (fecha de corte); the pay-by day is your payment deadline. Both are days of the month, like 25 and 10.'}
+            {num(f.cutDay) && num(f.payDay) ? `Your billing cycle ends on day ${num(f.cutDay)} of each month (fecha de corte) and you pay by day ${num(f.payDay)}. Your minimum payment is worked out from what you buy up to the cutoff; what you buy after it is paid the month after.` : 'The cutoff day is when your billing cycle ends (fecha de corte); the pay-by day is your payment deadline. Both are days of the month, like 25 and 10.'}
           </span>
         </div>
       )}
@@ -334,7 +330,7 @@ export function EditAcctSheet({ id }: { id: string }) {
   return (
     <SheetFrame title="Edit account">
       <AcctForm isNew={false}
-        initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', cutDay: a.cutDay ? String(a.cutDay) : '', payDay: payDayOf(a) ? String(payDayOf(a)) : '', minPay: a.minPay ? String(a.minPay) : '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '', cardImg: a.cardImg ?? null, cardText: a.cardText, notMine: a.notMine }}
+        initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', cutDay: a.cutDay ? String(a.cutDay) : '', payDay: payDayOf(a) ? String(payDayOf(a)) : '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '', cardImg: a.cardImg ?? null, cardText: a.cardText, notMine: a.notMine }}
         onSave={f => {
           const card = f.type === 'card';
           setData(x => ({ accounts: x.accounts.map(y => (y.id === id ? { ...y, name: f.name.trim(), type: f.type, kind: ACCT_KIND[f.type], bal: editedBalance(num(f.bal), y.bal), limit: card ? num(f.limit) : undefined, ...(card ? cycleFields(f) : { cutDay: undefined, payDay: undefined, minPay: undefined, due: undefined }), photo: f.photo, hue: f.hue, cardImg: card ? f.cardImg : undefined, cardText: card && f.cardImg ? f.cardText : undefined, notMine: f.notMine || undefined, ...rateFields(y, f) } : y)) }));
@@ -393,8 +389,7 @@ export function PaySheet({ id }: { id: string }) {
         <span style={{ margin: '0 4px', fontSize: 13, color: 'var(--color-neutral-700)' }}>{cy?.cycle && cy.statement <= 0.004 ? `Nothing is due this cycle. You owe ${fmt(pc.bal)} in total.` : cy?.due ? `${fmt(cy.statement)} to pay by ${shortDate(cy.due)}` : `${fmt(pc.bal)} owed`}</span>
         <BigAmount value={amt} onChange={setAmt} />
         <div className="noscroll" style={{ display: 'flex', gap: 6, marginTop: 8, overflowX: 'auto' }}>
-          {cy && cy.cycle && cy.statement > 0.004 && <button onClick={() => setAmt(String(cy.statement))} style={payChip}>{`What's due · ${fmt(cy.statement)}`}</button>}
-          {cy && cy.min > 0.004 && <button onClick={() => setAmt(String(cy.min))} style={payChip}>{`Minimum · ${fmt(cy.min)}`}</button>}
+          {cy && cy.cycle && cy.statement > 0.004 && <button onClick={() => setAmt(String(cy.statement))} style={payChip}>{`Minimum payment · ${fmt(cy.statement)}`}</button>}
           <button onClick={() => setAmt(String(roundAmt(pc.bal)))} style={payChip}>{`Everything · ${fmt(pc.bal)}`}</button>
         </div>
         <FieldLabel m="18px 4px 8px">Pay from</FieldLabel>

@@ -1265,6 +1265,7 @@ You owe|Debes
 Include investments|Incluir inversiones
 and your groups|y tus grupos
 Include investments in net worth|Incluir inversiones en el patrimonio
+Minimum payment, overdue|Pago mínimo, vencido
 Minimum payment|Pago mínimo
 Cutoff day|Día de corte
 Pay-by day|Día límite de pago
@@ -1696,6 +1697,10 @@ Borrowed from {0}|Préstamo de {0}
 You paid {0} back in full 🎉|Le pagaste todo a {0} 🎉
 {0} paid you back|{0} te pagó
 Paid back {0}|Pagada el {0}
+Your billing cycle ends on day {0} of each month (fecha de corte) and you pay by day {1}. Your minimum payment is worked out from what you buy up to the cutoff; what you buy after it is paid the month after.|Tu ciclo cierra el día {0} de cada mes (fecha de corte) y pagas hasta el día {1}. Tu pago mínimo se calcula con lo que compres hasta el corte; lo que compres después se paga al mes siguiente.
+What you bought up to the cutoff on {0}, minus what you've paid since.|Lo que compraste hasta el corte del {0}, menos lo que has pagado desde entonces.
+Pays what you bought up to the cutoff and haven't paid yet (now {0}). What you buy after the cutoff waits for the next cycle.|Paga lo que compraste hasta el corte y no has pagado (ahora {0}). Lo que compres después del corte espera al siguiente ciclo.
+Pays whatever the card owes that day (now {0}). Add the card's cutoff day to leave out what you buy after it.|Paga lo que deba la tarjeta ese día (ahora {0}). Agrega el día de corte de la tarjeta para dejar por fuera lo que compres después.
 Your billing cycle ends on day {0} of each month (fecha de corte) and you pay by day {1}. What you buy after the cutoff is paid the month after.|Tu ciclo cierra el día {0} de cada mes (fecha de corte) y pagas hasta el día {1}. Lo que compres después del corte se paga al mes siguiente.
 Next payment by {0}|Próximo pago hasta el {0}
 It was due {0}|Venció el {0}
@@ -1843,6 +1848,7 @@ You were added to this trip · {0} people. Your share of new expenses shows up h
 {0} new messages ·|{0} mensajes nuevos ·
 {0} payment tomorrow|Pago de {0} mañana
 The full balance, from {0}.|El saldo total, desde {0}.
+The minimum payment, from {0}.|El pago mínimo, desde {0}.
 {0} arrives tomorrow|{0} llega mañana
 {0} is due tomorrow|{0} vence mañana
 {0}, paid by someone else.|{0}, lo paga otra persona.
@@ -1851,6 +1857,7 @@ will be paid automatically from {0}|se pagará automáticamente desde {0}
 You owe {0}.|Debes {0}.
 {0} payment is today|El pago de {0} es hoy
 The full balance{0}.|El saldo total{0}.
+The minimum payment{0}.|El pago mínimo{0}.
 💰 {0} arrives today|💰 {0} llega hoy
 {0} is due today|{0} vence hoy
 {0} is charged today|{0} se cobra hoy
@@ -1868,6 +1875,7 @@ Your {0} CDT matured|Tu CDT de {0} venció
 {0} didn't have enough money.|{0} no tenía suficiente dinero.
 +{0}{1} added to {2}.|+{0}{1} agregado a {2}.
 The full balance (now {0})|El saldo total (ahora {0})
+The minimum payment (now {0})|El pago mínimo (ahora {0})
 will be paid from {0}|se pagará desde {0}
 will be added to {0}|se sumará a {0}
 {0}, paid by someone else. Nothing is taken from your accounts.|{0}, lo paga otra persona. No se saca nada de tus cuentas.

@@ -11,7 +11,7 @@ export interface Pocket { id: string; name: string; emoji?: string; photo?: stri
  * `rate` is an annual return (% E.A.) for bank/savings accounts, like Nu's Cajitas.
  * Interest is added daily (compound) up to `accruedTo`; `earned` is the total so far.
  */
-export interface Account { /** Credit card: the day of the month the billing cycle ends (cutoff, "fecha de corte"), the day it must be paid by, and the minimum payment. */ cutDay?: number; payDay?: number; minPay?: number; id: string; name: string; kind: string; type: AcctType; bal: number; limit?: number; due?: string; hue: number; photo?: string | null; rate?: number; accruedTo?: string; earned?: number; /** Credit card: a photo of the card's design, used as its background (card-shaped). */ cardImg?: string | null; /** Text on the card design: white or dark. */ cardText?: 'light' | 'dark'; /** Someone else's account or card: left out of net worth, and what's paid with it isn't your spending. */ notMine?: boolean }
+export interface Account { /** Credit card: the day of the month the billing cycle ends (cutoff, "fecha de corte"), and the day it must be paid by. (`minPay` was a typed minimum; it is no longer used: the minimum is worked out.) */ cutDay?: number; payDay?: number; minPay?: number; id: string; name: string; kind: string; type: AcctType; bal: number; limit?: number; due?: string; hue: number; photo?: string | null; rate?: number; accruedTo?: string; earned?: number; /** Credit card: a photo of the card's design, used as its background (card-shaped). */ cardImg?: string | null; /** Text on the card design: white or dark. */ cardText?: 'light' | 'dark'; /** Someone else's account or card: left out of net worth, and what's paid with it isn't your spending. */ notMine?: boolean }
 /** `p` is '' for expenses that don't belong to a weekly pocket (e.g. a scheduled bill). */
 /** `orig` keeps the dollar amount and the TRM used when a USD subscription was converted. */
 export interface FxOrig { amt: number; cur: 'USD'; rate: number; official: boolean }
@@ -39,7 +39,7 @@ export interface Bill {
   currency?: 'USD' | 'COP';
   /** Card payments: the card to pay (`acct` is the account it's paid from) and how much. */
   toCard?: string;
-  /** Card payment: what's due (the whole balance if the card has no cutoff day), the card's minimum, or a fixed amount. */
+  /** Card payment: the minimum payment (what was bought up to the cutoff; the whole balance if the card has no cutoff day) or a fixed amount. 'min' is an old value that means the same as 'full'. */
   payMode?: 'full' | 'min' | 'fixed';
   /** Someone else pays it (e.g. a shared plan): listed for reference, but never charged, reminded or counted. */
   notMine?: boolean;

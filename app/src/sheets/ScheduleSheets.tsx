@@ -44,7 +44,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const [photo, setPhoto] = useState<string | null>(base?.photo ?? null);
   const cards = d.accounts.filter(a => a.type === 'card');
   const [toCard, setToCard] = useState(base?.toCard ?? cards[0]?.id ?? '');
-  const [payMode, setPayMode] = useState<'full' | 'min' | 'fixed'>(base?.payMode ?? 'full');
+  const [payMode, setPayMode] = useState<'full' | 'fixed'>(base?.payMode === 'fixed' ? 'fixed' : 'full');
   // Lock-screen notifications for this event: the day before and on the day, each at its own time (or off).
   const [before, setBefore] = useState<string | null>(base ? notifyTime(base, 'before') : DEFAULT_BEFORE);
   const [onDay, setOnDay] = useState<string | null>(base ? notifyTime(base, 'day') : DEFAULT_DAY);
@@ -122,10 +122,10 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
             {cards.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add a credit card first, in the Accounts tab.</span>}
           </div>
           <FieldLabel m="14px 4px 0">How much</FieldLabel>
-          <Segmented items={[['full', "What's due"], ['min', 'Minimum'], ['fixed', 'Fixed amount']]} value={payMode} onPick={setPayMode} mt={6} />
+          <Segmented items={[['full', 'Minimum payment'], ['fixed', 'Fixed amount']]} value={payMode} onPick={setPayMode} mt={6} />
           {payMode === 'fixed' && <div style={{ marginTop: 8 }}><SmallAmount value={amt} onChange={setAmt} /></div>}
           <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
-            {payMode === 'full' ? (cy?.cycle ? `Pays the last statement (now ${fmt(cy.statement)}). What you buy after the cutoff waits for the next one.` : `Pays whatever the card owes that day${card ? ` (now ${fmt(card.bal)})` : ''}.`) : payMode === 'min' ? (cy && cy.min > 0 ? `Pays the card's minimum payment (now ${fmt(cy.min)}).` : 'Set the minimum payment on the card first (Accounts → the card → Edit).') : 'Never more than the card owes.'} If the account doesn't have enough, it pays what's there.
+            {payMode === 'full' ? (cy?.cycle ? `Pays what you bought up to the cutoff and haven't paid yet (now ${fmt(cy.statement)}). What you buy after the cutoff waits for the next cycle.` : `Pays whatever the card owes that day${card ? ` (now ${fmt(card.bal)})` : ''}. Add the card's cutoff day to leave out what you buy after it.`) : 'Never more than the card owes.'} If the account doesn't have enough, it pays what's there.
           </span>
         </> : <>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 12, marginTop: 12 }}>
@@ -200,7 +200,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 600 }}>{income ? 'Add to my balance automatically' : 'Pay automatically'}</span>
             <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>
-              {auto && acctName ? (cardPay ? `${payMode === 'full' ? "What's due" : payMode === 'min' ? 'Minimum payment' : fmt(v)} from ${acctName} to ${card?.name || 'the card'} on the ${ordinal(dueDay)}` : `${income ? '+' : '−'}${usd ? fmtUsd(v) + ' in pesos' : fmt(v)} ${income ? 'into' : 'from'} ${acctName} on the ${ordinal(dueDay)}`) : "Just remind me, I'll tick it off myself"}
+              {auto && acctName ? (cardPay ? `${payMode === 'full' ? 'Minimum payment' : fmt(v)} from ${acctName} to ${card?.name || 'the card'} on the ${ordinal(dueDay)}` : `${income ? '+' : '−'}${usd ? fmtUsd(v) + ' in pesos' : fmt(v)} ${income ? 'into' : 'from'} ${acctName} on the ${ordinal(dueDay)}`) : "Just remind me, I'll tick it off myself"}
             </span>
           </div>
           <Toggle on={auto} onChange={setAuto} label="Automatic" />

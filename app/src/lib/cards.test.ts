@@ -64,12 +64,11 @@ describe('what is due on a card', () => {
     const d = data(visa({ bal: 300000 }), [buy('tv', '2026-10-28', 300000)]);
     expect(cardCycle(d, d.accounts[1], '2026-11-26')).toMatchObject({ lastCut: '2026-11-25', statement: 300000, later: 0, due: '2026-12-10' });
   });
-  it('the minimum payment is never more than what is due', () => {
+  it('the minimum payment is worked out from purchase dates: what was bought up to the cutoff, never a typed number', () => {
     const d = data(visa({ bal: 500000, minPay: 120000 }), [buy('shoes', '2026-10-20', 200000), buy('tv', '2026-10-28', 300000)]);
-    expect(cardCycle(d, d.accounts[1], '2026-11-05').min).toBe(120000);
-    const small = data(visa({ bal: 80000, minPay: 120000 }), [buy('shoes', '2026-10-20', 80000)]);
-    expect(cardCycle(small, small.accounts[1], '2026-11-05').min).toBe(80000);
-    const none = data(visa({ bal: 300000, minPay: 120000 }), [buy('tv', '2026-10-28', 300000)]);
+    expect(cardCycle(d, d.accounts[1], '2026-11-05').min).toBe(200000);
+    // Nothing bought last cycle: nothing to pay, even though the card owes money from this cycle.
+    const none = data(visa({ bal: 300000 }), [buy('tv', '2026-10-28', 300000)]);
     expect(cardCycle(none, none.accounts[1], '2026-11-05').min).toBe(0);
   });
   it('without a cutoff day it works as before: everything owed is due on the pay-by day', () => {
@@ -82,15 +81,25 @@ describe('what is due on a card', () => {
 
 describe('the cycle in the rest of the app', () => {
   const bill = (payMode: Bill['payMode'], amt = 0): Bill => ({ id: 'b', name: 'Visa payment', kind: 'CardPayment', amt, dueDay: 10, hue: 1, paidMonths: [], acct: 'bank', toCard: 'visa', auto: true, payMode });
-  it('a scheduled payment of "what\'s due" pays only the statement; "minimum" pays the minimum', () => {
+  it('a scheduled payment of the minimum pays only what was bought up to the cutoff', () => {
     const today = new Date(), iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     // Dates relative to the real "today", because scheduled payments run on the device's date.
     const lastCut = cutOnOrBefore(25, iso), before = lastCut, afterCut = iso > lastCut ? iso : lastCut;
     const d = data(visa({ bal: 500000, minPay: 50000 }), [buy('old', before, 200000), ...(afterCut > lastCut ? [buy('new', afterCut, 300000)] : [])]);
     const d2 = afterCut > lastCut ? d : { ...d, accounts: d.accounts.map(a => (a.id === 'visa' ? { ...a, bal: 200000 } : a)) };
     expect(cardPayAmount(d2, bill('full'))).toBe(200000);
-    expect(cardPayAmount(d2, bill('min'))).toBe(50000);
+    expect(cardPayAmount(d2, bill('min'))).toBe(200000); // the old "minimum" choice now means the same
     expect(cardPayAmount(d2, bill('fixed', 70000))).toBe(70000);
+  });
+  it('the owner\'s case: a monthly scheduled payment, nothing spent last cycle, purchases this cycle → nothing is charged', () => {
+    // Cutoff on the 25th, paid on the 10th. Everything on the card was bought after Oct 25.
+    const d = data(visa({ bal: 310000 }), [buy('headphones', '2026-10-27', 250000), buy('dinner', '2026-11-03', 60000)]);
+    expect(cardPayAmount(d, bill('full'), '2026-11-10')).toBe(0);
+    // Next month those purchases are in the statement (cutoff Nov 25) and get paid on Dec 10.
+    expect(cardPayAmount(d, bill('full'), '2026-12-10')).toBe(310000);
+    // And a purchase from before the cutoff is charged this month, alone.
+    const mixed = data(visa({ bal: 400000 }), [buy('shoes', '2026-10-24', 90000), buy('headphones', '2026-10-27', 250000), buy('dinner', '2026-11-03', 60000)]);
+    expect(cardPayAmount(mixed, bill('full'), '2026-11-10')).toBe(90000);
   });
   it('money lent with the card is needed by the pay-by day of the statement it falls in', () => {
     const d = data(visa());
@@ -135,7 +144,7 @@ describe('edge cases', () => {
   });
   it('euro cents stay exact', () => {
     const r = cy(visa({ bal: 30.3, minPay: 10.1 }), [buy('a', '2026-10-20', 10.1), buy('b', '2026-10-21', 20.2)], '2026-11-05');
-    expect(r.statement).toBe(30.3); expect(r.min).toBe(10.1);
+    expect(r.statement).toBe(30.3); expect(r.min).toBe(30.3);
   });
   it('a debt lent with the card is part of the statement it falls in', () => {
     const d = data(visa({ bal: 78000 }));

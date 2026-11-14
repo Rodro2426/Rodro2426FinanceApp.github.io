@@ -42,21 +42,20 @@ export interface CardCycle {
   /** When the next payment has to be made (null if no date is known). */ due: string | null;
   /** What is due by `due`: the last statement, minus what you've paid since. Without a cutoff day: everything owed. */ statement: number;
   /** Bought after the cutoff: it goes on the next statement. */ later: number;
-  /** The minimum payment (never more than what's due). */ min: number;
+  /** The minimum payment, worked out from the dates of your purchases: the same as `statement`. */ min: number;
   /** The pay-by day passed and the statement isn't fully paid. */ overdue: boolean;
 }
 
 /** Where a card stands in its billing cycle today. */
 export function cardCycle(d: Data, a: Account, today: string): CardCycle {
   const owed = Math.max(0, a.bal), cutDay = okDay(a.cutDay), payDay = payDayOf(a);
-  const minOf = (st: number) => cents(Math.min(Math.max(0, a.minPay ?? 0), st));
   if (!cutDay || !payDay) {
     // No cutoff day: the old behavior, where everything owed is due on the pay-by day.
     // A typed pay-by day repeats monthly; the old "Nov 15" text keeps meaning that one date (this or next year).
     const m = today.slice(0, 7);
     const monthly = payDay ? (dayIn(m, payDay) >= today ? dayIn(m, payDay) : dayIn(shiftMonth(m, 1), payDay)) : null;
     const due = okDay(a.payDay) ? monthly : parseShortDate(a.due, today) ?? monthly;
-    return { cycle: false, lastCut: null, nextCut: null, due, statement: owed, later: 0, min: minOf(owed), overdue: false };
+    return { cycle: false, lastCut: null, nextCut: null, due, statement: owed, later: 0, min: owed, overdue: false };
   }
   const lastCut = cutOnOrBefore(cutDay, today), nextCut = dayIn(shiftMonth(lastCut.slice(0, 7), 1), cutDay);
   // What the card owed at the cutoff, then every payment or refund since comes off that statement first.
@@ -67,7 +66,7 @@ export function cardCycle(d: Data, a: Account, today: string): CardCycle {
   const later = cents(owed - statement);
   const thisDue = payAfter(payDay, lastCut);
   const due = statement > 0.004 ? thisDue : payAfter(payDay, nextCut);
-  return { cycle: true, lastCut, nextCut, due, statement, later, min: minOf(statement), overdue: statement > 0.004 && thisDue < today };
+  return { cycle: true, lastCut, nextCut, due, statement, later, min: statement, overdue: statement > 0.004 && thisDue < today };
 }
 
 /** When something bought with the card on `date` has to be paid: the pay-by day after the cutoff that closes it. */

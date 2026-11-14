@@ -32,7 +32,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - Card design photos, with a card-shaped cropper that snaps to center.
 - Interest (% E.A.) added daily.
 - Card payments.
-- **Card billing cycle:** each card has a cutoff day (fecha de corte), a pay-by day and a minimum payment. The card screen shows what's due and by when, the minimum, and what was bought after the cutoff (it waits for the next statement). Pay card offers What's due / Minimum / Everything. Scheduled card payments pay what's due, the minimum, or a fixed amount. Due reminders are skipped when nothing is due.
+- **Card billing cycle:** each card has a cutoff day (fecha de corte) and a pay-by day. The **minimum payment is worked out from the dates of the logged purchases**: what was bought up to the last cutoff, minus payments since. Purchases after the cutoff wait for the next cycle. The card screen shows it; Pay card offers Minimum payment / Everything; scheduled card payments pay the minimum (so nothing is charged when nothing was bought last cycle) or a fixed amount. Due reminders are skipped when nothing is due.
 - **"This isn't mine"** switch: the account is left out of net worth, and what's paid with it doesn't count as the owner's spending.
 
 **Scheduled items**
