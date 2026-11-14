@@ -159,6 +159,7 @@ export type Sheet =
   | { name: 'debt'; id: string | null; dir?: 'owed' | 'owe'; friend?: { uid: string; name: string } }
   | { name: 'debtPay'; id: string }
   | { name: 'pay'; id: string }
+  | { name: 'adjust'; id: string }
   | { name: 'goal'; id: string }
   | { name: 'newGoal' }
   | { name: 'settings' }

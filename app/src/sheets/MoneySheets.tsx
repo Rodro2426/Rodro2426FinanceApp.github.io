@@ -174,6 +174,7 @@ export function AcctSheet({ id }: { id: string }) {
             <I.Download size={16} />Excel
           </button>
         </div>
+        <button onClick={() => openSheet({ name: 'adjust', id })} className="hv-n200" style={{ marginTop: 8, height: 50, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><I.Swap size={16} />Adjust balance</button>
         {card && <PrimaryBtn onClick={() => openSheet({ name: 'pay', id })} mt={8} h={50} fs={15}>Pay card</PrimaryBtn>}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '18px 4px 8px' }}>
           <span style={{ fontSize: 17, fontWeight: 700 }}>History</span>

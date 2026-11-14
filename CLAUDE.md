@@ -67,7 +67,7 @@ cd app
 npm ci
 npm run dev -- --port 5199        # dev server
 npx tsc --noEmit -p .              # typecheck (also part of npm run build)
-npx vitest run                     # unit tests (lib/*.test.ts, ui/*.test.ts), currently 265
+npx vitest run                     # unit tests (lib/*.test.ts, ui/*.test.ts), currently 272
 npm run build                      # what CI runs
 ```
 

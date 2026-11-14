@@ -1265,6 +1265,21 @@ You owe|Debes
 Include investments|Incluir inversiones
 and your groups|y tus grupos
 Include investments in net worth|Incluir inversiones en el patrimonio
+Adjust balance|Ajustar saldo
+This account isn't yours, so the difference is saved in its history but doesn't count in your spending or your pockets.|Esta cuenta no es tuya, así que la diferencia queda en su historial pero no cuenta en tus gastos ni en tus bolsillos.
+Balance adjustment|Ajuste de saldo
+This account was deleted.|Esta cuenta fue eliminada.
+Counts as spent|Cuenta como gasto
+Counts as money you got|Cuenta como plata que recibiste
+Saved as an expense dated today, so your spending and your pockets stay true.|Se guarda como un gasto de hoy, para que tus gastos y tus bolsillos sigan siendo reales.
+Saved as an income dated today.|Se guarda como un ingreso de hoy.
+Take it from a pocket|Sácalo de un bolsillo
+With no pocket it still counts as spent this month, but no pocket goes down.|Sin bolsillo igual cuenta como gasto del mes, pero ningún bolsillo baja.
+Share it into my pockets|Repartirlo en mis bolsillos
+Split between your pockets for this week, by their budgets.|Se reparte entre tus bolsillos para esta semana, según sus presupuestos.
+Off: it stays in the account as extra money.|Apagado: se queda en la cuenta como plata extra.
+Type the real balance|Escribe el saldo real
+Only fix the number, with no transaction|Solo corregir el número, sin movimiento
 Minimum payment, overdue|Pago mínimo, vencido
 Minimum payment|Pago mínimo
 Cutoff day|Día de corte
@@ -1697,6 +1712,12 @@ Borrowed from {0}|Préstamo de {0}
 You paid {0} back in full 🎉|Le pagaste todo a {0} 🎉
 {0} paid you back|{0} te pagó
 Paid back {0}|Pagada el {0}
+Type what {0} really owes now. Pockets has {1}.|Escribe cuánto debe {0} de verdad ahora. Pockets tiene {1}.
+Type what {0} really has now. Pockets has {1}.|Escribe cuánto tiene {0} de verdad ahora. Pockets tiene {1}.
+{0} will have {1} less left.|A {0} le quedarán {1} menos.
+Set {0} to {1}|Dejar {0} en {1}
+{0} adjusted: {1} counted as spent|{0} ajustada: {1} contados como gasto
+{0} adjusted: {1} counted as income|{0} ajustada: {1} contados como ingreso
 Your billing cycle ends on day {0} of each month (fecha de corte) and you pay by day {1}. Your minimum payment is worked out from what you buy up to the cutoff; what you buy after it is paid the month after.|Tu ciclo cierra el día {0} de cada mes (fecha de corte) y pagas hasta el día {1}. Tu pago mínimo se calcula con lo que compres hasta el corte; lo que compres después se paga al mes siguiente.
 What you bought up to the cutoff on {0}, minus what you've paid since.|Lo que compraste hasta el corte del {0}, menos lo que has pagado desde entonces.
 Pays what you bought up to the cutoff and haven't paid yet (now {0}). What you buy after the cutoff waits for the next cycle.|Paga lo que compraste hasta el corte y no has pagado (ahora {0}). Lo que compres después del corte espera al siguiente ciclo.

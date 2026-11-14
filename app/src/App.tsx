@@ -51,6 +51,7 @@ import { CropperHost } from './ui/Cropper';
 import { tookSwipe, useSwipeNav, type Peek } from './ui/swipe';
 import { EditTxnSheet } from './sheets/EditTxn';
 import { AddSheet, CoverSheet, RefillSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
+import { AdjustSheet } from './sheets/AdjustSheet';
 import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
 import * as I from './ui/icons';
 
@@ -86,6 +87,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'debt': return <DebtSheet id={sheet.id} dir={sheet.dir} friend={sheet.friend} />;
     case 'debtPay': return <DebtPaySheet id={sheet.id} />;
     case 'pay': return <PaySheet id={sheet.id} />;
+    case 'adjust': return <AdjustSheet id={sheet.id} />;
     case 'goal': return <GoalSheet id={sheet.id} />;
     case 'newGoal': return <NewGoalSheet />;
     case 'settings': return <SettingsSheet />;

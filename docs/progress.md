@@ -32,6 +32,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - Card design photos, with a card-shaped cropper that snaps to center.
 - Interest (% E.A.) added daily.
 - Card payments.
+- **Adjust balance:** on any account, type the real balance and the difference is saved as a transaction dated today: missing money is an expense (in a pocket you pick, or none), extra money is an income (optionally shared into pockets). Cards go the other way. "Only fix the number" still exists in Edit.
 - **Card billing cycle:** each card has a cutoff day (fecha de corte) and a pay-by day. The **minimum payment is worked out from the dates of the logged purchases**: what was bought up to the last cutoff, minus payments since. Purchases after the cutoff wait for the next cycle. The card screen shows it; Pay card offers Minimum payment / Everything; scheduled card payments pay the minimum (so nothing is charged when nothing was bought last cycle) or a fixed amount. Due reminders are skipped when nothing is due.
 - **"This isn't mine"** switch: the account is left out of net worth, and what's paid with it doesn't count as the owner's spending.
 
