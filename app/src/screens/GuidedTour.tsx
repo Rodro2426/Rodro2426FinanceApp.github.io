@@ -9,7 +9,7 @@ import type { Tab } from '../lib/types';
 interface Stop { title: string; text: string; target?: string; tab?: Tab; desk?: string }
 const STOPS: Stop[] = [
   { title: 'A quick tour of Pockets', text: 'A look at the main parts of the app. Nothing you have is changed.' },
-  { title: 'Safe to spend', text: 'What’s left in all your pockets this week. It turns green, yellow or red as you spend, and starts over every Monday. Swipe it to see today or the month.', target: '[data-tour="safe"]', tab: 'home' },
+  { title: 'Safe to spend', text: 'What’s left in all your pockets this week. It turns green, yellow or red as you spend, and starts over every Monday. After the tour, swipe it to see today or the month.', target: '[data-tour="safe"]', tab: 'home' },
   { title: 'Add an expense', text: 'Spent or got paid? Tap + and log it in seconds: amount, category, pocket and account.', desk: 'Spent or got paid? Click Add and log it in seconds: amount, category, pocket and account.', target: '[data-tour="add"]', tab: 'home' },
   { title: 'Your pockets', text: 'Weekly budgets for each kind of spending. Tap one to see what you spent, or move leftovers to another pocket or a goal.', target: '[data-tour="pocket"]', tab: 'home' },
   { title: 'Accounts', text: 'Your banks, cash and cards with their balances. Investments and the Excel export live here too.', target: '[data-tour="tab-accounts"]', tab: 'accounts' },

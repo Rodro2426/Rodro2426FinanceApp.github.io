@@ -90,7 +90,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
 
     const blocked = () => {
       const { ui } = getState();
-      return busy || !!(ui.tour || ui.welcome || ui.install || document.querySelector('[data-modal]'));
+      return busy || !!(ui.tour || ui.guide || ui.setup || ui.welcome || ui.install || document.querySelector('[data-modal]'));
     };
 
     /* ---- tab bar: a pill follows the finger ---- */

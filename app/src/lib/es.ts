@@ -808,7 +808,7 @@ A card whose name includes an account's name ("Visa Davivienda") goes to that ac
 Your cards|Tus tarjetas
 A quick tour of Pockets|Un recorrido rápido por Pockets
 A look at the main parts of the app. Nothing you have is changed.|Un vistazo a las partes principales de la app. No se cambia nada de lo tuyo.
-What’s left in all your pockets this week. It turns green, yellow or red as you spend, and starts over every Monday. Swipe it to see today or the month.|Lo que te queda en todos tus bolsillos esta semana. Se pone verde, amarillo o rojo mientras gastas, y empieza de nuevo cada lunes. Deslízalo para ver hoy o el mes.
+What’s left in all your pockets this week. It turns green, yellow or red as you spend, and starts over every Monday. After the tour, swipe it to see today or the month.|Lo que te queda en todos tus bolsillos esta semana. Se pone verde, amarillo o rojo mientras gastas, y empieza de nuevo cada lunes. Después del recorrido, deslízalo para ver hoy o el mes.
 Spent or got paid? Tap + and log it in seconds: amount, category, pocket and account.|¿Gastaste o te pagaron? Toca + y regístralo en segundos: monto, categoría, bolsillo y cuenta.
 Spent or got paid? Click Add and log it in seconds: amount, category, pocket and account.|¿Gastaste o te pagaron? Haz clic en Agregar y regístralo en segundos: monto, categoría, bolsillo y cuenta.
 Weekly budgets for each kind of spending. Tap one to see what you spent, or move leftovers to another pocket or a goal.|Presupuestos semanales para cada tipo de gasto. Toca uno para ver lo que gastaste, o pasa lo que sobra a otro bolsillo o a una meta.
