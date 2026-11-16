@@ -1280,6 +1280,7 @@ You owe|Debes
 Include investments|Incluir inversiones
 and your groups|y tus grupos
 Include investments in net worth|Incluir inversiones en el patrimonio
+Updating your colors…|Actualizando tus colores…
 Adjust balance|Ajustar saldo
 This account isn't yours, so the difference is saved in its history but doesn't count in your spending or your pockets.|Esta cuenta no es tuya, así que la diferencia queda en su historial pero no cuenta en tus gastos ni en tus bolsillos.
 Balance adjustment|Ajuste de saldo

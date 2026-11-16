@@ -30,6 +30,12 @@ function persist() {
   saveTimer = setTimeout(() => { if (persistOn) set(KEY, state.data).catch(err => console.warn('Could not save data', err)); }, 300);
 }
 
+/** Writes the data to the phone now instead of in 300 ms (before a reload). */
+export async function saveNow() {
+  clearTimeout(saveTimer);
+  if (persistOn) await set(KEY, state.data).catch(err => console.warn('Could not save data', err));
+}
+
 export const getState = () => state;
 export const getData = () => state.data;
 

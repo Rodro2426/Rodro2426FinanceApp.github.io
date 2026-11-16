@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { lookOf, restartIfLookChanged } from '../lib/restart';
 import { glyph } from '../ui/PocketIcons';
 import { cardCycle, payDayOf } from '../lib/cards';
 import { getLang, setLang, type Lang } from '../lib/i18n';
@@ -10,7 +11,7 @@ import { CardFace } from '../ui/CardFace';
 import { requestCrop } from '../ui/Cropper';
 import { HuePicker } from '../ui/HuePicker';
 import { BgPicker } from '../ui/BgPicker';
-import { useApp, setData, openSheet, closeSheet, flash, replaceData, setUI, startTour } from '../lib/store';
+import { useApp, setData, openSheet, closeSheet, flash, replaceData, setUI, startTour, getData } from '../lib/store';
 import { syncLabel, useSync } from './CloudSheet';
 import { ACCT_KIND, ACCT_TYPE_LABEL, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { acctTxns, editedBalance, fmt, initialOf, num, pctOf, plural, roundAmt, uid } from '../lib/derive';
@@ -468,6 +469,8 @@ function LogOutBlock({ email }: { email: string }) {
 export function SettingsSheet() {
   const { data: d } = useApp();
   const st = d.settings;
+  // The iPhone's top bar only takes a new colour when the app starts: restart once Profile closes after a change.
+  useEffect(() => { const start = lookOf(getData()); return () => restartIfLookChanged(start); }, []);
   const [confirm, setConfirm] = useState<null | 'erase' | 'sample'>(null);
   const [restore, setRestore] = useState<Awaited<ReturnType<typeof readBackup>> | null>(null);
   const [askTour, setAskTour] = useState(false);

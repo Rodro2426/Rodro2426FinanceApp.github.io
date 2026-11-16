@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { getData, getState, loadData, setData } from './lib/store';
 import { holdOnOpen } from './ui/ArrivalVeil';
+import { returnAfterRestart } from './lib/restart';
 import type { Settings } from './lib/types';
 import { watchForUpdates } from './lib/update';
 import './styles.css';
@@ -28,6 +29,7 @@ watchForUpdates();
 
 loadData().then(() => {
   if (!getState().ui.welcome) holdOnOpen();
+  returnAfterRestart();
   forgetQuickAdd();
   createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
 });
