@@ -16,6 +16,8 @@ const COMMIT = 0.28;    // back swipe: share of the width past which a released 
 const TAB_COMMIT = 0.5; // tab swipe: a slow drag opens the next tab only if more than half of it is showing when you let go
 const FLICK = 0.5;      // px/ms: a quick flick completes even if short
 const MS = 300;         // longest slide after letting go (a fast flick finishes sooner)
+const TAB_FLICK = 0.3;  // px/ms: tabs take a gentler flick than the back swipe
+const TAB_MS = [380, 480]; // a tab change glides in a bit slower, so it reads as smooth rather than snappy
 const EASE = 'cubic-bezier(.22,1,.36,1)'; // quick start, soft landing, like iOS
 
 /** True once after a finger swipe changed the tab (so the App doesn't animate it a second time). */
@@ -147,7 +149,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       const ms = Math.max(1, Date.now() - g.t), p = e.changedTouches[0];
       const v = Math.abs((p ? p.clientX - g.x : g.dx) / ms);
       // A slow drag must pass the line; a quick flick completes even if short.
-      const done = Math.abs(g.dx) > w * (g.mode === 'tab' ? TAB_COMMIT : COMMIT) || (v > FLICK && Math.abs(g.dx) > 30);
+      const done = Math.abs(g.dx) > w * (g.mode === 'tab' ? TAB_COMMIT : COMMIT) || (g.mode === 'tab' ? v > TAB_FLICK && Math.abs(g.dx) > 20 : v > FLICK && Math.abs(g.dx) > 30);
       // The time left depends on how far is left to go and how fast the finger was moving.
       const rest = done ? w - Math.abs(g.dx) : Math.abs(g.dx);
       const dur = Math.round(Math.max(170, Math.min(MS, rest / Math.max(v, 0.9) * 1.6)));
@@ -164,10 +166,11 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
         return;
       }
       if (done && g.to) {
-        slide(scroller.current, `translateX(${-g.side * w}px)`, true, dur);
-        slide(peek.current, 'translateX(0)', true, dur);
+        const tabDur = Math.round(Math.max(TAB_MS[0], Math.min(TAB_MS[1], rest / Math.max(v, 0.6) * 2)));
+        slide(scroller.current, `translateX(${-g.side * w}px)`, true, tabDur);
+        slide(peek.current, 'translateX(0)', true, tabDur);
         // The App resets the scroller's position in the same render that shows the new tab (no flicker).
-        setTimeout(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); busy = false; }, dur);
+        setTimeout(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); busy = false; }, tabDur);
       } else {
         slide(scroller.current, 'translateX(0)', true, dur);
         slide(peek.current, `translateX(${g.side * 100}%)`, true, dur);
