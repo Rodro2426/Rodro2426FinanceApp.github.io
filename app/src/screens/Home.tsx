@@ -138,7 +138,7 @@ export default function Home() {
 
         {!hidden.includes('pockets') && <section className="dh-sec">
           <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={view === 'day' ? 'Today' : view === 'week' ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
-          {all.length > 0 ? <div className="dh-lines">
+          {all.length > 0 ? <div className="dh-lines" data-tour="pocket">
             {lines.map(({ p, left, budget, off }) => {
               const pct = budget > 0 ? Math.max(0, Math.min(100, (left / budget) * 100)) : 0;
               return (
