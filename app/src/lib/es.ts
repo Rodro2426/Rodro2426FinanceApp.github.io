@@ -807,7 +807,7 @@ Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
 Your cards|Tus tarjetas
 Ask me to check each purchase|Pedirme revisar cada compra
-A notification in Pockets for every Apple Pay purchase. Tap it to fix a strange store name or change the details.|Una notificación en Pockets por cada compra con Apple Pay. Tócala para corregir un nombre de tienda raro o cambiar los detalles.
+A notification in Pockets for every Apple Pay purchase. Tap it to fix a strange store name or change the details. A name you fix is used for that store's next purchases.|Una notificación en Pockets por cada compra con Apple Pay. Tócala para corregir un nombre de tienda raro o cambiar los detalles. El nombre que corrijas se usa en las próximas compras de esa tienda.
 Categories to choose from|Categorías para elegir
 After the pocket, the Shortcut asks for one of these. Up to 8.|Después del bolsillo, el atajo te pide una de estas. Hasta 8.
 Until you pick some, the Shortcut offers the last categories you used. Up to 8.|Mientras no elijas, el atajo ofrece las últimas categorías que usaste. Hasta 8.

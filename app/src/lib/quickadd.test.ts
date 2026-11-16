@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { sampleData } from './seed';
-import { cardAccount, importInbox, newQuickKey, quickAccount, quickMenu, shortcutCats } from './quickadd';
+import { cardAccount, importInbox, learnStoreName, newQuickKey, quickAccount, quickMenu, shortcutCats, storeKey } from './quickadd';
 
 const ts = new Date(2026, 10, 9, 13, 30).getTime();
 
@@ -130,5 +130,37 @@ describe('quick add inbox', () => {
     expect(again.patch).toBeNull();
     const off = { ...d, settings: { ...d.settings, quickAdd: { key: 'k', review: false } } };
     expect(importInbox(off, [{ id: 'r3', amt: 500, ts }]).patch!.notifications).toBeUndefined();
+  });
+
+  it('treats branch numbers as the same store', () => {
+    expect(storeKey('PAYU*EXITO 0123')).toBe('payu exito');
+    expect(storeKey('payu*exito  0456')).toBe(storeKey('PAYU*EXITO 0123'));
+    expect(storeKey('Tostao Café')).toBe('tostao café');
+  });
+
+  it('remembers a renamed store and uses the name on its next purchases', () => {
+    const base = sampleData();
+    const d = { ...base, notifications: [], settings: { ...base.settings, quickAdd: { key: 'k' } } };
+    const first = importInbox(d, [{ id: 's1', amt: 9000, note: 'PAYU*EXITO 0123', ts }]);
+    const e = first.added[0];
+    expect(e).toMatchObject({ note: 'PAYU*EXITO 0123', store: 'PAYU*EXITO 0123' });
+    const after = { ...d, ...first.patch } as typeof d;
+    const settings = learnStoreName(after, e, '  Éxito ')!;
+    expect(settings.quickAdd!.names).toEqual({ 'payu exito': 'Éxito' });
+    const taught = { ...after, settings };
+    const next = importInbox(taught, [{ id: 's2', amt: 4000, note: 'PAYU*EXITO 0456', ts: ts + 5 }]);
+    expect(next.added[0]).toMatchObject({ note: 'Éxito', store: 'PAYU*EXITO 0456' });
+    expect(next.patch!.notifications![0].body).toContain('Éxito');
+  });
+
+  it('learns nothing from expenses typed by hand, empty names or no change', () => {
+    const base = sampleData();
+    const d = { ...base, settings: { ...base.settings, quickAdd: { key: 'k' } } };
+    const typed = d.expenses[0];
+    expect(learnStoreName(d, typed, 'Something else')).toBeNull();
+    const ap = { ...typed, note: 'TOSTAO 12', store: 'TOSTAO 12' };
+    expect(learnStoreName(d, ap, '   ')).toBeNull();
+    expect(learnStoreName(d, ap, 'TOSTAO 12')).toBeNull();
+    expect(learnStoreName({ ...d, settings: { ...d.settings, quickAdd: undefined } }, ap, 'Tostao')).toBeNull();
   });
 });

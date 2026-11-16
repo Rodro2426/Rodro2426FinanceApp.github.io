@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { learnStoreName } from '../lib/quickadd';
 import { CategoryPicker, IncomeCategoryPicker } from '../ui/CategoryPicker';
 import { useApp, setData, setUI, flash, getState } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
@@ -74,7 +75,9 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
       setData(x => {
         // Undo the old charge, then apply the new one (handles account changes too).
         const accounts = chargeAccount(chargeAccount(x.accounts, e.a, -e.amt), acct, val);
-        return { accounts, expenses: x.expenses.map(y => (y.id === e.id ? { ...y, amt: val, note: note.trim() || y.note, date, a: acct, p: pocket, cat, sub, tags, orig: val === roundAmt(y.amt) ? y.orig : undefined } : y)) };
+        // An Apple Pay purchase renamed by hand: remember the name for that store's next purchases.
+        const settings = learnStoreName(x, e, note);
+        return { accounts, expenses: x.expenses.map(y => (y.id === e.id ? { ...y, amt: val, note: note.trim() || y.note, date, a: acct, p: pocket, cat, sub, tags, orig: val === roundAmt(y.amt) ? y.orig : undefined } : y)), ...(settings ? { settings } : {}) };
       });
     } else if (inc) {
       // Same rules as everywhere else: the account follows the difference, and the split shrinks to fit if needed.

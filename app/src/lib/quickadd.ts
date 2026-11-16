@@ -44,6 +44,16 @@ export function quickMenu(d: Data, lang: 'en' | 'es') {
   };
 }
 
+/** "PAYU*EXITO 0123" and "PAYU*EXITO 0456" are the same store: lower case, without numbers or extra signs. */
+export const storeKey = (raw: string) => raw.toLowerCase().replace(/[\d*#_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+/** Settings after the person renamed an Apple Pay expense: the next purchases from that store get the new name. */
+export function learnStoreName(d: Data, e: Expense, name: string): Data['settings'] | null {
+  const qa = d.settings.quickAdd, key = e.store ? storeKey(e.store) : '', clean = name.trim();
+  if (!qa || !key || !clean || clean === e.note || qa.names?.[key] === clean) return null;
+  return { ...d.settings, quickAdd: { ...qa, names: { ...qa.names, [key]: clean } } };
+}
+
 const shown = (name: string, lang: 'en' | 'es') => (lang === 'es' ? tr(name) : name);
 const same = (a = '', b = '') => a.trim().toLowerCase() === b.trim().toLowerCase();
 /** A stored name matches what the Shortcut sent, in English or as shown in Spanish. */
@@ -90,12 +100,13 @@ export function importInbox(d: Data, items: InboxItem[]): { patch: Partial<Data>
     const p = d.pockets.find(x => named(x.name, it.pocket))?.id ?? '';
     const a = d.accounts.find(x => named(x.name, it.account))?.id ?? cardAccount(d, it.card);
     const card = (it.card || '').trim();
+    const raw = (it.note || '').trim(), learned = raw ? d.settings.quickAdd?.names?.[storeKey(raw)] : undefined;
     if (card && !cards[card]) cards[card] = a;
     const sent = d.cats.find(k => named(k.name, it.category));
-    const prev = (it.note ? latest.find(e => same(e.note, it.note)) : undefined) ?? latest.find(e => e.p === p && p) ?? latest[0];
+    const prev = (raw ? latest.find(e => same(e.note, learned ?? raw) || (!!e.store && storeKey(e.store) === storeKey(raw))) : undefined) ?? latest.find(e => e.p === p && p) ?? latest[0];
     const [cat, sub] = sent ? [sent.name, ''] : prev ? catOf(prev) : [d.cats[0]?.name ?? 'Other', ''];
-    const note = (it.note || '').trim() || (sub && sub !== 'General' ? sub : cat);
-    added.push({ id, ts: it.ts, p, a, amt, note, date: iso(new Date(it.ts)), tags: [], cat, sub });
+    const note = learned || raw || (sub && sub !== 'General' ? sub : cat);
+    added.push({ id, ts: it.ts, p, a, amt, note, date: iso(new Date(it.ts)), tags: [], cat, sub, ...(raw ? { store: raw } : {}) });
     accounts = chargeAccount(accounts, a, amt);
     known.add(id);
   }
