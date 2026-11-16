@@ -33,7 +33,7 @@ import CalendarScreen from './screens/Calendar';
 import Welcome from './screens/Welcome';
 import { ArrivalVeil } from './ui/ArrivalVeil';
 import Tour from './screens/Tour';
-import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
+import InstallGuide, { isInstalled, shouldShowInstallGuide } from './screens/InstallGuide';
 import Setup from './screens/Setup';
 import Investments from './screens/Investments';
 import ReportPage, { ReportsIndex } from './screens/Reports';
@@ -247,7 +247,16 @@ export default function App() {
   }, [quickOn, quickKey]);
   const quickList = quickOn ? JSON.stringify(quickMenu(data, 'en')) : '';
   useEffect(() => { if (quickList) pushQuickMenu().catch(() => {}); }, [quickList]);
-  useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
+  // ?install=1 comes from the website's Start free on an iPhone: show the install guide right away (even if skipped before).
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if (q.has('install')) {
+      q.delete('install');
+      history.replaceState(null, '', location.pathname + (q.toString() ? `?${q}` : '') + location.hash);
+      if (!isInstalled()) { setUI({ install: 'auto' }); return; }
+    }
+    if (shouldShowInstallGuide()) setUI({ install: 'auto' });
+  }, []);
   // Closed the app in the middle of the first-time setup: open it again at the same step.
   useEffect(() => { if (getData().settings.setupStep && !ui.welcome && !ui.tour) setUI({ setup: true }); }, [ui.welcome]);
   // Light/dark: follow the setting, or the iPhone when it's "System".

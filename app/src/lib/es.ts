@@ -806,6 +806,11 @@ Turn on Apple Pay purchases|Activar compras con Apple Pay
 Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
 Your cards|Tus tarjetas
+Add Pockets to your Home Screen|Agrega Pockets a tu pantalla de inicio
+It opens full screen like an app. You create your account there, once.|Se abre en pantalla completa como una app. Ahí creas tu cuenta, una sola vez.
+5 taps · about a minute|5 toques · más o menos un minuto
+Open Pockets from your Home Screen|Abre Pockets desde tu pantalla de inicio
+and create your account there. Safari keeps a separate copy, so there's no need to sign in here.|y crea tu cuenta ahí. Safari guarda una copia aparte, así que no hace falta iniciar sesión aquí.
 Watch the step-by-step video|Ver el video paso a paso (en inglés)
 Apple Pay tutorial video|Video tutorial de Apple Pay
 Close video|Cerrar video

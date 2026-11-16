@@ -337,7 +337,13 @@
     setTimeout(function () { authEl.hidden = true; }, reduce.matches ? 0 : 230);
     if (opener && opener.focus) opener.focus({ preventScroll: true });
   }
-  document.querySelectorAll('[data-auth]').forEach(function (b) { b.addEventListener('click', function () { openAuth(b.dataset.auth, b); }); });
+  // On an iPhone in Safari, signing in here wouldn't reach the Home Screen app (it keeps its own storage, so people had
+  // to sign in twice). Start free and Sign in go straight to the app's install guide; the account is made in the app.
+  var iPhoneSafari = (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) && !navigator.standalone;
+  document.querySelectorAll('[data-auth]').forEach(function (b) { b.addEventListener('click', function () {
+    if (iPhoneSafari) { location.href = '../?app&install=1'; return; }
+    openAuth(b.dataset.auth, b);
+  }); });
   authEl.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', closeAuth); });
   document.querySelectorAll('.auth-tabs [role=tab]').forEach(function (b) { b.addEventListener('click', function () { setMode(b.dataset.tab); }); });
   document.addEventListener('keydown', function (e) {
