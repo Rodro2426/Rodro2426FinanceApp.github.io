@@ -308,7 +308,7 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
         <input placeholder="e.g. Lunch at Crepes & Waffles" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 4px 8px', gap: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>{split ? 'Categories' : 'Category'} {!split && !cat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</span>
-          <button onClick={() => (split ? (setSplit(false), setCat(parts[0]?.cat[0] ? parts[0].cat : [cat, sub])) : startSplit())} style={{ border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{split ? 'Use one category' : 'Split into categories'}</button>
+          <button onClick={() => (split ? (setSplit(false), setCat(parts[0]?.cat[0] ? parts[0].cat : [cat, sub])) : startSplit())} style={{ border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{split ? 'Use one category' : 'Split into categories'}</button>
         </div>
         {!split ? <CategoryPicker value={[cat, sub]} onChange={setCat} /> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -447,7 +447,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
           : <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <I.Swap size={17} />Move leftover
           </button>}
-          <button onClick={() => openSheet({ name: 'add', pocket: id })} className="hv-acc600" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Add expense</button>
+          <button onClick={() => openSheet({ name: 'add', pocket: id })} className="hv-acc600" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Add expense</button>
         </div>
       </div>
     </SheetFrame>
@@ -870,7 +870,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
             <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
               <I.Image size={14} />{photo ? 'Change image' : 'Upload image'}
             </button>
-            {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Use emoji instead</button>}
+            {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Use emoji instead</button>}
           </div>
         </div>
         <FieldLabel m="14px 4px 6px">Color</FieldLabel>

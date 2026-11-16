@@ -261,8 +261,8 @@ export default function App() {
       {desk && <TopBar tabs={TABS} />}
       <div className="main">
       <div ref={brand} className="brand-reveal" aria-hidden="true">
-        <img src="./pockets-mark.svg" alt="" width={50} height={61} />
-        <span>Pockets</span>
+        <img src="./pockets-mark.svg" alt="" width={54} height={54} />
+        <span className="wordmark">Pockets</span>
       </div>
       <div ref={scroll} onScroll={onScroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 1 }}>
         <div key={ui.tab} className={`scroll-body ${tabAnim.current}`} style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}>
@@ -313,14 +313,14 @@ export default function App() {
             const on = ui.tab === k;
             return (
               <button key={k} data-tour={`tab-${k}`} onClick={() => setUI({ tab: k })} aria-label={label} aria-current={on ? 'page' : undefined}
-                style={{ flex: on ? (getLang() === 'es' ? 3.3 : 2.3) : 1, minWidth: 0, height: 52, borderRadius: 999, border: 0, background: on ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--color-accent-700)' : 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 8px', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'flex .25s ease,background .2s', overflow: 'hidden' }}>
+                style={{ flex: on ? (getLang() === 'es' ? 3.3 : 2.3) : 1, minWidth: 0, height: 52, borderRadius: 999, border: 0, background: on ? 'var(--brand-tint)' : 'transparent', color: on ? 'var(--brand)' : 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 8px', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'flex .25s ease,background .2s', overflow: 'hidden' }}>
                 <Icon size={21} sw={2} />
                 {on && <span style={{ whiteSpace: 'nowrap' }}>{label}</span>}
               </button>
             );
           })}
         </nav>
-        <button data-tour="add" onClick={() => openSheet({ name: 'add' })} aria-label="Add expense" className="hv-acc600 pr92" style={{ width: 62, height: 62, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flex: 'none', boxShadow: '0 8px 20px color-mix(in srgb,var(--color-accent) 35%,transparent)', transition: 'transform .15s' }}>
+        <button data-tour="add" onClick={() => openSheet({ name: 'add' })} aria-label="Add expense" className="hv-acc600 pr92" style={{ width: 62, height: 62, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flex: 'none', boxShadow: '0 8px 20px color-mix(in srgb,var(--action) 35%,transparent)', transition: 'transform .15s' }}>
           <I.Plus size={26} sw={2.5} />
         </button>
       </div>}

@@ -114,7 +114,7 @@ function Portfolio() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', fontSize: 12, color: 'var(--color-neutral-600)', gap: 8 }}>
           <span>{d.settings.currency === 'COP' ? `1 USD = ${fmt(inv.usdRate)}${inv.usdManual ? ' (typed in)' : ''}` : d.settings.currency !== '$' ? `1 USD = ${fmt(perUsd(inv, d.settings.currency))}` : ''}{lastAt ? ` · prices ${ago(lastAt)}` : ''}</span>
-          <button onClick={() => refresh()} disabled={busy} aria-label="Refresh prices" className="d-ink" style={{ border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, opacity: busy ? 0.5 : 1 }}><I.Refresh size={13} />{busy ? 'Updating…' : 'Refresh'}</button>
+          <button onClick={() => refresh()} disabled={busy} aria-label="Refresh prices" className="d-ink" style={{ border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, opacity: busy ? 0.5 : 1 }}><I.Refresh size={13} />{busy ? 'Updating…' : 'Refresh'}</button>
         </div>
       </div>
 
@@ -134,7 +134,7 @@ function Portfolio() {
         {sorted.map((h, i) => <HoldingRow key={h.ticker} h={h} color={colorOf(all, h.ticker)} last={i === sorted.length - 1} total={total} />)}
         {all.length === 0 && <div style={{ padding: '16px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No stocks yet. Add your first buy, for example AAPL or VOO, or a Colombian stock from Trii.</div>}
       </ListCard>
-      <button onClick={() => openSheet({ name: 'trade', side: 'buy' })} className="hv-acc600 inv-add" style={{ height: 54, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      <button onClick={() => openSheet({ name: 'trade', side: 'buy' })} className="hv-acc600 inv-add" style={{ height: 54, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         <I.Plus size={18} sw={2.5} />Add buy or sell
       </button>
 
@@ -348,7 +348,7 @@ function Simulator() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-neutral-600)' }}><span>Month 1</span><span>Month {months}</span></div>
       </div>
-      <button onClick={() => setData(x => ({ investments: { ...x.investments, sim: { amt: '10000000', rate: '9.25', months: '12', deposit: '0' } } }))} style={{ alignSelf: 'center', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Reset to example</button>
+      <button onClick={() => setData(x => ({ investments: { ...x.investments, sim: { amt: '10000000', rate: '9.25', months: '12', deposit: '0' } } }))} style={{ alignSelf: 'center', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Reset to example</button>
     </div>
   );
 }

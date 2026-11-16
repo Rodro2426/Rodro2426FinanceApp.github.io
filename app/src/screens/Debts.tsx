@@ -102,7 +102,7 @@ function DebtRequests() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <button onClick={() => act(o, false)} disabled={busy === o.id} className="hv-n200" style={{ height: 42, borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Decline</button>
-              <button onClick={() => act(o, true)} disabled={busy === o.id} className="hv-acc600" style={{ height: 42, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Accept</button>
+              <button onClick={() => act(o, true)} disabled={busy === o.id} className="hv-acc600" style={{ height: 42, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Accept</button>
             </div>
           </div>
         );
@@ -177,7 +177,7 @@ export function DebtList() {
         {sum.real > 0.004
           ? <>
             <span style={{ fontSize: 13.5, lineHeight: 1.45, color: RED, fontWeight: 600 }}>{`Your pockets promise ${fmt(sum.real)} more than you have.`}</span>
-            <button onClick={() => openSheet({ name: 'cover' })} className="hv-acc600" style={{ height: 46, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>Adjust my pockets</button>
+            <button onClick={() => openSheet({ name: 'cover' })} className="hv-acc600" style={{ height: 46, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer' }}>Adjust my pockets</button>
           </>
           : <span style={{ fontSize: 13.5, lineHeight: 1.45, color: GREEN, fontWeight: 600 }}>You have enough money to cover it, so your pockets don't need to change.</span>}
       </div>

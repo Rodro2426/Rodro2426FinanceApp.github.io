@@ -253,7 +253,7 @@ export function TripPage({ id }: { id: string }) {
       </button>
     </div>
 
-    <button onClick={() => openSheet({ name: 'tripItem', trip: t.id, id: null })} className="hv-acc600" style={{ height: 54, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><I.Plus size={18} sw={2.5} />Add an expense</button>
+    <button onClick={() => openSheet({ name: 'tripItem', trip: t.id, id: null })} className="hv-acc600" style={{ height: 54, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><I.Plus size={18} sw={2.5} />Add an expense</button>
 
     <div style={card}>
       <span style={{ fontSize: 15, fontWeight: 700 }}>Activity</span>

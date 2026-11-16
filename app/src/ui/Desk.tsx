@@ -56,7 +56,7 @@ export function TopBar({ tabs }: { tabs: [Tab, string, (p: { size?: number; sw?:
     <header className="topbar" aria-label="Pockets">
       <div className="topbar-in">
         <button className="top-brand" onClick={() => setUI({ tab: 'home', page: null, sheet: null })} aria-label="Pockets, home">
-          <img src="./pockets-mark.svg" alt="" width={26} height={32} />
+          <img src="./pockets-mark.svg" alt="" width={28} height={28} />
           <span className="wordmark">Pockets</span>
         </button>
         <nav className="top-tabs" aria-label="Sections">

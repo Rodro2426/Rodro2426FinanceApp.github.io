@@ -70,7 +70,7 @@ function TxnMover({ rows, kind, targets, subsOf, onMove }: {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
         <span style={{ fontSize: 13, fontWeight: 700 }}>{kind === 'expense' ? plural(rows.length, 'expense') : plural(rows.length, 'income')}</span>
-        <button onClick={() => setSel(live.length === rows.length ? [] : rows.map(r => r.id))} style={{ border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{live.length === rows.length ? 'Select none' : 'Select all'}</button>
+        <button onClick={() => setSel(live.length === rows.length ? [] : rows.map(r => r.id))} style={{ border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{live.length === rows.length ? 'Select none' : 'Select all'}</button>
       </div>
       {live.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, background: 'var(--color-neutral-100)', borderRadius: 16, padding: 10 }}>
@@ -103,7 +103,7 @@ function TxnMover({ rows, kind, targets, subsOf, onMove }: {
           );
         })}
       </div>
-      {list.length > 15 && <button onClick={() => setAll(v => !v)} style={{ alignSelf: 'flex-start', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '4px 0' }}>{all ? 'Show less' : `See all ${list.length}`}</button>}
+      {list.length > 15 && <button onClick={() => setAll(v => !v)} style={{ alignSelf: 'flex-start', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: '4px 0' }}>{all ? 'Show less' : `See all ${list.length}`}</button>}
     </div>
   );
 }
@@ -392,7 +392,7 @@ export function CategoryTable({ kind = 'expense' }: { kind?: 'expense' | 'income
       {active.length > 0 && <>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 4 }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>{plural(inc ? incList.length : list.length, 'transaction')}</span>
-          {!inc && active.length === 1 && <span onClick={() => openSheet({ name: 'search', cat: active[0] })} style={{ fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 700, cursor: 'pointer' }}>Search in {active[0]}</span>}
+          {!inc && active.length === 1 && <span onClick={() => openSheet({ name: 'search', cat: active[0] })} style={{ fontSize: 13, color: 'var(--brand)', fontWeight: 700, cursor: 'pointer' }}>Search in {active[0]}</span>}
         </div>
         <div style={{ margin: '-4px 0 0' }}>
           {list.slice(0, 40).map((e, i) => <SwipeRow key={e.id} kind="expense" id={e.id}><ExpRow v={expView(d, e, c)} size={36} last={i === Math.min(list.length, 40) - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: e.id })} /></SwipeRow>)}

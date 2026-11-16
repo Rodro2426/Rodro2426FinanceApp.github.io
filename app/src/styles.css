@@ -1,9 +1,13 @@
-/* Self-hosted rounded face for browsers without SF Pro Rounded (Chrome, Windows, Android). */
-@font-face { font-family: "Nunito"; src: url("/fonts/nunito-latin.woff2") format("woff2"); font-weight: 500 900; font-style: normal; font-display: swap; }
-/* Tokens from the Modernist design system, with Pockets' rounded Apple font. */
+/* Brand font, self-hosted so it works offline. */
+@font-face { font-family: "Plus Jakarta Sans"; src: url("/fonts/jakarta-latin.woff2") format("woff2"); font-weight: 200 800; font-style: normal; font-display: swap; }
+/* Tokens. Brand colours come from the $100.000 bill ("Cien mil"): deep teal brand, lime action, lavender accent.
+   Red (--color-accent) stays for warnings: overspent, delete, unread. */
 :root {
   --surface: #fff;
-  --page: #f7f5f3;
+  --page: #f5f8f4;
+  --brand: #1f5f5a; --brand-tint: #dcefe6;
+  --action: #8cc84b; --action-press: #7db83d; --action-ink: #14301f;
+  --lavender: #7a68b8;
   --on-text: #fff;
   /* Money people owe you, and notes that say all is well / be careful. */
   --money-in: oklch(0.45 0.11 150);
@@ -15,7 +19,7 @@
      fine line screen), the same as the website. Dark values are in the dark block. */
   --tex-hero: url("/tex/billete-hero.svg");
   --tex-tile: url("/tex/billete-tile.svg");
-  --hatch: repeating-linear-gradient(135deg, rgba(35,46,122,.028) 0 1px, transparent 1px 6px);
+  --hatch: repeating-linear-gradient(135deg, rgba(31,95,90,.03) 0 1px, transparent 1px 6px);
   /* The top fades from the plain page colour into the texture, so it flows on from the iPhone's status bar
      (time, wifi), which iOS paints in that same plain colour. */
   --ground-fade: linear-gradient(var(--page) 0, var(--page) env(safe-area-inset-top, 0px), transparent calc(env(safe-area-inset-top, 0px) + 72px)) no-repeat top / 100% calc(env(safe-area-inset-top, 0px) + 72px);
@@ -54,7 +58,7 @@
   --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
   --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
   --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
-  --font-body: ui-rounded, "SF Pro Rounded", "Nunito", -apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Helvetica Neue", system-ui, sans-serif;
 
   /* Safe-area aware offsets for the floating tab bar. */
   --top: max(22px, calc(env(safe-area-inset-top, 0px) + 12px));
@@ -99,7 +103,7 @@ input::placeholder { color: var(--color-neutral-500); }
 }
 @media (min-width: 560px) and (min-height: 700px) {
   :root { --top: 40px; --tb: 30px; }
-  html, body { background: #ebe8e6; }
+  html, body { background: #e6ece7; }
   .shell { height: min(874px, calc(100dvh - 80px)); width: 402px; margin: 40px auto; border-radius: 48px; box-shadow: 0 30px 80px rgba(45, 43, 43, .18), 0 0 0 1px rgba(45, 43, 43, .06); }
 }
 
@@ -110,7 +114,7 @@ input::placeholder { color: var(--color-neutral-500); }
   .hv-n300:hover { background: var(--color-neutral-300) !important; }
   .hv-white:hover { background: var(--surface) !important; }
   .hv-w75:hover { background: var(--glass) !important; }
-  .hv-acc600:hover { background: var(--color-accent-600) !important; }
+  .hv-acc600:hover { background: var(--action-press) !important; }
   .hv-acc100:hover { background: var(--color-accent-100) !important; }
   .hv-acc100r:hover { background: var(--color-accent-100) !important; color: var(--color-accent-700) !important; }
   .hv-green:hover { background: oklch(0.45 0.12 150) !important; }
@@ -169,7 +173,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none;
   opacity: 0; transform: translateY(-40px) scale(.86); transform-origin: 50% 0; will-change: opacity, transform;
 }
-.brand-reveal span { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: #232e7a; line-height: 1; }
+.brand-reveal span { font-size: 22px; font-weight: 800; color: var(--brand); line-height: 1; text-transform: uppercase; letter-spacing: 0.06em; }
 
 /* Tour cards slide in. */
 @keyframes tour-in { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
@@ -199,6 +203,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   --color-bg: #121211;
   --color-surface: #262524;
   --color-text: #f2efea;
+  --brand: #8fd6cb; --brand-tint: #16302c;
   --color-neutral-100: #262524;
   --color-neutral-200: #302e2d;
   --color-neutral-300: #403d3b;
@@ -222,12 +227,13 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   --shadow-lg: 0 12px 32px rgba(0,0,0,.6);
   --tex-hero: url("/tex/billete-hero-dark.svg");
   --tex-tile: url("/tex/billete-tile-dark.svg");
-  --hatch: repeating-linear-gradient(135deg, rgba(197,203,242,.035) 0 1px, transparent 1px 6px);
+  --hatch: repeating-linear-gradient(135deg, rgba(143,214,203,.035) 0 1px, transparent 1px 6px);
   --bill-green: url("/tex/card-green-dark.svg"); --bill-yellow: url("/tex/card-yellow-dark.svg"); --bill-red: url("/tex/card-red-dark.svg");
 }
 /* Brand screens (welcome, install guide) keep their cream look in both modes. */
 .force-light {
   color-scheme: light;
+  --brand: #1f5f5a;
   --surface: #fff; --on-text: #fff; --color-text: #201e1d;
   --color-neutral-100: #f8f4f4; --color-neutral-200: #eae7e7; --color-neutral-300: #d7d3d3; --color-neutral-500: #9b9797; --color-neutral-600: #7d7979; --color-neutral-700: #605d5d;
   --color-accent-700: #ae1800;
@@ -242,8 +248,10 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
    A slim top bar, one calm reading column, and details in a side panel on the right.
    See .impeccable/surfaces/app-src-ui-desk-tsx.md. */
 .main { display: contents; }
-.wordmark { color: #232e7a; }
-:root[data-theme="dark"] .wordmark { color: #c5cbf2; }
+/* POCKETS in capitals, spaced a little, in the brand teal. */
+.wordmark { color: var(--brand); text-transform: uppercase; letter-spacing: 0.06em; }
+/* The logo file is teal; on dark screens show the light version (brand screens stay light). */
+:root[data-theme="dark"] img[src$="pockets-mark.svg"]:not(.force-light img) { content: url("/pockets-mark-dark.svg"); }
 .dh, .topbar { display: none; }
 @media (min-width: 1024px) and (min-height: 560px) {
   :root { --top: 36px; --tb: 28px; --col: 1000px; }
@@ -257,7 +265,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   .topbar { display: block; flex: none; position: relative; z-index: 30; border-bottom: 1px solid color-mix(in srgb, var(--color-neutral-300) 60%, transparent); }
   .topbar-in { max-width: calc(var(--col) + 280px); margin: 0 auto; height: 68px; padding: 0 32px; display: flex; align-items: center; gap: 28px; }
   .top-brand { display: flex; align-items: center; gap: 9px; border: 0; background: none; padding: 0; cursor: pointer; font: inherit; }
-  .top-brand .wordmark { font-size: 21px; font-weight: 800; letter-spacing: -0.035em; }
+  .top-brand .wordmark { font-size: 19px; font-weight: 800; }
   .top-tabs { display: flex; align-items: center; gap: 2px; }
   .top-tab {
     position: relative; height: 38px; padding: 0 13px; border: 0; border-radius: 999px; background: transparent; cursor: pointer;
@@ -286,7 +294,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   .top-search kbd { margin-left: auto; font: inherit; font-size: 11.5px; font-weight: 700; color: var(--color-neutral-600); background: var(--color-neutral-100); border-radius: 7px; padding: 2px 6px; }
   .top-icon { position: relative; width: 40px; height: 40px; border-radius: 999px; border: 0; background: transparent; color: var(--color-text); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color .15s ease; }
   .top-badge { position: absolute; top: 3px; right: 1px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; background: var(--color-accent); color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
-  .top-add { height: 40px; padding: 0 16px 0 12px; border-radius: 999px; border: 0; background: var(--color-accent); color: #fff; font: inherit; font-size: 14.5px; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform .16s var(--ease-out), background-color .15s ease; }
+  .top-add { height: 40px; padding: 0 16px 0 12px; border-radius: 999px; border: 0; background: var(--action); color: var(--action-ink); font: inherit; font-size: 14.5px; font-weight: 800; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: transform .16s var(--ease-out), background-color .15s ease; }
   .top-add:active, .top-icon:active, .top-tab:active { transform: scale(.97); }
   .top-avatar { position: relative; width: 38px; height: 38px; border-radius: 999px; border: 0; overflow: hidden; background: var(--color-accent-200); color: var(--color-accent-800); font: inherit; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   @media (hover: hover) and (pointer: fine) {
@@ -332,9 +340,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 /* Tab bar drag (ui/swipe.ts): a pill follows the finger; the tab under it lights up. */
 .tabbar nav { position: relative; }
 .tabbar nav > button { position: relative; z-index: 1; }
-.tabbar nav .tab-pill { position: absolute; left: 0; top: 5px; width: 70px; height: 52px; border-radius: 999px; background: var(--color-accent-100); opacity: .9; transform-origin: center; pointer-events: none; z-index: 0; box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+.tabbar nav .tab-pill { position: absolute; left: 0; top: 5px; width: 70px; height: 52px; border-radius: 999px; background: var(--brand-tint); opacity: .9; transform-origin: center; pointer-events: none; z-index: 0; box-shadow: 0 4px 14px rgba(0,0,0,.08); }
 .tabbar nav.dragging > button { background: transparent !important; }
-.tabbar nav.dragging > button[data-hover] { color: var(--color-accent-700) !important; }
+.tabbar nav.dragging > button[data-hover] { color: var(--brand) !important; }
 
 /* ---------- "Billete Pockets" ground and the engraved safe-to-spend card ---------- */
 .shell, .shell .page { background: var(--ground) !important; }

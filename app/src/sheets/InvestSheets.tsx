@@ -162,7 +162,7 @@ export function HoldingSheet({ ticker }: { ticker: string }) {
           </div>
         )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 12 }}>
-          <button onClick={() => openSheet({ name: 'trade', ticker, side: 'buy' })} className="hv-acc600" style={{ height: 50, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Buy more</button>
+          <button onClick={() => openSheet({ name: 'trade', ticker, side: 'buy' })} className="hv-acc600" style={{ height: 50, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Buy more</button>
           <button onClick={() => openSheet({ name: 'trade', ticker, side: 'sell' })} disabled={!h} className="hv-n200" style={{ height: 50, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: h ? 1 : 0.45 }}>Sell</button>
         </div>
 
@@ -174,7 +174,7 @@ export function HoldingSheet({ ticker }: { ticker: string }) {
           <button onClick={setPrice} disabled={!(num(manual) > 0)} style={{ height: 52, padding: '0 18px', borderRadius: 18, border: 0, background: TEXT, color: 'var(--on-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: num(manual) > 0 ? 1 : 0.45 }}>Set</button>
         </div>
         <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
-          Useful for Colombian stocks or funds without a live price. {q?.manual && finnhubKey(d) && <button onClick={useLive} style={{ border: 0, padding: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Use live price again</button>}
+          Useful for Colombian stocks or funds without a live price. {q?.manual && finnhubKey(d) && <button onClick={useLive} style={{ border: 0, padding: 0, background: 'transparent', color: 'var(--brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Use live price again</button>}
         </span>
 
         <FieldLabel>Trades</FieldLabel>
@@ -228,7 +228,7 @@ export function PriceSettingsSheet() {
           </div>
           <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
             {inv.usdManual ? 'Using your rate. ' : 'Updated automatically a few times a day. '}
-            {inv.usdManual && <button onClick={() => { setData(x => ({ investments: { ...x.investments, usdManual: false } })); refreshUsdRate(true).then(() => setRate(String(Math.round(getData().investments.usdRate)))); }} style={{ border: 0, padding: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Update automatically</button>}
+            {inv.usdManual && <button onClick={() => { setData(x => ({ investments: { ...x.investments, usdManual: false } })); refreshUsdRate(true).then(() => setRate(String(Math.round(getData().investments.usdRate)))); }} style={{ border: 0, padding: 0, background: 'transparent', color: 'var(--brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Update automatically</button>}
           </span>
         </>}
         {d.settings.finnhubKey && <GhostDanger onClick={() => { setKey(''); setData(x => ({ settings: { ...x.settings, finnhubKey: undefined } })); flash('Key removed'); }}>Remove key</GhostDanger>}

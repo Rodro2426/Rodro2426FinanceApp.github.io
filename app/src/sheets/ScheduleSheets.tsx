@@ -279,7 +279,7 @@ export function NotificationsSheet() {
     <SheetFrame title="Notifications">
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 320 }}>
         {list.length > 0 && (
-          <button onClick={() => setData(x => ({ notifications: x.notifications.map(n => ({ ...n, dismissed: true })) }))} style={{ alignSelf: 'flex-end', margin: '0 4px 8px', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Dismiss all</button>
+          <button onClick={() => setData(x => ({ notifications: x.notifications.map(n => ({ ...n, dismissed: true })) }))} style={{ alignSelf: 'flex-end', margin: '0 4px 8px', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Dismiss all</button>
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {list.map(n => (

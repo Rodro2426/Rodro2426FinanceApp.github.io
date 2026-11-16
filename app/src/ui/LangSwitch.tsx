@@ -1,7 +1,7 @@
 // English / Español switch for the welcome screens (the same choice is in Profile).
 import { getLang, setLang, type Lang } from '../lib/i18n';
 
-export function LangSwitch({ color = '#232e7a' }: { color?: string }) {
+export function LangSwitch({ color = '#1f5f5a' }: { color?: string }) {
   const cur = getLang();
   const b = (l: Lang, label: string) => (
     <button key={l} onClick={() => l !== cur && setLang(l)} aria-pressed={l === cur} translate="no"

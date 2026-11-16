@@ -134,7 +134,7 @@
   function setTheme(next, save) {
     var swap = function () {
       root.dataset.theme = next;
-      themeMeta.setAttribute('content', next === 'dark' ? '#0e0e0d' : '#f7f5f3');
+      themeMeta.setAttribute('content', next === 'dark' ? '#0e0e0d' : '#f5f8f4');
       applyShots(); themeLabel();
     };
     if (save) { try { localStorage.setItem('pockets-site-theme', next); } catch (e) {} }

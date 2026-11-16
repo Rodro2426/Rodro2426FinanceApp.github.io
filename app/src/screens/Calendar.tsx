@@ -189,7 +189,7 @@ function RemindersBlock() {
       {!list.length && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '14px 0' }}>
           <span style={{ fontSize: 14, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>A daily nudge makes it easy to log what you spend before you forget.</span>
-          <button onClick={() => { setData(x => ({ reminders: [...remindersOf(x), nightly(uid('rem'))] })); flash('Reminder set for 21:00'); }} className="hv-acc600" style={{ alignSelf: 'flex-start', height: 40, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Remind me every night at 9:00</button>
+          <button onClick={() => { setData(x => ({ reminders: [...remindersOf(x), nightly(uid('rem'))] })); flash('Reminder set for 21:00'); }} className="hv-acc600" style={{ alignSelf: 'flex-start', height: 40, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Remind me every night at 9:00</button>
         </div>
       )}
     </ListCard>

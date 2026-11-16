@@ -13,7 +13,7 @@ export function SectionHead({ title, right, onRight, muted }: { title: string; r
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 4px 0' }}>
       <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.02em' }}>{title}</span>
       {right != null && (
-        <span onClick={onRight} className={onRight && !muted ? 'sec-link' : undefined} style={onRight && !muted ? { fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 600, cursor: 'pointer' } : { fontSize: 13, color: 'var(--color-neutral-700)' }}>{right}</span>
+        <span onClick={onRight} className={onRight && !muted ? 'sec-link' : undefined} style={onRight && !muted ? { fontSize: 13, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer' } : { fontSize: 13, color: 'var(--color-neutral-700)' }}>{right}</span>
       )}
     </div>
   );
@@ -35,17 +35,17 @@ export function Bar({ pct, h = 10, track = 'var(--surface)', fill, ease = '.5s' 
   );
 }
 
-export function PrimaryBtn({ children, onClick, disabled, mt = 14, h = 56, fs = 16, bg = 'var(--color-accent)', hover = 'hv-acc600' }: { children: ReactNode; onClick: () => void; disabled?: boolean; mt?: number; h?: number; fs?: number; bg?: string; hover?: string }) {
+export function PrimaryBtn({ children, onClick, disabled, mt = 14, h = 56, fs = 16, bg = 'var(--action)', hover = 'hv-acc600' }: { children: ReactNode; onClick: () => void; disabled?: boolean; mt?: number; h?: number; fs?: number; bg?: string; hover?: string }) {
   return (
     <button onClick={() => !disabled && onClick()} disabled={disabled} className={hover}
-      style={{ marginTop: mt, height: h, borderRadius: 999, border: 0, background: bg, color: '#fff', fontSize: fs, fontWeight: 700, cursor: 'pointer', opacity: disabled ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      style={{ marginTop: mt, height: h, borderRadius: 999, border: 0, background: bg, color: bg === 'var(--action)' ? 'var(--action-ink)' : '#fff', fontSize: fs, fontWeight: 700, cursor: 'pointer', opacity: disabled ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
       {children}
     </button>
   );
 }
 
 export function GhostDanger({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return <button onClick={onClick} className="hv-acc100" style={{ marginTop: 8, height: 48, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>{children}</button>;
+  return <button onClick={onClick} className="hv-acc100" style={{ marginTop: 8, height: 48, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>{children}</button>;
 }
 
 /** The big "$ 0" amount field used by add, move, pay and goal sheets. */

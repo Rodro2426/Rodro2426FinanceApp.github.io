@@ -1,29 +1,33 @@
-/* Pockets website. The app's own surfaces: warm off-white page, white cards, near-black ink,
-   the app's red only on the main action, pastel pocket tints behind each scene, navy for the close. */
+/* Pockets website. Colours from the $100.000 bill ("Cien mil"): mint-white page, white cards, near-black ink,
+   deep teal for the brand and the close, lime only on the main action, lavender as the second colour. */
 
 @font-face {
-  font-family: "Nunito";
-  src: url("fonts/nunito-latin.woff2") format("woff2");
-  font-weight: 500 900;
+  font-family: "Plus Jakarta Sans";
+  src: url("fonts/jakarta-latin.woff2") format("woff2");
+  font-weight: 200 800;
   font-style: normal;
   font-display: swap;
 }
 
 :root {
   color-scheme: light;
-  --page: #f7f5f3;
+  --page: #f5f8f4;
   --surface: #ffffff;
   --sunk: #efecea;
   --ink: #201e1d;
   --ink-2: #57534f;
   --ink-3: #6b6764;
   --line: #e2dedb;
-  --red: #ec3013;
-  --red-press: #d42a10;
-  --navy: #232e7a;
-  --navy-deep: #161d55;
-  --lilac: #c3c9f2;
-  --font: ui-rounded, "SF Pro Rounded", "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --red: #d4301a;                 /* errors only */
+  --action: #8cc84b;
+  --action-press: #7db83d;
+  --action-ink: #14301f;
+  --navy: #1f5f5a;                /* brand teal (name kept so old rules still work) */
+  --navy-deep: #123c38;
+  --lilac: #d9cdea;
+  --tile: #e3f1d2;
+  --tile-ink: #2f5e3c;
+  --font: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
@@ -33,16 +37,16 @@
   --gutter-r: max(20px, env(safe-area-inset-right, 0px));
   --nav-h: 64px;
   --radius: 24px;
-  --hatch: repeating-linear-gradient(135deg, rgba(35, 46, 122, 0.028) 0 1px, transparent 1px 6px);
+  --hatch: repeating-linear-gradient(135deg, rgba(31, 95, 90, 0.03) 0 1px, transparent 1px 6px);
   --tex-hero: url("tex/billete-hero.svg");
   --tex-tile: url("tex/billete-tile.svg");
 
   /* Theme-dependent roles (light values; dark below) */
   --brand-ink: var(--navy);        /* navy words, icons, focus ring */
-  --select: #f9cfc7;
+  --select: #d6ecbd;
   --scroll-thumb: #cbc6c2;
   --shadow: 32, 30, 29;            /* rgb of every soft shadow */
-  --app-page: #f7f5f3;             /* the app's own ground, behind the phone status bar */
+  --app-page: #f5f8f4;             /* the app's own ground, behind the phone status bar */
   --tl: 0.945; --tc: 0.045;        /* pocket tint lightness and chroma (the app's oklch tint) */
   --pk-l: 0.42; --pk-c: 0.1;       /* pocket ink */
   --red-tile: #fde4df;
@@ -63,12 +67,14 @@
   --ink-2: #b8b3ad;
   --ink-3: #9c9791;
   --line: #302e2d;
-  --navy-deep: #0f1440;
-  --hatch: repeating-linear-gradient(135deg, rgba(197, 203, 242, 0.035) 0 1px, transparent 1px 6px);
+  --navy-deep: #0c2724;
+  --hatch: repeating-linear-gradient(135deg, rgba(143, 214, 203, 0.035) 0 1px, transparent 1px 6px);
   --tex-hero: url("tex/billete-hero-dark.svg");
   --tex-tile: url("tex/billete-tile-dark.svg");
-  --brand-ink: #aab3ea;
-  --select: #5a2418;
+  --brand-ink: #8fd6cb;
+  --tile: #22341a;
+  --tile-ink: #b5e28a;
+  --select: #2f4a1c;
   --scroll-thumb: #403d3b;
   --shadow: 0, 0, 0;
   --app-page: #0e0e0d;
@@ -127,7 +133,7 @@ html { scrollbar-color: var(--scroll-thumb) var(--page); }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 52px; padding: 0 26px; border-radius: 999px; border: 0;
-  background: var(--red); color: #fff; text-decoration: none; font-weight: 800; font-size: 19px; letter-spacing: -0.01em;
+  background: var(--action); color: var(--action-ink); text-decoration: none; font-weight: 800; font-size: 19px; letter-spacing: -0.01em;
   box-shadow: 0 10px 24px -12px rgba(236, 48, 19, 0.7);
   transition: transform 160ms var(--ease-out), background-color 160ms ease;
   -webkit-tap-highlight-color: transparent; cursor: pointer; white-space: nowrap;
@@ -137,7 +143,7 @@ html { scrollbar-color: var(--scroll-thumb) var(--page); }
 .btn-ghost { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line); }
 .btn-light { background: #fff; color: var(--navy); box-shadow: 0 16px 40px -14px rgba(0, 0, 0, 0.5); }
 @media (hover: hover) and (pointer: fine) {
-  .btn:hover { background: var(--red-press); }
+  .btn:hover { background: var(--action-press); }
   .btn-ghost:hover { background: var(--sunk); }
   .btn-light:hover { background: #eef0fb; }
 }
@@ -163,8 +169,10 @@ html { scrollbar-color: var(--scroll-thumb) var(--page); }
   padding-left: var(--gutter); padding-right: var(--gutter-r);
   display: flex; align-items: center; gap: 28px;
 }
-.brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 900; font-size: 20px; letter-spacing: -0.02em; text-decoration: none; }
-.brand img { width: 26px; height: auto; }
+/* POCKETS in capitals, a little spaced, in brand teal. */
+.brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; font-size: 18px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand-ink); text-decoration: none; }
+.brand img { width: 28px; height: auto; }
+:root[data-theme="dark"] img[src$="pockets-mark.svg"]:not(.close-mark) { content: url("../pockets-mark-dark.svg"); }
 .nav-links { display: flex; gap: 4px; margin-right: auto; }
 .nav-links a {
   padding: 8px 12px; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 15px; color: var(--ink-2);
@@ -221,7 +229,7 @@ html { scrollbar-color: var(--scroll-thumb) var(--page); }
 }
 .frag b { display: block; font-weight: 800; font-size: 14px; }
 .frag small { display: block; color: var(--ink-3); font-weight: 600; font-size: 12px; }
-.frag-ico { width: 34px; height: 34px; border-radius: 11px; background: var(--red-tile); color: var(--red-tile-ink); display: grid; place-items: center; flex: none; }
+.frag-ico { width: 34px; height: 34px; border-radius: 11px; background: var(--tile); color: var(--tile-ink); display: grid; place-items: center; flex: none; }
 .frag-ico svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .frag-bill { left: -190px; top: 70px; max-width: 290px; white-space: normal; }
 .frag-pocket { right: -150px; top: 270px; flex-direction: column; align-items: flex-start; gap: 2px; background: oklch(var(--tl) var(--tc) 250); color: oklch(var(--pk-l) var(--pk-c) 250); padding: 14px 18px; min-width: 160px; }
@@ -242,12 +250,12 @@ html { scrollbar-color: var(--scroll-thumb) var(--page); }
   background: var(--navy);
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.16); display: grid; place-items: center;
 }
-.back > img { width: 92px; }
-.back .cam { position: absolute; top: 22px; left: 22px; width: 112px; height: 112px; border-radius: 34px; background: #2e3a8f; }
-.back .cam i { position: absolute; width: 40px; height: 40px; border-radius: 50%; background: #0b0d1c; box-shadow: 0 0 0 4px #1b2366; }
+.back > img { width: 92px; content: url("../pockets-mark-dark.svg"); }
+.back .cam { position: absolute; top: 22px; left: 22px; width: 112px; height: 112px; border-radius: 34px; background: #2a7069; }
+.back .cam i { position: absolute; width: 40px; height: 40px; border-radius: 50%; background: #0a1a18; box-shadow: 0 0 0 4px #164a45; }
 .back .cam i:nth-child(1) { top: 12px; left: 12px; }
 .back .cam i:nth-child(2) { bottom: 12px; left: 12px; }
-.back .cam i:nth-child(3) { top: 36px; right: 12px; width: 22px; height: 22px; box-shadow: 0 0 0 3px #1b2366; }
+.back .cam i:nth-child(3) { top: 36px; right: 12px; width: 22px; height: 22px; box-shadow: 0 0 0 3px #164a45; }
 .screen { position: relative; width: 100%; height: 100%; border-radius: 44px; overflow: hidden; background: var(--app-page); }
 .island { position: absolute; top: 10px; left: 50%; translate: -50% 0; width: 94px; height: 28px; border-radius: 20px; background: #000; z-index: 3; }
 .status { position: absolute; inset: 0 0 auto; height: 44px; padding: 14px 26px 0; display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; z-index: 2; color: var(--ink); background: linear-gradient(var(--app-page) 70%, transparent); }
@@ -362,21 +370,21 @@ html:not(.js) .story-stage { display: none; }
 
 /* ---------- Close ---------- */
 .close {
-  background: radial-gradient(70% 60% at 50% 0%, #3a47a8 0%, var(--navy) 45%, var(--navy-deep) 100%);
+  background: radial-gradient(70% 60% at 50% 0%, #2b7b72 0%, var(--navy) 45%, var(--navy-deep) 100%);
   color: #fff; padding-block: 120px 110px; text-align: center; border-radius: 48px 48px 0 0; overflow: hidden; position: relative;
 }
 .close-in { display: flex; flex-direction: column; align-items: center; gap: 22px; }
-.close-mark { width: 84px; filter: drop-shadow(0 24px 30px rgba(0, 0, 0, 0.4)); }
+.close-mark { width: 88px; content: url("../pockets-mark-dark.svg"); filter: drop-shadow(0 24px 30px rgba(0, 0, 0, 0.4)); }
 .h-close { font-size: clamp(3rem, 7vw, 5.75rem); font-weight: 900; letter-spacing: -0.04em; line-height: 0.96; }
 .h-close span { color: var(--lilac); }
 .close p { color: #c9cdf0; font-size: 1.25rem; font-weight: 600; }
 .close .btn { margin-top: 10px; }
 .close :focus-visible { outline-color: #fff; }
 
-.foot { background: var(--navy-deep); color: #b6bbe6; padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px)); }
+.foot { background: var(--navy-deep); color: #b9ddd6; padding-block: 28px calc(28px + env(safe-area-inset-bottom, 0px)); }
 .foot-in { display: flex; align-items: center; gap: 12px 28px; flex-wrap: wrap; }
 .foot .brand { color: #fff; font-size: 17px; }
-.foot .brand img { width: 20px; }
+.foot .brand img { width: 22px; content: url("../pockets-mark-dark.svg"); }
 .foot p { font-size: 14px; font-weight: 600; flex: 1 1 320px; }
 .foot nav { display: flex; gap: 18px; }
 .foot nav a { font-weight: 700; font-size: 14px; text-decoration: none; color: #fff; }

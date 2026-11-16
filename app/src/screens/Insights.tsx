@@ -47,7 +47,7 @@ export default function Insights() {
   const card = { background: 'var(--surface)', borderRadius: 26, padding: 20, display: 'flex', flexDirection: 'column' } as const;
   const [allBills, setAllBills] = useState(false);
   const [allTags, setAllTags] = useState(false);
-  const seeAll = { alignSelf: 'flex-start' as const, padding: '10px 0 4px', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 14, fontWeight: 700, cursor: 'pointer' };
+  const seeAll = { alignSelf: 'flex-start' as const, padding: '10px 0 4px', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 14, fontWeight: 700, cursor: 'pointer' };
   const catSums = new Map<string, number>();
   monthExp.forEach(e => { const k = catOf(e)[0]; catSums.set(k, (catSums.get(k) ?? 0) + e.amt); });
   const topCat = [...catSums.entries()].sort((a, b) => b[1] - a[1])[0];
@@ -125,7 +125,7 @@ export default function Insights() {
       <div style={{ ...card, gap: 6 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Spending by tag</span>
-          <span onClick={() => openSheet({ name: 'search' })} style={{ fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 600, cursor: 'pointer' }}>Search</span>
+          <span onClick={() => openSheet({ name: 'search' })} style={{ fontSize: 13, color: 'var(--brand)', fontWeight: 600, cursor: 'pointer' }}>Search</span>
         </div>
         {tagTotals.slice(0, allTags ? tagTotals.length : 3).map(x => (
           <div key={x.t} onClick={() => openSheet({ name: 'search', tag: x.t })} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0', cursor: 'pointer' }}>

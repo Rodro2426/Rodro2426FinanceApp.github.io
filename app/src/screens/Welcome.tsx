@@ -10,7 +10,7 @@ import * as I from '../ui/icons';
 import { useDesk } from '../ui/Desk';
 import { LangSwitch } from '../ui/LangSwitch';
 
-const NAVY = '#232e7a', NAVY2 = '#3d4784';
+const NAVY = '#1f5f5a', NAVY2 = '#3c6b66';
 
 /**
  * First open on a device. The first screen is the account: sign in to bring your data back, or create an
@@ -81,8 +81,8 @@ export default function Welcome() {
   if (desk) return (
     <div className="noscroll force-light" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(160deg, #fbf9f3 0%, #ebe3d2 100%)' }}>
       <header style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 48px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <img src="./pockets-mark.svg" alt="" width={38} height={46} />
-        <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.035em', color: NAVY }}>Pockets</span>
+        <img src="./pockets-mark.svg" alt="" width={40} height={40} />
+        <span className="wordmark" style={{ fontSize: 26, fontWeight: 800, color: NAVY }}>Pockets</span>
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: 13.5, fontWeight: 600, color: NAVY2 }}>On your computer and your iPhone</span>
         <LangSwitch />
@@ -130,8 +130,8 @@ export default function Welcome() {
       {/* Screen 1: the account */}
       <section aria-label="Your account" style={{ minHeight: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', padding: 'calc(var(--top) + 18px) 22px 18px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
-          <img src="./pockets-mark.svg" alt="" width={60} height={73} />
-          <span style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.035em', color: NAVY }}>Pockets</span>
+          <img src="./pockets-mark.svg" alt="" width={64} height={64} />
+          <span className="wordmark" style={{ fontSize: 32, fontWeight: 800, color: NAVY }}>Pockets</span>
           <span style={{ fontSize: 14.5, lineHeight: 1.4, color: NAVY2, maxWidth: 300 }}>Split your income into weekly pockets and always know what's safe to spend.</span>
           <div style={{ marginTop: 6 }}><LangSwitch /></div>
         </div>

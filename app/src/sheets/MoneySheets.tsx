@@ -515,7 +515,7 @@ export function SettingsSheet() {
             {st.lastBackup ? <> Last backup: <b style={{ color: TEXT }}>{shortDate(st.lastBackup)}</b>.</> : <> <b style={{ color: 'var(--color-accent-700)' }}>No backup yet.</b></>}
           </span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8 }}>
-            <button onClick={async () => { const r = await makeBackup(); if (r === 'shared') flash('Backup saved'); else if (r === 'downloaded') flash('Backup downloaded to Files'); }} className="hv-acc600" style={{ height: 48, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><I.Download size={16} />Back up</button>
+            <button onClick={async () => { const r = await makeBackup(); if (r === 'shared') flash('Backup saved'); else if (r === 'downloaded') flash('Backup downloaded to Files'); }} className="hv-acc600" style={{ height: 48, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><I.Download size={16} />Back up</button>
             <button onClick={async () => {
               const f = await pickBackupFile(); if (!f) return;
               try { const r = await readBackup(f); setRestore(r); } catch (e) { flash((e as Error).message); }

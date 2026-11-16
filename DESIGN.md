@@ -1,20 +1,24 @@
 ---
 name: Pockets
-description: A warm, rounded budget app for the Colombian quincena, and the website that shows it off.
+description: A budget app for the Colombian quincena, branded after the $100.000 bill, and the website that shows it off.
 colors:
-  page: "#f7f5f3"
+  page: "#f5f8f4"
   surface: "#ffffff"
   sunk: "#efecea"
   ink: "#201e1d"
   ink-2: "#57534f"
   ink-3: "#6b6764"
   line: "#e2dedb"
-  red: "#ec3013"
-  red-press: "#d42a10"
+  red: "#d4301a"
+  action: "#8cc84b"
+  action-press: "#7db83d"
+  action-ink: "#14301f"
   red-wash: "#fde4df"
-  navy: "#232e7a"
-  navy-deep: "#161d55"
-  lilac: "#c3c9f2"
+  navy: "#1f5f5a"
+  navy-deep: "#123c38"
+  lilac: "#d9cdea"
+  lavender: "#7a68b8"
+  brand-dark: "#8fd6cb"
   tint-green: "#dcf3e3"
   tint-blue: "#d9e8fb"
   tint-lilac: "#ece3fb"
@@ -25,35 +29,35 @@ colors:
   tint-mist: "#e3e6f7"
 typography:
   display:
-    fontFamily: "ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
+    fontFamily: "\"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
     fontSize: "clamp(3.1rem, 6.6vw, 5.75rem)"
     fontWeight: 900
     lineHeight: 0.95
     letterSpacing: "-0.04em"
   headline:
-    fontFamily: "ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
+    fontFamily: "\"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
     fontSize: "clamp(2.4rem, 4.6vw, 4rem)"
     fontWeight: 900
     lineHeight: 1.04
     letterSpacing: "-0.035em"
   title:
-    fontFamily: "ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
+    fontFamily: "\"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
     fontSize: "1.3rem"
     fontWeight: 800
     lineHeight: 1.04
     letterSpacing: "-0.02em"
   lede:
-    fontFamily: "ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
+    fontFamily: "\"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
     fontSize: "clamp(1.08rem, 1.45vw, 1.3rem)"
     fontWeight: 600
     lineHeight: 1.55
   body:
-    fontFamily: "ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
+    fontFamily: "\"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
     fontSize: "17px"
     fontWeight: 600
     lineHeight: 1.55
   label:
-    fontFamily: "ui-rounded, \"SF Pro Rounded\", \"Nunito\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
+    fontFamily: "\"Plus Jakarta Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", system-ui, sans-serif"
     fontSize: "14px"
     fontWeight: 800
     lineHeight: 1.3
@@ -130,6 +134,15 @@ components:
 # Design System: Pockets
 
 ## Overview
+
+> **Rebrand, November 2026 ("Cien mil").** Colours come from the Colombian $100.000 bill and supersede the red/navy wording below:
+> - **Brand teal** `#1f5f5a` (dark mode `#8fd6cb`): logo, wordmark, headline second line, links and neutral text buttons, the active tab, the website's close and footer. Tokens: `--brand` (app), `--navy` / `--brand-ink` (site, names kept).
+> - **Lime action** `#8cc84b` with dark text `#14301f`: the one "do this" button (add, save, Start free, Sign in). Tokens: `--action`, `--action-press`, `--action-ink`.
+> - **Lavender** `#7a68b8` / wash `#d9cdea`: the second colour, the closing headline on teal, and the bill wash in the texture.
+> - **Red** stays only as a warning: overspent, delete/remove/log out, unread dots, errors (`--color-accent` in the app).
+> - **Page** `#f5f8f4`, a mint-white.
+> - **Type:** Plus Jakarta Sans 200–800 (self-hosted `fonts/jakarta-latin.woff2`) everywhere. It replaces SF Rounded / Nunito.
+> - **Logo:** the engraved rosette (the safe-to-spend card's guilloché) as a solid teal flower with page-coloured engraving (`pockets-mark.svg`), a light version for dark screens (`pockets-mark-dark.svg`), and white-on-teal app icons. The wordmark is **POCKETS** in capitals, 800 weight, +0.06em tracking (`text-transform: uppercase`, so the text in code stays "Pockets").
 
 **Creative North Star: "The Pocket on the Kitchen Table"**
 

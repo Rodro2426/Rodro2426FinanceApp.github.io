@@ -314,7 +314,7 @@ Conservative|Conservador
 Moderate|Moderado
 Aggressive|Arriesgado
 Closed|Cerrado
-Pockets cream|Crema Pockets
+Pockets mint|Menta Pockets
 Sand|Arena
 Linen|Lino
 Butter|Mantequilla
