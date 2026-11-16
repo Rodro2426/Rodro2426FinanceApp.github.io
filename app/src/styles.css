@@ -494,17 +494,23 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*="var(--surface)"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text) 10%, transparent); }
 @media (prefers-reduced-transparency: reduce) { :root { --surface: var(--surface-solid); } [style*="var(--surface)"] { backdrop-filter: none; -webkit-backdrop-filter: none; } }
 
-/* ---------- The add button: the bill's flower with a + on a glass disc ---------- */
+/* ---------- The add button: the bill's flower with a + on a glass disc, in the logo's colours ---------- */
 .add-flower {
-  --flower: #2e6b47;
+  --flower: var(--brand);
   position: relative; width: 62px; height: 62px; flex: none; padding: 0; border: 0; border-radius: 999px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; color: var(--flower);
   background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5);
   box-shadow: 0 8px 20px rgba(0,0,0,.12), inset 0 0 0 1px rgba(255,255,255,.6);
 }
-:root[data-theme="dark"] .add-flower { --flower: #8cc84b; background: rgba(40,40,38,.62); box-shadow: 0 8px 20px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.08); }
+:root[data-theme="dark"] .add-flower { background: rgba(40,40,38,.62); box-shadow: 0 8px 20px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.08); }
 .add-flower-rose {
   position: absolute; inset: -2px; background: var(--flower);
   -webkit-mask: url("/flower.svg") center / contain no-repeat; mask: url("/flower.svg") center / contain no-repeat;
 }
 @media (prefers-reduced-transparency: reduce) { .add-flower { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+/* The logo shown when you pull down at the top: the same flower as the add button, lines only, no + or background. */
+.brand-flower {
+  display: block; width: 58px; height: 58px; background: var(--brand);
+  -webkit-mask: url("/flower.svg") center / contain no-repeat; mask: url("/flower.svg") center / contain no-repeat;
+}

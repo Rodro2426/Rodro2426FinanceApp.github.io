@@ -268,7 +268,7 @@ export default function App() {
       {desk && <TopBar tabs={TABS} />}
       <div className="main">
       <div ref={brand} className="brand-reveal" aria-hidden="true">
-        <img src="./pockets-mark.svg" alt="" width={54} height={54} />
+        <span className="brand-flower" />
         <span className="wordmark">Pockets</span>
       </div>
       <div ref={scroll} onScroll={onScroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 1 }}>
