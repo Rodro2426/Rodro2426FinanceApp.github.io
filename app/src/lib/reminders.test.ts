@@ -1,10 +1,12 @@
 import 'fake-indexeddb/auto';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { emptyData, sampleData } from './seed';
 import { upcomingReminders } from './reminders';
 import type { Data } from './types';
 
 describe('reminders for lock-screen notifications', () => {
+  // These tests pretend today is Nov 6, 2026; reminders already in the past are skipped, so the clock is pinned too.
+  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date(2026, 10, 6, 7, 0)); });
   const base = (): Data => {
     const e = emptyData(sampleData());
     return { ...e, accounts: [{ id: 'bank', name: 'Bancolombia', kind: 'Checking', type: 'bank', bal: 500000, hue: 85 }],
