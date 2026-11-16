@@ -806,6 +806,70 @@ Turn on Apple Pay purchases|Activar compras con Apple Pay
 Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
 Your cards|Tus tarjetas
+Add a bank account first to have your pay arrive on its own. The amount is still used for your pockets.|Agrega primero una cuenta para que tu pago llegue solo. El monto igual se usa para tus bolsillos.
+Add the Shortcut|Agrega el atajo
+Add your Apple Pay purchases on their own?|¿Agregamos solas tus compras con Apple Pay?
+All set|Todo listo
+Amount and day of the month|Monto y día del mes
+Another bank or wallet|Otro banco o billetera
+Another bill|Otro gasto fijo
+Any fixed bills?|¿Tienes gastos fijos?
+Card name|Nombre de la tarjeta
+Continue|Continuar
+Couldn't reach the Pockets server. You can turn this on later in Profile.|No pudimos conectar con el servidor de Pockets. Puedes activarlo después en Perfil.
+Create the automation|Crea la automatización
+Dictionary:|Diccionario:
+Do you have a credit card?|¿Tienes tarjeta de crédito?
+Each one: Shortcut Input → Type Transaction → Amount, Merchant, Card or Pass|Cada uno: Entrada del atajo → Tipo Transacción → Importe, Comercio, Tarjeta o pase
+Each week|Cada semana
+Every expense comes out of a pocket. When a pocket runs out, Pockets helps you move money from another one.|Cada gasto sale de un bolsillo. Cuando uno se acaba, Pockets te ayuda a pasar plata de otro.
+Explore with the tour first|Primero explorar con el recorrido
+Fixed bills|Gastos fijos
+Go to Pockets|Ir a Pockets
+Hi there|Hola
+How much do you earn a month?|¿Cuánto ganas al mes?
+How much is in each one now?|¿Cuánto tienes hoy en cada una?
+How you're paid|Cómo te pagan
+In Shortcuts → Automation → +, choose Transaction and your cards, turn Automation on, then add these two actions:|En Atajos → Automatización → +, elige Transacción y tus tarjetas, activa Automatización y agrega estas dos acciones:
+It arrives in|Llega a
+Let's set up your money in 2 minutes: your bank, your income and your pockets. You can skip anything and change it later.|Organicemos tu plata en 2 minutos: tu banco, tu ingreso y tus bolsillos. Puedes saltar lo que quieras y cambiarlo después.
+Let's start|Empecemos
+Money for each kind of spending, every week. We suggested amounts from your income: change them, or add your own.|Plata para cada tipo de gasto, cada semana. Sugerimos montos según tu ingreso: cámbialos o agrega los tuyos.
+No fixed bills|No tengo gastos fijos
+Not now|Ahora no
+Once a month|Una vez al mes
+Pay and pick the pocket|Paga y elige el bolsillo
+Payday|Día de pago
+Pockets keeps track of what you owe and reminds you before the pay-by day.|Pockets lleva la cuenta de lo que debes y te recuerda antes de la fecha de pago.
+Quincena (15 and 30)|Quincena (15 y 30)
+Rent, services and subscriptions. Pockets reminds you the day before and counts them in your month.|Arriendo, servicios y suscripciones. Pockets te avisa el día antes y los cuenta en tu mes.
+Right after you tap to pay, choose the pocket and category. The purchase shows up next time you open Pockets.|Justo después de pagar, elige el bolsillo y la categoría. La compra aparece la próxima vez que abras Pockets.
+Run Shortcut:|Ejecutar atajo:
+· Input: Dictionary|· Entrada: Diccionario
+Set up Pockets|Configurar Pockets
+Skip|Saltar
+Tap your bank (or several) and add its logo in one go. Not on the list? Type it below.|Toca tu banco (o varios) y su logo queda listo. ¿No está en la lista? Escríbelo abajo.
+This week you can spend|Esta semana puedes gastar
+Welcome to Pockets|Bienvenido a Pockets
+What arrives each month after deductions. Pockets splits it into your pockets.|Lo que te llega al mes después de descuentos. Pockets lo reparte en tus bolsillos.
+What do you spend on each week?|¿En qué gastas cada semana?
+What you owe today|Lo que debes hoy
+What's your main bank?|¿Cuál es tu banco principal?
+When you pay with your iPhone, it asks for the pocket and Pockets adds the purchase for you.|Cuando pagas con tu iPhone, te pregunta el bolsillo y Pockets agrega la compra por ti.
+Yes, I have one|Sí, tengo una
+Yes, set it up|Sí, configurarlo
+You can add accounts, income and pockets anytime from their tabs.|Puedes agregar cuentas, ingresos y bolsillos cuando quieras desde sus pestañas.
+You're all set|Todo listo
+Your Pockets is ready|Tu Pockets está listo
+Your income|Tu ingreso
+Your key is copied for you. When the Shortcut asks for it, just paste.|Tu clave ya está copiada. Cuando el atajo te la pida, solo pégala.
+Your key is copied: paste it when the Shortcut asks|Tu clave está copiada: pégala cuando el atajo la pida
+Your own bank name|Nombre de tu banco
+Your own bill name|Nombre de tu gasto fijo
+Your own pocket|Tu propio bolsillo
+Your own pocket name|Nombre de tu bolsillo
+Account created · it backs up as you go|Cuenta creada · se respalda mientras avanzas
+Banco de Bogotá|Banco de Bogotá
 Ask me to check each purchase|Pedirme revisar cada compra
 A notification in Pockets for every Apple Pay purchase. Tap it to fix a strange store name or change the details. A name you fix goes to that store's other purchases too, past and next.|Una notificación en Pockets por cada compra con Apple Pay. Tócala para corregir un nombre de tienda raro o cambiar los detalles. El nombre que corrijas se pone también en las demás compras de esa tienda, las anteriores y las próximas.
 Categories to choose from|Categorías para elegir
@@ -1901,6 +1965,14 @@ Moved {0} expenses to {1}|{0} gastos movidos a {1}
 Moved 1 income to {0}|1 ingreso movido a {0}
 Moved {0} incomes to {1}|{0} ingresos movidos a {1}
 Added {0} Apple Pay purchases|Se agregaron {0} compras con Apple Pay
+Hi, {0}|Hola, {0}
+You're all set, {0}|Todo listo, {0}
+Left free each month: {0}|Te queda libre cada mes: {0}
+Over your income by {0} a month|Te pasas de tu ingreso por {0} al mes
+Amount of {0}|Monto de {0}
+Balance of {0}|Saldo de {0}
+Day of {0}|Día de {0}
+Weekly budget for {0}|Presupuesto semanal de {0}
 {0}. Tap to check it or fix the name.|{0}. Tócala para revisarla o corregir el nombre.
 Account for {0}|Cuenta para {0}
 Tap again to delete {0}|Toca otra vez para eliminar {0}

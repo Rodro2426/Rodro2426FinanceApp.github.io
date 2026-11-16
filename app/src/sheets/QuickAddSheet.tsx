@@ -10,7 +10,7 @@ import { FieldLabel, GhostDanger, PrimaryBtn, Toggle } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 
 /** iCloud link of the shared "Pockets Apple Pay" shortcut. Empty until the owner shares it; then the short steps show. */
-const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/2765a45031bc48d4ad115eddd4f796d6';
+export const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/2765a45031bc48d4ad115eddd4f796d6';
 const SHARED_STEPS = [
   'Tap "Get the Shortcut" and add it. When it asks for your key, paste it (Copy next to Your key).',
   'Open Shortcuts → Automation → +. Choose "Transaction" and your cards. Leave Any Category and Any Merchant, turn Automation on and Notify off, tap Next, then "New Blank Automation".',

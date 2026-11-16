@@ -34,6 +34,7 @@ import Welcome from './screens/Welcome';
 import { ArrivalVeil } from './ui/ArrivalVeil';
 import Tour from './screens/Tour';
 import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
+import Setup from './screens/Setup';
 import Investments from './screens/Investments';
 import ReportPage, { ReportsIndex } from './screens/Reports';
 import CategoriesPage from './screens/Categories';
@@ -346,6 +347,7 @@ export default function App() {
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
       {ui.tour && <Tour />}
       {ui.welcome && <Welcome />}
+      {ui.setup && <Setup />}
       <ArrivalVeil />
       {ui.install && <InstallGuide fromProfile={ui.install === 'profile'} onClose={() => setUI({ install: false })} />}
       <CropperHost />

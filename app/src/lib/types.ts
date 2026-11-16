@@ -194,4 +194,6 @@ export interface UI {
   install?: false | 'auto' | 'profile';
   /** The guided tour, running on a practice copy of the data. */
   tour?: { step: number; mode: 'first' | 'replay' } | null;
+  /** The first-time setup (accounts, income, pockets…) right after creating an account or starting from scratch. */
+  setup?: boolean;
 }

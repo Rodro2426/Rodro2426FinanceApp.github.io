@@ -4,7 +4,7 @@ import { getSync, pullForWelcome, subscribeSync, withoutMarking } from '../lib/c
 import { takeHandoff, type Handoff } from '../lib/handoff';
 import { ArrivalScreen, dropVeil, holdVeil } from '../ui/ArrivalVeil';
 import { SignInForm } from '../sheets/CloudSheet';
-import { finishWelcome, flash, normalize, startTour } from '../lib/store';
+import { finishWelcome, flash, normalize, setUI, startTour } from '../lib/store';
 import { emptyData, sampleData } from '../lib/seed';
 import { pickBackupFile, readBackup } from '../lib/backup';
 import { TEXT } from '../lib/constants';
@@ -33,6 +33,7 @@ export default function Welcome() {
   const scratch = (n = who) => {
     const d = emptyData(sampleData());
     finishWelcome({ ...d, settings: { ...d.settings, name: n || 'there', lastBackup: undefined, tourSeen: true } });
+    setUI({ setup: true });
   };
   const sample = () => { const d = sampleData(); finishWelcome(who ? { ...d, settings: { ...d.settings, name: who } } : d); };
   const restore = async () => {
@@ -48,7 +49,7 @@ export default function Welcome() {
     try {
       const d = await pullForWelcome();
       if (d) { withoutMarking(() => finishWelcome(normalize(d))); flash(`Welcome back, ${d.settings.name}`); }
-      else { startTour('first', n || 'there'); flash(created ? 'Account created · it will back up as soon as you start' : 'Signed in · let\'s set things up'); }
+      else { scratch(n); flash(created ? 'Account created · it backs up as you go' : 'Signed in · let\'s set things up'); }
     } catch (e) { flash((e as Error).message); setArriving(false); dropVeil(); }
     setBusy(null);
   };
