@@ -252,7 +252,9 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
   const namePh = { bank: 'Davivienda', savings: 'Emergency savings', cash: 'Wallet', card: 'Visa Platinum' }[f.type];
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14, marginTop: isNew ? 10 : 0 }}>
+      <FieldLabel m={isNew ? '10px 4px 6px' : '0 4px 6px'}>Name</FieldLabel>
+      <input value={f.name} placeholder={namePh} onChange={e => set('name')(e.target.value)} style={textInput} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14, marginTop: 14 }}>
         <AcctBadge photo={f.photo} initial={initialOf(f.name)} size={64} radius={20} bg={tint(f.hue)} color={ink(f.hue)} fs={24} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
           <button onClick={() => pickPhoto().then(p => p && setF(x => ({ ...x, photo: p })))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{f.photo ? 'Change photo' : 'Add photo'}</button>
@@ -260,10 +262,6 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
         </div>
       </div>
       <Segmented items={TYPES} value={f.type} onPick={t => setF(x => ({ ...x, type: t }))} h={isNew ? 40 : 38} />
-      <FieldLabel m="14px 4px 6px">Color</FieldLabel>
-      <HuePicker value={f.hue} onChange={h => setF(x => ({ ...x, hue: h }))} label="Account color" />
-      <FieldLabel m="14px 4px 6px">Name</FieldLabel>
-      <input value={f.name} placeholder={namePh} onChange={e => set('name')(e.target.value)} style={textInput} />
       <FieldLabel m="14px 4px 6px">{isCard ? 'Balance owed' : 'Current balance'}</FieldLabel>
       <SmallAmount value={f.bal} onChange={set('bal')} />
       {isCard && (
@@ -320,6 +318,8 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
         </div>
         <Toggle on={!!f.notMine} onChange={v => setF(x => ({ ...x, notMine: v || undefined }))} label={isCard ? "This card isn't mine" : "This account isn't mine"} />
       </div>
+      <FieldLabel m="14px 4px 6px">Color</FieldLabel>
+      <HuePicker value={f.hue} onChange={h => setF(x => ({ ...x, hue: h }))} label="Account color" />
       <PrimaryBtn onClick={() => onSave(f)} disabled={cant} mt={20}>{isNew ? `Add ${isCard ? 'card' : 'account'}` : 'Save changes'}</PrimaryBtn>
       {onDelete && <GhostDanger onClick={() => (confirmDel ? onDelete() : setConfirmDel(true))}>{confirmDel ? 'Tap again to delete' : 'Delete account'}</GhostDanger>}
     </div>

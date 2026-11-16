@@ -866,7 +866,9 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   return (
     <SheetFrame title={isNew ? 'New pocket' : 'Edit pocket'}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14 }}>
+        <FieldLabel m="10px 4px 6px">Name</FieldLabel>
+        <input value={name} placeholder="Gym" onChange={e => setName(e.target.value)} style={textInput} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14, marginTop: 14 }}>
           <div style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: tint(hue), position: 'relative', overflow: 'hidden', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 32, flex: 'none' }}>{glyph(icon)}<Fill src={photo} /></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
             <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -875,8 +877,6 @@ export function EditPocketSheet({ id }: { id: string | null }) {
             {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Use icon instead</button>}
           </div>
         </div>
-        <FieldLabel m="14px 4px 6px">Color</FieldLabel>
-        <HuePicker value={hue} onChange={setHue} label="Pocket color" />
         <FieldLabel m="14px 4px 6px">Icon</FieldLabel>
         <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(8,minmax(0,1fr))', gap: 4, background: 'var(--surface)', borderRadius: 22, padding: 8 }}>
           {POCKET_ICONS.map(m => { const on = !photo && emoji === m.code; return <button key={m.code} aria-label={m.name} aria-pressed={on} onClick={() => { setEmoji(m.code); setPhoto(null); }} style={{ aspectRatio: '1', minHeight: 36, borderRadius: 12, border: 0, background: on ? tint(hue) : 'transparent', color: on ? ink(hue) : 'var(--brand)', fontSize: 20, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .15s' }}>{glyph(m.code)}</button>; })}
@@ -889,8 +889,6 @@ export function EditPocketSheet({ id }: { id: string | null }) {
             onInput={e => { const m = lastEmoji(e.currentTarget.value); if (m) { setEmoji(m); setPhoto(null); e.currentTarget.blur(); } }}
             style={{ position: 'absolute', bottom: 0, right: 0, width: 1, height: 1, opacity: 0, border: 0, padding: 0, fontSize: 16, pointerEvents: 'none' }} />
         </div>
-        <FieldLabel m="14px 4px 6px">Name</FieldLabel>
-        <input value={name} placeholder="Gym" onChange={e => setName(e.target.value)} style={textInput} />
         <FieldLabel m="14px 4px 6px">Starts over</FieldLabel>
         <Segmented items={[['week', 'Every week'], ['half', 'Every 15 days']]} value={period} onPick={v => switchPeriod(v as 'week' | 'half')} />
         <span style={{ margin: '6px 4px 0', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
@@ -929,6 +927,8 @@ export function EditPocketSheet({ id }: { id: string | null }) {
           </div>
           <Toggle on={carry} onChange={setCarry} label={half ? 'Carry over to next quincena' : 'Carry over to next week'} />
         </div>
+        <FieldLabel m="14px 4px 6px">Color</FieldLabel>
+        <HuePicker value={hue} onChange={setHue} label="Pocket color" />
         <PrimaryBtn onClick={save} disabled={cant} mt={18}>{isNew ? 'Create pocket' : 'Save changes'}</PrimaryBtn>
         {!isNew && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : 'Delete pocket'}</GhostDanger>}
       </div>
