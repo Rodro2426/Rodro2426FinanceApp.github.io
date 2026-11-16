@@ -56,24 +56,23 @@ const slide = (el: HTMLElement | null, x: string, animate: boolean, ms = MS) => 
   el.style.transition = animate ? `transform ${ms}ms ${EASE}` : 'none';
   el.style.transform = x;
 };
-/** The tab bar keeping pace with a tab swipe: the current tab's bubble shrinks and the next one's grows, in step with the page. */
-type Bar = { a: HTMLElement; b: HTMLElement; big: number; saved: [string, string]; tr: string } | null;
+/** The tab bar keeping pace with a tab swipe: the current tab's highlight fades out and the next one's fades in, in step with the page. */
+type Bar = { a: HTMLElement; b: HTMLElement; saved: [string, string]; tr: string } | null;
 const barBtn = (t: Tab) => document.querySelector<HTMLElement>(`.tabbar nav button[data-tour="tab-${t}"]`);
 function barStart(from: Tab, to: Tab): Bar {
   const a = barBtn(from), b = barBtn(to);
-  return a && b ? { a, b, big: parseFloat(a.style.flex) || 2.3, saved: [a.style.cssText, b.style.cssText], tr: a.style.transition } : null;
+  return a && b ? { a, b, saved: [a.style.cssText, b.style.cssText], tr: a.style.transition } : null;
 }
 /** p: 0 = the current tab is selected, 1 = the next one is. ms > 0 glides there. */
 function barAt(bar: Bar, p: number, ms = 0) {
   if (!bar) return;
-  const pct = Math.round(p * 100), set = (el: HTMLElement, f: number, on: number) => {
-    el.style.transition = ms ? `flex ${ms}ms ${EASE}, background-color ${ms}ms ${EASE}, color ${ms}ms ${EASE}` : 'none';
-    el.style.flex = `${f} 1 0%`;
+  const pct = Math.round(p * 100), set = (el: HTMLElement, on: number) => {
+    el.style.transition = ms ? `background-color ${ms}ms ${EASE}, color ${ms}ms ${EASE}` : 'none';
     el.style.background = `color-mix(in srgb, var(--brand-tint) ${on}%, transparent)`;
     el.style.color = `color-mix(in srgb, var(--brand) ${on}%, var(--color-neutral-600))`;
   };
-  set(bar.a, bar.big - (bar.big - 1) * p, 100 - pct);
-  set(bar.b, 1 + (bar.big - 1) * p, pct);
+  set(bar.a, 100 - pct);
+  set(bar.b, pct);
 }
 /** Back to exactly what React drew (after a swipe that sprang back). */
 const barReset = (bar: Bar) => { if (bar) { bar.a.style.cssText = bar.saved[0]; bar.b.style.cssText = bar.saved[1]; } };

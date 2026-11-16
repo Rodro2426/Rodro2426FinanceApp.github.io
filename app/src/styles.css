@@ -351,7 +351,6 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 
 /* Tab bar drag (ui/swipe.ts): a pill follows the finger; the tab under it lights up. */
 .tabbar nav { position: relative; }
-.tab-label { animation: fade-in .2s var(--ease-out); }
 .tabbar nav > button { position: relative; z-index: 1; }
 .tabbar nav .tab-pill { position: absolute; left: 0; top: 5px; width: 70px; height: 52px; border-radius: 999px; background: var(--brand-tint); opacity: .9; transform-origin: center; pointer-events: none; z-index: 0; box-shadow: 0 4px 14px rgba(0,0,0,.08); }
 .tabbar nav.dragging > button { background: transparent !important; }

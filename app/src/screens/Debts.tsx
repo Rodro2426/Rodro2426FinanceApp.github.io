@@ -213,7 +213,7 @@ export function FriendsHomeCard() {
   const bits = [tt.trips ? (tt.trips === 1 ? '1 trip' : `${tt.trips} trips`) : '', friends ? (friends === 1 ? '1 friend' : `${friends} friends`) : '', dt.owedCount + dt.oweCount ? (dt.owedCount + dt.oweCount === 1 ? '1 debt' : `${dt.owedCount + dt.oweCount} debts`) : ''].filter(Boolean);
   const empty = owed <= 0.004 && owe <= 0.004 && !bits.length;
   return (
-    <button onClick={() => setUI({ page: 'social' })} className="pr98" style={{ ...card, border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT, gap: 8 }}>
+    <button onClick={() => setUI({ tab: 'social', page: null })} className="pr98" style={{ ...card, border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT, gap: 8 }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <span aria-hidden="true" style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--color-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: 'var(--brand)' }}>{glyph('pk:people')}</span>
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -245,7 +245,7 @@ export function DeskFriends() {
   const dt = debtTotals(d), tt = tripTotals();
   const owed = dt.owedToMe + tt.owedToMe, owe = dt.iOwe + tt.iOwe;
   const friends = so.friends.filter(f => f.status === 'accepted' && f.uid !== myUid()).length;
-  const open = () => setUI({ page: 'social' });
+  const open = () => setUI({ tab: 'social', page: null });
   return (
     <section className="dh-sec">
       <SectionHead title="Friends & trips" right="Open" onRight={open} />

@@ -1,8 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { getLang } from './lib/i18n';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud, syncNow } from './lib/cloud';
-import { TopBar, useDesk } from './ui/Desk';
+import { People, TopBar, useDesk } from './ui/Desk';
 import { applyBg } from './lib/bg';
 import { registerSW, syncReminders } from './lib/push';
 import { LockGate } from './ui/LockScreen';
@@ -57,7 +56,7 @@ import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoal
 import * as I from './ui/icons';
 
 const TABS: [Tab, string, (p: { size?: number; sw?: number }) => ReactNode][] = [
-  ['home', 'Home', I.Home], ['accounts', 'Accounts', I.Card], ['budget', 'Budget', I.Wallet], ['insights', 'Insights', I.Chart], ['calendar', 'Calendar', I.Calendar]
+  ['home', 'Home', I.Home], ['accounts', 'Accounts', I.Card], ['budget', 'Budget', I.Wallet], ['insights', 'Insights', I.Chart], ['calendar', 'Calendar', I.Calendar], ['social', 'Friends', People]
 ];
 
 function TabView({ tab }: { tab: Tab }) {
@@ -65,6 +64,7 @@ function TabView({ tab }: { tab: Tab }) {
   if (tab === 'accounts') return <Accounts />;
   if (tab === 'budget') return <Budget />;
   if (tab === 'insights') return <Insights />;
+  if (tab === 'social') return <SocialPage />;
   return <CalendarScreen />;
 }
 
@@ -279,7 +279,6 @@ export default function App() {
       {ui.page === 'reports' && <ReportsIndex />}
       {ui.page === 'categories' && <CategoriesPage />}
       {ui.page?.startsWith('report:') && <ReportPage id={ui.page.slice(7)} />}
-      {ui.page === 'social' && <SocialPage />}
       {ui.page?.startsWith('trip:') && <TripPage id={ui.page.slice(5)} />}
       {ui.page?.startsWith('tripstats:') && <TripStatsPage id={ui.page.slice(10)} />}
       {ui.page?.startsWith('tripchat:') && <TripChatPage id={ui.page.slice(9)} />}
@@ -314,10 +313,9 @@ export default function App() {
             const on = ui.tab === k;
             return (
               <button key={k} data-tour={`tab-${k}`} onClick={() => setUI({ tab: k })} aria-label={label} aria-current={on ? 'page' : undefined}
-                style={{ flex: on ? (getLang() === 'es' ? 3.3 : 2.3) : 1, minWidth: 0, height: 52, borderRadius: 999, border: 0, background: on ? 'var(--brand-tint)' : 'transparent', color: on ? 'var(--brand)' : 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 8px', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'flex .25s ease,background .2s', overflow: 'hidden' }}>
+                style={{ flex: 1, minWidth: 0, height: 52, borderRadius: 999, border: 0, background: on ? 'var(--brand-tint)' : 'transparent', color: on ? 'var(--brand)' : 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, cursor: 'pointer', transition: 'background .2s' }}>
                 <Icon size={21} sw={2} />
-                {on && <span className="tab-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>}
-              </button>
+                              </button>
             );
           })}
         </nav>

@@ -172,7 +172,7 @@ function ChatPage({ id, friend }: { id: string; friend?: string }) {
   return (
     <div className="chatpage" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: vh ? `${vh}px` : '100%', zIndex: 26, background: 'var(--page)', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'calc(var(--top) + 4px) 16px 10px', borderBottom: `1px solid ${LINE}`, background: 'var(--page)' }}>
-        {backBtn(() => setUI({ page: t ? `trip:${id}` : 'social' }), t ? 'Back to trip' : 'Back to friends')}
+        {backBtn(() => setUI(t ? { page: `trip:${id}` } : { tab: 'social', page: null }), t ? 'Back to trip' : 'Back to friends')}
         {t ? <span style={{ fontSize: 22 }}>{t.emoji}</span> : <Avatar name={friendName} uid={friend} size={36} />}
         <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <span style={{ fontSize: 17, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t ? t.name : friendName}</span>

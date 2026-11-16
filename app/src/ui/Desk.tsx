@@ -16,7 +16,7 @@ const mq = typeof window !== 'undefined' ? window.matchMedia(MQ) : null;
 /** True on a laptop or desktop browser window (wide enough for the sidebar layout). */
 export const useDesk = () => useSyncExternalStore(cb => { mq?.addEventListener('change', cb); return () => mq?.removeEventListener('change', cb); }, () => !!mq?.matches, () => false);
 
-const People = ({ size = 20 }: { size?: number }) => (
+export const People = ({ size = 20 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><circle cx="17" cy="9" r="2.6" /><path d="M16.5 14.6c2.6.2 4.5 1.9 5 4.9" /></svg>
 );
 
@@ -27,10 +27,10 @@ export function TopBar({ tabs }: { tabs: [Tab, string, (p: { size?: number; sw?:
   const unread = d.notifications.filter(n => !n.read && !n.dismissed).length;
   const chat = so.trips.some(t => hasUnread(t.id)) || so.dms.some(t => hasUnread(t.key));
   const photo = d.settings.profilePhoto;
-  const onPage = (p: string) => ui.page === p || (p === 'social' && /^(trip|tripstats|tripchat|dm):/.test(ui.page ?? '')) || (p === 'reports' && !!ui.page?.startsWith('report:'));
+  const onPage = (p: string) => ui.page === p || (p === 'reports' && !!ui.page?.startsWith('report:'));
   const [more, setMore] = useState(false);
   const moreRef = useRef<HTMLDivElement>(null);
-  const moreOn = ['investments', 'social', 'categories', 'reports'].some(onPage);
+  const moreOn = ['investments', 'categories', 'reports'].some(onPage);
 
   // The "More" menu closes on a click outside or Escape; Cmd/Ctrl+K opens search from anywhere.
   useEffect(() => {
@@ -62,16 +62,15 @@ export function TopBar({ tabs }: { tabs: [Tab, string, (p: { size?: number; sw?:
         <nav className="top-tabs" aria-label="Sections">
           {tabs.map(([k, label]) => {
             const on = ui.tab === k && !ui.page;
-            return <button key={k} data-tour={`tab-${k}`} onClick={() => setUI({ tab: k, page: null })} aria-current={on ? 'page' : undefined} className={'top-tab' + (on ? ' on' : '')}>{label}</button>;
+            return <button key={k} data-tour={`tab-${k}`} onClick={() => setUI({ tab: k, page: null })} aria-current={on ? 'page' : undefined} className={'top-tab' + (on ? ' on' : '')}>{label}{k === 'social' && chat && <span className="top-dot" aria-label="New messages" />}</button>;
           })}
           <div ref={moreRef} className="top-more-wrap">
             <button onClick={() => setMore(m => !m)} aria-expanded={more} aria-haspopup="menu" className={'top-tab' + (moreOn ? ' on' : '')}>
-              More{chat && <span className="top-dot" aria-hidden="true" />}
+              More
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: more ? 'rotate(180deg)' : 'none', transition: 'transform .2s var(--ease-out)' }}><path d="m6 9 6 6 6-6" /></svg>
             </button>
             {more && <div role="menu" className="top-more">
               {moreItem('investments', 'Investments', <I.TrendUp size={18} />)}
-              {moreItem('social', 'Friends & trips', <People size={18} />, chat)}
               {moreItem('categories', 'Categories', <I.Target size={18} />)}
               {moreItem('reports', 'Reports', <I.Chart size={18} />)}
             </div>}

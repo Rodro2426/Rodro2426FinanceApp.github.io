@@ -63,7 +63,12 @@ export default function SocialPage() {
       <button onClick={() => openSheet({ name: 'cloud' })} style={{ height: 48, borderRadius: 999, border: 0, background: TEXT, color: 'var(--surface)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Sign in or create an account</button>
     </div>
   );
-  return page(<>
+  // A main tab now (bottom bar), so it has a big title like the other tabs and no back button.
+  return <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <span style={{ flex: 1, fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Friends & trips</span>
+      {refresh}
+    </div>
     {sync.uid && <VerifyBanner />}
     <MoneyBetween />
     <Segmented items={[
@@ -81,7 +86,7 @@ export default function SocialPage() {
       <Purpose icon="friends">People with a Pockets account. Add them by email to share trips, send messages, and link them to your debts.</Purpose>
       {sync.uid ? <FriendList /> : signIn('Add your friends', 'Friends are people with a Pockets account. Sign in to add them by email.')}
     </>}
-  </>, 'Friends & trips', () => setUI({ page: null }), refresh);
+  </div>;
 }
 
 function VerifyBanner() {
@@ -203,7 +208,7 @@ export function TripPage({ id }: { id: string }) {
   const so = useSocial();
   const { data: d } = useApp();
   const t = so.trips.find(x => x.id === id);
-  if (!t) return page(<div style={card}>{so.loading ? 'Loading…' : 'This trip was deleted or you are no longer in it.'}</div>, 'Trip', () => setUI({ page: 'social' }));
+  if (!t) return page(<div style={card}>{so.loading ? 'Loading…' : 'This trip was deleted or you are no longer in it.'}</div>, 'Trip', () => setUI({ tab: 'social', page: null }));
   const items = so.items[t.id] ?? [], members = tripMembers(t), uid = myUid();
   const nameOf = (x: string) => (x === uid ? 'You' : members.find(m => m.id === x)?.name ?? 'Someone');
   const bal = balances(members, items, moneyScale()), plan = settleUp(bal, moneyScale()), mb = myBalance(t, items);
@@ -274,9 +279,9 @@ export function TripPage({ id }: { id: string }) {
       {!items.length && <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing yet. Add the first expense.</span>}
     </div>
     <span style={{ margin: '0 4px', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-600)' }}>Tap Refresh on the Trips page to see what others added. Tap an expense to edit it or add your share to your budget.</span>
-    {t.owner === uid && <button onClick={async () => { if (!confirm(`Delete "${t.name}" for everyone? This can't be undone.`)) return; const e = await deleteTrip(t.id); flash(e ?? 'Trip deleted'); if (!e) setUI({ page: 'social' }); }} style={{ border: 0, background: 'transparent', color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer', padding: 10 }}>Delete trip</button>}
-    {t.owner !== uid && <button onClick={async () => { if (!confirm(`Leave "${t.name}"? Your expenses stay so the balances stay right.`)) return; const e = await updateTrip(t.id, { members: t.members.filter(m => m !== uid) }); if (!e) { flash('You left the trip'); setUI({ page: 'social' }); await refreshSocial(); } }} style={{ border: 0, background: 'transparent', color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer', padding: 10 }}>Leave trip</button>}
-  </>, t.name, () => setUI({ page: 'social' }), <button onClick={() => refreshSocial()} className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: so.loading ? 0.5 : 1 }}>{so.loading ? '…' : 'Refresh'}</button>);
+    {t.owner === uid && <button onClick={async () => { if (!confirm(`Delete "${t.name}" for everyone? This can't be undone.`)) return; const e = await deleteTrip(t.id); flash(e ?? 'Trip deleted'); if (!e) setUI({ tab: 'social', page: null }); }} style={{ border: 0, background: 'transparent', color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer', padding: 10 }}>Delete trip</button>}
+    {t.owner !== uid && <button onClick={async () => { if (!confirm(`Leave "${t.name}"? Your expenses stay so the balances stay right.`)) return; const e = await updateTrip(t.id, { members: t.members.filter(m => m !== uid) }); if (!e) { flash('You left the trip'); setUI({ tab: 'social', page: null }); await refreshSocial(); } }} style={{ border: 0, background: 'transparent', color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer', padding: 10 }}>Leave trip</button>}
+  </>, t.name, () => setUI({ tab: 'social', page: null }), <button onClick={() => refreshSocial()} className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: so.loading ? 0.5 : 1 }}>{so.loading ? '…' : 'Refresh'}</button>);
 }
 
 export { saveItem };

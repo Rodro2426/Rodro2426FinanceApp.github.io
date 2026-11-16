@@ -171,7 +171,7 @@ export default function Home() {
           <span style={{ fontSize: 26, fontWeight: 700, letterSpacing: '-0.02em' }}>Hi, {d.settings.name}</span>
         </div>
         <div className="desk-hide" style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => setUI({ page: 'social' })} aria-label="Friends and trips" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--surface)', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+          <button onClick={() => setUI({ tab: 'social', page: null })} aria-label="Friends and trips" className="hv-n200" style={{ width: 44, height: 44, borderRadius: 999, background: 'var(--surface)', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><circle cx="17" cy="9" r="2.6" /><path d="M16.5 14.6c2.6.2 4.5 1.9 5 4.9" /></svg>
           </button>
           <button data-tour="bell" onClick={() => openSheet({ name: 'notifications' })} aria-label={unread ? `Notifications, ${unread} new` : 'Notifications'} className="hv-n200" style={{ position: 'relative', width: 44, height: 44, borderRadius: 999, background: 'var(--surface)', border: 0, color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
