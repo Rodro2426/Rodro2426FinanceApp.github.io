@@ -83,7 +83,7 @@ function TxnMover({ rows, kind, targets, subsOf, onMove }: {
               {subs.map(t => <option key={t} value={t}>{t}</option>)}
             </select>}
           </div>
-          <button onClick={move} style={{ ...small, alignSelf: 'flex-start', background: 'var(--color-accent)', color: '#fff' }}>Move</button>
+          <button onClick={move} style={{ ...small, alignSelf: 'flex-start', background: 'var(--action)', color: 'var(--action-ink)' }}>Move</button>
         </div>
       )}
       <div>
@@ -170,7 +170,7 @@ function IncomeCategories() {
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <input value={name} onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') add(); }} placeholder="New category, like Rent" aria-label="New income category" style={{ ...textInput, flex: 1 }} />
-        <button onClick={add} disabled={!name.trim()} style={{ ...small, height: 50, padding: '0 18px', display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-accent)', color: '#fff', opacity: name.trim() ? 1 : 0.4 }}><I.Plus size={16} />Create</button>
+        <button onClick={add} disabled={!name.trim()} style={{ ...small, height: 50, padding: '0 18px', display: 'flex', alignItems: 'center', gap: 6, background: 'var(--action)', color: 'var(--action-ink)', opacity: name.trim() ? 1 : 0.4 }}><I.Plus size={16} />Create</button>
       </div>
       <span style={{ margin: '0 4px', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Deleting a category only removes it from these lists. Expenses and incomes already in it keep their category, so your history doesn't change.</span>
     </>
@@ -285,7 +285,7 @@ function ManageCategories() {
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <input value={newCat} onChange={e => setNewCat(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addCat(); }} placeholder="New category, like Pets" aria-label="New category" style={{ ...textInput, flex: 1 }} />
-        <button onClick={addCat} disabled={!newCat.trim()} style={{ ...small, height: 50, padding: '0 18px', display: 'flex', alignItems: 'center', gap: 6, background: 'var(--color-accent)', color: '#fff', opacity: newCat.trim() ? 1 : 0.4 }}><I.Plus size={16} />Create</button>
+        <button onClick={addCat} disabled={!newCat.trim()} style={{ ...small, height: 50, padding: '0 18px', display: 'flex', alignItems: 'center', gap: 6, background: 'var(--action)', color: 'var(--action-ink)', opacity: newCat.trim() ? 1 : 0.4 }}><I.Plus size={16} />Create</button>
       </div>
     </>
   );

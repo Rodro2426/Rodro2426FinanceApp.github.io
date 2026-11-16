@@ -219,7 +219,7 @@ function ChatPage({ id, friend }: { id: string; friend?: string }) {
         <textarea value={text} onChange={e => setText(e.target.value)} rows={1} placeholder={att ? 'Add a caption' : 'Message'} aria-label="Message"
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }}
           style={{ flex: 1, resize: 'none', maxHeight: 120, border: 0, borderRadius: 22, background: 'var(--surface)', color: TEXT, fontSize: 16, padding: '11px 16px', outline: 'none', fontFamily: 'inherit', lineHeight: 1.35 }} />
-        <button onClick={send} disabled={!canSend} aria-label="Send" style={{ marginLeft: 4, width: 44, height: 44, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: canSend ? 1 : 0.4, flex: 'none' }}>
+        <button onClick={send} disabled={!canSend} aria-label="Send" style={{ marginLeft: 4, width: 44, height: 44, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: canSend ? 1 : 0.4, flex: 'none' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
         </button>
       </div>

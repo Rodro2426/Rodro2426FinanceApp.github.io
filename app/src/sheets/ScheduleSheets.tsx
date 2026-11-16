@@ -261,7 +261,7 @@ export function BackupNowButton({ id }: { id: string }) {
       if (r === 'cancelled') return;
       setData(x => ({ notifications: x.notifications.map(n => (n.id === id ? { ...n, dismissed: true, bannered: true } : n)) }));
       flash(r === 'shared' ? 'Backup saved' : 'Backup downloaded to Files');
-    }} style={{ alignSelf: 'flex-start', marginTop: 8, height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+    }} style={{ alignSelf: 'flex-start', marginTop: 8, height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
       <I.Download size={14} />Back up now
     </button>
   );
