@@ -20,6 +20,12 @@
         ],
         "createdAt": "2026-11-12T03:12:14.517Z",
         "reason": "intentional: the install step art draws the iPhone Safari toolbar and share sheet (iOS UI pieces) inside its illustration frame; not a layout card"
+      },
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-11-16T03:03:27.402Z",
+        "reason": "user confirmed: owner picked Plus Jakarta Sans from five options on 2026-11-15"
       }
     ]
   }

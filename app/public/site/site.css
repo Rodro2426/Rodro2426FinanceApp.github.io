@@ -377,7 +377,7 @@ html:not(.js) .story-stage { display: none; }
 .close-mark { width: 88px; content: url("../pockets-mark-dark.svg"); filter: drop-shadow(0 24px 30px rgba(0, 0, 0, 0.4)); }
 .h-close { font-size: clamp(3rem, 7vw, 5.75rem); font-weight: 900; letter-spacing: -0.04em; line-height: 0.96; }
 .h-close span { color: var(--lilac); }
-.close p { color: #c9cdf0; font-size: 1.25rem; font-weight: 600; }
+.close p { color: #f4faf8; font-size: 1.25rem; font-weight: 600; }
 .close .btn { margin-top: 10px; }
 .close :focus-visible { outline-color: #fff; }
 
