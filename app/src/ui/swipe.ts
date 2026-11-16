@@ -2,6 +2,7 @@
 // - from the left edge to the right: the page or sheet on top slides away with your finger, then goes back
 //   (it presses the back or close button on screen, so it goes exactly where that button would);
 // - left or right on a main tab: the tab moves with your finger and the next one slides in beside it;
+//   letting go opens it if more than half of it is showing or after a quick flick, otherwise both slide back;
 // - along the tab bar: a highlight follows your finger and letting go opens that tab (like Instagram).
 // Swipes that start on something that scrolls sideways, a slider, a text box or a chart are left alone.
 // While the finger is down, elements are moved directly (no React re-render per frame), so it stays smooth.
@@ -11,7 +12,8 @@ import type { Tab } from '../lib/types';
 
 const EDGE = 28;        // px from the left edge that counts as an edge swipe
 const LOCK = 10;        // px of movement before deciding sideways vs. up-and-down
-const COMMIT = 0.28;    // share of the width past which a released swipe completes
+const COMMIT = 0.28;    // back swipe: share of the width past which a released swipe completes
+const TAB_COMMIT = 0.5; // tab swipe: a slow drag opens the next tab only if more than half of it is showing when you let go
 const FLICK = 0.5;      // px/ms: a quick flick completes even if short
 const MS = 300;         // longest slide after letting go (a fast flick finishes sooner)
 const EASE = 'cubic-bezier(.22,1,.36,1)'; // quick start, soft landing, like iOS
@@ -144,7 +146,8 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       const w = (g.mode === 'back' ? g.layer?.clientWidth : scroller.current?.clientWidth) || window.innerWidth;
       const ms = Math.max(1, Date.now() - g.t), p = e.changedTouches[0];
       const v = Math.abs((p ? p.clientX - g.x : g.dx) / ms);
-      const done = Math.abs(g.dx) > w * COMMIT || (v > FLICK && Math.abs(g.dx) > 30);
+      // A slow drag must pass the line; a quick flick completes even if short.
+      const done = Math.abs(g.dx) > w * (g.mode === 'tab' ? TAB_COMMIT : COMMIT) || (v > FLICK && Math.abs(g.dx) > 30);
       // The time left depends on how far is left to go and how fast the finger was moving.
       const rest = done ? w - Math.abs(g.dx) : Math.abs(g.dx);
       const dur = Math.round(Math.max(170, Math.min(MS, rest / Math.max(v, 0.9) * 1.6)));
