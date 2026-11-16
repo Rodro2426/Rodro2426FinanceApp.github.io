@@ -104,7 +104,7 @@ function sampleDataRaw(today: string): Data {
 export function emptyData(prev: Data): Data {
   return {
     version: 1,
-    settings: { ...prev.settings },
+    settings: { ...prev.settings, sampleMode: undefined },
     incomeStr: '0',
     pockets: [], accounts: [], expenses: [], incomes: [], notifications: [], investments: { trades: [], quotes: {}, usdRate: prev.investments?.usdRate ?? 4000, usdRateAt: 0 }, fx: prev.fx ?? { trm: {}, tried: {} }, moves: [], payments: [], bills: [], goals: [],
     cats: CATS.map(c => ({ ...c, subs: [...c.subs] })), tags: []

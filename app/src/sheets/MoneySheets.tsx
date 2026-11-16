@@ -11,7 +11,7 @@ import { CardFace } from '../ui/CardFace';
 import { requestCrop } from '../ui/Cropper';
 import { HuePicker } from '../ui/HuePicker';
 import { BgPicker } from '../ui/BgPicker';
-import { useApp, setData, openSheet, closeSheet, flash, replaceData, setUI, startTour, getData } from '../lib/store';
+import { useApp, setData, openSheet, closeSheet, flash, replaceData, setUI, startTour, getData, loadSample, undoSample } from '../lib/store';
 import { syncLabel, useSync } from './CloudSheet';
 import { ACCT_KIND, ACCT_TYPE_LABEL, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { acctTxns, editedBalance, fmt, initialOf, num, pctOf, plural, roundAmt, uid } from '../lib/derive';
@@ -21,7 +21,7 @@ import { pickPhoto } from '../lib/photo';
 import { findLogo, siteHost } from '../lib/logo';
 import { makeBackup, pickBackupFile, readBackup, restoreBackup } from '../lib/backup';
 import { dailyRate, earnsInterest, perDay } from '../lib/interest';
-import { emptyData, sampleData } from '../lib/seed';
+import { emptyData } from '../lib/seed';
 import type { Account, AcctType, Currency } from '../lib/types';
 import type { CSSProperties } from 'react';
 import { AcctBadge, Fill, Bar, BigAmount, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
@@ -589,11 +589,17 @@ export function SettingsSheet() {
           </div>
         ) : <button onClick={() => (hasData ? setAskTour(true) : startTour('replay'))} className="hv-n200" style={{ marginTop: 18, height: 46, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>App tutorial</button>}
         <button onClick={() => setUI({ sheet: null, install: 'profile' })} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>How to install Pockets on iPhone</button>
+        {st.sampleMode && (
+          <div style={{ marginTop: 18, background: 'var(--color-accent-100)', borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-accent-900)' }}>You're looking at sample data. Your own data is saved on this phone, and nothing is uploaded to the cloud until you bring it back.</span>
+            <button onClick={async () => { if (await undoSample()) { closeSheet(); flash('Your data is back'); } else flash('Could not find your data on this phone'); }} style={{ height: 44, borderRadius: 999, border: 0, background: 'var(--color-accent)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Bring back my data</button>
+          </div>
+        )}
         <span style={{ margin: '14px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>Start over</span>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginTop: 10 }}>
           <button onClick={() => {
             if (confirm !== 'sample') return setConfirm('sample');
-            replaceData({ ...sampleData(), settings: { ...st } }); closeSheet(); flash('Sample data loaded');
+            loadSample().then(() => { closeSheet(); flash('Sample data loaded'); }, () => flash('Could not save a copy of your data, so nothing changed'));
           }} className="hv-n200" style={{ height: 48, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>{confirm === 'sample' ? 'Tap to replace' : 'Load sample data'}</button>
           <button onClick={() => {
             if (confirm !== 'erase') return setConfirm('erase');
