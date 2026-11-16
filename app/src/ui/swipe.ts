@@ -56,6 +56,28 @@ const slide = (el: HTMLElement | null, x: string, animate: boolean, ms = MS) => 
   el.style.transition = animate ? `transform ${ms}ms ${EASE}` : 'none';
   el.style.transform = x;
 };
+/** The tab bar keeping pace with a tab swipe: the current tab's bubble shrinks and the next one's grows, in step with the page. */
+type Bar = { a: HTMLElement; b: HTMLElement; big: number; saved: [string, string]; tr: string } | null;
+const barBtn = (t: Tab) => document.querySelector<HTMLElement>(`.tabbar nav button[data-tour="tab-${t}"]`);
+function barStart(from: Tab, to: Tab): Bar {
+  const a = barBtn(from), b = barBtn(to);
+  return a && b ? { a, b, big: parseFloat(a.style.flex) || 2.3, saved: [a.style.cssText, b.style.cssText], tr: a.style.transition } : null;
+}
+/** p: 0 = the current tab is selected, 1 = the next one is. ms > 0 glides there. */
+function barAt(bar: Bar, p: number, ms = 0) {
+  if (!bar) return;
+  const pct = Math.round(p * 100), set = (el: HTMLElement, f: number, on: number) => {
+    el.style.transition = ms ? `flex ${ms}ms ${EASE}, background-color ${ms}ms ${EASE}, color ${ms}ms ${EASE}` : 'none';
+    el.style.flex = `${f} 1 0%`;
+    el.style.background = `color-mix(in srgb, var(--brand-tint) ${on}%, transparent)`;
+    el.style.color = `color-mix(in srgb, var(--brand) ${on}%, var(--color-neutral-600))`;
+  };
+  set(bar.a, bar.big - (bar.big - 1) * p, 100 - pct);
+  set(bar.b, 1 + (bar.big - 1) * p, pct);
+}
+/** Back to exactly what React drew (after a swipe that sprang back). */
+const barReset = (bar: Bar) => { if (bar) { bar.a.style.cssText = bar.saved[0]; bar.b.style.cssText = bar.saved[1]; } };
+
 const clear = (el: HTMLElement | null) => { if (el) { el.style.transition = ''; el.style.transform = ''; el.style.boxShadow = ''; } };
 
 export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
@@ -64,7 +86,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
   useEffect(() => {
     if (!enabled) return;
     type Mode = 'undecided' | 'none' | 'back' | 'tab' | 'bar';
-    let s: { x: number; y: number; t: number; edge: boolean; free: boolean; mode: Mode; dx: number; layer: HTMLElement | null; side: 1 | -1; to: Tab | null; nav: HTMLElement | null; pill: HTMLElement | null } | null = null;
+    let s: { x: number; y: number; t: number; edge: boolean; free: boolean; mode: Mode; dx: number; layer: HTMLElement | null; side: 1 | -1; to: Tab | null; nav: HTMLElement | null; pill: HTMLElement | null; bar: Bar } | null = null;
     let busy = false;
 
     const blocked = () => {
@@ -106,7 +128,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       if (e.touches.length !== 1 || blocked()) { s = null; return; }
       const p = e.touches[0], target = e.target as Element;
       const nav = target.closest?.('.tabbar nav') as HTMLElement | null;
-      s = { x: p.clientX, y: p.clientY, t: Date.now(), edge: p.clientX <= EDGE, free: !ownsSwipe(target), mode: 'undecided', dx: 0, layer: null, side: 1, to: null, nav, pill: null };
+      s = { x: p.clientX, y: p.clientY, t: Date.now(), edge: p.clientX <= EDGE, free: !ownsSwipe(target), mode: 'undecided', dx: 0, layer: null, side: 1, to: null, nav, pill: null, bar: null };
     };
 
     const move = (e: TouchEvent) => {
@@ -120,7 +142,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
         else if (s.edge && dx > 0 && backButton()) { s.mode = 'back'; s.layer = backLayer(); }
         else if (s.free && !ui.sheet && !ui.page) {
           const side: 1 | -1 = dx < 0 ? 1 : -1, i = tabs.indexOf(ui.tab), to = tabs[i + side];
-          if (i >= 0 && to) { s.mode = 'tab'; s.side = side; s.to = to; setPeek({ tab: to, side }); }
+          if (i >= 0 && to) { s.mode = 'tab'; s.side = side; s.to = to; s.bar = barStart(ui.tab, to); setPeek({ tab: to, side }); }
           else if (i >= 0) { s.mode = 'tab'; s.side = side; s.to = null; } // first or last tab: it stretches a little and springs back
           else s.mode = 'none';
         } else s.mode = 'none';
@@ -139,6 +161,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       if (!s.to) { slide(scroller.current, `translateX(${s.dx * 0.22}px)`, false); return; }
       slide(scroller.current, `translateX(${s.dx}px)`, false);
       slide(peek.current, `translateX(calc(${s.side * 100}% + ${s.dx}px))`, false);
+      barAt(s.bar, Math.min(1, Math.abs(s.dx) / (scroller.current?.clientWidth || window.innerWidth)));
     };
 
     const up = (e: TouchEvent) => {
@@ -169,12 +192,15 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
         const tabDur = Math.round(Math.max(TAB_MS[0], Math.min(TAB_MS[1], rest / Math.max(v, 0.6) * 2)));
         slide(scroller.current, `translateX(${-g.side * w}px)`, true, tabDur);
         slide(peek.current, 'translateX(0)', true, tabDur);
+        barAt(g.bar, 1, tabDur);
         // The App resets the scroller's position in the same render that shows the new tab (no flicker).
-        setTimeout(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); busy = false; }, tabDur);
+        // React then draws the bar the same way, so only its normal transition is handed back.
+        setTimeout(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); if (g.bar) g.bar.a.style.transition = g.bar.b.style.transition = g.bar.tr; busy = false; }, tabDur);
       } else {
         slide(scroller.current, 'translateX(0)', true, dur);
         slide(peek.current, `translateX(${g.side * 100}%)`, true, dur);
-        setTimeout(() => { clear(scroller.current); setPeek(null); busy = false; }, dur);
+        barAt(g.bar, 0, dur);
+        setTimeout(() => { clear(scroller.current); setPeek(null); barReset(g.bar); busy = false; }, dur);
       }
     };
     const cancel = () => {
@@ -182,7 +208,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       if (!g) return;
       if (g.mode === 'bar') endBar(g, false);
       if (g.mode === 'back') clear(g.layer);
-      if (g.mode === 'tab') { clear(scroller.current); setPeek(null); }
+      if (g.mode === 'tab') { clear(scroller.current); setPeek(null); barReset(g.bar); }
     };
 
     // Tapping a page's back button: the page slides away to the right first, then goes back.

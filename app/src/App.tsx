@@ -316,7 +316,7 @@ export default function App() {
               <button key={k} data-tour={`tab-${k}`} onClick={() => setUI({ tab: k })} aria-label={label} aria-current={on ? 'page' : undefined}
                 style={{ flex: on ? (getLang() === 'es' ? 3.3 : 2.3) : 1, minWidth: 0, height: 52, borderRadius: 999, border: 0, background: on ? 'var(--brand-tint)' : 'transparent', color: on ? 'var(--brand)' : 'var(--color-neutral-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '0 8px', fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'flex .25s ease,background .2s', overflow: 'hidden' }}>
                 <Icon size={21} sw={2} />
-                {on && <span style={{ whiteSpace: 'nowrap' }}>{label}</span>}
+                {on && <span className="tab-label" style={{ whiteSpace: 'nowrap' }}>{label}</span>}
               </button>
             );
           })}
