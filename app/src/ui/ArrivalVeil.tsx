@@ -2,6 +2,7 @@
 // (account data in, fonts and photos loaded, first cloud sync done), then fades out. Without it the
 // first second shows photos popping in, numbers changing and banners sliding in.
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../lib/store';
 import { firstSync, getSync, subscribeSync } from '../lib/cloud';
 
@@ -24,12 +25,14 @@ const syncIdle = () => new Promise<void>(r => {
 });
 
 /** The logo and one line, on the page colour. Also used by the welcome screen while it waits. */
+// On the body itself, so no layout rule (like the computer's side panel) can squeeze it: it always fills the window.
 export function ArrivalScreen({ text, fading }: { text: string; fading?: boolean }) {
-  return (
-    <div role="status" aria-live="polite" style={{ position: 'absolute', inset: 0, zIndex: 300, background: 'var(--page)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, opacity: fading ? 0 : 1, transition: `opacity ${FADE_MS}ms var(--ease-out)`, pointerEvents: fading ? 'none' : 'auto' }}>
+  return createPortal(
+    <div role="status" aria-live="polite" style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'var(--page)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, opacity: fading ? 0 : 1, transition: `opacity ${FADE_MS}ms var(--ease-out)`, pointerEvents: fading ? 'none' : 'auto' }}>
       <img className="arrive-mark" src="./pockets-mark.svg" alt="" width={64} height={64} />
       {text && <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-neutral-600)' }}>{text}</span>}
-    </div>
+    </div>,
+    document.body
   );
 }
 
