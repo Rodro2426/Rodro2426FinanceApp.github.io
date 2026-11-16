@@ -27,6 +27,8 @@ const syncIdle = () => new Promise<void>(r => {
 /** The logo and one line, on the page colour. Also used by the welcome screen while it waits. */
 // On the body itself, so no layout rule (like the computer's side panel) can squeeze it: it always fills the window.
 export function ArrivalScreen({ text, fading }: { text: string; fading?: boolean }) {
+  // The page's own stand-in from a restart (index.html) can go once this one is drawn.
+  useEffect(() => { document.getElementById('restart-splash')?.remove(); }, []);
   return createPortal(
     <div role="status" aria-live="polite" style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'var(--page)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, opacity: fading ? 0 : 1, transition: `opacity ${FADE_MS}ms var(--ease-out)`, pointerEvents: fading ? 'none' : 'auto' }}>
       <img className="arrive-mark" src="./pockets-mark.svg" alt="" width={64} height={64} />

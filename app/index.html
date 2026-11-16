@@ -28,6 +28,21 @@
   <title>Pockets</title>
 </head>
 <body>
+  <script>
+    // Coming back from a restart (lib/restart.ts): draw the same loading screen and message right away, so the
+    // blank moment while the app loads doesn't flash. The app's own loading screen replaces it (ui/ArrivalVeil.tsx).
+    try {
+      var back = JSON.parse(sessionStorage.getItem('pockets-return') || 'null');
+      if (back && back.text) {
+        var el = document.createElement('div'); el.id = 'restart-splash'; el.setAttribute('role', 'status');
+        el.style.cssText = 'position:fixed;inset:0;z-index:1001;background:var(--page,' + (document.documentElement.dataset.theme === 'dark' ? '#0e0e0d' : '#f5f8f4') + ');display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px';
+        var img = document.createElement('img'); img.src = './pockets-mark.svg'; img.alt = ''; img.width = 64; img.height = 64; img.className = 'arrive-mark';
+        var tx = document.createElement('span'); tx.textContent = back.text; tx.setAttribute('translate', 'no');
+        tx.style.cssText = 'font-family:var(--font-body,-apple-system,system-ui,sans-serif);font-size:15px;font-weight:600;color:var(--color-neutral-600,' + (document.documentElement.dataset.theme === 'dark' ? '#9c9791' : '#7d7979') + ')';
+        el.appendChild(img); el.appendChild(tx); document.body.appendChild(el);
+      }
+    } catch (e) {}
+  </script>
   <div id="root"></div>
   <script type="module" src="./src/main.tsx"></script>
 </body>

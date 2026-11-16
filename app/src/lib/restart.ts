@@ -2,6 +2,7 @@
 // itself and only reads its colour when the app starts, so a new theme or background only reaches it after a restart.
 import { getData, getState, isPersisting, saveNow, setUI } from './store';
 import { holdVeil } from '../ui/ArrivalVeil';
+import { tr } from './i18n';
 import type { Data, Tab, UI } from './types';
 
 const RETURN_KEY = 'pockets-return';
@@ -18,7 +19,7 @@ export async function restartApp(text = 'Updating your colors…') {
   if (!isPersisting()) return; // the practice tour isn't saved, so a restart would lose it
   const { tab, page, sheet } = getState().ui;
   const panel = document.querySelector('.sheet-panel');
-  const back = { tab, page: page ?? null, settings: sheet?.name === 'settings', scroll: panel ? panel.scrollTop : 0 };
+  const back = { tab, page: page ?? null, settings: sheet?.name === 'settings', scroll: panel ? panel.scrollTop : 0, text: tr(text) };
   try { sessionStorage.setItem(RETURN_KEY, JSON.stringify(back)); } catch { /* comes back on Home */ }
   holdVeil(text);
   await saveNow();
@@ -35,7 +36,9 @@ export function returnAfterRestart() {
     const raw = sessionStorage.getItem(RETURN_KEY);
     if (!raw) return;
     sessionStorage.removeItem(RETURN_KEY);
-    const r = JSON.parse(raw) as { tab?: Tab; page?: UI['page']; settings?: boolean; scroll?: number };
+    const r = JSON.parse(raw) as { tab?: Tab; page?: UI['page']; settings?: boolean; scroll?: number; text?: string };
+    // Same loading screen and message as before the restart, so nothing flashes.
+    if (r.text) holdVeil(r.text);
     if (r.tab) setUI({ tab: r.tab, page: r.page ?? null });
     if (r.settings) { scrollBack = r.scroll ?? 0; setUI({ sheet: { name: 'settings' } }); }
   } catch { /* nothing to restore */ }
