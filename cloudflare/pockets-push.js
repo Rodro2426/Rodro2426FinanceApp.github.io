@@ -294,7 +294,8 @@ async function quick(env, req, key, action) {
     return { saved: true };
   }
   if (!m) return { ok: false, text: 'Agregar rápido está desactivado: actívalo en Pockets → Ajustes. / Quick add is off: turn it on in Pockets → Settings.' };
-  if (action === 'menu') return { pockets: m.pockets, accounts: m.accounts, cats: m.cats, lang: m.lang };
+  // askPocket / askCat are the list titles, so one shared Shortcut speaks each person's language.
+  if (action === 'menu') return { pockets: m.pockets, accounts: m.accounts, cats: m.cats, lang: m.lang, askPocket: es ? 'Bolsillo para' : 'Pocket for', askCat: es ? 'Categoría' : 'Category' };
   const box = JSON.parse((await env.SCHED.get(ik)) || 'null') || { items: [], day: '', adds: 0 };
   const save = () => env.SCHED.put(ik, JSON.stringify(box), { expirationTtl: 30 * 86400 });
   if (action === 'items') return { items: box.items };
@@ -317,7 +318,8 @@ async function quick(env, req, key, action) {
     const n = new Intl.NumberFormat(es ? 'es-CO' : 'en-US', { maximumFractionDigits: 2 }).format(item.amt);
     const where = item.pocket || (es ? 'sin bolsillo' : 'no pocket');
     const at = item.note ? (es ? ` de ${item.note}` : ` at ${item.note}`) : '';
-    return { ok: true, text: es ? `Guardado: $${n}${at} en ${where}` : `Saved $${n}${at} to ${where}` };
+    const kind = item.category ? ` · ${item.category}` : '';
+    return { ok: true, text: es ? `Guardado: $${n}${at} en ${where}${kind}` : `Saved $${n}${at} to ${where}${kind}` };
   }
   if (action === 'ack') {
     const ids = new Set((Array.isArray(body.ids) ? body.ids : []).map(String));

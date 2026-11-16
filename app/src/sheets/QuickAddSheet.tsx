@@ -4,11 +4,19 @@ import { useState } from 'react';
 import { useApp, setData, flash, getData, openSheet } from '../lib/store';
 import { useSync } from './CloudSheet';
 import { TEXT, ink, tint } from '../lib/constants';
-import { newQuickKey, quickAccount } from '../lib/quickadd';
+import { newQuickKey, quickAccount, shortcutCats } from '../lib/quickadd';
 import { pullQuickInbox, pushQuickMenu, quickAddOff, quickUrl } from '../lib/quickaddSync';
 import { FieldLabel, GhostDanger, PrimaryBtn } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 
+/** iCloud link of the shared "Pockets Apple Pay" shortcut. Empty until the owner shares it; then the short steps show. */
+const SHORTCUT_LINK = '';
+const SHARED_STEPS = [
+  'Tap "Get the Shortcut" and add it. When it asks for your key, paste it (Copy next to Your key).',
+  'Open Shortcuts → Automation → +. Choose "Transaction" and your cards. Leave Any Category and Any Merchant, turn Automation on and Notify off, and tap Next.',
+  'Add "Run Shortcut" and pick "Pockets Apple Pay". Open it with the arrow and set Input to Shortcut Input.',
+  'Pay with Apple Pay: pick the pocket and the category, and a notification says "Saved $25.000 at Éxito to Groceries · Food".'
+];
 const STEPS = [
   'Open Shortcuts → Automation → +. Choose "Transaction" and pick your card. Leave Any Category and Any Merchant, turn Automation on and Notify off.',
   'Tap Search at the bottom and add "Get Contents of URL". Tap the blue URL and paste the Pocket list link.',
@@ -28,6 +36,13 @@ export function QuickAddSheet() {
   const accounts = d.accounts.filter(a => !a.notMine);
   const payFrom = quickAccount(d);
   const cards = Object.entries(qa?.cards ?? {});
+  const shown = shortcutCats(d);
+  // Tapping a category pins it (the first tap starts from the list shown, so nothing jumps). At most 8: it pops up at the checkout.
+  const pin = (name: string) => setData(x => {
+    const q = x.settings.quickAdd!, now = q.pins?.length ? q.pins : shortcutCats(x);
+    const pins = now.includes(name) ? now.filter(n => n !== name) : now.length >= 8 ? now : [...now, name];
+    return { settings: { ...x.settings, quickAdd: { ...q, pins } } };
+  });
 
   const sync = useSync();
   // On only once the Worker has created the inbox (it needs the Pockets sign-in); otherwise undo and say why.
@@ -111,16 +126,28 @@ export function QuickAddSheet() {
             </div>
           </>}
 
+          <FieldLabel>Categories to choose from</FieldLabel>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {d.cats.map(k => {
+              const on = shown.includes(k.name);
+              return <button key={k.name} onClick={() => pin(k.name)} aria-pressed={on} className="pr97"
+                style={{ height: 38, padding: '0 14px', borderRadius: 999, border: 0, background: on ? 'var(--color-text)' : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{k.name}</button>;
+            })}
+          </div>
+          <span style={{ margin: '6px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{qa.pins?.length ? 'After the pocket, the Shortcut asks for one of these. Up to 8.' : 'Until you pick some, the Shortcut offers the last categories you used. Up to 8.'}</span>
+
           <FieldLabel>Your links</FieldLabel>
           <div style={{ ...card, gap: 14 }}>
+            {linkRow('Your key', qa.key)}
             {linkRow('Pocket list', quickUrl(qa.key, 'menu'))}
             {linkRow('Add purchase', quickUrl(qa.key, 'add'))}
             <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Anyone with these links can add expenses to your Pockets and see your pocket names, so keep them to yourself. If one leaks, turn this off and on again to get new links.</span>
           </div>
 
           <FieldLabel>Build the Shortcut</FieldLabel>
+          {SHORTCUT_LINK && <a href={SHORTCUT_LINK} target="_blank" rel="noreferrer" className="pr97" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, marginBottom: 10, borderRadius: 999, background: TEXT, color: 'var(--surface)', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>Get the Shortcut</a>}
           <ol style={{ ...card, margin: 0, padding: '16px 16px 16px 36px', gap: 10 }}>
-            {STEPS.map(s => <li key={s} style={{ fontSize: 13.5, lineHeight: 1.45 }}>{s}</li>)}
+            {(SHORTCUT_LINK ? SHARED_STEPS : STEPS).map(s => <li key={s} style={{ fontSize: 13.5, lineHeight: 1.45 }}>{s}</li>)}
           </ol>
 
           <PrimaryBtn onClick={check} disabled={busy}>{busy ? 'Checking…' : 'Check for new purchases'}</PrimaryBtn>

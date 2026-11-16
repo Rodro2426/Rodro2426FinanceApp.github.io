@@ -5,6 +5,7 @@
 import type { Data, Expense } from './types';
 import { iso } from './dates';
 import { catOf, chargeAccount } from './derive';
+import { tr } from './i18n';
 
 export interface InboxItem { id: string; amt: number; pocket?: string; note?: string; account?: string; category?: string; /** The Wallet card's name. */ card?: string; ts: number }
 
@@ -15,17 +16,38 @@ export function newQuickKey(): string {
   return [...b].map(x => x.toString(16).padStart(2, '0')).join('');
 }
 
-/** What the Shortcut shows in its lists: pocket names (plus "no pocket"), account names and categories. */
+/**
+ * The categories the Shortcut offers after the pocket: the pinned ones (in the order pinned), else the last 6 used,
+ * else the first 6. A short list, because it pops up at the checkout.
+ */
+export function shortcutCats(d: Data): string[] {
+  const names = d.cats.map(k => k.name);
+  const pinned = (d.settings.quickAdd?.pins ?? []).filter(n => names.includes(n));
+  if (pinned.length) return pinned;
+  const used: string[] = [];
+  for (const e of [...d.expenses].sort((a, b) => b.ts - a.ts)) {
+    const c = catOf(e)[0];
+    if (names.includes(c) && !used.includes(c)) used.push(c);
+    if (used.length === 6) break;
+  }
+  return used.length ? used : names.slice(0, 6);
+}
+
+/** What the Shortcut shows in its lists: pocket names (plus "no pocket"), account names and the short category list. */
 export function quickMenu(d: Data, lang: 'en' | 'es') {
   return {
-    pockets: [...d.pockets.map(p => p.name), lang === 'es' ? 'Sin bolsillo' : 'No pocket'],
-    accounts: d.accounts.filter(a => !a.notMine).map(a => a.name),
-    cats: d.cats.map(k => k.name),
+    // Names as the person sees them in the app (built-in names are stored in English); importInbox matches both.
+    pockets: [...d.pockets.map(p => shown(p.name, lang)), lang === 'es' ? 'Sin bolsillo' : 'No pocket'],
+    accounts: d.accounts.filter(a => !a.notMine).map(a => shown(a.name, lang)),
+    cats: shortcutCats(d).map(n => shown(n, lang)),
     lang
   };
 }
 
+const shown = (name: string, lang: 'en' | 'es') => (lang === 'es' ? tr(name) : name);
 const same = (a = '', b = '') => a.trim().toLowerCase() === b.trim().toLowerCase();
+/** A stored name matches what the Shortcut sent, in English or as shown in Spanish. */
+const named = (name: string, sent = '') => same(name, sent) || same(tr(name), sent);
 
 /** The account a purchase is paid from when its card isn't linked yet: the chosen one, else the first bank account, else the first account. */
 export function quickAccount(d: Data): string {
@@ -65,11 +87,11 @@ export function importInbox(d: Data, items: InboxItem[]): { patch: Partial<Data>
   for (const it of [...items].sort((a, b) => a.ts - b.ts)) {
     const id = `eq-${it.id}`, amt = Math.round(Number(it.amt) * 100) / 100;
     if (known.has(id) || !(amt > 0)) continue;
-    const p = d.pockets.find(x => same(x.name, it.pocket))?.id ?? '';
-    const a = d.accounts.find(x => same(x.name, it.account))?.id ?? cardAccount(d, it.card);
+    const p = d.pockets.find(x => named(x.name, it.pocket))?.id ?? '';
+    const a = d.accounts.find(x => named(x.name, it.account))?.id ?? cardAccount(d, it.card);
     const card = (it.card || '').trim();
     if (card && !cards[card]) cards[card] = a;
-    const sent = d.cats.find(k => same(k.name, it.category));
+    const sent = d.cats.find(k => named(k.name, it.category));
     const prev = (it.note ? latest.find(e => same(e.note, it.note)) : undefined) ?? latest.find(e => e.p === p && p) ?? latest[0];
     const [cat, sub] = sent ? [sent.name, ''] : prev ? catOf(prev) : [d.cats[0]?.name ?? 'Other', ''];
     const note = (it.note || '').trim() || (sub && sub !== 'General' ? sub : cat);

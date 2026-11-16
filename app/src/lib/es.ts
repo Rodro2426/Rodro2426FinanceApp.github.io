@@ -806,6 +806,15 @@ Turn on Apple Pay purchases|Activar compras con Apple Pay
 Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
 Your cards|Tus tarjetas
+Categories to choose from|Categorías para elegir
+After the pocket, the Shortcut asks for one of these. Up to 8.|Después del bolsillo, el atajo te pide una de estas. Hasta 8.
+Until you pick some, the Shortcut offers the last categories you used. Up to 8.|Mientras no elijas, el atajo ofrece las últimas categorías que usaste. Hasta 8.
+Your key|Tu clave
+Get the Shortcut|Obtener el atajo
+Tap "Get the Shortcut" and add it. When it asks for your key, paste it (Copy next to Your key).|Toca "Obtener el atajo" y agrégalo. Cuando te pida tu clave, pégala (Copiar junto a Tu clave).
+Open Shortcuts → Automation → +. Choose "Transaction" and your cards. Leave Any Category and Any Merchant, turn Automation on and Notify off, and tap Next.|Abre Atajos → Automatización → +. Elige "Transacción" y tus tarjetas. Deja Cualquier categoría y Cualquier comercio, activa Automatización, desactiva Notificar y toca Siguiente.
+Add "Run Shortcut" and pick "Pockets Apple Pay". Open it with the arrow and set Input to Shortcut Input.|Agrega "Ejecutar atajo" y elige "Pockets Apple Pay". Ábrelo con la flecha y pon Entrada del atajo como Entrada.
+Pay with Apple Pay: pick the pocket and the category, and a notification says "Saved $25.000 at Éxito to Groceries · Food".|Paga con Apple Pay: elige el bolsillo y la categoría, y una notificación dice "Guardado: $25.000 de Éxito en Mercado · Comida".
 Cards show up here after their first purchase. A change applies to the next purchases.|Las tarjetas aparecen aquí después de su primera compra. Un cambio aplica a las próximas compras.
 Add purchase|Agregar compra
 Anyone with these links can add expenses to your Pockets and see your pocket names, so keep them to yourself. If one leaks, turn this off and on again to get new links.|Cualquiera con estos enlaces puede agregar gastos a tu Pockets y ver los nombres de tus bolsillos, así que no los compartas. Si uno se filtra, desactiva esto y vuelve a activarlo para tener enlaces nuevos.

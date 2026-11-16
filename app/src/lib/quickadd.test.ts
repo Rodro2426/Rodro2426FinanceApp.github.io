@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { sampleData } from './seed';
-import { cardAccount, importInbox, newQuickKey, quickAccount, quickMenu } from './quickadd';
+import { cardAccount, importInbox, newQuickKey, quickAccount, quickMenu, shortcutCats } from './quickadd';
 
 const ts = new Date(2026, 10, 9, 13, 30).getTime();
 
@@ -90,5 +90,31 @@ describe('quick add inbox', () => {
     const past = { ...d.expenses[0], id: 'old', note: 'Éxito', cat: pick, sub: '', ts: ts - 1000 };
     const { added } = importInbox({ ...d, expenses: [past, ...d.expenses] }, [{ id: 'm1', amt: 800, note: 'éxito', pocket: d.pockets[0].name, ts }]);
     expect(added[0].cat).toBe(pick);
+  });
+
+  it('offers the pinned categories in the Shortcut, else the last ones used', () => {
+    const d = sampleData();
+    const names = d.cats.map(k => k.name);
+    const pinned = { ...d, settings: { ...d.settings, quickAdd: { key: 'k', pins: [names[2], 'Gone', names[0]] } } };
+    expect(shortcutCats(pinned)).toEqual([names[2], names[0]]);
+    expect(quickMenu(pinned, 'en').cats).toEqual([names[2], names[0]]);
+    const recent = shortcutCats(d);
+    expect(recent.length).toBeGreaterThan(0);
+    expect(recent.length).toBeLessThanOrEqual(6);
+    expect(new Set(recent).size).toBe(recent.length);
+    expect(shortcutCats({ ...d, expenses: [] })).toEqual(names.slice(0, 6));
+  });
+
+  it('shows built-in names in Spanish and maps them back when the purchase comes in', () => {
+    const real = (globalThis as { localStorage?: unknown }).localStorage;
+    (globalThis as { localStorage?: unknown }).localStorage = { getItem: () => 'es', setItem: () => {}, removeItem: () => {} };
+    try {
+      const d = sampleData();
+      const groceries = d.cats.find(k => k.name === 'Groceries')!;
+      const pinned = { ...d, settings: { ...d.settings, quickAdd: { key: 'k', pins: [groceries.name] } } };
+      expect(quickMenu(pinned, 'es').cats).toEqual(['Mercado']);
+      const { added } = importInbox(pinned, [{ id: 'es1', amt: 800, category: 'Mercado', ts }]);
+      expect(added[0].cat).toBe('Groceries');
+    } finally { (globalThis as { localStorage?: unknown }).localStorage = real; }
   });
 });
