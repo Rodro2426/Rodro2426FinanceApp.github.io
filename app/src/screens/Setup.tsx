@@ -2,7 +2,8 @@
 // that opens into a card, over a dark screen with the glowing Pockets flower and a breathing mint/lavender light.
 // The motion copies the approved mock (mocks/welcome-motion/compositions/opt-a.html). Every step saves as you go.
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { closeSheet, flash, getData, replaceData, setData, setUI, startTour, useApp } from '../lib/store';
+import { closeSheet, flash, getData, replaceData, setData, setUI, useApp } from '../lib/store';
+import type { Data } from '../lib/types';
 import { emptyData } from '../lib/seed';
 import { pickPhoto } from '../lib/photo';
 import { findLogo, siteHost } from '../lib/logo';
@@ -108,6 +109,16 @@ export default function Setup() {
     await reveal(false);
   };
   const next = () => go(steps[Math.min(steps.length - 1, steps.indexOf(step) + 1)]);
+  // What the data looked like when each step opened: going back to a step puts that back, so what the step saved is undone.
+  const before = useRef<Partial<Record<Step, Data>>>({});
+  useEffect(() => { before.current[step] = getData(); }, [step]);
+  const prev = steps[steps.indexOf(step) - 1];
+  const back = () => {
+    const snap = prev && before.current[prev];
+    if (!snap || busy) return;
+    replaceData({ ...snap, settings: { ...getData().settings, ...snap.settings, setupStep: prev } });
+    go(prev);
+  };
   const finish = () => { setData(x => ({ settings: { ...x.settings, setupStep: undefined } })); setUI({ setup: false, tab: 'home' }); flash('Your Pockets is ready'); };
 
   const idx = steps.indexOf(step);
@@ -119,7 +130,9 @@ export default function Setup() {
         <div className={'setup-glow' + (open ? ' open' : '')}><i /><i /><i /></div>
       </div>
       <div style={{ position: 'relative', maxWidth: 520, margin: '0 auto', padding: 'calc(var(--top) + 8px) 18px calc(var(--tb) + 40px)', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+        <div style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Back only while this visit remembers what the earlier step looked like (not after the app was reopened). */}
+          <button onClick={back} disabled={busy} aria-label="Back" style={{ ...ghost, width: 44, fontSize: 26, visibility: prev && before.current[prev] ? 'visible' : 'hidden' }}>‹</button>
           {step !== 'done' && step !== 'hello' && <button onClick={next} disabled={busy} style={{ ...ghost, width: 'auto', padding: '0 14px', fontSize: 15, fontWeight: 600 }}>Skip</button>}
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 26px' }}>
@@ -172,9 +185,10 @@ function OwnName({ placeholder, onAdd, label }: { placeholder: string; onAdd: (n
     </div>
   );
 }
-const Logo = ({ src, size = 32 }: { src: string | null; size?: number }) => src
-  ? <span style={{ width: size, height: size, borderRadius: Math.round(size * 0.28), overflow: 'hidden', background: '#fff', flex: 'none', display: 'inline-flex', boxShadow: '0 0 0 1px rgba(255,255,255,0.12)' }}><img src={src} alt="" width={size} height={size} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /></span>
+const Logo = ({ src, size = 32, pad }: { src: string | null; size?: number; pad?: boolean }) => src
+  ? <span style={{ width: size, height: size, borderRadius: Math.round(size * 0.28), overflow: 'hidden', background: '#fff', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 1px rgba(255,255,255,0.12)' }}><img src={src} alt="" width={size} height={size} style={{ width: pad ? '72%' : '100%', height: pad ? '72%' : '100%', objectFit: 'contain' }} /></span>
   : null;
+const padded = (name: string) => !!BANKS.find(b => b.name === name)?.pad;
 
 /** For a bank typed by hand: a photo from the phone, or the logo of its website. */
 function OwnLogo({ name, photo, onPhoto }: { name: string; photo: string | null; onPhoto: (p: string | null) => void }) {
@@ -206,7 +220,6 @@ function Hello({ name, onStart }: { name: string; onStart: () => void }) {
     <H>{name ? `Hi, ${name}` : 'Hi there'}</H>
     <Sub>Let's set up your money in 2 minutes: your bank, your income and your pockets. You can skip anything and change it later.</Sub>
     <Main onClick={onStart}>Let's start</Main>
-    <button onClick={() => { setData(x => ({ settings: { ...x.settings, setupStep: undefined } })); setUI({ setup: false }); startTour('first', name || 'there'); }} style={{ display: 'block', margin: '14px auto 0', border: 0, background: 'transparent', color: SOFT, fontSize: 15, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>Explore with the tour first</button>
   </>;
 }
 
@@ -226,7 +239,7 @@ function AccountStep({ onDone }: { onDone: () => void }) {
     <H>Your accounts</H>
     <Sub>Tap your bank (or several) and add its logo in one go. Not on the list? Type it below.</Sub>
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
-      {BANKS.map(b => <Chip key={b.name} on={has(b.name)} onClick={() => toggle(b.name)} icon={<Logo src={bankLogo(b.name)} />}>{b.name}</Chip>)}
+      {BANKS.map(b => <Chip key={b.name} on={has(b.name)} onClick={() => toggle(b.name)} icon={<Logo src={bankLogo(b.name)} pad={b.pad} />}>{b.name}</Chip>)}
       {rows.filter(r => own(r.name)).map(r => <Chip key={r.name} on onClick={() => toggle(r.name)} icon={<Logo src={r.photo ?? null} />}>{r.name}</Chip>)}
     </div>
     <OwnName placeholder="Another bank or wallet" label="Your own bank name" onAdd={n => !has(n) && setRows(r => [...r, { name: n, bal: '' }])} />
@@ -234,7 +247,7 @@ function AccountStep({ onDone }: { onDone: () => void }) {
     {rows.map(r => (
       <div key={r.name} style={{ marginTop: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Logo src={own(r.name) ? r.photo ?? null : bankLogo(r.name)} size={36} />
+          <Logo src={own(r.name) ? r.photo ?? null : bankLogo(r.name)} size={36} pad={padded(r.name)} />
           <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
           <div style={{ width: '52%' }}><Money value={r.bal} onChange={v => setRows(x => x.map(y => (y.name === r.name ? { ...y, bal: v } : y)))} label={`Balance of ${r.name}`} /></div>
         </div>
@@ -300,7 +313,7 @@ function IncomeStep({ onDone }: { onDone: () => void }) {
       <Chip on={pay === 'half'} onClick={() => setPay('half')}>Quincena (15 and 30)</Chip>
     </div>
     {pay === 'month' && <><Label>Payday</Label><input inputMode="numeric" value={day} onChange={e => setDay(e.target.value.replace(/\D/g, '').slice(0, 2))} aria-label="Payday" style={{ ...field, width: 110 }} /></>}
-    {own.length > 1 && <><Label>It arrives in</Label><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{own.map(a => <Chip key={a.id} on={acct === a.id} onClick={() => setAcct(a.id)} icon={<Logo src={a.photo ?? null} />}>{a.name}</Chip>)}</div></>}
+    {own.length > 1 && <><Label>It arrives in</Label><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{own.map(a => <Chip key={a.id} on={acct === a.id} onClick={() => setAcct(a.id)} icon={<Logo src={a.photo ?? null} pad={padded(a.name)} />}>{a.name}</Chip>)}</div></>}
     {!own.length && <Sub>Add a bank account first to have your pay arrive on its own. The amount is still used for your pockets.</Sub>}
     <Main onClick={save} disabled={!(num(amt) > 0)}>Continue</Main>
   </>;
@@ -405,6 +418,7 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
       {card(1, 'Add the Shortcut', stage === 'added', stage === 'added' ? null : <>
         {stage === 'ready' && <>
           <Sub>We copy your key and open the Shortcut. There: tap Add Shortcut, paste the key in the box, and tap Add Shortcut again. Then come back to Pockets.</Sub>
+          <Sub>Already have a Pockets shortcut from before? Delete it first in Shortcuts, so there's only one "Pockets Apple Pay".</Sub>
           {btn('Get the Shortcut', getShortcut)}
         </>}
         {stage === 'away' && <>

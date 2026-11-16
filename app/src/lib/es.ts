@@ -806,6 +806,7 @@ Turn on Apple Pay purchases|Activar compras con Apple Pay
 Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
 Your cards|Tus tarjetas
+Already have a Pockets shortcut from before? Delete it first in Shortcuts, so there's only one "Pockets Apple Pay".|¿Ya tenías un atajo de Pockets? Bórralo primero en Atajos, para que solo quede un "Pockets Apple Pay".
 or its website|o su página web
 Logo|Logo
 We copy your key and open the Shortcut. There: tap Add Shortcut, paste the key in the box, and tap Add Shortcut again. Then come back to Pockets.|Copiamos tu clave y abrimos el atajo. Allí: toca Agregar atajo, pega la clave en la casilla y vuelve a tocar Agregar atajo. Después regresa a Pockets.

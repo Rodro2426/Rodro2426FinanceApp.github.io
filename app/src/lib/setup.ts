@@ -8,11 +8,11 @@ import { uid } from './derive';
 import { addDays, todayISO } from './dates';
 
 /** Banks people in Colombia pick most; the logo comes from the bank's website. `cash` is the wallet. */
-export const BANKS: { name: string; site?: string; cash?: boolean }[] = [
-  { name: 'Bancolombia', site: 'bancolombia.com' },
+export const BANKS: { name: string; site?: string; cash?: boolean; /** Logo drawn to the edge: shrink it inside its tile. */ pad?: boolean }[] = [
+  { name: 'Bancolombia', site: 'bancolombia.com', pad: true },
   { name: 'Davivienda', site: 'davivienda.com' },
-  { name: 'Nequi', site: 'nequi.com.co' },
-  { name: 'Nu', site: 'nu.com.co' },
+  { name: 'Nequi', site: 'nequi.com.co', pad: true },
+  { name: 'Nu', site: 'nu.com.co', pad: true },
   { name: 'BBVA', site: 'bbva.com.co' },
   { name: 'Banco de Bogotá', site: 'bancodebogota.com' },
   { name: 'Daviplata', site: 'daviplata.com' },
