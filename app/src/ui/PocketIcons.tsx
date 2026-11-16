@@ -35,7 +35,20 @@ const P: [id: string, name: string, svg: string][] = [
   ['chart', 'Investments', '<circle cx="18" cy="8" r="2.2"/><path d="M4 20h16M5 16l4-4 3 3 6-7"/>'],
 ];
 export const POCKET_ICONS = P.map(([id, name]) => ({ code: 'pk:' + id, name }));
-const BY = new Map(P.map(([id, , svg]) => ['pk:' + id, svg]));
+/** Icons the app uses for its own rows and buttons, kept out of the pocket picker. */
+const UI: [id: string, svg: string][] = [
+  ['bank', '<path d="M3 9.5 12 4l9 5.5M4 20h16M6 10.5V17M10 10.5V17M14 10.5V17M18 10.5V17"/>'],
+  ['bars', '<path d="M4 20h16"/><rect x="5.5" y="11" width="3" height="6" rx="1"/><rect x="10.5" y="6" width="3" height="11" rx="1"/><rect x="15.5" y="9" width="3" height="8" rx="1"/>'],
+  ['lock', '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5v2"/>'],
+  ['bell', '<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15zM10 20.5a2 2 0 0 0 4 0"/>'],
+  ['cloud', '<path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 10.5a4 4 0 0 1-.5 8z"/>'],
+  ['chat', '<path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 3.5V17H6.5A2.5 2.5 0 0 1 4 14.5z"/><path d="M8.5 10.5v0M12 10.5v0M15.5 10.5v0"/>'],
+  ['compass', '<circle cx="12" cy="12" r="8.5"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>'],
+  ['sparkle', '<path d="M12 3.5c.6 4.2 2.3 5.9 6.5 6.5-4.2.6-5.9 2.3-6.5 6.5-.6-4.2-2.3-5.9-6.5-6.5 4.2-.6 5.9-2.3 6.5-6.5zM18.5 15.5c.3 1.8 1 2.5 2.5 2.8-1.5.3-2.2 1-2.5 2.7-.3-1.7-1-2.4-2.5-2.7 1.5-.3 2.2-1 2.5-2.8z"/>'],
+  ['flask', '<path d="M9.5 3.5h5M10.5 3.5v5.5L5 18.5A1.5 1.5 0 0 0 6.3 21h11.4a1.5 1.5 0 0 0 1.3-2.5L13.5 9V3.5M7.5 15h9"/>'],
+  ['folder', '<path d="M3.5 7A2 2 0 0 1 5.5 5h4l2 2.5h7a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>'],
+];
+const BY = new Map([...P.map(([id, , svg]) => ['pk:' + id, svg] as const), ...UI.map(([id, svg]) => ['pk:' + id, svg] as const)]);
 
 /** One of our icons drawn in the current text colour, sized to the font. */
 export function PkIcon({ code }: { code: string }) {

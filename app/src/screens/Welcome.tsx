@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { glyph } from '../ui/PocketIcons';
 import { getSync, pullForWelcome, subscribeSync, withoutMarking } from '../lib/cloud';
 import { takeHandoff, type Handoff } from '../lib/handoff';
 import { ArrivalScreen, dropVeil, holdVeil } from '../ui/ArrivalVeil';
@@ -71,7 +72,7 @@ export default function Welcome() {
 
   const option = (icon: string, title: string, sub: string, onClick: () => void) => (
     <button onClick={onClick} disabled={!!busy} style={{ width: '100%', textAlign: 'left', border: 0, borderRadius: 22, padding: '14px 16px', background: 'var(--surface)', color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.12)' }}>
-      <span style={{ fontSize: 22, width: 30, textAlign: 'center' }}>{icon}</span>
+      <span aria-hidden="true" style={{ fontSize: 22, width: 30, display: 'flex', justifyContent: 'center', color: 'var(--brand)' }}>{glyph(icon)}</span>
       <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ fontSize: 16, fontWeight: 700 }}>{title}</span>
         <span style={{ fontSize: 13, opacity: 0.65 }}>{sub}</span>
@@ -81,10 +82,10 @@ export default function Welcome() {
   );
 
   const features: [string, string, string][] = [
-    ['👛', 'Weekly pockets', "Split your income into pockets and see what's safe to spend today, this week and this month."],
-    ['☁️', 'Same data everywhere', 'Sign in on your iPhone and here: every change backs up to the cloud and shows up on both.'],
-    ['🏖️', 'Trips with friends', 'Share expenses, see who owes what, settle up in the fewest payments and chat.'],
-    ['📈', 'Net worth and investments', 'Accounts, cards, stocks and CDTs in one place, with reports you can filter.']
+    ['pk:pocket', 'Weekly pockets', "Split your income into pockets and see what's safe to spend today, this week and this month."],
+    ['pk:cloud', 'Same data everywhere', 'Sign in on your iPhone and here: every change backs up to the cloud and shows up on both.'],
+    ['pk:beach', 'Trips with friends', 'Share expenses, see who owes what, settle up in the fewest payments and chat.'],
+    ['pk:chart', 'Net worth and investments', 'Accounts, cards, stocks and CDTs in one place, with reports you can filter.']
   ];
   if (arriving) return <ArrivalScreen text="Bringing back your data…" />;
   if (desk) return (
@@ -103,7 +104,7 @@ export default function Welcome() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14, marginTop: 10 }}>
             {features.map(([icon, title, body]) => (
               <div key={title} style={{ background: 'rgba(255,255,255,.6)', borderRadius: 24, padding: '18px 18px 20px', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.08)' }}>
-                <span aria-hidden="true" style={{ fontSize: 26 }}>{icon}</span>
+                <span aria-hidden="true" style={{ fontSize: 26, display: 'flex', color: NAVY }}>{glyph(icon)}</span>
                 <span style={{ fontSize: 16.5, fontWeight: 800, letterSpacing: '-0.01em', color: NAVY }}>{title}</span>
                 <span style={{ fontSize: 14, lineHeight: 1.45, color: NAVY2 }}>{body}</span>
               </div>
@@ -123,10 +124,10 @@ export default function Welcome() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
               <input value={name} onChange={e => setName(e.target.value)} placeholder="What should we call you?" autoComplete="given-name" aria-label="Name for starting without an account"
                 style={{ border: 0, borderRadius: 16, background: 'var(--surface)', fontSize: 15, color: TEXT, padding: '13px 16px', outline: 'none' }} />
-              {option('🧭', 'Quick tour', 'Try every feature on a practice copy', () => startTour('first', who || 'there'))}
-              {option('✨', 'Start from scratch', 'Data stays only in this browser', () => scratch())}
-              {option('🧪', 'Try it with sample data', 'Made-up accounts and expenses', sample)}
-              {option('📂', 'Restore a backup file', 'Bring back a Pockets backup', restore)}
+              {option('pk:compass', 'Quick tour', 'Try every feature on a practice copy', () => startTour('first', who || 'there'))}
+              {option('pk:sparkle', 'Start from scratch', 'Data stays only in this browser', () => scratch())}
+              {option('pk:flask', 'Try it with sample data', 'Made-up accounts and expenses', sample)}
+              {option('pk:folder', 'Restore a backup file', 'Bring back a Pockets backup', restore)}
             </div>
           </details>
         </section>
@@ -166,10 +167,10 @@ export default function Welcome() {
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" autoComplete="given-name" aria-label="Name for starting without an account"
             style={{ border: 0, borderRadius: 18, background: 'var(--surface)', fontSize: 16, color: TEXT, padding: '15px 18px', outline: 'none' }} />
         </label>
-        {option('🧭', 'Quick tour', 'Try every feature on a practice copy, then keep it or start clean', () => startTour('first', who || 'there'))}
-        {option('✨', 'Start from scratch', 'Add your own accounts, pockets and income', () => scratch())}
-        {option('🧪', 'Try it with sample data', 'Explore with made-up accounts and expenses', sample)}
-        {option('📂', 'Restore a backup file', 'Bring back your data from a backup file', restore)}
+        {option('pk:compass', 'Quick tour', 'Try every feature on a practice copy, then keep it or start clean', () => startTour('first', who || 'there'))}
+        {option('pk:sparkle', 'Start from scratch', 'Add your own accounts, pockets and income', () => scratch())}
+        {option('pk:flask', 'Try it with sample data', 'Explore with made-up accounts and expenses', sample)}
+        {option('pk:folder', 'Restore a backup file', 'Bring back your data from a backup file', restore)}
         <span style={{ marginTop: 6, fontSize: 12, color: NAVY2, opacity: 0.75, textAlign: 'center' }}>You can replay the tour anytime from Profile.</span>
       </section>
     </div>

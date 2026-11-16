@@ -513,7 +513,7 @@ export function SettingsSheet() {
         <LockSetting />
         <FieldLabel m="18px 4px 8px">Cloud backup</FieldLabel>
         <button onClick={() => openSheet({ name: 'cloud' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
-          <span style={{ fontSize: 22 }}>☁️</span>
+          <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--brand)', display: 'inline-flex' }}>{glyph('pk:cloud')}</span>
           <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <span style={{ fontSize: 15, fontWeight: 700 }}>{sync.uid ? sync.email : 'Turn on cloud backup'}</span>
             <span style={{ fontSize: 12.5, color: sync.uid ? 'var(--color-neutral-700)' : 'var(--color-accent-700)' }}>{sync.uid ? syncLabel(sync) : 'Sign in so your data is never lost'}</span>

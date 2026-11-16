@@ -1,4 +1,5 @@
 // Friends & trips: the Debts tab, the money summary at the top, and the Home block.
+import { glyph } from '../ui/PocketIcons';
 import { useState, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, flash } from '../lib/store';
 import { LINE, RED, TEXT } from '../lib/constants';
@@ -214,7 +215,7 @@ export function FriendsHomeCard() {
   return (
     <button onClick={() => setUI({ page: 'social' })} className="pr98" style={{ ...card, border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT, gap: 8 }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span aria-hidden="true" style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--color-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🤝</span>
+        <span aria-hidden="true" style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--color-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: 'var(--brand)' }}>{glyph('pk:people')}</span>
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>Friends & trips</span>
           <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{empty ? 'Debts with one person, and trips shared with a group' : bits.join(' · ') || 'Debts and trips'}</span>

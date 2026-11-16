@@ -321,7 +321,7 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
       };
     }),
     ...(d.incomes || []).filter(t => t.a === id).map(t => ({
-      kind: 'income' as const, id: t.id, icon: '💰', photoBg: 'none', ts: t.ts, date: t.date, note: t.note, pocket: 'Income',
+      kind: 'income' as const, id: t.id, icon: 'pk:money', photoBg: 'none', ts: t.ts, date: t.date, note: t.note, pocket: 'Income',
       hue: 150, tags: [], category: 'Income', show: t.amt, effect: card ? -t.amt : t.amt, after: 0, fx: fxText(t.orig)
     })),
     ...d.payments.filter(p => p.from === id || p.to === id).map(p => {
@@ -349,7 +349,7 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
       };
     }),
     ...debtAcctLines(d, id).map(x => ({
-      kind: 'payment' as const, id: x.id, icon: '🤝', photoBg: 'none', ts: x.ts, date: x.date, note: x.note, pocket: 'Debt',
+      kind: 'payment' as const, id: x.id, icon: 'pk:people', photoBg: 'none', ts: x.ts, date: x.date, note: x.note, pocket: 'Debt',
       hue: 60, tags: [], category: 'Debt', show: x.show, effect: x.effect, after: 0, debt: x.debt
     }))
   ].sort(byDateDesc);

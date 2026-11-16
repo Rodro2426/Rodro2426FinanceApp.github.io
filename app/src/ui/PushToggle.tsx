@@ -1,4 +1,5 @@
 // Profile > Lock-screen notifications: on or off for this phone.
+import { glyph } from './PocketIcons';
 import { dateLocale } from '../lib/i18n';
 import { useEffect, useState } from 'react';
 import { flash, useApp } from '../lib/store';
@@ -29,7 +30,7 @@ export function PushToggle() {
   return (<>
     <FieldLabel m="18px 4px 0">Notifications</FieldLabel>
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', marginTop: 8 }}>
-      <span style={{ fontSize: 22 }}>🔔</span>
+      <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--brand)', display: 'inline-flex' }}>{glyph('pk:bell')}</span>
       <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 15, fontWeight: 700 }}>Lock-screen notifications</span>
         <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{busy ? 'One moment…' : sub}</span>

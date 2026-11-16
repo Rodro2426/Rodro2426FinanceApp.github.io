@@ -9,7 +9,7 @@ import { pushOn } from '../lib/push';
 import { NOTIF_TONE, NotifIcon } from '../sheets/ScheduleSheets';
 import { openTripLink } from '../lib/tripNotify';
 import type { Notif } from '../lib/types';
-import { LINE, TEXT, tint } from '../lib/constants';
+import { LINE, TEXT, ink, tint } from '../lib/constants';
 import { ctxOf, fmt, myExpenses } from '../lib/derive';
 import { daysInMonth, fmtDay, monthLabel, parse, prevMonthKey, relDay, todayISO } from '../lib/dates';
 import { dueDate, eventsOn } from '../lib/schedule';
@@ -113,7 +113,7 @@ export default function CalendarScreen() {
         })}
         {selIncome.map((t, i) => (
           <SwipeRow key={t.id} kind="income" id={t.id}><div onClick={() => openSheet({ name: 'txn', kind: 'income', id: t.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selIncome.length - 1 && !selSpent.length ? 'transparent' : LINE}`, cursor: 'pointer' }}>
-            <div style={{ width: 40, height: 40, borderRadius: 999, background: tint(150), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flex: 'none' }}>💰</div>
+            <div style={{ width: 40, height: 40, borderRadius: 999, background: tint(150), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flex: 'none', color: ink(150) }}>{glyph('pk:money')}</div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{t.note}</span>
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Income · {d.accounts.find(a => a.id === t.a)?.name || ''}</span>

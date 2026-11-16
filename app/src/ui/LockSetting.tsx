@@ -1,4 +1,5 @@
 // Profile > Face ID lock: on or off for this device, and how long Pockets can stay in the background before it locks.
+import { glyph } from './PocketIcons';
 import { useEffect, useState } from 'react';
 import { flash } from '../lib/store';
 import { useSync } from '../sheets/CloudSheet';
@@ -26,7 +27,7 @@ export function LockSetting() {
   return (
     <div style={{ marginTop: 8, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 22 }}>🔒</span>
+        <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--brand)', display: 'inline-flex' }}>{glyph('pk:lock')}</span>
         <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>{name} lock</span>
           <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{busy ? 'One moment…' : sub}</span>

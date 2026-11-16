@@ -1,4 +1,5 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import { glyph } from '../ui/PocketIcons';
 import { useApp, setUI, openSheet, flash } from '../lib/store';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { fmt, moneyScale } from '../lib/derive';
@@ -245,11 +246,11 @@ export function TripPage({ id }: { id: string }) {
 
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
       <button onClick={() => setUI({ page: `tripchat:${t.id}` })} className="pr98" style={{ ...card, border: 0, cursor: 'pointer', color: TEXT, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, position: 'relative' }}>
-        <span style={{ fontSize: 22 }}>💬</span><span style={{ fontSize: 15, fontWeight: 700 }}>Chat</span>
+        <span style={{ fontSize: 22, color: 'var(--brand)', display: 'inline-flex' }}>{glyph('pk:chat')}</span><span style={{ fontSize: 15, fontWeight: 700 }}>Chat</span>
         {hasUnread(t.id) && <span aria-label="New messages" style={{ position: 'absolute', top: 12, right: 12, width: 10, height: 10, borderRadius: 99, background: 'var(--color-accent)' }} />}
       </button>
       <button onClick={() => setUI({ page: `tripstats:${t.id}` })} className="pr98" style={{ ...card, border: 0, cursor: 'pointer', color: TEXT, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14 }}>
-        <span style={{ fontSize: 22 }}>📊</span><span style={{ fontSize: 15, fontWeight: 700 }}>Spending</span>
+        <span style={{ fontSize: 22, color: 'var(--brand)', display: 'inline-flex' }}>{glyph('pk:bars')}</span><span style={{ fontSize: 15, fontWeight: 700 }}>Spending</span>
       </button>
     </div>
 
@@ -261,7 +262,7 @@ export function TripPage({ id }: { id: string }) {
         const share = sharesOf(it, moneyScale())[uid] ?? 0, key = `${t.id}:${it.id}`;
         return (
           <div key={it.id} onClick={() => openSheet({ name: 'tripItem', trip: t.id, id: it.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderTop: i ? `1px solid ${LINE}` : 0, cursor: 'pointer' }}>
-            <span style={{ width: 38, height: 38, borderRadius: 12, background: it.kind === 'payment' ? 'oklch(0.95 0.045 155)' : 'var(--color-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flex: 'none' }}>{it.kind === 'payment' ? '🤝' : '🧾'}</span>
+            <span style={{ width: 38, height: 38, borderRadius: 12, background: it.kind === 'payment' ? 'oklch(0.95 0.045 155)' : 'var(--color-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flex: 'none', color: 'var(--brand)' }}>{glyph(it.kind === 'payment' ? 'pk:people' : 'pk:receipt')}</span>
             <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 14.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.kind === 'payment' ? `${nameOf(it.paidBy)} paid ${nameOf(it.to ?? '')}` : it.desc}</span>
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{it.kind === 'payment' ? shortDate(it.date) : `${nameOf(it.paidBy)} paid · ${shortDate(it.date)}`}{share > 0 ? ` · your share ${fmt(share)}` : ''}{share > 0 && logged.has(key) ? ' · in your budget' : ''}</span>

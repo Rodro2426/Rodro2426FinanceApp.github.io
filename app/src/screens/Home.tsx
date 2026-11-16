@@ -87,7 +87,7 @@ export default function Home() {
           if (r.kind === 'expense') { const v = expView(d, r.e, c, stats); return <SwipeRow key={r.id} kind="expense" id={r.id}><ExpRow v={v} last={last} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: r.id })} /></SwipeRow>; }
           const t = r.t, acct = d.accounts.find(a => a.id === t.a)?.name;
           const row = <ExpRow last={last} onClick={() => openSheet({ name: 'txn', kind: 'income', id: r.id })}
-            v={{ key: r.id, initial: '💰', photoBg: 'none', tint: 'oklch(0.95 0.045 155)', ink: 'oklch(0.42 0.09 155)', note: t.note, meta: ['Income', acct, relDay(t.date, c.today)].filter(Boolean).join(' · '), amtFmt: '+' + fmt(t.amt), tagLine: '', amtColor: 'oklch(0.45 0.11 150)' }} />;
+            v={{ key: r.id, initial: 'pk:money', photoBg: 'none', tint: 'oklch(0.95 0.045 155)', ink: 'oklch(0.42 0.09 155)', note: t.note, meta: ['Income', acct, relDay(t.date, c.today)].filter(Boolean).join(' · '), amtFmt: '+' + fmt(t.amt), tagLine: '', amtColor: 'oklch(0.45 0.11 150)' }} />;
           return t.interest ? <div key={r.id}>{row}</div> : <SwipeRow key={r.id} kind="income" id={r.id}>{row}</SwipeRow>;
         })}
         {recent.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing yet. Tap + to add an expense or income.</div>}

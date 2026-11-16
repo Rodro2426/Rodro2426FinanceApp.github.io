@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { glyph } from '../ui/PocketIcons';
 import { useApp, openSheet, setUI } from '../lib/store';
 import { EyeToggle } from '../ui/EyeToggle';
 import { earnsInterest } from '../lib/interest';
@@ -147,7 +148,7 @@ function InvestmentsCard({ inv }: { inv: ReturnType<typeof investmentsValue> }) 
   const gainPct = inv.stocks - inv.stocksGain > 0 ? inv.stocksGain / (inv.stocks - inv.stocksGain) : 0;
   const row = (icon: string, title: string, sub: string, value: string, extra?: string, extraColor?: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
-      <span style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(255,255,255,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flex: 'none' }}>{icon}</span>
+      <span style={{ width: 38, height: 38, borderRadius: 12, background: 'rgba(255,255,255,.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flex: 'none' }}>{glyph(icon)}</span>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 15, fontWeight: 600 }}>{title}</span>
         <span style={{ fontSize: 12, opacity: 0.75 }}>{sub}</span>
@@ -167,10 +168,10 @@ function InvestmentsCard({ inv }: { inv: ReturnType<typeof investmentsValue> }) 
       </div>
       <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em', margin: '2px 0 6px' }}>{fmt(inv.total)}</span>
       <div style={{ borderTop: '1px solid rgba(255,255,255,.15)' }}>
-        {row('📈', 'Stocks & ETFs', inv.stocksCount ? plural(inv.stocksCount, 'holding') : 'Add your first buy', fmt(inv.stocks), inv.stocksCount ? `${inv.stocksGain >= 0 ? '+' : '−'}${fmt(Math.abs(inv.stocksGain))} · ${(gainPct * 100).toFixed(1).replace('.', ',')}%` : undefined, inv.stocksGain >= 0 ? '#9ff0c4' : '#ffb4b4')}
+        {row('pk:chart', 'Stocks & ETFs', inv.stocksCount ? plural(inv.stocksCount, 'holding') : 'Add your first buy', fmt(inv.stocks), inv.stocksCount ? `${inv.stocksGain >= 0 ? '+' : '−'}${fmt(Math.abs(inv.stocksGain))} · ${(gainPct * 100).toFixed(1).replace('.', ',')}%` : undefined, inv.stocksGain >= 0 ? '#9ff0c4' : '#ffb4b4')}
         <div style={{ height: 1, background: 'rgba(255,255,255,.12)' }} />
-        {row('🏦', 'CDTs', inv.cdtCount ? plural(inv.cdtCount, 'active CDT') : 'Add a CDT', fmt(inv.cdts))}
-        {row('📊', 'Investment funds', inv.fundCount ? plural(inv.fundCount, 'fund') : 'Add a fund', fmt(inv.funds))}
+        {row('pk:bank', 'CDTs', inv.cdtCount ? plural(inv.cdtCount, 'active CDT') : 'Add a CDT', fmt(inv.cdts))}
+        {row('pk:bars', 'Investment funds', inv.fundCount ? plural(inv.fundCount, 'fund') : 'Add a fund', fmt(inv.funds))}
       </div>
     </div>
   );
