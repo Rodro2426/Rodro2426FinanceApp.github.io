@@ -30,9 +30,15 @@ export function SwipeRow({ kind, id, back, children }: { kind: 'expense' | 'inco
   const moved = useRef(false);
   const handle = useRef({ close: () => {} }).current;
 
+  const done = useRef<number | null>(null);
   const place = (to: number, ms = 0) => {
     const el = front.current; if (!el) return;
     x.current = to;
+    // At rest the row is see-through like the card it sits on; while it's moved it gets a solid backing
+    // so the Edit / Delete buttons under it don't show through (removed once it's back in place).
+    if (done.current) { clearTimeout(done.current); done.current = null; }
+    const r = root.current;
+    if (r) { if (to) r.classList.add('slid'); else if (ms) done.current = window.setTimeout(() => r.classList.remove('slid'), ms); else r.classList.remove('slid'); }
     el.style.transition = ms ? `transform ${ms}ms ${EASE}` : 'none';
     el.style.transform = to ? `translateX(${to}px)` : '';
   };

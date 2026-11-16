@@ -386,7 +386,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .swipe-row { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .22s var(--ease-drawer), opacity .18s ease; }
 .swipe-row.gone { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
 .swipe-clip { position: relative; overflow: hidden; min-height: 0; }
-.swipe-front { position: relative; z-index: 1; background: var(--surface-row); touch-action: pan-y; }
+.swipe-front { position: relative; z-index: 1; background: transparent; touch-action: pan-y; }
+.swipe-row.slid .swipe-front { background: var(--surface-row); }
+.swipe-row:not(.slid) .swipe-actions { visibility: hidden; }
 .swipe-actions { position: absolute; top: 0; right: 0; bottom: 0; display: flex; gap: 6px; align-items: center; padding: 6px 0 6px 6px; }
 .swipe-actions button {
   width: 70px; height: 100%; max-height: 64px; border: 0; border-radius: 16px; cursor: pointer;
