@@ -2,7 +2,10 @@
 // that opens into a card, over a dark screen with the glowing Pockets flower and a breathing mint/lavender light.
 // The motion copies the approved mock (mocks/welcome-motion/compositions/opt-a.html). Every step saves as you go.
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { flash, getData, setData, setUI, startTour, useApp } from '../lib/store';
+import { closeSheet, flash, getData, replaceData, setData, setUI, startTour, useApp } from '../lib/store';
+import { emptyData } from '../lib/seed';
+import { pickPhoto } from '../lib/photo';
+import { findLogo, siteHost } from '../lib/logo';
 import { fmt, num } from '../lib/derive';
 import { BANKS, BILLS, bankLogo, leftFree, makeAccount, makeBills, makeCard, makeIncome, makePockets, suggestPockets, type BillPick, type PocketPick } from '../lib/setup';
 import { newQuickKey, quickAccount } from '../lib/quickadd';
@@ -17,7 +20,7 @@ type Step = 'hello' | 'account' | 'card' | 'income' | 'pockets' | 'bills' | 'app
 
 const INK = '#f2efea', SOFT = '#a9a49e', MINT = '#8fd6cb', DEEP = '#0f2b28';
 const PILL = 76, R_PILL = 38, R_CARD = 36, EDGE = 2;
-const OPEN = 1200, CLOSE = 1150, SHAPE = 'cubic-bezier(0.76, 0, 0.24, 1)';
+const OPEN = 850, CLOSE = 800, SHAPE = 'cubic-bezier(0.76, 0, 0.24, 1)';
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -40,7 +43,9 @@ export default function Setup() {
   const { data: d } = useApp();
   const sync = useSync();
   const steps: Step[] = ['hello', 'account', 'card', 'income', 'pockets', 'bills', ...(isIOS() && sync.uid ? ['applepay' as Step] : []), 'done'];
-  const [step, setStep] = useState<Step>('hello');
+  const [step, setStep] = useState<Step>(() => { const s = getData().settings.setupStep as Step | undefined; return s && QUESTION[s] ? s : 'hello'; });
+  // Reopened on a step that isn't in today's list (e.g. Apple Pay before the sign-in loaded): keep it, just before Done.
+  if (!steps.includes(step)) steps.splice(steps.length - 1, 0, step);
   const [busy, setBusy] = useState(true);
   const [open, setOpen] = useState(false);
   const shape = useRef<HTMLDivElement>(null), ring = useRef<HTMLDivElement>(null), panel = useRef<HTMLDivElement>(null);
@@ -54,8 +59,8 @@ export default function Setup() {
     return a?.finished.catch(() => undefined) ?? Promise.resolve();
   };
   const fade = (el: HTMLElement | null, on: boolean, ms: number) => el?.animate(
-    on ? [{ opacity: 0, filter: 'blur(10px)', transform: 'translateY(8px)' }, { opacity: 1, filter: 'blur(0px)', transform: 'none' }]
-      : [{ opacity: 1, filter: 'blur(0px)' }, { opacity: 0, filter: 'blur(12px)' }],
+    on ? [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }]
+      : [{ opacity: 1 }, { opacity: 0 }],
     { duration: ms, easing: on ? 'cubic-bezier(0.23, 1, 0.32, 1)' : 'ease-in', fill: 'forwards' }
   ).finished.catch(() => undefined);
   const pulse = () => logo.current?.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.14)' }, { transform: 'scale(1)' }], { duration: 700, easing: 'ease-out' });
@@ -63,15 +68,15 @@ export default function Setup() {
   /** Opens the current step: the question shows in the pill, then the pill opens into the card. */
   const reveal = async (first: boolean) => {
     if (reduced()) { setOpen(true); q.current && (q.current.style.opacity = '0'); await fade(body.current, true, 200); setBusy(false); return; }
-    if (first) { await wait(250); morph('dot', 'pill', 800, 'cubic-bezier(0.16, 1, 0.3, 1)'); await wait(250); }
-    await fade(q.current, true, 450);
-    await wait(first ? 700 : 450);
+    if (first) { await wait(200); morph('dot', 'pill', 650, 'cubic-bezier(0.16, 1, 0.3, 1)'); await wait(200); }
+    await fade(q.current, true, 350);
+    await wait(first ? 450 : 250);
     pulse();
-    fade(q.current, false, 300);
+    fade(q.current, false, 220);
     setOpen(true);
     const opening = morph('pill', 'card', OPEN, SHAPE);
-    await wait(OPEN * 0.7);
-    await fade(body.current, true, 450);
+    await wait(OPEN * 0.65);
+    await fade(body.current, true, 320);
     await opening;
     setBusy(false);
   };
@@ -84,13 +89,14 @@ export default function Setup() {
     if (q.current) q.current.style.opacity = '0';
   }, []);
   useEffect(() => { reveal(true); }, []);
+  useEffect(() => { setData(x => (x.settings.setupStep === step ? {} : { settings: { ...x.settings, setupStep: step } })); }, [step]);
 
   /** Next (or another) step: the card folds back into a pill, the next question appears, and it opens again. */
   const go = async (to: Step) => {
     if (busy) return;
     setBusy(true);
     if (reduced()) { await fade(body.current, false, 150); setStep(to); scroller.current?.scrollTo(0, 0); await wait(30); await fade(body.current, true, 200); setBusy(false); return; }
-    await fade(body.current, false, 300);
+    await fade(body.current, false, 200);
     pulse();
     setOpen(false);
     await morph('card', 'pill', CLOSE, SHAPE);
@@ -102,7 +108,7 @@ export default function Setup() {
     await reveal(false);
   };
   const next = () => go(steps[Math.min(steps.length - 1, steps.indexOf(step) + 1)]);
-  const finish = () => { setUI({ setup: false, tab: 'home' }); flash('Your Pockets is ready'); };
+  const finish = () => { setData(x => ({ settings: { ...x.settings, setupStep: undefined } })); setUI({ setup: false, tab: 'home' }); flash('Your Pockets is ready'); };
 
   const idx = steps.indexOf(step);
   const name = d.settings.name && d.settings.name !== 'there' ? d.settings.name : '';
@@ -149,7 +155,7 @@ const H = ({ children }: { children: ReactNode }) => <div style={{ fontSize: 28,
 const Sub = ({ children }: { children: ReactNode }) => <div style={{ marginTop: 8, fontSize: 15, lineHeight: 1.4, color: SOFT }}>{children}</div>;
 const Label = ({ children }: { children: ReactNode }) => <div style={{ margin: '18px 2px 8px', fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: SOFT }}>{children}</div>;
 function Chip({ on, onClick, children, icon }: { on?: boolean; onClick: () => void; children: ReactNode; icon?: ReactNode }) {
-  return <button onClick={onClick} aria-pressed={!!on} className="pr97" style={{ height: 44, padding: icon ? '0 16px 0 6px' : '0 16px', borderRadius: 22, border: 0, background: on ? MINT : 'rgba(255,255,255,0.08)', color: on ? DEEP : INK, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'background .25s, color .25s' }}>{icon}{children}</button>;
+  return <button onClick={onClick} aria-pressed={!!on} className="pr97" style={{ height: 44, padding: icon ? '0 16px 0 7px' : '0 16px', borderRadius: 22, border: 0, background: on ? MINT : 'rgba(255,255,255,0.08)', color: on ? DEEP : INK, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'background .25s, color .25s' }}>{icon}{children}</button>;
 }
 function Main({ onClick, children, disabled }: { onClick: () => void; children: ReactNode; disabled?: boolean }) {
   return <button onClick={onClick} disabled={disabled} className="pr97" style={{ width: '100%', height: 54, marginTop: 24, borderRadius: 27, border: 0, background: MINT, color: DEEP, fontSize: 17, fontWeight: 700, cursor: 'pointer', opacity: disabled ? 0.4 : 1, transition: 'opacity .2s' }}>{children}</button>;
@@ -167,8 +173,32 @@ function OwnName({ placeholder, onAdd, label }: { placeholder: string; onAdd: (n
   );
 }
 const Logo = ({ src, size = 32 }: { src: string | null; size?: number }) => src
-  ? <span style={{ width: size, height: size, borderRadius: 999, overflow: 'hidden', background: '#fff', flex: 'none', display: 'inline-flex' }}><img src={src} alt="" width={size} height={size} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></span>
+  ? <span style={{ width: size, height: size, borderRadius: Math.round(size * 0.28), overflow: 'hidden', background: '#fff', flex: 'none', display: 'inline-flex', boxShadow: '0 0 0 1px rgba(255,255,255,0.12)' }}><img src={src} alt="" width={size} height={size} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /></span>
   : null;
+
+/** For a bank typed by hand: a photo from the phone, or the logo of its website. */
+function OwnLogo({ name, photo, onPhoto }: { name: string; photo: string | null; onPhoto: (p: string | null) => void }) {
+  const [site, setSite] = useState('');
+  const [state, setState] = useState<'idle' | 'busy' | 'none'>('idle');
+  const get = () => {
+    if (!siteHost(site) || state === 'busy') return;
+    setState('busy');
+    findLogo(site).then(u => { if (u) { onPhoto(u); setSite(''); } setState(u ? 'idle' : 'none'); });
+  };
+  const small: CSSProperties = { flex: 'none', height: 40, padding: '0 14px', borderRadius: 14, border: 0, background: 'rgba(255,255,255,0.1)', color: INK, fontSize: 14, fontWeight: 600, cursor: 'pointer' };
+  return (
+    <div style={{ margin: '8px 0 6px', padding: 10, borderRadius: 16, background: 'rgba(255,255,255,0.04)' }}>
+      <div style={{ fontSize: 13, color: SOFT, margin: '0 2px 8px' }}>{`Logo for ${name}`}</div>
+      <button onClick={() => pickPhoto().then(p => p && onPhoto(p))} className="pr97" style={{ ...small, width: '100%' }}>{photo ? 'Change photo' : 'Add photo'}</button>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <input value={site} onChange={e => { setSite(e.target.value); setState('idle'); }} onKeyDown={e => { if (e.key === 'Enter') get(); }} placeholder="or its website" aria-label={`Website of ${name}`} inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+          style={{ ...field, flex: 1, minWidth: 0, padding: '10px 12px', fontSize: 14, height: 40 }} />
+        {site.trim() && <button onClick={get} disabled={!siteHost(site) || state === 'busy'} className="pr97" style={{ ...small, background: MINT, color: DEEP }}>{state === 'busy' ? '…' : 'Logo'}</button>}
+      </div>
+      {state === 'none' && <div style={{ marginTop: 6, fontSize: 13, color: SOFT }}>No logo found for that website. Check the address, or add a photo instead.</div>}
+    </div>
+  );
+}
 
 /* ---------------- Steps ---------------- */
 function Hello({ name, onStart }: { name: string; onStart: () => void }) {
@@ -176,18 +206,20 @@ function Hello({ name, onStart }: { name: string; onStart: () => void }) {
     <H>{name ? `Hi, ${name}` : 'Hi there'}</H>
     <Sub>Let's set up your money in 2 minutes: your bank, your income and your pockets. You can skip anything and change it later.</Sub>
     <Main onClick={onStart}>Let's start</Main>
-    <button onClick={() => { setUI({ setup: false }); startTour('first', name || 'there'); }} style={{ display: 'block', margin: '14px auto 0', border: 0, background: 'transparent', color: SOFT, fontSize: 15, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>Explore with the tour first</button>
+    <button onClick={() => { setData(x => ({ settings: { ...x.settings, setupStep: undefined } })); setUI({ setup: false }); startTour('first', name || 'there'); }} style={{ display: 'block', margin: '14px auto 0', border: 0, background: 'transparent', color: SOFT, fontSize: 15, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>Explore with the tour first</button>
   </>;
 }
 
 function AccountStep({ onDone }: { onDone: () => void }) {
-  const [rows, setRows] = useState<{ name: string; bal: string }[]>([]);
+  const [rows, setRows] = useState<{ name: string; bal: string; photo?: string | null }[]>([]);
+  const own = (n: string) => !BANKS.some(b => b.name === n);
+  const setPhoto = (n: string, photo: string | null) => setRows(x => x.map(y => (y.name === n ? { ...y, photo } : y)));
   const has = (n: string) => rows.some(r => r.name === n);
   const toggle = (n: string) => setRows(r => (has(n) ? r.filter(x => x.name !== n) : [...r, { name: n, bal: '' }]));
   const save = () => {
     const ok = rows.filter(r => r.name.trim());
     // One after another, so each new account gets the next colour.
-    if (ok.length) setData(x => ({ accounts: ok.reduce((acc, r) => [...acc, makeAccount({ ...x, accounts: acc }, r.name, num(r.bal))], x.accounts) }));
+    if (ok.length) setData(x => ({ accounts: ok.reduce((acc, r) => [...acc, makeAccount({ ...x, accounts: acc }, r.name, num(r.bal), r.photo)], x.accounts) }));
     onDone();
   };
   return <>
@@ -195,15 +227,18 @@ function AccountStep({ onDone }: { onDone: () => void }) {
     <Sub>Tap your bank (or several) and add its logo in one go. Not on the list? Type it below.</Sub>
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
       {BANKS.map(b => <Chip key={b.name} on={has(b.name)} onClick={() => toggle(b.name)} icon={<Logo src={bankLogo(b.name)} />}>{b.name}</Chip>)}
-      {rows.filter(r => !BANKS.some(b => b.name === r.name)).map(r => <Chip key={r.name} on onClick={() => toggle(r.name)}>{r.name}</Chip>)}
+      {rows.filter(r => own(r.name)).map(r => <Chip key={r.name} on onClick={() => toggle(r.name)} icon={<Logo src={r.photo ?? null} />}>{r.name}</Chip>)}
     </div>
     <OwnName placeholder="Another bank or wallet" label="Your own bank name" onAdd={n => !has(n) && setRows(r => [...r, { name: n, bal: '' }])} />
     {rows.length > 0 && <Label>How much is in each one now?</Label>}
     {rows.map(r => (
-      <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-        <Logo src={bankLogo(r.name)} size={36} />
-        <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
-        <div style={{ width: '52%' }}><Money value={r.bal} onChange={v => setRows(x => x.map(y => (y.name === r.name ? { ...y, bal: v } : y)))} label={`Balance of ${r.name}`} /></div>
+      <div key={r.name} style={{ marginTop: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Logo src={own(r.name) ? r.photo ?? null : bankLogo(r.name)} size={36} />
+          <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
+          <div style={{ width: '52%' }}><Money value={r.bal} onChange={v => setRows(x => x.map(y => (y.name === r.name ? { ...y, bal: v } : y)))} label={`Balance of ${r.name}`} /></div>
+        </div>
+        {own(r.name) && <OwnLogo name={r.name} photo={r.photo ?? null} onPhoto={p => setPhoto(r.name, p)} />}
       </div>
     ))}
     <Main onClick={save} disabled={!rows.length}>Continue</Main>
@@ -329,6 +364,8 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
   const { data: d } = useApp();
   const qa = d.settings.quickAdd;
   const [busy, setBusy] = useState(false);
+  // 'ready' → tap Get the Shortcut; 'away' → came back from Shortcuts, confirm it was added; 'added' → build the automation.
+  const [stage, setStage] = useState<'ready' | 'away' | 'added'>('ready');
   const turnOn = async () => {
     setBusy(true);
     setData(x => ({ settings: { ...x.settings, quickAdd: { key: newQuickKey(), acct: quickAccount(x) } } }));
@@ -338,23 +375,26 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
   };
   const getShortcut = async () => {
     const key = getData().settings.quickAdd?.key;
-    try { if (key) await navigator.clipboard.writeText(key); flash('Your key is copied: paste it when the Shortcut asks'); } catch { /* the steps say where to copy it */ }
+    try { if (key) await navigator.clipboard.writeText(key); } catch { /* the key is also shown below */ }
+    setStage('away');
     window.open(SHORTCUT_LINK, '_blank');
   };
-  const card = (n: number, title: string, children: ReactNode) => (
+  const copyKey = async () => { try { await navigator.clipboard.writeText(qa?.key ?? ''); flash('Key copied'); } catch { flash('Press and hold the key to copy it'); } };
+  const card = (n: number, title: string, done: boolean, children: ReactNode) => (
     <div style={{ marginTop: 12, padding: 14, borderRadius: 20, background: 'rgba(255,255,255,0.06)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ width: 28, height: 28, borderRadius: 14, background: MINT, color: DEEP, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{n}</span>
-        <span style={{ fontSize: 16, fontWeight: 700 }}>{title}</span>
+        <span style={{ width: 28, height: 28, borderRadius: 14, background: MINT, color: DEEP, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{done ? '✓' : n}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, opacity: done ? 0.6 : 1 }}>{title}</span>
       </div>
-      <div style={{ marginTop: 10 }}>{children}</div>
+      {children && <div style={{ marginTop: 10 }}>{children}</div>}
     </div>
   );
   const row = (icon: string, text: ReactNode, tint: string) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, background: '#1d1c1b', marginTop: 6, fontSize: 14, fontWeight: 600 }}>
-      <span style={{ width: 26, height: 26, borderRadius: 7, background: tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>{icon}</span>{text}
+      <span style={{ width: 26, height: 26, borderRadius: 7, background: tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>{icon}</span><span>{text}</span>
     </div>
   );
+  const btn = (label: string, onClick: () => void, light = false) => <button onClick={onClick} className="pr97" style={{ width: '100%', height: 48, marginTop: 10, borderRadius: 24, border: 0, background: light ? 'rgba(255,255,255,0.1)' : INK, color: light ? INK : DEEP, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>{label}</button>;
   return <>
     <H>Apple Pay</H>
     <Sub>When you pay with your iPhone, it asks for the pocket and Pockets adds the purchase for you.</Sub>
@@ -362,20 +402,52 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
       <Main onClick={turnOn} disabled={busy}>{busy ? 'Turning on…' : 'Yes, set it up'}</Main>
       <button onClick={onDone} style={{ display: 'block', margin: '14px auto 0', border: 0, background: 'transparent', color: SOFT, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Not now</button>
     </> : <>
-      {card(1, 'Add the Shortcut', <>
-        <Sub>Your key is copied for you. When the Shortcut asks for it, just paste.</Sub>
-        <button onClick={getShortcut} className="pr97" style={{ width: '100%', height: 48, marginTop: 10, borderRadius: 24, border: 0, background: INK, color: DEEP, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>Get the Shortcut</button>
+      {card(1, 'Add the Shortcut', stage === 'added', stage === 'added' ? null : <>
+        {stage === 'ready' && <>
+          <Sub>We copy your key and open the Shortcut. There: tap Add Shortcut, paste the key in the box, and tap Add Shortcut again. Then come back to Pockets.</Sub>
+          {btn('Get the Shortcut', getShortcut)}
+        </>}
+        {stage === 'away' && <>
+          <Sub>Did the Shortcut get added? If Pockets shows a blank page when you come back, tap Done at the top left.</Sub>
+          {btn('Yes, I added it', () => setStage('added'))}
+          {btn('Open it again', getShortcut, true)}
+          <div style={{ marginTop: 10, fontSize: 13, color: SOFT }}>Your key, if it asks again: <span onClick={copyKey} style={{ color: INK, fontWeight: 600, userSelect: 'all', WebkitUserSelect: 'all', wordBreak: 'break-all', cursor: 'pointer' }}>{qa.key}</span></div>
+        </>}
       </>)}
-      {card(2, 'Create the automation', <>
-        <Sub>In Shortcuts → Automation → +, choose Transaction and your cards, turn Automation on, then add these two actions:</Sub>
-        {row('▤', <span>Dictionary: <b>amount</b>, <b>merchant</b>, <b>card</b></span>, '#f2994a')}
-        <div style={{ margin: '4px 0 0 46px', fontSize: 13, color: SOFT }}>Each one: Shortcut Input → Type Transaction → Amount, Merchant, Card or Pass</div>
-        {row('◆', <span>Run Shortcut: <b>Pockets Apple Pay</b> · Input: Dictionary</span>, '#7a68b8')}
-      </>)}
-      {card(3, 'Pay and pick the pocket', <Sub>Right after you tap to pay, choose the pocket and category. The purchase shows up next time you open Pockets.</Sub>)}
-      <Main onClick={onDone}>Done</Main>
+      {stage === 'added' && <>
+        {card(2, 'Create the automation', false, <>
+          <Sub>In Shortcuts → Automation → +, choose Transaction and your cards, turn Automation on, then add these two actions:</Sub>
+          {row('▤', <span>Dictionary: <b>amount</b>, <b>merchant</b>, <b>card</b></span>, '#f2994a')}
+          <div style={{ margin: '4px 0 0 46px', fontSize: 13, color: SOFT }}>Each one: Shortcut Input → Type Transaction → Amount, Merchant, Card or Pass</div>
+          {row('◆', <span>Run Shortcut: <b>Pockets Apple Pay</b> · Input: Dictionary</span>, '#7a68b8')}
+        </>)}
+        {card(3, 'Pay and pick the pocket', false, <Sub>Right after you tap to pay, choose the pocket and category. The purchase shows up next time you open Pockets.</Sub>)}
+        <Main onClick={onDone}>Done</Main>
+      </>}
+      {stage !== 'added' && <button onClick={onDone} style={{ display: 'block', margin: '14px auto 0', border: 0, background: 'transparent', color: SOFT, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Finish this later in Profile</button>}
     </>}
   </>;
+}
+
+/** Profile → start over: erases this phone's data (and the cloud copy, once it syncs) and runs the setup again. */
+export function StartOverButton() {
+  const [ask, setAsk] = useState(false);
+  const go = () => {
+    const d = getData();
+    const e = emptyData(d);
+    replaceData({ ...e, settings: { ...e.settings, setupStep: 'hello', tourSeen: true } });
+    closeSheet();
+    setUI({ setup: true, tab: 'home', page: null });
+  };
+  return ask ? (
+    <div role="alertdialog" aria-label="Start over" style={{ marginTop: 12, background: 'var(--color-accent-100)', borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--color-accent-900)' }}>This erases your accounts, pockets, income, bills and transactions on this phone and in your cloud copy, then opens the setup. Your name and settings stay. It can't be undone: make a backup first if you might want them back.</span>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={go} style={{ flex: 1, height: 44, borderRadius: 999, border: 0, background: 'var(--color-accent-700)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Erase and start the setup</button>
+        <button onClick={() => setAsk(false)} style={{ flex: 'none', padding: '0 18px', height: 44, borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+      </div>
+    </div>
+  ) : <button onClick={() => setAsk(true)} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-accent-700)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Start over with the setup</button>;
 }
 
 function Done({ name, onFinish }: { name: string; onFinish: () => void }) {

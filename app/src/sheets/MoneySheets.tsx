@@ -5,6 +5,7 @@ import { cardCycle, payDayOf } from '../lib/cards';
 import { getLang, setLang, type Lang } from '../lib/i18n';
 import { dateLocale } from '../lib/i18n';
 import { LockSetting } from '../ui/LockSetting';
+import { StartOverButton } from '../screens/Setup';
 import { logOutAndClear } from '../lib/session';
 import { PushToggle } from '../ui/PushToggle';
 import { CardFace } from '../ui/CardFace';
@@ -596,6 +597,7 @@ export function SettingsSheet() {
           </div>
         ) : <button onClick={() => (hasData ? setAskTour(true) : startTour('replay'))} className="hv-n200" style={{ marginTop: 18, height: 46, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>App tutorial</button>}
         <button onClick={() => setUI({ sheet: null, install: 'profile' })} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>How to install Pockets on iPhone</button>
+        <StartOverButton />
         {sync.uid && <LogOutBlock email={sync.email ?? ''} />}
       </div>
     </SheetFrame>

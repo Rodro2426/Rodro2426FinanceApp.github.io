@@ -248,6 +248,8 @@ export default function App() {
   const quickList = quickOn ? JSON.stringify(quickMenu(data, 'en')) : '';
   useEffect(() => { if (quickList) pushQuickMenu().catch(() => {}); }, [quickList]);
   useEffect(() => { if (shouldShowInstallGuide()) setUI({ install: 'auto' }); }, []);
+  // Closed the app in the middle of the first-time setup: open it again at the same step.
+  useEffect(() => { if (getData().settings.setupStep && !ui.welcome && !ui.tour) setUI({ setup: true }); }, [ui.welcome]);
   // Light/dark: follow the setting, or the iPhone when it's "System".
   const theme = data.settings.theme ?? 'system';
   const bgKey = JSON.stringify(data.settings.bg ?? {});

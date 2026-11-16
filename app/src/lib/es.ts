@@ -806,6 +806,20 @@ Turn on Apple Pay purchases|Activar compras con Apple Pay
 Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
 Your cards|Tus tarjetas
+or its website|o su página web
+Logo|Logo
+We copy your key and open the Shortcut. There: tap Add Shortcut, paste the key in the box, and tap Add Shortcut again. Then come back to Pockets.|Copiamos tu clave y abrimos el atajo. Allí: toca Agregar atajo, pega la clave en la casilla y vuelve a tocar Agregar atajo. Después regresa a Pockets.
+Did the Shortcut get added? If Pockets shows a blank page when you come back, tap Done at the top left.|¿Quedó agregado el atajo? Si al volver Pockets muestra una página en blanco, toca OK arriba a la izquierda.
+Yes, I added it|Sí, lo agregué
+Open it again|Abrirlo otra vez
+Your key, if it asks again:|Tu clave, si te la vuelve a pedir:
+Key copied|Clave copiada
+Press and hold the key to copy it|Mantén presionada la clave para copiarla
+Finish this later in Profile|Terminar después en Perfil
+This erases your accounts, pockets, income, bills and transactions on this phone and in your cloud copy, then opens the setup. Your name and settings stay. It can't be undone: make a backup first if you might want them back.|Esto borra tus cuentas, bolsillos, ingresos, gastos fijos y movimientos en este celular y en tu copia en la nube, y abre la configuración. Tu nombre y tus ajustes se mantienen. No se puede deshacer: haz una copia de seguridad antes si quizá los quieras recuperar.
+Erase and start the setup|Borrar y empezar la configuración
+Start over with the setup|Empezar de nuevo con la configuración
+Start over|Empezar de nuevo
 Add a bank account first to have your pay arrive on its own. The amount is still used for your pockets.|Agrega primero una cuenta para que tu pago llegue solo. El monto igual se usa para tus bolsillos.
 Add the Shortcut|Agrega el atajo
 Add your Apple Pay purchases on their own?|¿Agregamos solas tus compras con Apple Pay?
@@ -1973,6 +1987,8 @@ Amount of {0}|Monto de {0}
 Balance of {0}|Saldo de {0}
 Day of {0}|Día de {0}
 Weekly budget for {0}|Presupuesto semanal de {0}
+Website of {0}|Página web de {0}
+Logo for {0}|Logo de {0}
 {0}. Tap to check it or fix the name.|{0}. Tócala para revisarla o corregir el nombre.
 Account for {0}|Cuenta para {0}
 Tap again to delete {0}|Toca otra vez para eliminar {0}

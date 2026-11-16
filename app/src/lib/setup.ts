@@ -17,6 +17,7 @@ export const BANKS: { name: string; site?: string; cash?: boolean }[] = [
   { name: 'Banco de Bogotá', site: 'bancodebogota.com' },
   { name: 'Daviplata', site: 'daviplata.com' },
   { name: 'Lulo Bank', site: 'lulobank.com' },
+  { name: 'Rappi', site: 'rappi.com.co' },
   { name: 'Cash', cash: true }
 ];
 
@@ -60,11 +61,11 @@ export function leftFree(income: number, weeks: number, pockets: { on: boolean; 
 const hueAt = (i: number) => HUES[i % HUES.length];
 const clean = (s: string) => s.trim().replace(/\s+/g, ' ');
 
-/** A bank, savings or cash account, with its logo when it's a known bank. */
-export function makeAccount(d: Data, name: string, bal: number): Account {
+/** A bank, savings or cash account, with its logo when it's a known bank (or the photo or website logo the person chose). */
+export function makeAccount(d: Data, name: string, bal: number, photo?: string | null): Account {
   const cash = BANKS.find(b => b.name === name)?.cash;
   const type = cash ? 'cash' : 'bank';
-  return { id: uid('x'), name: tr(clean(name)), kind: ACCT_KIND[type], type, bal: Math.max(0, Math.round(bal)), hue: hueAt(d.accounts.length), photo: bankLogo(name) };
+  return { id: uid('x'), name: tr(clean(name)), kind: ACCT_KIND[type], type, bal: Math.max(0, Math.round(bal)), hue: hueAt(d.accounts.length), photo: photo ?? bankLogo(name) };
 }
 
 /** A credit card: what's owed now, the limit, and the cutoff and pay-by days. */
