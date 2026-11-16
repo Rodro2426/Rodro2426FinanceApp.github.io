@@ -37,3 +37,13 @@ describe('custom pocket colors', () => {
     expect(ink(colorFromHex('#232e7a'))).toBe('#ffffff');
   });
 });
+
+describe('status bar behind an open sheet', () => {
+  it('is the page color seen through the 30% dark layer', async () => {
+    const { dimmed } = await import('./bg');
+    expect(dimmed('#ffffff')).toBe('#bcbcbb'); // 255·0.7 + (32,30,29)·0.3
+    expect(dimmed('#f5f8f4')).toBe('#b5b7b3');
+    expect(dimmed('#000000')).toBe('#0a0909');
+    expect(dimmed('#abc')).toBe(dimmed('#aabbcc'));
+  });
+});

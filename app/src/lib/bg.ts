@@ -25,6 +25,17 @@ export const contrast = (a: string, b: string) => { const [x, y] = [lum(a), lum(
 /** Whether the app's text stays easy to read on this background in this mode. */
 export const readable = (hex: string, mode: Mode) => contrast(hex, TEXT[mode]) >= 4.5;
 
+/** A page color seen through the dark layer behind an open sheet (rgba(32,30,29,.3)): what the status bar should show then. */
+export function dimmed(hex: string, k = 0.3): string {
+  const c = normHex(hex) ?? '#ffffff', n = parseInt(c.slice(1), 16), ink = [32, 30, 29];
+  return '#' + [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v, i) => Math.round(v * (1 - k) + ink[i] * k).toString(16).padStart(2, '0')).join('');
+}
+/** The iPhone status bar: the page color, or dimmed while a sheet is open so the strip at the top darkens with the app. */
+export function tintStatusBar(bg: { light?: string; dark?: string } | undefined, mode: Mode, dim: boolean) {
+  const c = bg?.[mode] ?? DEFAULT_BG[mode];
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dim ? dimmed(c) : c);
+}
+
 /** Puts the chosen background on the page and the iPhone status bar. */
 export function applyBg(bg: { light?: string; dark?: string } | undefined, mode: Mode) {
   const c = bg?.[mode];
