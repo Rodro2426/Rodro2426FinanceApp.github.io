@@ -31,5 +31,15 @@ export function shouldShowSite(): boolean {
   if (standalone || navigator.webdriver || hasHandoff()) return false;
   return !new URLSearchParams(location.search).has('app');
 }
+/**
+ * iPhone Safari is only the way in: Pockets is used from the Home Screen app, which keeps its own storage. So there the
+ * main link always shows the website, even if Safari has Pockets data from before (its Get started opens the install
+ * guide). Links with ?app, the installed app and automated tests still open the app.
+ */
+export function iPhoneSafariFrontDoor(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return ios && shouldShowSite();
+}
 /** Where the website lives (the dev server needs the file name). */
 export const SITE_URL = import.meta.env.DEV ? './site/index.html' : './site/';

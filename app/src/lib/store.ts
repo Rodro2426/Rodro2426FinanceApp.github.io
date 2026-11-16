@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { SITE_URL, shouldShowSite } from './handoff';
+import { SITE_URL, iPhoneSafariFrontDoor, shouldShowSite } from './handoff';
 import { get, set } from 'idb-keyval';
 import type { Data, UI } from './types';
 import { emptyData, sampleData } from './seed';
@@ -64,6 +64,7 @@ export function normalize(d: Data): Data {
 /** Load saved data, or keep the sample data on first run. */
 export async function loadData() {
   try {
+    if (iPhoneSafariFrontDoor()) { location.replace(SITE_URL); return new Promise<void>(() => {}); }
     const saved = await get<Data>(KEY);
     if (saved && saved.version === 1) state = { ...state, data: normalize(saved) };
     else {
