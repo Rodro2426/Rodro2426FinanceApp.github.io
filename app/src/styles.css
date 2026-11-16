@@ -3,7 +3,14 @@
 /* Tokens. Brand colours come from the $100.000 bill ("Cien mil"): deep teal brand, lime action, lavender accent.
    Red (--color-accent) stays for warnings: overspent, delete, unread. */
 :root {
-  --surface: #fff;
+  /* Cards are clear glass: mostly see-through white, blurred (see the glass rules below). Things that float over
+     other content use --surface-solid; rows that hide buttons under them use --surface-row (the glass's look, solid). */
+  --surface: rgba(255,255,255,0.32);
+  --surface-solid: #fff;
+  --surface-row: color-mix(in srgb, var(--page) 68%, #fff);
+  --glass-edge: rgba(255,255,255,0.55);
+  /* A faint outline so glass boxes keep their shape on plain backgrounds (sheets). */
+  --glass-line: rgba(32,30,29,0.07);
   --page: #f5f8f4;
   --brand: #1f5f5a; --brand-tint: #dcefe6;
   --action: #8cc84b; --action-press: #7db83d; --action-ink: #14301f;
@@ -193,7 +200,11 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 /* Same tokens, dark values. Set by Profile > Appearance (System follows the iPhone setting). */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --surface: #1d1c1b;
+  --surface: rgba(40,40,38,0.48);
+  --surface-solid: #1d1c1b;
+  --surface-row: color-mix(in srgb, var(--page) 52%, #282826);
+  --glass-edge: rgba(255,255,255,0.08);
+  --glass-line: transparent;
   --page: #0e0e0d;
   --on-text: #141312;
   --money-in: oklch(0.78 0.14 150);
@@ -234,7 +245,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .force-light {
   color-scheme: light;
   --brand: #1f5f5a;
-  --surface: #fff; --on-text: #fff; --color-text: #201e1d;
+  --surface: #fff; --surface-solid: #fff; --surface-row: #fff; --on-text: #fff; --color-text: #201e1d;
   --color-neutral-100: #f8f4f4; --color-neutral-200: #eae7e7; --color-neutral-300: #d7d3d3; --color-neutral-500: #9b9797; --color-neutral-600: #7d7979; --color-neutral-700: #605d5d;
   --color-accent-700: #ae1800;
   color: var(--color-text);
@@ -277,7 +288,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   .top-dot { width: 7px; height: 7px; border-radius: 99px; background: var(--color-accent); }
   .top-more-wrap { position: relative; }
   .top-more {
-    position: absolute; top: calc(100% + 10px); left: 0; min-width: 230px; padding: 6px; border-radius: 18px; background: var(--surface);
+    position: absolute; top: calc(100% + 10px); left: 0; min-width: 230px; padding: 6px; border-radius: 18px; background: var(--surface-solid);
     box-shadow: 0 18px 40px -16px rgba(32,30,29,.35), 0 0 0 1px var(--color-neutral-200); display: flex; flex-direction: column;
     transform-origin: top left; animation: menu-in .16s var(--ease-out);
   }
@@ -375,7 +386,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .swipe-row { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .22s var(--ease-drawer), opacity .18s ease; }
 .swipe-row.gone { grid-template-rows: 0fr; opacity: 0; pointer-events: none; }
 .swipe-clip { position: relative; overflow: hidden; min-height: 0; }
-.swipe-front { position: relative; z-index: 1; background: var(--surface); touch-action: pan-y; }
+.swipe-front { position: relative; z-index: 1; background: var(--surface-row); touch-action: pan-y; }
 .swipe-actions { position: absolute; top: 0; right: 0; bottom: 0; display: flex; gap: 6px; align-items: center; padding: 6px 0 6px 6px; }
 .swipe-actions button {
   width: 70px; height: 100%; max-height: 64px; border: 0; border-radius: 16px; cursor: pointer;
@@ -469,3 +480,14 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 @keyframes arrive-breathe { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.94); opacity: .7; } }
 .arrive-mark { animation: arrive-breathe 1.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .arrive-mark { animation: none; } }
+
+/* ---------- Clear glass cards ----------
+   Every box drawn with var(--surface) lets the page show through, blurred, with a thin light edge.
+   Only the outermost box blurs (a blur inside a blur adds nothing and costs a lot on iPhone). */
+[style*="var(--surface)"] { -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5); box-shadow: inset 0 0 0 1px var(--glass-edge), 0 0 0 1px var(--glass-line); }
+[style*="var(--surface)"] [style*="var(--surface)"] { -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* Things floating over other content stay solid so what's under them doesn't show through. */
+[style*="var(--surface)"][style*="position: absolute"], [style*="var(--surface)"][style*="position: fixed"], [style*="var(--surface)"][style*="position: sticky"] { background: var(--surface-solid) !important; }
+/* Text boxes keep a visible outline now that their fill is see-through. */
+input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*="var(--surface)"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text) 10%, transparent); }
+@media (prefers-reduced-transparency: reduce) { :root { --surface: var(--surface-solid); } [style*="var(--surface)"] { backdrop-filter: none; -webkit-backdrop-filter: none; } }

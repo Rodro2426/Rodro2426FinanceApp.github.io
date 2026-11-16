@@ -73,6 +73,7 @@ Key choices, with the reason behind each one. Newest topics are near the end of 
 - **"Minimum payment" means what the cycle obliges you to pay**, and the app works it out; it is never typed. It is everything bought up to the last cutoff that isn't paid yet (`cardCycle().statement` in `lib/cards.ts`). The owner asked for this so a monthly scheduled payment charges nothing when nothing was bought last cycle. The app has no installments (cuotas), so it's the whole statement, not a bank's partial minimum. `Account.minPay` and `payMode: 'min'` are leftovers from one day when it was typed; both are ignored.
 
 ## UI
+- **Clear glass cards everywhere (Nov 2026).** The owner picked see-through boxes (about 32% white, blurred) after comparing solid, frosted and clear mocks. Light mode adds a faint outline so boxes keep their shape on the plain sheet background. iPhones with Reduce Transparency get solid boxes.
 
 - **Photos are drawn with `<img>` (`Fill` in `ui/bits.tsx`), not CSS backgrounds.** See the gotchas.
 - **Edit layout uses invisible movable blocks around the existing designs** (`ui/Blocks.tsx`). The owner explicitly didn't want the pockets' look changed.
