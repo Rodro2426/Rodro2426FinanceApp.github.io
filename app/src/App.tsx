@@ -327,8 +327,10 @@ export default function App() {
             );
           })}
         </nav>
-        <button data-tour="add" onClick={() => openSheet({ name: 'add' })} aria-label="Add expense" className="hv-acc600 pr92" style={{ width: 62, height: 62, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flex: 'none', boxShadow: '0 8px 20px color-mix(in srgb,var(--action) 35%,transparent)', transition: 'transform .15s' }}>
-          <I.Plus size={26} sw={2.5} />
+        {/* The add button: the bill's flower with a + in the middle, on a glass disc (styles: .add-flower). */}
+        <button data-tour="add" onClick={() => openSheet({ name: 'add' })} aria-label="Add expense" className="add-flower pr92">
+          <span className="add-flower-rose" aria-hidden="true" />
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 1.8V16.2M1.8 9H16.2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg>
         </button>
       </div>}
 
