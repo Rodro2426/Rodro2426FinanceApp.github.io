@@ -15,6 +15,7 @@ import { useSync } from '../sheets/CloudSheet';
 import { SHORTCUT_LINK } from '../sheets/QuickAddSheet';
 import { isIOS } from './InstallGuide';
 import { MoneyInput } from '../ui/MoneyInput';
+import { TutorialVideoButton } from '../ui/TutorialVideo';
 import { glyph } from '../ui/PocketIcons';
 
 type Step = 'hello' | 'account' | 'card' | 'income' | 'pockets' | 'bills' | 'applepay' | 'done';
@@ -430,6 +431,7 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
       <Main onClick={turnOn} disabled={busy}>{busy ? 'Turning on…' : 'Yes, set it up'}</Main>
       <button onClick={onDone} style={{ display: 'block', margin: '14px auto 0', border: 0, background: 'transparent', color: SOFT, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Not now</button>
     </> : <>
+      <TutorialVideoButton style={{ marginTop: 16, background: MINT, color: DEEP }} />
       {card(1, 'Add the Shortcut', stage === 'added', stage === 'added' ? null : <>
         {stage === 'ready' && <>
           <Sub>We copy your key and open the Shortcut. There: tap Set Up Shortcut, paste the key in the box, then tap Add Shortcut. If nothing happens, tap Skip Setup: your key is kept. Then come back to Pockets.</Sub>

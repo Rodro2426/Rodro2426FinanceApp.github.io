@@ -8,6 +8,7 @@ import { newQuickKey, quickAccount, shortcutCats } from '../lib/quickadd';
 import { pullQuickInbox, pushQuickMenu, quickAddOff, quickUrl } from '../lib/quickaddSync';
 import { FieldLabel, GhostDanger, PrimaryBtn, Toggle } from '../ui/bits';
 import { SheetFrame } from './Sheet';
+import { TutorialVideoButton } from '../ui/TutorialVideo';
 
 /** iCloud link of the shared "Pockets Apple Pay" shortcut. Empty until the owner shares it; then the short steps show. */
 export const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/2765a45031bc48d4ad115eddd4f796d6';
@@ -66,6 +67,12 @@ export function QuickAddSheet() {
     setConfirmOff(false); flash('Apple Pay purchases are off');
   };
   const link = (card: string, acct: string) => setData(x => ({ settings: { ...x.settings, quickAdd: { ...x.settings.quickAdd!, cards: { ...x.settings.quickAdd?.cards, [card]: acct } } } }));
+  // Copies the key (the Shortcut asks for it) and opens a fresh link each time: the very same link opened twice only
+  // brought Shortcuts forward without its add screen.
+  const openShortcut = async (key: string) => {
+    try { await navigator.clipboard.writeText(key); flash('Your key is copied: paste it when the Shortcut asks'); } catch { /* Copy next to Your key */ }
+    window.open(`${SHORTCUT_LINK}?open=${Date.now()}`, '_blank');
+  };
   const copy = async (text: string) => {
     try { await navigator.clipboard.writeText(text); flash('Link copied'); } catch { flash('Could not copy. Press and hold the link to copy it.'); }
   };
@@ -154,7 +161,8 @@ export function QuickAddSheet() {
           </div>
 
           <FieldLabel>Build the Shortcut</FieldLabel>
-          {SHORTCUT_LINK && <a href={SHORTCUT_LINK} target="_blank" rel="noreferrer" className="pr97" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, marginBottom: 10, borderRadius: 999, background: TEXT, color: 'var(--surface)', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>Get the Shortcut</a>}
+          <TutorialVideoButton style={{ marginBottom: 10, background: 'var(--action)', color: 'var(--action-ink)' }} />
+          {SHORTCUT_LINK && <a href={SHORTCUT_LINK} target="_blank" rel="noreferrer" onClick={e => { e.preventDefault(); openShortcut(qa.key); }} className="pr97" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 48, marginBottom: 10, borderRadius: 999, background: TEXT, color: 'var(--surface)', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>Get the Shortcut</a>}
           <ol style={{ ...card, margin: 0, padding: '16px 16px 16px 36px', gap: 10 }}>
             {(SHORTCUT_LINK ? SHARED_STEPS : STEPS).map(s => <li key={s} style={{ fontSize: 13.5, lineHeight: 1.45 }}>{s}</li>)}
           </ol>
