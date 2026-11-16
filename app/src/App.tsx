@@ -311,7 +311,7 @@ export default function App() {
       )}
 
       {banner && !ui.sheet && !ui.tour && (
-        <div className="banner" role="alert" onClick={() => { if (banner.kind === 'reminder') { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'add' }); } else if (banner.link) { patchNotif(banner.id, { bannered: true, dismissed: true }); openTripLink(banner.link); } else { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); } }}
+        <div className="banner" role="alert" onClick={() => { if (banner.kind === 'reminder') { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'add' }); } else if (banner.txn) { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'txn', kind: 'expense', id: banner.txn }); } else if (banner.link) { patchNotif(banner.id, { bannered: true, dismissed: true }); openTripLink(banner.link); } else { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); } }}
           style={{ position: 'absolute', left: 12, right: 12, top: 'calc(var(--top) - 10px)', zIndex: 35, background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 22, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 10px 30px rgba(45,43,43,.18),0 0 0 1px rgba(45,43,43,.05)', cursor: 'pointer' }}>
           <div style={{ width: 38, height: 38, borderRadius: 999, background: NOTIF_TONE[banner.kind].bg, color: NOTIF_TONE[banner.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={banner.kind} /></div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>

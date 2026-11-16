@@ -2,9 +2,9 @@
 // which pocket (an iPhone pop-up) and drops the amount, store and card in a private inbox on the Pockets Worker. When
 // Pockets opens it collects the inbox and saves each item as a normal expense. The inbox is locked by a long random key
 // that only this person's devices know.
-import type { Data, Expense } from './types';
+import type { Data, Expense, Notif } from './types';
 import { iso } from './dates';
-import { catOf, chargeAccount } from './derive';
+import { catOf, chargeAccount, fmt } from './derive';
 import { tr } from './i18n';
 
 export interface InboxItem { id: string; amt: number; pocket?: string; note?: string; account?: string; category?: string; /** The Wallet card's name. */ card?: string; ts: number }
@@ -101,6 +101,11 @@ export function importInbox(d: Data, items: InboxItem[]): { patch: Partial<Data>
   }
   if (!added.length) return { patch: null, added };
   const qa = d.settings.quickAdd;
+  // One notice per purchase so the person can fix a store name like "PAYU*EXITO 0123" (unless they turned it off).
+  const notes: Notif[] = qa?.review === false ? [] : added.map(e => ({
+    id: `nq-${e.id}`, date: iso(new Date()), ts: Date.now(), kind: 'applepay', txn: e.id, read: false, dismissed: false, bannered: false,
+    title: `Apple Pay · ${fmt(e.amt)}`, body: `${e.note}. Tap to check it or fix the name.`
+  }));
   const settings = qa && Object.keys(cards).length !== Object.keys(qa.cards ?? {}).length ? { ...d.settings, quickAdd: { ...qa, cards } } : undefined;
-  return { patch: { expenses: [...added.reverse(), ...d.expenses], accounts, ...(settings ? { settings } : {}) }, added };
+  return { patch: { expenses: [...added.reverse(), ...d.expenses], accounts, ...(settings ? { settings } : {}), ...(notes.length ? { notifications: [...notes, ...d.notifications] } : {}) }, added };
 }

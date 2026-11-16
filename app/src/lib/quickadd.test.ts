@@ -117,4 +117,18 @@ describe('quick add inbox', () => {
       expect(added[0].cat).toBe('Groceries');
     } finally { (globalThis as { localStorage?: unknown }).localStorage = real; }
   });
+
+  it('adds a notice to check each purchase, unless it is turned off', () => {
+    const d = { ...sampleData(), notifications: [] };
+    const on = { ...d, settings: { ...d.settings, quickAdd: { key: 'k' } } };
+    const { patch } = importInbox(on, [{ id: 'r1', amt: 25000, note: 'PAYU*EXITO 0123', ts }, { id: 'r2', amt: 900, note: 'Tostao', ts: ts + 1 }]);
+    const notes = patch!.notifications!;
+    expect(notes.map(n => n.txn).sort()).toEqual(['eq-r1', 'eq-r2']);
+    expect(notes[0]).toMatchObject({ kind: 'applepay', read: false, dismissed: false, bannered: false });
+    expect(notes.find(n => n.txn === 'eq-r1')!.body).toContain('PAYU*EXITO 0123');
+    const again = importInbox({ ...on, ...patch }, [{ id: 'r1', amt: 25000, ts }]);
+    expect(again.patch).toBeNull();
+    const off = { ...d, settings: { ...d.settings, quickAdd: { key: 'k', review: false } } };
+    expect(importInbox(off, [{ id: 'r3', amt: 500, ts }]).patch!.notifications).toBeUndefined();
+  });
 });

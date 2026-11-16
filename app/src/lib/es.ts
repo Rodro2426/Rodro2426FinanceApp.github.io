@@ -806,6 +806,8 @@ Turn on Apple Pay purchases|Activar compras con Apple Pay
 Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
 Your cards|Tus tarjetas
+Ask me to check each purchase|Pedirme revisar cada compra
+A notification in Pockets for every Apple Pay purchase. Tap it to fix a strange store name or change the details.|Una notificación en Pockets por cada compra con Apple Pay. Tócala para corregir un nombre de tienda raro o cambiar los detalles.
 Categories to choose from|Categorías para elegir
 After the pocket, the Shortcut asks for one of these. Up to 8.|Después del bolsillo, el atajo te pide una de estas. Hasta 8.
 Until you pick some, the Shortcut offers the last categories you used. Up to 8.|Mientras no elijas, el atajo ofrece las últimas categorías que usaste. Hasta 8.
@@ -1899,6 +1901,7 @@ Moved {0} expenses to {1}|{0} gastos movidos a {1}
 Moved 1 income to {0}|1 ingreso movido a {0}
 Moved {0} incomes to {1}|{0} ingresos movidos a {1}
 Added {0} Apple Pay purchases|Se agregaron {0} compras con Apple Pay
+{0}. Tap to check it or fix the name.|{0}. Tócala para revisarla o corregir el nombre.
 Account for {0}|Cuenta para {0}
 Tap again to delete {0}|Toca otra vez para eliminar {0}
 Top: {0}|Mayor gasto: {0}

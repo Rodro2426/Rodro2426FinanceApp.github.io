@@ -6,7 +6,7 @@ import { useSync } from './CloudSheet';
 import { TEXT, ink, tint } from '../lib/constants';
 import { newQuickKey, quickAccount, shortcutCats } from '../lib/quickadd';
 import { pullQuickInbox, pushQuickMenu, quickAddOff, quickUrl } from '../lib/quickaddSync';
-import { FieldLabel, GhostDanger, PrimaryBtn } from '../ui/bits';
+import { FieldLabel, GhostDanger, PrimaryBtn, Toggle } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 
 /** iCloud link of the shared "Pockets Apple Pay" shortcut. Empty until the owner shares it; then the short steps show. */
@@ -126,6 +126,14 @@ export function QuickAddSheet() {
               <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Cards show up here after their first purchase. A change applies to the next purchases.</span>
             </div>
           </>}
+
+          <div style={{ ...card, flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14 }}>
+            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ fontSize: 15, fontWeight: 700 }}>Ask me to check each purchase</span>
+              <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>A notification in Pockets for every Apple Pay purchase. Tap it to fix a strange store name or change the details.</span>
+            </span>
+            <Toggle on={qa.review !== false} onChange={v => setData(x => ({ settings: { ...x.settings, quickAdd: { ...x.settings.quickAdd!, review: v ? undefined : false } } }))} label="Ask me to check each purchase" />
+          </div>
 
           <FieldLabel>Categories to choose from</FieldLabel>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
