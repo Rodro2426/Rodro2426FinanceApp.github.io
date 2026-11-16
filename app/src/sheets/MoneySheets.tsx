@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { lookOf, restartIfLookChanged } from '../lib/restart';
+import { useEffect, useRef, useState } from 'react';
+import { lookOf, restartSoon, takeScrollBack } from '../lib/restart';
 import { glyph } from '../ui/PocketIcons';
 import { cardCycle, payDayOf } from '../lib/cards';
 import { getLang, setLang, type Lang } from '../lib/i18n';
@@ -469,8 +469,16 @@ function LogOutBlock({ email }: { email: string }) {
 export function SettingsSheet() {
   const { data: d } = useApp();
   const st = d.settings;
-  // The iPhone's top bar only takes a new colour when the app starts: restart once Profile closes after a change.
-  useEffect(() => { const start = lookOf(getData()); return () => restartIfLookChanged(start); }, []);
+  // The iPhone's top bar only takes a new colour when the app starts: restart right after a colour change
+  // (a moment after the last tap), then come back here at the same place.
+  const startLook = useRef(lookOf(getData()));
+  const look = lookOf(d);
+  useEffect(() => { restartSoon(startLook.current); }, [look]);
+  useEffect(() => {
+    const y = takeScrollBack();
+    // Set a few times while the sheet slides in and its content finishes laying out.
+    if (y) [0, 120, 300, 500].forEach(ms => setTimeout(() => { const p = document.querySelector('.sheet-panel'); if (p) p.scrollTop = y; }, ms));
+  }, []);
   const [confirm, setConfirm] = useState<null | 'erase' | 'sample'>(null);
   const [restore, setRestore] = useState<Awaited<ReturnType<typeof readBackup>> | null>(null);
   const [askTour, setAskTour] = useState(false);

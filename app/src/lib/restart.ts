@@ -13,15 +13,21 @@ export const isHomeScreenApp = () =>
 /** What the status bar's colour depends on: light/dark/system and the background colours. */
 export const lookOf = (d: Data) => JSON.stringify([d.settings.theme ?? 'system', d.settings.bg ?? {}]);
 
-/** Saves everything, shows the loading screen and reloads, coming back to the same tab. */
+/** Saves everything, shows the loading screen and reloads, coming back to the same tab (and to Profile, if it was open). */
 export async function restartApp(text = 'Updating your colors…') {
   if (!isPersisting()) return; // the practice tour isn't saved, so a restart would lose it
-  const { tab, page } = getState().ui;
-  try { sessionStorage.setItem(RETURN_KEY, JSON.stringify({ tab, page: page ?? null })); } catch { /* comes back on Home */ }
+  const { tab, page, sheet } = getState().ui;
+  const panel = document.querySelector('.sheet-panel');
+  const back = { tab, page: page ?? null, settings: sheet?.name === 'settings', scroll: panel ? panel.scrollTop : 0 };
+  try { sessionStorage.setItem(RETURN_KEY, JSON.stringify(back)); } catch { /* comes back on Home */ }
   holdVeil(text);
   await saveNow();
   location.reload();
 }
+
+/** Where Profile was scrolled to before a restart (read once by Profile when it opens again). */
+let scrollBack = 0;
+export const takeScrollBack = () => { const v = scrollBack; scrollBack = 0; return v; };
 
 /** After a restart: go back to where you were. Called once at start-up. */
 export function returnAfterRestart() {
@@ -29,14 +35,17 @@ export function returnAfterRestart() {
     const raw = sessionStorage.getItem(RETURN_KEY);
     if (!raw) return;
     sessionStorage.removeItem(RETURN_KEY);
-    const r = JSON.parse(raw) as { tab?: Tab; page?: UI['page'] };
+    const r = JSON.parse(raw) as { tab?: Tab; page?: UI['page']; settings?: boolean; scroll?: number };
     if (r.tab) setUI({ tab: r.tab, page: r.page ?? null });
+    if (r.settings) { scrollBack = r.scroll ?? 0; setUI({ sheet: { name: 'settings' } }); }
   } catch { /* nothing to restore */ }
 }
 
-/** Remembers the look when Profile opens; when it closes with a different look, restarts (home-screen app only). */
-export function restartIfLookChanged(start: string) {
+/** A colour change in Profile: restart shortly after the last change (home-screen app only), so trying several
+ *  colours in a row restarts once. Back in Profile, at the same place, after the restart. */
+let timer: ReturnType<typeof setTimeout> | undefined;
+export function restartSoon(start: string) {
+  clearTimeout(timer);
   if (!isHomeScreenApp() || lookOf(getData()) === start) return;
-  // Only once Profile is really closed, not when it hands over to another sheet.
-  setTimeout(() => { if (!getState().ui.sheet) restartApp(); }, 0);
+  timer = setTimeout(() => restartApp(), 900);
 }

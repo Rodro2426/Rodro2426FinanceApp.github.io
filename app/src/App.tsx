@@ -3,7 +3,7 @@ import { getLang } from './lib/i18n';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud, syncNow } from './lib/cloud';
 import { TopBar, useDesk } from './ui/Desk';
-import { applyBg, tintStatusBar } from './lib/bg';
+import { applyBg } from './lib/bg';
 import { registerSW, syncReminders } from './lib/push';
 import { LockGate } from './ui/LockScreen';
 import { openTripLink, pollTrips } from './lib/tripNotify';
@@ -249,12 +249,6 @@ export default function App() {
     apply(); mq.addEventListener('change', apply);
     return () => mq.removeEventListener('change', apply);
   }, [theme, bgKey]);
-  // The iPhone draws the status bar itself, in the page color: dim it with the app while a sheet is open.
-  const sheetOpen = !!ui.sheet && !desk;
-  useEffect(() => {
-    const mode = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
-    tintStatusBar(getData().settings.bg, mode, sheetOpen);
-  }, [sheetOpen, theme, bgKey]);
   // Cloud sync: every saved change is uploaded a few seconds later; other phones' changes come down on open.
   useEffect(() => { startCloud({ getData, replace: d => replaceData(d), canSync: isPersisting }); return onPersist(markDirty); }, []);
   useEffect(() => {
