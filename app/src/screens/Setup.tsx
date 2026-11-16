@@ -52,12 +52,26 @@ export default function Setup() {
   const shape = useRef<HTMLDivElement>(null), ring = useRef<HTMLDivElement>(null), panel = useRef<HTMLDivElement>(null);
   const q = useRef<HTMLDivElement>(null), body = useRef<HTMLDivElement>(null), logo = useRef<HTMLImageElement>(null), scroller = useRef<HTMLDivElement>(null);
 
+  // The shape the outline and the glass are in now. The end shape is also written on the element itself, so when the
+  // card under it grows or shrinks (a new step), it can be recomputed for the new height before anything is drawn.
+  const phase = useRef<'dot' | 'pill' | 'card'>('dot');
+  const setShape = (p: 'dot' | 'pill' | 'card') => {
+    const s = shapes(shape.current?.offsetHeight ?? 400);
+    [ring.current, panel.current].forEach((el, i) => { if (!el) return; el.getAnimations().forEach(a => a.cancel()); el.style.clipPath = s[p][i]; });
+    phase.current = p;
+  };
   const morph = (from: 'dot' | 'pill' | 'card', to: 'pill' | 'card', ms: number, ease: string) => {
-    const h = shape.current?.offsetHeight ?? 400, s = shapes(h);
-    const opts: KeyframeAnimationOptions = { duration: ms, easing: ease, fill: 'forwards' };
-    const a = ring.current?.animate([{ clipPath: s[from][0] }, { clipPath: s[to][0] }], opts);
-    panel.current?.animate([{ clipPath: s[from][1] }, { clipPath: s[to][1] }], opts);
-    return a?.finished.catch(() => undefined) ?? Promise.resolve();
+    const s = shapes(shape.current?.offsetHeight ?? 400);
+    let done: Promise<unknown> = Promise.resolve();
+    [ring.current, panel.current].forEach((el, i) => {
+      if (!el) return;
+      el.getAnimations().forEach(a => a.cancel());
+      el.style.clipPath = s[to][i];
+      const a = el.animate([{ clipPath: s[from][i] }, { clipPath: s[to][i] }], { duration: ms, easing: ease });
+      if (i === 0) done = a.finished.catch(() => undefined);
+    });
+    phase.current = to;
+    return done;
   };
   const fade = (el: HTMLElement | null, on: boolean, ms: number) => el?.animate(
     on ? [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }]
@@ -83,12 +97,13 @@ export default function Setup() {
   };
   useLayoutEffect(() => {
     // Start hidden: no shape, no text.
-    const s = shapes(shape.current?.offsetHeight ?? 400);
-    if (ring.current) ring.current.style.clipPath = s.dot[0];
-    if (panel.current) panel.current.style.clipPath = s.dot[1];
+    setShape('dot');
     if (body.current) body.current.style.opacity = '0';
     if (q.current) q.current.style.opacity = '0';
   }, []);
+  // A new step's card has another height: fit the pill (or dot) to it before the screen is drawn, or the old shape
+  // flashes for a frame at the wrong size.
+  useLayoutEffect(() => { if (phase.current !== 'card') setShape(phase.current); }, [step]);
   useEffect(() => { reveal(true); }, []);
   useEffect(() => { setData(x => (x.settings.setupStep === step ? {} : { settings: { ...x.settings, setupStep: step } })); }, [step]);
 
@@ -104,8 +119,6 @@ export default function Setup() {
     setStep(to);
     scroller.current?.scrollTo({ top: 0, behavior: 'smooth' });
     await wait(60);
-    // The next step's card may be taller or shorter: snap the pill to the new height before opening it.
-    morph('pill', 'pill', 1, 'linear');
     await reveal(false);
   };
   const next = () => go(steps[Math.min(steps.length - 1, steps.indexOf(step) + 1)]);
@@ -390,7 +403,8 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
     const key = getData().settings.quickAdd?.key;
     try { if (key) await navigator.clipboard.writeText(key); } catch { /* the key is also shown below */ }
     setStage('away');
-    window.open(SHORTCUT_LINK, '_blank');
+    // A fresh address each time: opening the very same link again only brought Shortcuts forward without the add screen.
+    window.open(`${SHORTCUT_LINK}?open=${Date.now()}`, '_blank');
   };
   const copyKey = async () => { try { await navigator.clipboard.writeText(qa?.key ?? ''); flash('Key copied'); } catch { flash('Press and hold the key to copy it'); } };
   const card = (n: number, title: string, done: boolean, children: ReactNode) => (
@@ -417,12 +431,12 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
     </> : <>
       {card(1, 'Add the Shortcut', stage === 'added', stage === 'added' ? null : <>
         {stage === 'ready' && <>
-          <Sub>We copy your key and open the Shortcut. There: tap Add Shortcut, paste the key in the box, and tap Add Shortcut again. Then come back to Pockets.</Sub>
+          <Sub>We copy your key and open the Shortcut. There: tap Set Up Shortcut, paste the key in the box, then tap Add Shortcut. If nothing happens, tap Skip Setup: your key is kept. Then come back to Pockets.</Sub>
           <Sub>Already have a Pockets shortcut from before? Delete it first in Shortcuts, so there's only one "Pockets Apple Pay".</Sub>
           {btn('Get the Shortcut', getShortcut)}
         </>}
         {stage === 'away' && <>
-          <Sub>Did the Shortcut get added? If Pockets shows a blank page when you come back, tap Done at the top left.</Sub>
+          <Sub>Did the Shortcut get added? If Pockets shows a blank page when you come back, tap ✕ at the top left.</Sub>
           {btn('Yes, I added it', () => setStage('added'))}
           {btn('Open it again', getShortcut, true)}
           <div style={{ marginTop: 10, fontSize: 13, color: SOFT }}>Your key, if it asks again: <span onClick={copyKey} style={{ color: INK, fontWeight: 600, userSelect: 'all', WebkitUserSelect: 'all', wordBreak: 'break-all', cursor: 'pointer' }}>{qa.key}</span></div>
@@ -433,7 +447,7 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
           <Sub>In Shortcuts → Automation → +, choose Transaction and your cards, turn Automation on, then add these two actions:</Sub>
           {row('▤', <span>Dictionary: <b>amount</b>, <b>merchant</b>, <b>card</b></span>, '#f2994a')}
           <div style={{ margin: '4px 0 0 46px', fontSize: 13, color: SOFT }}>Each one: Shortcut Input → Type Transaction → Amount, Merchant, Card or Pass</div>
-          {row('◆', <span>Run Shortcut: <b>Pockets Apple Pay</b> · Input: Dictionary</span>, '#7a68b8')}
+          {row('◆', <span>Run Shortcut (not Open): <b>Pockets Apple Pay</b> · Input: Dictionary</span>, '#7a68b8')}
         </>)}
         {card(3, 'Pay and pick the pocket', false, <Sub>Right after you tap to pay, choose the pocket and category. The purchase shows up next time you open Pockets.</Sub>)}
         <Main onClick={onDone}>Done</Main>
