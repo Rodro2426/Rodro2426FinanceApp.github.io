@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getSync, pullForWelcome, subscribeSync, withoutMarking } from '../lib/cloud';
-import { takeHandoff } from '../lib/handoff';
+import { takeHandoff, type Handoff } from '../lib/handoff';
 import { SignInForm } from '../sheets/CloudSheet';
 import { finishWelcome, flash, normalize, startTour } from '../lib/store';
 import { emptyData, sampleData } from '../lib/seed';
@@ -16,7 +16,13 @@ const NAVY = '#1f5f5a', NAVY2 = '#3c6b66';
  * First open on a device. The first screen is the account: sign in to bring your data back, or create an
  * account so it's backed up from day one. Scrolling down shows the other ways to start, without an account.
  */
+// The website's note, read once per page load (outside React so StrictMode's double render can't lose it).
+let pending: Handoff | null | undefined;
+const pendingHandoff = () => (pending === undefined ? (pending = takeHandoff()) : pending);
+
 export default function Welcome() {
+  // Arriving from the website: show only a calm loading screen, never this welcome page in between.
+  const [arriving, setArriving] = useState(() => { const h = pendingHandoff(); return h?.kind === 'signedin' || h?.kind === 'sample'; });
   const [name, setName] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const who = name.trim();
@@ -41,13 +47,13 @@ export default function Welcome() {
       const d = await pullForWelcome();
       if (d) { withoutMarking(() => finishWelcome(normalize(d))); flash(`Welcome back, ${d.settings.name}`); }
       else { startTour('first', n || 'there'); flash(created ? 'Account created · it will back up as soon as you start' : 'Signed in · let\'s set things up'); }
-    } catch (e) { flash((e as Error).message); }
+    } catch (e) { flash((e as Error).message); setArriving(false); }
     setBusy(null);
   };
 
   // Coming from the website: finish what was started there (sign-in, or sample data).
   useEffect(() => {
-    const h = takeHandoff();
+    const h = pendingHandoff(); pending = null;
     if (!h) return;
     if (h.kind === 'sample') { sample(); return; }
     if (h.kind !== 'signedin') return;
@@ -56,7 +62,7 @@ export default function Welcome() {
     const go = () => { if (done || !getSync().uid) return; done = true; stop(); clearTimeout(t); afterSignIn({ created: h.created, name: h.name }); };
     const stop = subscribeSync(go);
     // If the sign-in didn't carry over, show the normal welcome so they can sign in here.
-    const t = setTimeout(() => { if (done) return; done = true; stop(); setBusy(null); flash('Sign in again to continue'); }, 12000);
+    const t = setTimeout(() => { if (done) return; done = true; stop(); setBusy(null); setArriving(false); flash('Sign in again to continue'); }, 12000);
     go();
     // No cleanup on purpose: the note is read once, so the wait must survive React's dev double-run.
   }, []);
@@ -78,6 +84,12 @@ export default function Welcome() {
     ['🏖️', 'Trips with friends', 'Share expenses, see who owes what, settle up in the fewest payments and chat.'],
     ['📈', 'Net worth and investments', 'Accounts, cards, stocks and CDTs in one place, with reports you can filter.']
   ];
+  if (arriving) return (
+    <div role="status" aria-live="polite" style={{ position: 'absolute', inset: 0, zIndex: 80, background: 'var(--page)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+      <img className="arrive-mark" src="./pockets-mark.svg" alt="" width={64} height={64} />
+      <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-neutral-600)' }}>Bringing back your data…</span>
+    </div>
+  );
   if (desk) return (
     <div className="noscroll force-light" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(160deg, #fbf9f3 0%, #ebe3d2 100%)' }}>
       <header style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 48px 0', display: 'flex', alignItems: 'center', gap: 12 }}>

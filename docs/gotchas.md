@@ -136,3 +136,4 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - **The wordmark is written "Pockets" in code** and turned into POCKETS by CSS (`.wordmark`, `.brand`, `.brand-reveal`), so screen readers and the Spanish dictionary still see the normal word.
 - **The website's app pictures** (`site/screens/{es,en,es-dark,en-dark}`) are screenshots of the real app. Retake them after a visible app change, with pop-up banners dismissed.
 - `lib/reminders.test.ts` "on the day, at 8:00" fails depending on today's date (it failed on 15 Nov 2026 before the rebrand too).
+- **Arriving from the website:** `Welcome.tsx` reads the website's note once per page load (`pendingHandoff`, outside React) and, while it finishes the sign-in or sample data, shows only a loading screen (logo + "Bringing back your data…"). Never render the welcome page during that wait: it flashes the old welcome before the account opens.

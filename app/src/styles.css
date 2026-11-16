@@ -464,3 +464,8 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   .desk .inv-stat + .inv-stat { border-left: 1px solid var(--color-neutral-200); }
   .desk .inv-add { align-self: flex-start; width: auto !important; padding: 0 24px !important; height: 46px !important; }
 }
+
+/* Arriving from the website: the logo breathes slowly while the account loads. */
+@keyframes arrive-breathe { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.94); opacity: .7; } }
+.arrive-mark { animation: arrive-breathe 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .arrive-mark { animation: none; } }
