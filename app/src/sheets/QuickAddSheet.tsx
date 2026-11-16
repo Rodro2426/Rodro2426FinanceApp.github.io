@@ -10,11 +10,12 @@ import { FieldLabel, GhostDanger, PrimaryBtn } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 
 /** iCloud link of the shared "Pockets Apple Pay" shortcut. Empty until the owner shares it; then the short steps show. */
-const SHORTCUT_LINK = '';
+const SHORTCUT_LINK = 'https://www.icloud.com/shortcuts/2765a45031bc48d4ad115eddd4f796d6';
 const SHARED_STEPS = [
   'Tap "Get the Shortcut" and add it. When it asks for your key, paste it (Copy next to Your key).',
-  'Open Shortcuts → Automation → +. Choose "Transaction" and your cards. Leave Any Category and Any Merchant, turn Automation on and Notify off, and tap Next.',
-  'Add "Run Shortcut" and pick "Pockets Apple Pay". Open it with the arrow and set Input to Shortcut Input.',
+  'Open Shortcuts → Automation → +. Choose "Transaction" and your cards. Leave Any Category and Any Merchant, turn Automation on and Notify off, tap Next, then "New Blank Automation".',
+  'Add "Dictionary" with three Text items named amount, merchant and card. For each value insert Shortcut Input, tap it, set Type to Transaction and pick Amount, Merchant or Card or Pass.',
+  'Add "Run Shortcut" and pick "Pockets Apple Pay". Open it with the arrow and set Input to Dictionary.',
   'Pay with Apple Pay: pick the pocket and the category, and a notification says "Saved $25.000 at Éxito to Groceries · Food".'
 ];
 const STEPS = [
