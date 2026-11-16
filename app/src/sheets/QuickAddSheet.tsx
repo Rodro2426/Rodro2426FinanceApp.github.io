@@ -152,12 +152,13 @@ export function QuickAddSheet() {
           </div>
           <span style={{ margin: '6px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{qa.pins?.length ? 'After the pocket, the Shortcut asks for one of these. Up to 8.' : 'Until you pick some, the Shortcut offers the last categories you used. Up to 8.'}</span>
 
-          <FieldLabel>Your links</FieldLabel>
+          <FieldLabel>{SHORTCUT_LINK ? 'Your key' : 'Your links'}</FieldLabel>
           <div style={{ ...card, gap: 14 }}>
             {linkRow('Your key', qa.key)}
-            {linkRow('Pocket list', quickUrl(qa.key, 'menu'))}
-            {linkRow('Add purchase', quickUrl(qa.key, 'add'))}
-            <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Anyone with these links can add expenses to your Pockets and see your pocket names, so keep them to yourself. If one leaks, turn this off and on again to get new links.</span>
+            {/* The shared Shortcut already has both links built in: only a hand-built one needs them. */}
+            {!SHORTCUT_LINK && linkRow('Pocket list', quickUrl(qa.key, 'menu'))}
+            {!SHORTCUT_LINK && linkRow('Add purchase', quickUrl(qa.key, 'add'))}
+            <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{SHORTCUT_LINK ? 'Anyone with your key can add expenses to your Pockets and see your pocket names, so keep it to yourself. If it leaks, turn this off and on again to get a new one.' : 'Anyone with these links can add expenses to your Pockets and see your pocket names, so keep them to yourself. If one leaks, turn this off and on again to get new links.'}</span>
           </div>
 
           <FieldLabel>Build the Shortcut</FieldLabel>

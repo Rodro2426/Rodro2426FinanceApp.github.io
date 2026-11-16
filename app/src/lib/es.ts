@@ -806,6 +806,7 @@ Turn on Apple Pay purchases|Activar compras con Apple Pay
 Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
 Your cards|Tus tarjetas
+Anyone with your key can add expenses to your Pockets and see your pocket names, so keep it to yourself. If it leaks, turn this off and on again to get a new one.|Cualquiera con tu clave puede agregar gastos a tu Pockets y ver los nombres de tus bolsillos, así que no la compartas. Si se filtra, desactiva esto y vuelve a activarlo para tener una nueva.
 Add Pockets to your Home Screen|Agrega Pockets a tu pantalla de inicio
 It opens full screen like an app. You create your account there, once.|Se abre en pantalla completa como una app. Ahí creas tu cuenta, una sola vez.
 5 taps · about a minute|5 toques · más o menos un minuto
