@@ -18,6 +18,7 @@ import { acctTxns, editedBalance, fmt, initialOf, num, pctOf, plural, roundAmt, 
 import { allMonths, downloadCSV, exportData } from '../lib/exportData';
 import { monthLabel, shortDate, todayISO } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
+import { findLogo, siteHost } from '../lib/logo';
 import { makeBackup, pickBackupFile, readBackup, restoreBackup } from '../lib/backup';
 import { dailyRate, earnsInterest, perDay } from '../lib/interest';
 import { emptyData, sampleData } from '../lib/seed';
@@ -246,6 +247,14 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
 }) {
   const [f, setF] = useState(initial);
   const [confirmDel, setConfirmDel] = useState(false);
+  // The bank's website: its logo becomes the account's photo.
+  const [site, setSite] = useState('');
+  const [logo, setLogo] = useState<'idle' | 'busy' | 'none'>('idle');
+  const getLogo = () => {
+    if (!siteHost(site) || logo === 'busy') return;
+    setLogo('busy');
+    findLogo(site).then(u => { if (u) { setF(x => ({ ...x, photo: u })); setSite(''); } setLogo(u ? 'idle' : 'none'); });
+  };
   const set = (k: keyof typeof f) => (v: string) => setF(x => ({ ...x, [k]: v }));
   const isCard = f.type === 'card';
   const cant = !f.name.trim() || (isCard && !(num(f.limit) > 0));
@@ -261,6 +270,15 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
           {f.photo && <button onClick={() => setF(x => ({ ...x, photo: null }))} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Remove photo</button>}
         </div>
       </div>
+      <FieldLabel m="12px 4px 6px">Or use the logo from the bank's website</FieldLabel>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input value={site} placeholder="davivienda.com" aria-label="Bank website" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="go"
+          onChange={e => { setSite(e.target.value); setLogo('idle'); }} onKeyDown={e => { if (e.key === 'Enter') getLogo(); }} style={{ ...textInput, flex: 1, fontSize: 15 }} />
+        <button onClick={getLogo} disabled={!siteHost(site) || logo === 'busy'} className="pr97" style={{ flex: 'none', padding: '0 16px', borderRadius: 18, border: 0, background: siteHost(site) ? TEXT : 'var(--color-neutral-200)', color: siteHost(site) ? 'var(--surface)' : 'var(--color-neutral-500)', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: logo === 'busy' ? 0.6 : 1 }}>
+          {logo === 'busy' ? 'Looking…' : 'Get logo'}
+        </button>
+      </div>
+      {logo === 'none' && <span role="status" style={{ margin: '6px 4px 0', fontSize: 12.5, color: 'var(--color-neutral-700)' }}>No logo found for that website. Check the address, or add a photo instead.</span>}
       <Segmented items={TYPES} value={f.type} onPick={t => setF(x => ({ ...x, type: t }))} h={isNew ? 40 : 38} />
       <FieldLabel m="14px 4px 6px">{isCard ? 'Balance owed' : 'Current balance'}</FieldLabel>
       <SmallAmount value={f.bal} onChange={set('bal')} />

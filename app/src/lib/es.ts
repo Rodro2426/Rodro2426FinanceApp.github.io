@@ -752,6 +752,11 @@ No transactions on this account yet.|Aún no hay movimientos en esta cuenta.
 Emergency savings|Ahorro de emergencia
 Add photo|Agregar foto
 Remove photo|Quitar foto
+Or use the logo from the bank's website|O usa el logo de la página web del banco
+Bank website|Página web del banco
+Get logo|Traer logo
+Looking…|Buscando…
+No logo found for that website. Check the address, or add a photo instead.|No encontramos un logo para esa página. Revisa la dirección o agrega una foto.
 Account color|Color de la cuenta
 Card design|Diseño de la tarjeta
 New photo|Nueva foto
