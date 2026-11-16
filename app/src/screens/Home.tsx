@@ -209,7 +209,6 @@ export default function Home() {
       </div>
 
       </> },
-        { id: 'friends', name: 'Friends & trips', desc: 'Who owes you, what you owe, and shared trips', node: <FriendsHomeCard /> },
         { id: 'pockets', name: 'Pockets', desc: 'What is left in each pocket', node: <>
       <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={pocketPage === 0 ? 'Today' : pocketPage === 1 ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
       {all.length > 0 && <Pager label="Pockets" names={['today', 'this week', 'this month']} initial={1} onPage={setPocketPage} pages={[
@@ -220,6 +219,7 @@ export default function Home() {
       {all.length === 0 && <EmptyHint text="No pockets yet. Create them in the Budget tab." onClick={() => setUI({ tab: 'budget' })} />}
 
       </> },
+        { id: 'friends', name: 'Friends & trips', desc: 'Who owes you, what you owe, and shared trips', node: <FriendsHomeCard /> },
         { id: 'coming', name: 'Coming up', desc: 'Bills due soon', node: <>
       <SectionHead title="Coming up" right="All payments" onRight={() => setUI({ tab: 'insights' })} />
       {comingList}
@@ -228,7 +228,7 @@ export default function Home() {
         { id: 'recent', name: 'Recent', desc: 'Latest expenses and income', node: <>
       <SectionHead title="Recent" right="Search" onRight={() => openSheet({ name: 'search' })} />
       {recentList}
-      </> }
+      </> },
       ]} />
     </div>
   );

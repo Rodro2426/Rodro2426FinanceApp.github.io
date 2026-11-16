@@ -1627,6 +1627,10 @@ This card or account isn't yours: the expense is saved on it, but it isn't count
 Not yours|No es tuya
 Balance owed · not yours|Saldo adeudado · no es tuya
 Friends & trips|Amigos y viajes
+Who owes whom|Quién le debe a quién
+People owe you and you owe|Lo que te deben y lo que debes
+Debts, trips and friends|Deudas, viajes y amigos
+Your debts, shared trips and friends|Tus deudas, viajes compartidos y amigos
 Friends and trips|Amigos y viajes
 Debts|Deudas
 Trips|Viajes

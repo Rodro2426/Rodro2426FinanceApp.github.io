@@ -124,12 +124,6 @@ export default function Accounts() {
         {cash.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No bank, savings or cash accounts yet.</div>}
       </ListCard>}
       </> },
-        { id: 'investments', name: 'Investments', desc: 'Stocks and CDTs', node: <>
-      <FoldHead title="Investments" open={!isFolded('investments')} onToggle={() => toggle('investments')} summary={fmt(inv.total)}
-        right={<span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{nw.includeInvestments ? 'In net worth' : 'Not in net worth'}</span>} />
-      {!isFolded('investments') && <InvestmentsCard inv={inv} />}
-      </> },
-        ...(d.groups ?? []).map(g => ({ id: `group:${g.id}`, name: `${g.emoji} ${g.name}`, desc: 'Your custom group', node: <GroupCard g={g} /> })),
         { id: 'cards', name: 'Credit cards', desc: 'Card balances and payments', node: <>
       <FoldHead title="Credit cards" open={!isFolded('cards')} onToggle={() => toggle('cards')} summary={`${plural(cards.length, 'card')} · ${fmt(cards.filter(x => !x.notMine).reduce((a, x) => a + x.bal, 0))} owed`} />
       {!isFolded('cards') && cards.map(a => {
@@ -137,7 +131,13 @@ export default function Accounts() {
         return <CardFace key={a.id} a={{ ...a, due: cardDueLabel(d, a, todayISO()) }} onClick={() => openSheet({ name: 'acct', id: a.id })}
           action={<button onClick={e => { e.stopPropagation(); openSheet({ name: 'pay', id: a.id }); }} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: a.cardImg ? '#141414' : k, fontSize: 14, fontWeight: 700, cursor: 'pointer', textShadow: 'none' }}>Pay</button>} />;
       })}
-      </> }
+      </> },
+        { id: 'investments', name: 'Investments', desc: 'Stocks and CDTs', node: <>
+      <FoldHead title="Investments" open={!isFolded('investments')} onToggle={() => toggle('investments')} summary={fmt(inv.total)}
+        right={<span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{nw.includeInvestments ? 'In net worth' : 'Not in net worth'}</span>} />
+      {!isFolded('investments') && <InvestmentsCard inv={inv} />}
+      </> },
+        ...(d.groups ?? []).map(g => ({ id: `group:${g.id}`, name: `${g.emoji} ${g.name}`, desc: 'Your custom group', node: <GroupCard g={g} /> })),
       ]} />
     </div>
   );

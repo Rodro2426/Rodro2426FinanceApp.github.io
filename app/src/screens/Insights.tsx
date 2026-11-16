@@ -66,6 +66,16 @@ export default function Insights() {
       <div style={{ padding: '4px 4px 0', fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Insights</div>
 
       <Blocks page="insights" title="Insights" blocks={[
+        ...(best && goal0 ? [{ id: 'tip', name: 'Savings tip', desc: 'Move leftovers to a goal', node: (
+
+        <div style={{ background: 'oklch(0.95 0.04 160)', borderRadius: 26, padding: 18, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--surface)', color: 'oklch(0.42 0.09 160)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Bulb size={18} /></div>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <span style={{ fontSize: 14, lineHeight: 1.4, color: 'oklch(0.32 0.07 160)', textWrap: 'pretty' }}>{best.name} still has {fmt(best.left)} this week. Move some to {goal0.name}?</span>
+            <button onClick={() => openSheet({ name: 'move', id: best.id, to: goal0.id })} style={{ alignSelf: 'flex-start', height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'oklch(0.42 0.09 160)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Move to goal</button>
+          </div>
+        </div>
+        ) }] : []),
         { id: 'month', name: 'Spent this month', desc: 'Month total by pocket', node: <>
       <div style={{ ...card, gap: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -153,16 +163,6 @@ export default function Insights() {
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{weekSpent <= lastWeek ? `${fmt(lastWeek - weekSpent)} less than last week so far.` : `${fmt(weekSpent - lastWeek)} more than last week.`}</span>
       </div>
       </> },
-        ...(best && goal0 ? [{ id: 'tip', name: 'Savings tip', desc: 'Move leftovers to a goal', node: (
-
-        <div style={{ background: 'oklch(0.95 0.04 160)', borderRadius: 26, padding: 18, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <div style={{ width: 38, height: 38, borderRadius: 999, background: 'var(--surface)', color: 'oklch(0.42 0.09 160)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Bulb size={18} /></div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span style={{ fontSize: 14, lineHeight: 1.4, color: 'oklch(0.32 0.07 160)', textWrap: 'pretty' }}>{best.name} still has {fmt(best.left)} this week. Move some to {goal0.name}?</span>
-            <button onClick={() => openSheet({ name: 'move', id: best.id, to: goal0.id })} style={{ alignSelf: 'flex-start', height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'oklch(0.42 0.09 160)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Move to goal</button>
-          </div>
-        </div>
-        ) }] : []),
       ]} />
     </div>
   );

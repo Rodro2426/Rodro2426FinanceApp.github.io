@@ -50,8 +50,8 @@ export function SearchSheet({ tag, cat }: { tag?: string | null; cat?: string | 
   return (
     <SheetFrame title="Transactions" topOnFocus>
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: 560 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, background: 'var(--surface)', borderRadius: 999, padding: '0 16px', height: 50 }}>
-          <I.Search size={18} color="var(--color-neutral-500)" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, background: 'var(--surface)', borderRadius: 999, padding: '0 18px', height: 56, flex: 'none' }}>
+          <I.Search size={20} color="var(--color-neutral-500)" />
           <input placeholder="Search by name, category, pocket or #tag" value={q} onChange={e => setQ(e.target.value)} ref={searchRef} style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 16, color: TEXT, padding: 0, outline: 'none' }} />
           {q && <button onClick={() => setQ('')} aria-label="Clear" style={{ width: 24, height: 24, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><I.X size={12} sw={3} /></button>}
         </div>

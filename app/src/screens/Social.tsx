@@ -12,6 +12,7 @@ import {
 } from '../lib/social';
 import { balances, personTotals, settleUp, sharesOf } from '../lib/settle';
 import { Fill, Segmented, textInput } from '../ui/bits';
+import { Blocks } from '../ui/Blocks';
 import * as I from '../ui/icons';
 import { isOpen } from '../lib/debts';
 import { DebtList, MoneyBetween, Purpose, friendDebt } from './Debts';
@@ -70,7 +71,9 @@ export default function SocialPage() {
       {refresh}
     </div>
     {sync.uid && <VerifyBanner />}
-    <MoneyBetween />
+    <Blocks page="social" title="Friends & trips" gap={12} blocks={[
+      { id: 'totals', name: 'Who owes whom', desc: 'People owe you and you owe', node: <MoneyBetween /> },
+      { id: 'lists', name: 'Debts, trips and friends', desc: 'Your debts, shared trips and friends', node: <>
     <Segmented items={[
       ['debts', openDebts ? `Debts · ${openDebts}` : 'Debts'],
       ['trips', so.trips.length ? `Trips · ${so.trips.length}` : 'Trips'],
@@ -86,6 +89,8 @@ export default function SocialPage() {
       <Purpose icon="friends">People with a Pockets account. Add them by email to share trips, send messages, and link them to your debts.</Purpose>
       {sync.uid ? <FriendList /> : signIn('Add your friends', 'Friends are people with a Pockets account. Sign in to add them by email.')}
     </>}
+      </> }
+    ]} />
   </div>;
 }
 
