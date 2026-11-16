@@ -180,16 +180,20 @@ export async function pullForWelcome(): Promise<Data | null> {
 }
 
 /* ---------------- Start ---------------- */
+/** Settles once the app knows whether it's signed in and, if so, has finished its first sync on open. */
+let firstDone: () => void = () => {};
+export const firstSync = new Promise<void>(r => { firstDone = r; });
+
 export async function startCloud(h: Hooks) {
   hooks = h;
   // Ask iOS to keep this app's storage even when the phone runs low on space.
   try { await navigator.storage?.persist?.(); } catch { /* not supported */ }
   const saved = await get<{ uid: string | null; syncedAt: number; dirty: boolean }>(SYNC_KEY).catch(() => undefined);
   onAuthStateChanged(auth, (u: User | null) => {
-    if (!u) { clearTimeout(timer); update({ uid: null, email: null, status: 'off', conflict: null, syncedAt: 0, dirty: false }); return; }
+    if (!u) { clearTimeout(timer); update({ uid: null, email: null, status: 'off', conflict: null, syncedAt: 0, dirty: false }); firstDone(); return; }
     const same = saved?.uid === u.uid;
     update({ uid: u.uid, email: u.email, syncedAt: same ? saved!.syncedAt : 0, dirty: same ? saved!.dirty : true });
-    syncNow();
+    void syncNow().finally(firstDone);
   });
   const again = () => { if (document.visibilityState === 'visible') syncNow(); else { clearTimeout(timer); push(); } };
   document.addEventListener('visibilitychange', again);

@@ -1,7 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
-import { getData, loadData, setData } from './lib/store';
+import { getData, getState, loadData, setData } from './lib/store';
+import { holdOnOpen } from './ui/ArrivalVeil';
 import type { Settings } from './lib/types';
 import { watchForUpdates } from './lib/update';
 import './styles.css';
@@ -26,6 +27,7 @@ syncViewport();
 watchForUpdates();
 
 loadData().then(() => {
+  if (!getState().ui.welcome) holdOnOpen();
   forgetQuickAdd();
   createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
 });
