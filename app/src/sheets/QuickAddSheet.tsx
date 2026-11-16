@@ -10,14 +10,14 @@ import { FieldLabel, GhostDanger, PrimaryBtn } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 
 const STEPS = [
-  'Open the Shortcuts app, go to Automation and tap +. Choose "Transaction".',
-  'Pick the cards you pay with in Wallet, leave "Any merchant", choose "Run Immediately" and tap Next, then "New Blank Automation".',
-  'Add "Get Contents of URL" and paste the Pocket list link.',
-  'Add "Get Dictionary Value": get the value for "pockets" in Contents of URL.',
-  'Add "Choose from List" with that Dictionary Value. Set the prompt to "Pocket for" and add the Merchant from Shortcut Input.',
-  'Add "Get Contents of URL" and paste the Add purchase link. Open its options: Method POST, Request Body JSON, and add four Text fields: pocket = Chosen Item, amount = Shortcut Input → Amount, merchant = Shortcut Input → Merchant, card = Shortcut Input → Card or Pass.',
-  'Add "Get Dictionary Value" for "text", then "Show Notification" with it. It says "Saved $25.000 at Éxito to Groceries", or what to fix if something went wrong.',
-  'Pay with Apple Pay once to try it. The pocket list shows up right after you pay; if it appears as a notification, tap it.'
+  'Open Shortcuts → Automation → +. Choose "Transaction" and pick your card. Leave Any Category and Any Merchant, turn Automation on and Notify off.',
+  'Tap Search at the bottom and add "Get Contents of URL". Tap the blue URL and paste the Pocket list link.',
+  'Add "Get Dictionary Value". Tap Key and type pockets.',
+  'Add "Choose from List". In its options, type "Pocket for" in Prompt, then add Shortcut Input: tap Type, choose Transaction, then Merchant.',
+  'Add another "Get Contents of URL" and paste the Add purchase link. Open it with the arrow: Method POST, Request Body JSON.',
+  'Tap Add new field → Text four times: pocket = Selected Item (a blue chip, not typed text); amount, merchant and card = Shortcut Input → Type Transaction → Amount, Merchant and Card or Pass.',
+  'Add "Get Dictionary Value" with Key text, then "Show Notification" with Dictionary Value as the message. A "Receive … from Nowhere" block appears at the top by itself: leave it.',
+  'Tap ▶ to test without paying: pick a pocket and you should see "Type an amount above 0." That means it works. A real Apple Pay payment then says "Saved $25.000 at Éxito to Groceries".'
 ];
 
 export function QuickAddSheet() {
