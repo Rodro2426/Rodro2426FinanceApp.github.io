@@ -147,7 +147,7 @@ function IncomeForm() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      <BigAmount value={amt} onChange={setAmt} autoFocus mt={12} />
+      <BigAmount value={amt} onChange={setAmt} mt={12} />
       <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
       <input placeholder="e.g. Freelance, gift, refund" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
       <FieldLabel m="14px 4px 6px">Category {!incCat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</FieldLabel>
@@ -303,7 +303,7 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <BigAmount value={amt} onChange={setAmt} autoFocus mt={10} />
+        <BigAmount value={amt} onChange={setAmt} mt={10} />
         <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
         <input placeholder="e.g. Lunch at Crepes & Waffles" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 4px 8px', gap: 8 }}>

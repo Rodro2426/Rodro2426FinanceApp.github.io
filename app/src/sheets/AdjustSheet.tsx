@@ -31,7 +31,7 @@ export function AdjustSheet({ id }: { id: string }) {
     <SheetFrame title="Adjust balance">
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ margin: '0 4px', fontSize: 13, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{card ? `Type what ${a.name} really owes now. Pockets has ${fmt(a.bal)}.` : `Type what ${a.name} really has now. Pockets has ${fmt(a.bal)}.`}</span>
-        <BigAmount value={real} onChange={setReal} autoFocus mt={10} />
+        <BigAmount value={real} onChange={setReal} mt={10} />
         {(spent || got) && (
           <div style={{ marginTop: 12, background: tone.bg, color: tone.ink, borderRadius: 20, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
             <span style={{ fontSize: 13, fontWeight: 600 }}>{spent ? 'Counts as spent' : 'Counts as money you got'}</span>
