@@ -32,6 +32,7 @@ import Budget from './screens/Budget';
 import Insights from './screens/Insights';
 import CalendarScreen from './screens/Calendar';
 import Welcome from './screens/Welcome';
+import { ArrivalVeil } from './ui/ArrivalVeil';
 import Tour from './screens/Tour';
 import InstallGuide, { shouldShowInstallGuide } from './screens/InstallGuide';
 import Investments from './screens/Investments';
@@ -329,6 +330,7 @@ export default function App() {
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
       {ui.tour && <Tour />}
       {ui.welcome && <Welcome />}
+      <ArrivalVeil />
       {ui.install && <InstallGuide fromProfile={ui.install === 'profile'} onClose={() => setUI({ install: false })} />}
       <CropperHost />
       <LockGate />
