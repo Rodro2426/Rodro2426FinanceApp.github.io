@@ -517,18 +517,24 @@ input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*
 }
 
 /* ---------------- First-time setup (screens/Setup.tsx) ---------------- */
+/* Its colours: dark by default, light with the app's light theme. The ground is the page colour, so the iPhone's top bar matches it. */
+.setup { --su-bg: var(--page); --su-ink: #f2efea; --su-soft: #a9a49e; --su-accent: #8fd6cb; --su-on-accent: #0f2b28; --su-fill: rgba(255,255,255,0.08); --su-fill2: rgba(255,255,255,0.1); --su-dot: rgba(255,255,255,0.18); --su-line: rgba(255,255,255,0.12); --su-card: rgba(255,255,255,0.06); --su-card2: rgba(255,255,255,0.04); --su-panel: rgba(22,22,21,0.95); --su-row: #1d1c1b; --su-good: rgba(143,214,203,0.12); --su-ph: rgba(242,239,234,0.38); --su-g1: rgba(47,143,132,0.55); --su-g2: rgba(122,104,184,0.5); --su-g3: rgba(143,214,203,0.45); --su-glow: rgba(143,214,203,0.7); --su-glow2: rgba(122,104,184,0.45); }
+:root[data-theme="light"] .setup { --su-ink: #1f2a28; --su-soft: #5d6a67; --su-accent: #1f5f5a; --su-on-accent: #ffffff; --su-fill: rgba(31,42,40,0.06); --su-fill2: rgba(31,42,40,0.08); --su-dot: rgba(31,95,90,0.2); --su-line: rgba(31,42,40,0.1); --su-card: rgba(31,42,40,0.045); --su-card2: rgba(31,42,40,0.035); --su-panel: rgba(255,255,255,0.94); --su-row: #ffffff; --su-good: rgba(31,95,90,0.1); --su-ph: rgba(31,42,40,0.4); --su-g1: rgba(143,214,203,0.5); --su-g2: rgba(217,205,234,0.7); --su-g3: rgba(185,168,230,0.45); --su-glow: rgba(143,214,203,0.55); --su-glow2: rgba(122,104,184,0.25); }
+.su-mark-light { display: none !important; }
+:root[data-theme="light"] .setup .su-mark-dark { display: none !important; }
+:root[data-theme="light"] .setup .su-mark-light { display: block !important; }
 /* The light behind the card: soft gradients (no blur filter, so it stays smooth on the phone) that breathe, and swell when the card opens. */
 .setup-glow { position: absolute; left: 50%; top: 120px; width: 720px; height: 720px; margin-left: -360px; pointer-events: none; transform: scale(1); transition: transform 1.2s cubic-bezier(0.76, 0, 0.24, 1); }
 .setup-glow.open { transform: scale(1.3); }
 .setup-glow i { position: absolute; border-radius: 50%; animation: setup-breathe 2.6s ease-in-out infinite alternate; }
-.setup-glow i:nth-child(1) { left: 40px; top: 60px; width: 420px; height: 420px; background: radial-gradient(circle, rgba(47,143,132,0.55) 0%, rgba(47,143,132,0) 68%); animation-delay: -0.4s; }
-.setup-glow i:nth-child(2) { left: 260px; top: 160px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(122,104,184,0.5) 0%, rgba(122,104,184,0) 68%); animation-delay: -1.3s; }
-.setup-glow i:nth-child(3) { left: 140px; top: 300px; width: 420px; height: 360px; background: radial-gradient(circle, rgba(143,214,203,0.45) 0%, rgba(143,214,203,0) 68%); }
+.setup-glow i:nth-child(1) { left: 40px; top: 60px; width: 420px; height: 420px; background: radial-gradient(circle, var(--su-g1) 0%, transparent 68%); animation-delay: -0.4s; }
+.setup-glow i:nth-child(2) { left: 260px; top: 160px; width: 400px; height: 400px; background: radial-gradient(circle, var(--su-g2) 0%, transparent 68%); animation-delay: -1.3s; }
+.setup-glow i:nth-child(3) { left: 140px; top: 300px; width: 420px; height: 360px; background: radial-gradient(circle, var(--su-g3) 0%, transparent 68%); }
 @keyframes setup-breathe { from { opacity: 0.82; transform: translate(0, 0) scale(1); } to { opacity: 1; transform: translate(14px, -10px) scale(1.06); } }
 /* The edge light: a conic gradient turning slowly behind the glass. */
 .setup-spin { position: absolute; left: 50%; top: 50%; width: 1500px; height: 1500px; margin: -750px 0 0 -750px; will-change: transform; background: conic-gradient(from 0deg, #8fd6cb, #7a68b8, #d9cdea, #2f8f84, #8fd6cb); animation: setup-turn 14s linear infinite; }
 @keyframes setup-turn { to { transform: rotate(360deg); } }
 .setup-logo { width: 64px; height: 64px; animation: setup-turn 90s linear infinite; }
-.setup-logo img { display: block; filter: drop-shadow(0 0 12px rgba(143,214,203,0.7)) drop-shadow(0 0 26px rgba(122,104,184,0.45)); }
-.setup input::placeholder { color: rgba(242,239,234,0.38); }
+.setup-logo img { display: block; filter: drop-shadow(0 0 12px var(--su-glow)) drop-shadow(0 0 26px var(--su-glow2)); }
+.setup input::placeholder { color: var(--su-ph); }
 @media (prefers-reduced-motion: reduce) { .setup-glow, .setup-glow i, .setup-spin, .setup-logo { animation: none !important; transition: none !important; } }

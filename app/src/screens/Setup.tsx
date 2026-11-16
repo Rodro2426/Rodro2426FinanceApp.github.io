@@ -19,7 +19,8 @@ import { glyph } from '../ui/PocketIcons';
 
 type Step = 'hello' | 'account' | 'card' | 'income' | 'pockets' | 'bills' | 'applepay' | 'done';
 
-const INK = '#f2efea', SOFT = '#a9a49e', MINT = '#8fd6cb', DEEP = '#0f2b28';
+// Colours come from CSS (styles.css, .setup): dark or light with the app's theme, so the iPhone's top bar matches.
+const INK = 'var(--su-ink)', SOFT = 'var(--su-soft)', MINT = 'var(--su-accent)', DEEP = 'var(--su-on-accent)';
 const PILL = 76, R_PILL = 38, R_CARD = 36, EDGE = 2;
 const OPEN = 850, CLOSE = 800, SHAPE = 'cubic-bezier(0.76, 0, 0.24, 1)';
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,7 +51,7 @@ export default function Setup() {
   const [busy, setBusy] = useState(true);
   const [open, setOpen] = useState(false);
   const shape = useRef<HTMLDivElement>(null), ring = useRef<HTMLDivElement>(null), panel = useRef<HTMLDivElement>(null);
-  const q = useRef<HTMLDivElement>(null), body = useRef<HTMLDivElement>(null), logo = useRef<HTMLImageElement>(null), scroller = useRef<HTMLDivElement>(null);
+  const q = useRef<HTMLDivElement>(null), body = useRef<HTMLDivElement>(null), logo = useRef<HTMLSpanElement>(null), scroller = useRef<HTMLDivElement>(null);
 
   // The shape the outline and the glass are in now. The end shape is also written on the element itself, so when the
   // card under it grows or shrinks (a new step), it can be recomputed for the new height before anything is drawn.
@@ -137,7 +138,7 @@ export default function Setup() {
   const idx = steps.indexOf(step);
   const name = d.settings.name && d.settings.name !== 'there' ? d.settings.name : '';
   return (
-    <div ref={scroller} className="noscroll setup" role="dialog" aria-label="Set up Pockets" style={{ position: 'absolute', inset: 0, zIndex: 85, overflowY: 'auto', overflowX: 'hidden', background: '#0b0b0a', color: INK }}>
+    <div ref={scroller} className="noscroll setup" role="dialog" aria-label="Set up Pockets" style={{ position: 'absolute', inset: 0, zIndex: 85, overflowY: 'auto', overflowX: 'hidden', background: 'var(--su-bg)', color: INK }}>
       {/* Clipped, so the wide light never makes the page scroll sideways. */}
       <div aria-hidden="true" style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1100, overflow: 'hidden', pointerEvents: 'none' }}>
         <div className={'setup-glow' + (open ? ' open' : '')}><i /><i /><i /></div>
@@ -149,11 +150,11 @@ export default function Setup() {
           {step !== 'done' && step !== 'hello' && <button onClick={next} disabled={busy} style={{ ...ghost, width: 'auto', padding: '0 14px', fontSize: 15, fontWeight: 600 }}>Skip</button>}
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 26px' }}>
-          <div className="setup-logo"><img ref={logo} src="./pockets-mark-dark.svg" alt="" width={64} height={64} /></div>
+          <div className="setup-logo"><span ref={logo} style={{ display: 'block' }}><img className="su-mark-dark" src="./pockets-mark-dark.svg" alt="" width={64} height={64} /><img className="su-mark-light" src="./pockets-mark.svg" alt="" width={64} height={64} /></span></div>
         </div>
         <div ref={shape} style={{ position: 'relative' }}>
           <div ref={ring} aria-hidden="true" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}><div className="setup-spin" /></div>
-          <div ref={panel} aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'rgba(22,22,21,0.95)' }} />
+          <div ref={panel} aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'var(--su-panel)' }} />
           <div ref={q} aria-live="polite" style={{ position: 'absolute', left: 24, right: 24, top: 0, height: PILL, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: 18, fontWeight: 600, pointerEvents: 'none' }}>{QUESTION[step]}</div>
           <div ref={body} style={{ position: 'relative', padding: '28px 22px 22px', minHeight: 180, pointerEvents: busy ? 'none' : undefined }}>
             {step === 'hello' && <Hello name={name} onStart={next} />}
@@ -167,7 +168,7 @@ export default function Setup() {
           </div>
         </div>
         <div aria-hidden="true" style={{ marginTop: 'auto', paddingTop: 28, display: 'flex', justifyContent: 'center', gap: 7 }}>
-          {steps.map((s, i) => <span key={s} style={{ height: 7, width: i === idx ? 22 : 7, borderRadius: 4, background: i === idx ? MINT : 'rgba(255,255,255,0.18)', transition: `width .5s ${SHAPE}, background .5s` }} />)}
+          {steps.map((s, i) => <span key={s} style={{ height: 7, width: i === idx ? 22 : 7, borderRadius: 4, background: i === idx ? MINT : 'var(--su-dot)', transition: `width .5s ${SHAPE}, background .5s` }} />)}
         </div>
       </div>
     </div>
@@ -175,13 +176,13 @@ export default function Setup() {
 }
 
 /* ---------------- Pieces ---------------- */
-const ghost: CSSProperties = { height: 44, borderRadius: 999, border: 0, background: 'rgba(255,255,255,0.08)', color: INK, fontSize: 26, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' };
-const field: CSSProperties = { width: '100%', boxSizing: 'border-box', border: 0, borderRadius: 16, background: 'rgba(255,255,255,0.08)', color: INK, fontSize: 17, fontWeight: 600, padding: '14px 16px', outline: 'none' };
+const ghost: CSSProperties = { height: 44, borderRadius: 999, border: 0, background: 'var(--su-fill)', color: INK, fontSize: 26, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const field: CSSProperties = { width: '100%', boxSizing: 'border-box', border: 0, borderRadius: 16, background: 'var(--su-fill)', color: INK, fontSize: 17, fontWeight: 600, padding: '14px 16px', outline: 'none' };
 const H = ({ children }: { children: ReactNode }) => <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>{children}</div>;
 const Sub = ({ children }: { children: ReactNode }) => <div style={{ marginTop: 8, fontSize: 15, lineHeight: 1.4, color: SOFT }}>{children}</div>;
 const Label = ({ children }: { children: ReactNode }) => <div style={{ margin: '18px 2px 8px', fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: SOFT }}>{children}</div>;
 function Chip({ on, onClick, children, icon }: { on?: boolean; onClick: () => void; children: ReactNode; icon?: ReactNode }) {
-  return <button onClick={onClick} aria-pressed={!!on} className="pr97" style={{ height: 44, padding: icon ? '0 16px 0 7px' : '0 16px', borderRadius: 22, border: 0, background: on ? MINT : 'rgba(255,255,255,0.08)', color: on ? DEEP : INK, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'background .25s, color .25s' }}>{icon}{children}</button>;
+  return <button onClick={onClick} aria-pressed={!!on} className="pr97" style={{ height: 44, padding: icon ? '0 16px 0 7px' : '0 16px', borderRadius: 22, border: 0, background: on ? MINT : 'var(--su-fill)', color: on ? DEEP : INK, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'background .25s, color .25s' }}>{icon}{children}</button>;
 }
 function Main({ onClick, children, disabled }: { onClick: () => void; children: ReactNode; disabled?: boolean }) {
   return <button onClick={onClick} disabled={disabled} className="pr97" style={{ width: '100%', height: 54, marginTop: 24, borderRadius: 27, border: 0, background: MINT, color: DEEP, fontSize: 17, fontWeight: 700, cursor: 'pointer', opacity: disabled ? 0.4 : 1, transition: 'opacity .2s' }}>{children}</button>;
@@ -194,12 +195,12 @@ function OwnName({ placeholder, onAdd, label }: { placeholder: string; onAdd: (n
   return (
     <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
       <input value={v} onChange={e => setV(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') add(); }} placeholder={placeholder} aria-label={label} enterKeyHint="done" style={{ ...field, flex: 1, minWidth: 0 }} />
-      <button onClick={add} disabled={!v.trim()} className="pr97" style={{ flex: 'none', padding: '0 16px', borderRadius: 16, border: 0, background: v.trim() ? INK : 'rgba(255,255,255,0.08)', color: v.trim() ? DEEP : SOFT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Add</button>
+      <button onClick={add} disabled={!v.trim()} className="pr97" style={{ flex: 'none', padding: '0 16px', borderRadius: 16, border: 0, background: v.trim() ? INK : 'var(--su-fill)', color: v.trim() ? DEEP : SOFT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Add</button>
     </div>
   );
 }
 const Logo = ({ src, size = 32, pad }: { src: string | null; size?: number; pad?: boolean }) => src
-  ? <span style={{ width: size, height: size, borderRadius: Math.round(size * 0.28), overflow: 'hidden', background: '#fff', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 1px rgba(255,255,255,0.12)' }}><img src={src} alt="" width={size} height={size} style={{ width: pad ? '72%' : '100%', height: pad ? '72%' : '100%', objectFit: 'contain' }} /></span>
+  ? <span style={{ width: size, height: size, borderRadius: Math.round(size * 0.28), overflow: 'hidden', background: '#fff', flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 0 1px var(--su-line)' }}><img src={src} alt="" width={size} height={size} style={{ width: pad ? '72%' : '100%', height: pad ? '72%' : '100%', objectFit: 'contain' }} /></span>
   : null;
 const padded = (name: string) => !!BANKS.find(b => b.name === name)?.pad;
 
@@ -212,9 +213,9 @@ function OwnLogo({ name, photo, onPhoto }: { name: string; photo: string | null;
     setState('busy');
     findLogo(site).then(u => { if (u) { onPhoto(u); setSite(''); } setState(u ? 'idle' : 'none'); });
   };
-  const small: CSSProperties = { flex: 'none', height: 40, padding: '0 14px', borderRadius: 14, border: 0, background: 'rgba(255,255,255,0.1)', color: INK, fontSize: 14, fontWeight: 600, cursor: 'pointer' };
+  const small: CSSProperties = { flex: 'none', height: 40, padding: '0 14px', borderRadius: 14, border: 0, background: 'var(--su-fill2)', color: INK, fontSize: 14, fontWeight: 600, cursor: 'pointer' };
   return (
-    <div style={{ margin: '8px 0 6px', padding: 10, borderRadius: 16, background: 'rgba(255,255,255,0.04)' }}>
+    <div style={{ margin: '8px 0 6px', padding: 10, borderRadius: 16, background: 'var(--su-card2)' }}>
       <div style={{ fontSize: 13, color: SOFT, margin: '0 2px 8px' }}>{`Logo for ${name}`}</div>
       <button onClick={() => pickPhoto().then(p => p && onPhoto(p))} className="pr97" style={{ ...small, width: '100%' }}>{photo ? 'Change photo' : 'Add photo'}</button>
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
@@ -354,7 +355,7 @@ function PocketsStep({ onDone }: { onDone: () => void }) {
         <div style={{ width: '48%' }}><Money value={p.weekly ? String(p.weekly) : ''} onChange={v => upd(p.key, { weekly: num(v) })} label={`Weekly budget for ${p.name}`} /></div>
       </div>
     ))}
-    {income > 0 && <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 16, background: free < 0 ? 'rgba(229,72,77,0.16)' : 'rgba(143,214,203,0.12)', fontSize: 15, fontWeight: 600 }}>
+    {income > 0 && <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 16, background: free < 0 ? 'rgba(229,72,77,0.16)' : 'var(--su-good)', fontSize: 15, fontWeight: 600 }}>
       {free < 0 ? `Over your income by ${fmt(-free)} a month` : `Left free each month: ${fmt(free)}`}
     </div>}
     <Main onClick={save} disabled={!picks.some(p => p.on)}>Continue</Main>
@@ -408,7 +409,7 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
   };
   const copyKey = async () => { try { await navigator.clipboard.writeText(qa?.key ?? ''); flash('Key copied'); } catch { flash('Press and hold the key to copy it'); } };
   const card = (n: number, title: string, done: boolean, children: ReactNode) => (
-    <div style={{ marginTop: 12, padding: 14, borderRadius: 20, background: 'rgba(255,255,255,0.06)' }}>
+    <div style={{ marginTop: 12, padding: 14, borderRadius: 20, background: 'var(--su-card)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ width: 28, height: 28, borderRadius: 14, background: MINT, color: DEEP, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{done ? '✓' : n}</span>
         <span style={{ fontSize: 16, fontWeight: 700, opacity: done ? 0.6 : 1 }}>{title}</span>
@@ -417,11 +418,11 @@ function ApplePayStep({ onDone }: { onDone: () => void }) {
     </div>
   );
   const row = (icon: string, text: ReactNode, tint: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, background: '#1d1c1b', marginTop: 6, fontSize: 14, fontWeight: 600 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, background: 'var(--su-row)', marginTop: 6, fontSize: 14, fontWeight: 600 }}>
       <span style={{ width: 26, height: 26, borderRadius: 7, background: tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>{icon}</span><span>{text}</span>
     </div>
   );
-  const btn = (label: string, onClick: () => void, light = false) => <button onClick={onClick} className="pr97" style={{ width: '100%', height: 48, marginTop: 10, borderRadius: 24, border: 0, background: light ? 'rgba(255,255,255,0.1)' : INK, color: light ? INK : DEEP, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>{label}</button>;
+  const btn = (label: string, onClick: () => void, light = false) => <button onClick={onClick} className="pr97" style={{ width: '100%', height: 48, marginTop: 10, borderRadius: 24, border: 0, background: light ? 'var(--su-fill2)' : INK, color: light ? INK : DEEP, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>{label}</button>;
   return <>
     <H>Apple Pay</H>
     <Sub>When you pay with your iPhone, it asks for the pocket and Pockets adds the purchase for you.</Sub>
