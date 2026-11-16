@@ -196,4 +196,6 @@ export interface UI {
   tour?: { step: number; mode: 'first' | 'replay' } | null;
   /** The first-time setup (accounts, income, pockets…) right after creating an account or starting from scratch. */
   setup?: boolean;
+  /** The look-only tour over the real screen (Profile → App tutorial). */
+  guide?: boolean;
 }

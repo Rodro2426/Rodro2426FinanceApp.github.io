@@ -539,3 +539,9 @@ input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*
 .setup input::placeholder { color: var(--su-ph); }
 @keyframes setup-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .setup-glow, .setup-glow i, .setup-spin, .setup-logo, .setup [style*="setup-in"] { animation: none !important; transition: none !important; } }
+
+/* The tour's glowing edge around the spotlight: a turning conic gradient shown only as a 3px ring. */
+@property --gt-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+.guided-ring { padding: 3px; background: conic-gradient(from var(--gt-a), #8fd6cb, #7a68b8, #d9cdea, #2f8f84, #8fd6cb); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); box-sizing: border-box; animation: gt-turn 6s linear infinite; }
+@keyframes gt-turn { to { --gt-a: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .guided-ring { animation: none; } }

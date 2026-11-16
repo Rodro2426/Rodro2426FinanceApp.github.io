@@ -806,6 +806,21 @@ Turn on Apple Pay purchases|Activar compras con Apple Pay
 Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
 Your cards|Tus tarjetas
+A quick tour of Pockets|Un recorrido rápido por Pockets
+A look at the main parts of the app. Nothing you have is changed.|Un vistazo a las partes principales de la app. No se cambia nada de lo tuyo.
+What’s left in all your pockets this week. It turns green, yellow or red as you spend, and starts over every Monday. Swipe it to see today or the month.|Lo que te queda en todos tus bolsillos esta semana. Se pone verde, amarillo o rojo mientras gastas, y empieza de nuevo cada lunes. Deslízalo para ver hoy o el mes.
+Spent or got paid? Tap + and log it in seconds: amount, category, pocket and account.|¿Gastaste o te pagaron? Toca + y regístralo en segundos: monto, categoría, bolsillo y cuenta.
+Spent or got paid? Click Add and log it in seconds: amount, category, pocket and account.|¿Gastaste o te pagaron? Haz clic en Agregar y regístralo en segundos: monto, categoría, bolsillo y cuenta.
+Weekly budgets for each kind of spending. Tap one to see what you spent, or move leftovers to another pocket or a goal.|Presupuestos semanales para cada tipo de gasto. Toca uno para ver lo que gastaste, o pasa lo que sobra a otro bolsillo o a una meta.
+Your banks, cash and cards with their balances. Investments and the Excel export live here too.|Tus bancos, efectivo y tarjetas con sus saldos. Aquí también están las inversiones y la exportación a Excel.
+Your monthly income and how it’s split into pockets and savings goals.|Tu ingreso mensual y cómo se reparte en bolsillos y metas de ahorro.
+Where your money goes: by category, pocket, #tag and bills, with reports.|A dónde va tu plata: por categoría, bolsillo, #etiqueta y gastos fijos, con reportes.
+Your salary, bills and subscriptions repeat on their day, with reminders before they’re due.|Tu salario, gastos fijos y suscripciones se repiten en su día, con recordatorios antes de que venzan.
+Debts with one person, and trips where everyone adds what they paid and Pockets settles up.|Deudas con una persona, y viajes donde cada uno agrega lo que pagó y Pockets hace las cuentas.
+Your name, look, backups, Apple Pay purchases, and this tour again.|Tu nombre, apariencia, copias de seguridad, compras con Apple Pay y este recorrido otra vez.
+Replay this tour anytime from Profile.|Repite este recorrido cuando quieras desde Perfil.
+End tour|Terminar recorrido
+App tour|Recorrido de la app
 Anyone with your key can add expenses to your Pockets and see your pocket names, so keep it to yourself. If it leaks, turn this off and on again to get a new one.|Cualquiera con tu clave puede agregar gastos a tu Pockets y ver los nombres de tus bolsillos, así que no la compartas. Si se filtra, desactiva esto y vuelve a activarlo para tener una nueva.
 Add Pockets to your Home Screen|Agrega Pockets a tu pantalla de inicio
 It opens full screen like an app. You create your account there, once.|Se abre en pantalla completa como una app. Ahí creas tu cuenta, una sola vez.
