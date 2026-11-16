@@ -10,9 +10,9 @@ colors:
   ink-3: "#6b6764"
   line: "#e2dedb"
   red: "#d4301a"
-  action: "#8cc84b"
-  action-press: "#7db83d"
-  action-ink: "#14301f"
+  action: "#1f5f5a"
+  action-press: "#174a46"
+  action-ink: "#ffffff"
   red-wash: "#fde4df"
   navy: "#1f5f5a"
   navy-deep: "#123c38"
@@ -137,7 +137,7 @@ components:
 
 > **Rebrand, November 2026 ("Cien mil").** Colours come from the Colombian $100.000 bill and supersede the red/navy wording below:
 > - **Brand teal** `#1f5f5a` (dark mode `#8fd6cb`): logo, wordmark, headline second line, links and neutral text buttons, the active tab, the website's close and footer. Tokens: `--brand` (app), `--navy` / `--brand-ink` (site, names kept).
-> - **Lime action** `#8cc84b` with dark text `#14301f`: the one "do this" button (add, save, Start free, Sign in). Tokens: `--action`, `--action-press`, `--action-ink`.
+> - **Action** uses the logo teal: `#1f5f5a` with white text (dark mode `#8fd6cb` with `#0f2b28` text): the one "do this" button (add, save, Start free, Sign in). It was lime `#8cc84b` until November 2026. Tokens: `--action`, `--action-press`, `--action-ink`.
 > - **Lavender** `#7a68b8` / wash `#d9cdea`: the second colour, the closing headline on teal, and the bill wash in the texture.
 > - **Red** stays only as a warning: overspent, delete/remove/log out, unread dots, errors (`--color-accent` in the app).
 > - **Page** `#f5f8f4`, a mint-white.

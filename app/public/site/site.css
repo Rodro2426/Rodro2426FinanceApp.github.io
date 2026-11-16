@@ -19,9 +19,9 @@
   --ink-3: #6b6764;
   --line: #e2dedb;
   --red: #d4301a;                 /* errors only */
-  --action: #8cc84b;
-  --action-press: #7db83d;
-  --action-ink: #14301f;
+  --action: #1f5f5a;
+  --action-press: #174a46;
+  --action-ink: #fff;
   --navy: #1f5f5a;                /* brand teal (name kept so old rules still work) */
   --navy-deep: #123c38;
   --lilac: #d9cdea;
@@ -72,6 +72,7 @@
   --tex-hero: url("tex/billete-hero-dark.svg");
   --tex-tile: url("tex/billete-tile-dark.svg");
   --brand-ink: #8fd6cb;
+  --action: #8fd6cb; --action-press: #7cc6ba; --action-ink: #0f2b28;
   --tile: #22341a;
   --tile-ink: #b5e28a;
   --select: #2f4a1c;

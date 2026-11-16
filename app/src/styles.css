@@ -13,7 +13,7 @@
   --glass-line: rgba(32,30,29,0.07);
   --page: #f5f8f4;
   --brand: #1f5f5a; --brand-tint: #dcefe6;
-  --action: #8cc84b; --action-press: #7db83d; --action-ink: #14301f;
+  --action: #1f5f5a; --action-press: #174a46; --action-ink: #fff;
   --lavender: #7a68b8;
   --on-text: #fff;
   /* Money people owe you, and notes that say all is well / be careful. */
@@ -215,6 +215,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   --color-surface: #262524;
   --color-text: #f2efea;
   --brand: #8fd6cb; --brand-tint: #16302c;
+  --action: #8fd6cb; --action-press: #7cc6ba; --action-ink: #0f2b28;
   --color-neutral-100: #262524;
   --color-neutral-200: #302e2d;
   --color-neutral-300: #403d3b;
@@ -244,7 +245,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 /* Brand screens (welcome, install guide) keep their cream look in both modes. */
 .force-light {
   color-scheme: light;
-  --brand: #1f5f5a;
+  --brand: #1f5f5a; --action: #1f5f5a; --action-press: #174a46; --action-ink: #fff;
   --surface: #fff; --surface-solid: #fff; --surface-row: #fff; --on-text: #fff; --color-text: #201e1d;
   --color-neutral-100: #f8f4f4; --color-neutral-200: #eae7e7; --color-neutral-300: #d7d3d3; --color-neutral-500: #9b9797; --color-neutral-600: #7d7979; --color-neutral-700: #605d5d;
   --color-accent-700: #ae1800;
