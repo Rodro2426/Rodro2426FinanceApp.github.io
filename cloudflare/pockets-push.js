@@ -10,6 +10,10 @@
 //   cron            Every few minutes: sends the reminders that are due.
 //   POST /status    What the server has saved for this phone (to check reminders from the app).
 //   POST /test      Sends this phone a test notification right away.
+//   /q/<key>/...    Quick add from an iPhone Shortcut (no sign-in: the long random key is the lock). The Shortcut reads
+//                   the pocket list (GET menu) and drops an expense in the inbox (POST add); the app uploads the list
+//                   (POST menu), collects the inbox when it opens (GET items, POST ack) and can turn it off (POST off).
+//                   The key can only add expenses and read pocket/account names; it can't read balances or history.
 //
 // Settings (Worker > Settings > Variables and Secrets):
 //   VAPID_JWK         secret: the private key (JSON) given during setup. Never put it in the app or on GitHub.
@@ -25,6 +29,8 @@ export default {
     const url = new URL(req.url);
     try {
       if (req.method === 'GET' && url.pathname === '/') return json({ ok: true, service: 'pockets-push', key: await publicKey(env) }, 200, cors);
+      const q = url.pathname.match(/^\/q\/([a-f0-9]{32})\/(menu|add|items|ack|off)$/);
+      if (q) return json(await quick(env, req, q[1], q[2]), 200, cors);
       if (req.method !== 'POST') return json({ error: 'not found' }, 404, cors);
       const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
       const uid = await verifyFirebaseToken(token, env.FIREBASE_PROJECT);
@@ -228,6 +234,102 @@ export async function encrypt(sub, plaintext, fixed) {
 async function hkdf(salt, ikm, info, len) {
   const k = await crypto.subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits']);
   return new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt, info }, k, len * 8));
+}
+
+/* ---------------- Quick add (iPhone Shortcut inbox) ---------------- */
+// Free-plan friendly: one KV value per person for the list (qm:) and one for the waiting expenses (qi:), so no KV
+// "list" calls. A key only works after the signed-in app created it (POST menu with a Firebase token); any other key
+// is answered with a read and nothing else, so made-up keys can't use up the daily KV writes.
+const QMAX = 30, QDAY = 60;
+/** "25000", "25.000", "25,000.50", "25.000,50" → a number (a separator followed by exactly 3 digits is thousands). */
+function parseAmount(raw) {
+  if (typeof raw === 'number') return raw;
+  const s = String(raw ?? '').replace(/[^\d.,]/g, '');
+  const last = Math.max(s.lastIndexOf('.'), s.lastIndexOf(','));
+  if (last < 0) return Number(s);
+  const sep = s[last], both = s.includes('.') && s.includes(',');
+  const tail = s.slice(last + 1), head = s.slice(0, last).replace(/[.,]/g, '');
+  // Both kinds: the last one is the decimal point. One kind used twice or more: thousands. Once: thousands only before 3 digits.
+  const thousands = !both && (s.indexOf(sep) !== last || tail.length === 3);
+  return thousands ? Number(head + tail) : Number(head + '.' + tail);
+}
+/**
+ * What the Shortcut sent, however Shortcuts sends it: a JSON body, a Form body, or ?amount=… in the link.
+ * Spanish field names work too (monto, bolsillo, nota, cuenta, categoria).
+ */
+async function readBody(req, url) {
+  const type = req.headers.get('Content-Type') || '';
+  let b = {};
+  try {
+    if (type.includes('json')) b = await req.json();
+    else if (type.includes('form')) b = Object.fromEntries((await req.formData()).entries());
+    else { const t = await req.text(); b = t.trim().startsWith('{') ? JSON.parse(t) : Object.fromEntries(new URLSearchParams(t)); }
+  } catch { b = {}; }
+  const all = { ...Object.fromEntries(url.searchParams), ...(b && typeof b === 'object' ? b : {}) };
+  const pick = (...names) => { for (const n of names) for (const k of Object.keys(all)) if (k.trim().toLowerCase() === n) return all[k]; return undefined; };
+  return {
+    amount: pick('amount', 'monto', 'valor', 'cantidad'), pocket: pick('pocket', 'bolsillo'), note: pick('note', 'nota'),
+    account: pick('account', 'cuenta'), category: pick('category', 'categoria', 'categoría'), ids: all.ids,
+    card: pick('card', 'tarjeta', 'card or pass', 'tarjeta o pase'), merchant: pick('merchant', 'comercio', 'tienda', 'store')
+  };
+}
+/** True for an amount in another currency: a currency sign other than $, or letters other than COP ("US$", "USD", "EUR"). */
+function isForeign(raw) {
+  return typeof raw === 'string' && (/[€£¥₹]/.test(raw) || /[a-z]/i.test(raw.replace(/cop/ig, '')));
+}
+async function quick(env, req, key, action) {
+  const post = req.method === 'POST';
+  const mk = `qm:${key}`, ik = `qi:${key}`;
+  const m = JSON.parse((await env.SCHED.get(mk)) || 'null');
+  const es = m ? m.lang === 'es' : false;
+  const list = v => (Array.isArray(v) ? v : []).slice(0, 80).map(x => clip(x, 60)).filter(Boolean);
+  if (action === 'menu' && post) {
+    const uid = await verifyFirebaseToken((req.headers.get('Authorization') || '').replace(/^Bearer\s+/i, ''), env.FIREBASE_PROJECT);
+    if (!uid) return { error: 'sign in first' };
+    if (m && m.uid !== uid) return { error: 'not yours' };
+    const body = await req.json().catch(() => ({}));
+    const next = { uid, pockets: list(body.pockets), accounts: list(body.accounts), cats: list(body.cats), lang: body.lang === 'es' ? 'es' : 'en' };
+    if (!next.pockets.length) next.pockets = [next.lang === 'es' ? 'Sin bolsillo' : 'No pocket'];
+    await env.SCHED.put(mk, JSON.stringify(next), { expirationTtl: 400 * 86400 });
+    return { saved: true };
+  }
+  if (!m) return { ok: false, text: 'Agregar rápido está desactivado: actívalo en Pockets → Ajustes. / Quick add is off: turn it on in Pockets → Settings.' };
+  if (action === 'menu') return { pockets: m.pockets, accounts: m.accounts, cats: m.cats, lang: m.lang };
+  const box = JSON.parse((await env.SCHED.get(ik)) || 'null') || { items: [], day: '', adds: 0 };
+  const save = () => env.SCHED.put(ik, JSON.stringify(box), { expirationTtl: 30 * 86400 });
+  if (action === 'items') return { items: box.items };
+  if (!post) return { ok: false, text: es ? 'En la última acción "Obtener contenido de URL", cambia el Método a POST.' : 'In the last "Get Contents of URL" action, set Method to POST.' };
+  const body = await readBody(req, new URL(req.url));
+  if (action === 'add') {
+    // Apple Pay sends the amount as text with its currency ("$25.000,00", "COP 25.000", "US$12.50"). Pockets is in pesos,
+    // so another currency is refused with a message instead of being saved as 12 pesos.
+    if (isForeign(body.amount)) return { ok: false, text: es ? `Pockets solo agrega pesos: agrega ${clip(body.amount, 20)} a mano.` : `Pockets only adds pesos: add ${clip(body.amount, 20)} by hand.` };
+    const amt = parseAmount(body.amount);
+    if (!(amt > 0 && amt < 1e10)) return { ok: false, text: es ? 'Escribe un monto mayor que 0.' : 'Type an amount above 0.' };
+    const today = new Date().toISOString().slice(0, 10);
+    if (box.day !== today) { box.day = today; box.adds = 0; }
+    if (box.items.length >= QMAX) return { ok: false, text: es ? 'Abre Pockets para guardar primero los gastos pendientes.' : 'Open Pockets to save the waiting expenses first.' };
+    if (box.adds >= QDAY) return { ok: false, text: es ? 'Llegaste al límite de hoy. Agrégalo desde Pockets.' : 'That is the limit for today. Add it from Pockets.' };
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const item = { id, amt: Math.round(amt * 100) / 100, pocket: clip(body.pocket, 60), note: clip(body.note || body.merchant, 80), account: clip(body.account, 60), card: clip(body.card, 60), category: clip(body.category, 60), ts: Date.now() };
+    box.items.push(item); box.adds++;
+    await save();
+    const n = new Intl.NumberFormat(es ? 'es-CO' : 'en-US', { maximumFractionDigits: 2 }).format(item.amt);
+    const where = item.pocket || (es ? 'sin bolsillo' : 'no pocket');
+    const at = item.note ? (es ? ` de ${item.note}` : ` at ${item.note}`) : '';
+    return { ok: true, text: es ? `Guardado: $${n}${at} en ${where}` : `Saved $${n}${at} to ${where}` };
+  }
+  if (action === 'ack') {
+    const ids = new Set((Array.isArray(body.ids) ? body.ids : []).map(String));
+    const left = box.items.filter(i => !ids.has(i.id));
+    if (left.length !== box.items.length) { box.items = left; await save(); }
+    return { left: left.length };
+  }
+  if (action === 'off') {
+    await Promise.all([env.SCHED.delete(mk), env.SCHED.delete(ik)]);
+    return { off: true };
+  }
+  return { error: 'not found' };
 }
 
 /* ---------------- Small helpers ---------------- */

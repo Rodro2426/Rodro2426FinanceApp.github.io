@@ -527,6 +527,15 @@ export function SettingsSheet() {
         <PushToggle />
         <FieldLabel m="18px 4px 0">Privacy</FieldLabel>
         <LockSetting />
+        <FieldLabel m="18px 4px 8px">Apple Pay</FieldLabel>
+        <button onClick={() => openSheet({ name: 'quickAdd' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+          <span aria-hidden="true" style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--color-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Card size={19} /></span>
+          <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: 15, fontWeight: 700 }}>Apple Pay purchases</span>
+            <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>{d.settings.quickAdd ? 'On · added when you pay with your iPhone' : 'Add them on their own when you pay'}</span>
+          </span>
+          <span aria-hidden="true" style={{ color: 'var(--color-neutral-500)', fontSize: 18 }}>›</span>
+        </button>
         <FieldLabel m="18px 4px 8px">Cloud backup</FieldLabel>
         <button onClick={() => openSheet({ name: 'cloud' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
           <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--brand)', display: 'inline-flex' }}>{glyph('pk:cloud')}</span>

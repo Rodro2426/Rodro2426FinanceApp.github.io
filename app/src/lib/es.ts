@@ -172,8 +172,41 @@ Select none|Quitar selección
 Move 1 transaction to|Mover 1 movimiento a
 Move to category|Mover a categoría
 Move to subcategory|Mover a subcategoría
+Couldn't reach the Pockets server. Check your connection and try again.|No se pudo conectar con el servidor de Pockets. Revisa tu conexión e inténtalo otra vez.
+Quick add needs your Pockets account, so only your phone can create your inbox.|Agregar rápido necesita tu cuenta de Pockets, para que solo tu teléfono pueda crear tu buzón.
 Sign in first|Inicia sesión primero
+Turning on…|Activando…
+Quick add from iPhone|Agregar rápido
+Quick add|Agregar rápido
+On · Control Center or Action button|Activado · Centro de control o botón de Acción
+Log expenses from Control Center|Registra gastos desde el Centro de control
+Log an expense in seconds|Registra un gasto en segundos
+A button in Control Center or on the Action button runs an iPhone Shortcut. It asks for the pocket and the amount in small iPhone pop-ups, without opening Pockets. The expense is saved here the next time you open the app.|Un botón en el Centro de control o en el botón de Acción abre un atajo del iPhone. Te pide el bolsillo y el monto en ventanitas del iPhone, sin abrir Pockets. El gasto se guarda aquí la próxima vez que abras la app.
+Turn on quick add|Activar agregar rápido
+Turn off quick add|Desactivar agregar rápido
+Tap again to turn off|Toca otra vez para desactivar
+Quick add is on|Agregar rápido está activado
+Quick add is off|Agregar rápido está desactivado
+Your links|Tus enlaces
+Pocket list|Lista de bolsillos
 Copy|Copiar
+Link copied|Enlace copiado
+Could not copy. Press and hold the link to copy it.|No se pudo copiar. Mantén presionado el enlace para copiarlo.
+Anyone with these links can add expenses to your Pockets, so keep them to yourself. If one leaks, turn quick add off and on again to get new links.|Cualquiera con estos enlaces puede agregar gastos a tu Pockets, así que guárdalos solo para ti. Si uno se filtra, desactiva y vuelve a activar agregar rápido para tener enlaces nuevos.
+Build the Shortcut|Crea el atajo
+Open the Shortcuts app, tap + and name the new shortcut "Pockets".|Abre la app Atajos, toca + y ponle al atajo nuevo el nombre "Pockets".
+Add "Get Contents of URL" and paste the Pocket list link.|Agrega "Obtener contenido de URL" y pega el enlace Lista de bolsillos.
+Add "Get Dictionary Value": get the value for "pockets" in Contents of URL.|Agrega "Obtener valor del diccionario": obtén el valor de "pockets" en Contenido de URL.
+Add "Choose from List" with that Dictionary Value, and set the prompt to "Pocket".|Agrega "Elegir de la lista" con ese Valor del diccionario y pon como mensaje "Bolsillo".
+Add "Ask for Input": type Number, prompt "Amount".|Agrega "Solicitar entrada": tipo Número, mensaje "Monto".
+Add another "Ask for Input": type Text, prompt "Note" (you can leave it empty when you use it).|Agrega otro "Solicitar entrada": tipo Texto, mensaje "Nota" (puedes dejarla vacía cuando lo uses).
+Add "Get Contents of URL" and paste the Add expense link. Open its options: Method POST, Request Body JSON, and add three fields: pocket (Text) = Chosen Item, amount (Number) = the Amount answer, note (Text) = the Note answer.|Agrega "Obtener contenido de URL" y pega el enlace Agregar gasto. Abre sus opciones: Método POST, Cuerpo de la solicitud JSON, y agrega tres campos: pocket (Texto) = Elemento elegido, amount (Número) = la respuesta de Monto, note (Texto) = la respuesta de Nota.
+Add "Get Dictionary Value" for "text" and then "Show Notification" with it. It tells you "Saved $25.000 to Groceries", or what to fix if something is wrong.|Agrega "Obtener valor del diccionario" para "text" y luego "Mostrar notificación" con ese valor. Te dice "Guardado: $25.000 en Mercado", o qué arreglar si algo está mal.
+Add the button: open Control Center, tap +, then Add a Control → Shortcut, and pick "Pockets". For the Action button: Settings → Action Button → Shortcut.|Agrega el botón: abre el Centro de control, toca +, luego Agregar un control → Atajo, y elige "Pockets". Para el botón de Acción: Configuración → Botón de Acción → Atajo.
+Check for new expenses|Buscar gastos nuevos
+Pockets also checks every time you open it. The pocket list updates on its own when you add or rename pockets.|Pockets también revisa cada vez que lo abres. La lista de bolsillos se actualiza sola cuando agregas o renombras bolsillos.
+No new expenses from your Shortcut|No hay gastos nuevos de tu atajo
+Added 1 expense from your Shortcut|Se agregó 1 gasto desde tu atajo
 Show less|Ver menos
 Back to reports|Volver a reportes
 Your categories|Tus categorías
@@ -755,6 +788,35 @@ Remove photo|Quitar foto
 Or use the logo from the bank's website|O usa el logo de la página web del banco
 Bank website|Página web del banco
 Get logo|Traer logo
+Apple Pay|Apple Pay
+Apple Pay purchases|Compras con Apple Pay
+Add them on their own when you pay|Se agregan solas cuando pagas
+On · added when you pay with your iPhone|Activado · se agregan cuando pagas con tu iPhone
+Add purchases when you pay|Agrega tus compras al pagar
+When you pay with your iPhone or Apple Watch, an iPhone Shortcut asks which pocket it was for and sends the amount and the store to Pockets. They are added as expenses the next time you open Pockets.|Cuando pagas con tu iPhone o Apple Watch, un atajo del iPhone te pregunta para qué bolsillo era y le envía a Pockets el monto y la tienda. Se agregan como gastos la próxima vez que abras Pockets.
+Only Apple Pay taps. Purchases with the physical card, transfers and online payments still go in by hand. Purchases in another currency are not added.|Solo pagos con Apple Pay. Las compras con la tarjeta física, las transferencias y los pagos en línea se siguen agregando a mano. Las compras en otra moneda no se agregan.
+This needs your Pockets account, so only your phone can create your private inbox.|Esto necesita tu cuenta de Pockets, así solo tu celular puede crear tu buzón privado.
+Turn on Apple Pay purchases|Activar compras con Apple Pay
+Pay from, for a new card|Pagar desde, para una tarjeta nueva
+A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
+Your cards|Tus tarjetas
+Cards show up here after their first purchase. A change applies to the next purchases.|Las tarjetas aparecen aquí después de su primera compra. Un cambio aplica a las próximas compras.
+Add purchase|Agregar compra
+Anyone with these links can add expenses to your Pockets and see your pocket names, so keep them to yourself. If one leaks, turn this off and on again to get new links.|Cualquiera con estos enlaces puede agregar gastos a tu Pockets y ver los nombres de tus bolsillos, así que no los compartas. Si uno se filtra, desactiva esto y vuelve a activarlo para tener enlaces nuevos.
+Open the Shortcuts app, go to Automation and tap +. Choose "Transaction".|Abre la app Atajos, ve a Automatización y toca +. Elige "Transacción".
+Pick the cards you pay with in Wallet, leave "Any merchant", choose "Run Immediately" and tap Next, then "New Blank Automation".|Elige las tarjetas con las que pagas en Wallet, deja "Cualquier comercio", elige "Ejecutar inmediatamente" y toca Siguiente, luego "Nueva automatización en blanco".
+Add "Get Contents of URL" and paste the Pocket list link.|Agrega "Obtener contenido de URL" y pega el enlace Lista de bolsillos.
+Add "Get Dictionary Value": get the value for "pockets" in Contents of URL.|Agrega "Obtener valor del diccionario": obtén el valor de "pockets" en Contenido de URL.
+Add "Choose from List" with that Dictionary Value. Set the prompt to "Pocket for" and add the Merchant from Shortcut Input.|Agrega "Seleccionar de la lista" con ese Valor del diccionario. Escribe en la indicación "Bolsillo para" y agrega el Comercio de la Entrada del atajo.
+Add "Get Contents of URL" and paste the Add purchase link. Open its options: Method POST, Request Body JSON, and add four Text fields: pocket = Chosen Item, amount = Shortcut Input → Amount, merchant = Shortcut Input → Merchant, card = Shortcut Input → Card or Pass.|Agrega "Obtener contenido de URL" y pega el enlace Agregar compra. Abre sus opciones: Método POST, Cuerpo de la solicitud JSON, y agrega cuatro campos de Texto: pocket = Elemento seleccionado, amount = Entrada del atajo → Importe, merchant = Entrada del atajo → Comercio, card = Entrada del atajo → Tarjeta o pase.
+Add "Get Dictionary Value" for "text", then "Show Notification" with it. It says "Saved $25.000 at Éxito to Groceries", or what to fix if something went wrong.|Agrega "Obtener valor del diccionario" para "text" y luego "Mostrar notificación" con ese valor. Dice "Guardado: $25.000 de Éxito en Mercado", o qué corregir si algo salió mal.
+Pay with Apple Pay once to try it. The pocket list shows up right after you pay; if it appears as a notification, tap it.|Paga una vez con Apple Pay para probarlo. La lista de bolsillos aparece justo después de pagar; si sale como notificación, tócala.
+Check for new purchases|Buscar compras nuevas
+Turn off Apple Pay purchases|Desactivar compras con Apple Pay
+Apple Pay purchases are on|Compras con Apple Pay activadas
+Apple Pay purchases are off|Compras con Apple Pay desactivadas
+No new Apple Pay purchases|No hay compras nuevas con Apple Pay
+Added 1 Apple Pay purchase|Se agregó 1 compra con Apple Pay
 Looking…|Buscando…
 No logo found for that website. Check the address, or add a photo instead.|No encontramos un logo para esa página. Revisa la dirección o agrega una foto.
 Account color|Color de la cuenta
@@ -1828,6 +1890,8 @@ Moved 1 expense to {0}|1 gasto movido a {0}
 Moved {0} expenses to {1}|{0} gastos movidos a {1}
 Moved 1 income to {0}|1 ingreso movido a {0}
 Moved {0} incomes to {1}|{0} ingresos movidos a {1}
+Added {0} Apple Pay purchases|Se agregaron {0} compras con Apple Pay
+Account for {0}|Cuenta para {0}
 Tap again to delete {0}|Toca otra vez para eliminar {0}
 Top: {0}|Mayor gasto: {0}
 {0} charts|{0} gráficos
