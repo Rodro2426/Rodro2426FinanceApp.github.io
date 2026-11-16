@@ -250,7 +250,7 @@ export default function App() {
     return () => mq.removeEventListener('change', apply);
   }, [theme, bgKey]);
   // Cloud sync: every saved change is uploaded a few seconds later; other phones' changes come down on open.
-  useEffect(() => { startCloud({ getData, replace: d => replaceData(d), canSync: () => isPersisting() && !getData().settings.sampleMode }); return onPersist(markDirty); }, []);
+  useEffect(() => { startCloud({ getData, replace: d => replaceData(d), canSync: isPersisting }); return onPersist(markDirty); }, []);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUI({ sheet: null }); };
     window.addEventListener('keydown', onKey);

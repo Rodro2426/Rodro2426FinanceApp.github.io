@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { SITE_URL, shouldShowSite } from './handoff';
-import { del, get, set } from 'idb-keyval';
+import { get, set } from 'idb-keyval';
 import type { Data, UI } from './types';
 import { emptyData, sampleData } from './seed';
 
@@ -74,25 +74,6 @@ export async function loadData() {
   } catch (err) { console.warn('Could not load saved data', err); }
   const d = state.data;
   state.ui.lastAdd = { pocket: d.pockets[0]?.id ?? '', acct: (d.accounts.find(a => a.type === 'bank') || d.accounts[0])?.id ?? '' };
-}
-
-/* ---------- Sample data over real data ---------- */
-const BEFORE_SAMPLE = 'pockets-before-sample-v1';
-/** Swaps in sample data, keeping a copy of the real data on the phone. Sample data is never uploaded (see App's canSync). */
-export async function loadSample() {
-  const d = state.data;
-  // A second load keeps the first copy: the current data is already sample data.
-  if (!d.settings.sampleMode) await set(BEFORE_SAMPLE, d);
-  replaceData({ ...sampleData(), settings: { ...d.settings, sampleMode: true } });
-}
-/** Brings back the data saved before sample data was loaded. False if there is none. */
-export async function undoSample() {
-  const saved = await get<Data>(BEFORE_SAMPLE).catch(() => undefined);
-  if (!saved) return false;
-  replaceData({ ...saved, settings: { ...saved.settings, sampleMode: undefined } });
-  await saveNow();
-  await del(BEFORE_SAMPLE).catch(() => {});
-  return true;
 }
 
 /* ---------- Guided tour on a practice copy ---------- */

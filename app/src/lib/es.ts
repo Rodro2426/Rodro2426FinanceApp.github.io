@@ -830,18 +830,6 @@ The tutorial uses a separate practice copy. Your accounts, pockets and transacti
 Yes, use a practice copy|Sí, usar una copia de práctica
 App tutorial|Tutorial de la app
 How to install Pockets on iPhone|Cómo instalar Pockets en iPhone
-Start over|Empezar de nuevo
-Sample data loaded|Datos de ejemplo cargados
-Tap to replace|Toca para reemplazar
-You're looking at sample data. Your own data is saved on this phone, and nothing is uploaded to the cloud until you bring it back.|Estás viendo datos de ejemplo. Tus propios datos están guardados en este celular y no se sube nada a la nube hasta que los recuperes.
-Bring back my data|Recuperar mis datos
-Your data is back|Tus datos volvieron
-Could not find your data on this phone|No encontramos tus datos en este celular
-Could not save a copy of your data, so nothing changed|No pudimos guardar una copia de tus datos, así que no cambió nada
-Load sample data|Cargar datos de ejemplo
-All data erased|Todos los datos borrados
-Tap again to erase|Toca otra vez para borrar
-Start fresh|Empezar de cero
 New savings goal|Nueva meta de ahorro
 Target amount|Valor objetivo
 Months to reach it|Meses para lograrla
