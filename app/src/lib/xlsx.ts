@@ -61,6 +61,7 @@ function sheet() {
     for (let c = 0; c < w; c++) { put(0, c, c ? '' : title, { s: S.banner }); put(1, c, c ? '' : sub, { s: S.bannerSub }); }
     mergeCells(0, 0, w - 1); mergeCells(1, 0, w - 1); height(0, 36); height(1, 22);
   };
+  const section = (r: number, text: string, w: number) => { for (let c = 0; c < w; c++) put(r, c, c ? '' : text, { s: S.section }); mergeCells(r, 0, w - 1); };
   // Small coloured number tile: label on top, value below.
   const tile = (r: number, c0: number, c1: number, label: string, v: unknown, o: PutOpts, tint: string) => {
     for (let c = c0; c <= c1; c++) { put(r, c, c === c0 ? label : '', { s: merge(S.tileLabel, { fill: fill(tint) }) }); put(r + 1, c, c === c0 ? v : '', { ...(c === c0 ? o : {}), s: merge(S.tileValue, { fill: fill(tint) }) }); }
@@ -85,7 +86,7 @@ function sheet() {
     ws['!cols'] = cols.map(w => ({ wch: w }));
     return ws as XLSX.WorkSheet;
   };
-  return { put, row, finish, mergeCells, banner, tile, table, height, extra, ws };
+  return { put, row, finish, mergeCells, banner, section, tile, table, height, extra, ws };
 }
 
 export function buildWorkbook(d: ExportPayload): Uint8Array {
@@ -109,7 +110,7 @@ export function buildWorkbook(d: ExportPayload): Uint8Array {
     });
     ai.sections.forEach(sec => {
       r++;
-      for (let c = 0; c < W; c++) sb.put(r, c, c ? '' : sec.title, { s: S.section });
+      sb.section(r, sec.title, W);
       r++;
       if (sec.note) { sb.put(r, 0, sec.note, { s: S.note }); sb.mergeCells(r, 0, W - 1); r++; }
       sb.row(r++, sec.header, { s: S.head });
@@ -178,7 +179,7 @@ export function buildWorkbook(d: ExportPayload): Uint8Array {
 
     if (d.pockets && d.pockets.length) {
       r += 1;
-      for (let c = 0; c < 5; c++) sb.put(r, c, c ? '' : `Pockets vs plan · ${d.months[0]}`, { s: S.section });
+      sb.section(r, `Pockets vs plan · ${d.months[0]}`, 5);
       r += 2;
       sb.row(r, ['Pocket', 'Planned', 'Spent', 'Left', 'Used'], { s: S.head });
       const p0 = r + 1;
@@ -199,7 +200,7 @@ export function buildWorkbook(d: ExportPayload): Uint8Array {
     }
 
     r += 1;
-    for (let c = 0; c < 5; c++) sb.put(r, c, c ? '' : 'Categories by month · use the arrows to sort or filter', { s: S.section });
+    sb.section(r, 'Categories by month · use the arrows to sort or filter', 5);
     r += 2;
     const rows: [string, string, string, number, number][] = [];
     d.months.forEach(m => {
@@ -214,7 +215,7 @@ export function buildWorkbook(d: ExportPayload): Uint8Array {
       sb.put(r + 1 + i, 3, v, { z: MONEY, s: S.cell });
       sb.put(r + 1 + i, 4, p, { z: PCT, s: S.cell });
     });
-    add(sb, [18, 22, 20, 18, 3, 22, 16, 12], 'Summary');
+    add(sb, [18, 22, 20, 18, 12, 22, 16, 12], 'Summary');
   }
 
   // ---------- Details ----------
@@ -281,7 +282,7 @@ function polish(buf: ArrayBuffer, extras: SheetExtra[]): Uint8Array {
 
   // Brand table style: mint banding + hairline rows. Header and totals keep their own cell colours.
   write('xl/styles.xml', read('xl/styles.xml')
-    .replace(/<dxfs count="0"\/>/, `<dxfs count="2"><dxf><fill><patternFill patternType="solid"><bgColor rgb="FF${C.page}"/></patternFill></fill></dxf><dxf><border><bottom style="thin"><color rgb="FF${C.line}"/></bottom><horizontal style="thin"><color rgb="FF${C.line}"/></horizontal></border></dxf></dxfs>`)
+    .replace(/<dxfs count="0"\/>/, `<dxfs count="2"><dxf><fill><patternFill patternType="solid"><bgColor rgb="FFEDF4EF"/></patternFill></fill></dxf><dxf><border><bottom style="thin"><color rgb="FF${C.line}"/></bottom><horizontal style="thin"><color rgb="FF${C.line}"/></horizontal></border></dxf></dxfs>`)
     .replace(/<tableStyles [^>]*\/>/, '<tableStyles count="1" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleLight16"><tableStyle name="Pockets" pivot="0" count="2"><tableStyleElement type="wholeTable" dxfId="1"/><tableStyleElement type="firstRowStripe" dxfId="0"/></tableStyle></tableStyles>'));
 
   let ct = read('[Content_Types].xml'), tid = 0;
