@@ -47,6 +47,16 @@ export function quickMenu(d: Data, lang: 'en' | 'es') {
 /** "PAYU*EXITO 0123" and "PAYU*EXITO 0456" are the same store: lower case, without numbers or extra signs. */
 export const storeKey = (raw: string) => raw.toLowerCase().replace(/[\d*#_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 
+/**
+ * The person's other purchases from the same store, renamed too. Only the ones still carrying a name Pockets gave
+ * them (the name as it arrived, or the previously learned one); a purchase they named differently by hand stays.
+ */
+export function renameStorePurchases(expenses: Expense[], e: Expense, name: string, before?: string): Expense[] {
+  const key = e.store ? storeKey(e.store) : '', clean = name.trim();
+  if (!key || !clean) return expenses;
+  return expenses.map(y => (y.id !== e.id && y.store && storeKey(y.store) === key && (y.note === y.store || (!!before && y.note === before)) ? { ...y, note: clean } : y));
+}
+
 /** Settings after the person renamed an Apple Pay expense: the next purchases from that store get the new name. */
 export function learnStoreName(d: Data, e: Expense, name: string): Data['settings'] | null {
   const qa = d.settings.quickAdd, key = e.store ? storeKey(e.store) : '', clean = name.trim();

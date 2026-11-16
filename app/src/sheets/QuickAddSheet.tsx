@@ -130,7 +130,7 @@ export function QuickAddSheet() {
           <div style={{ ...card, flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14 }}>
             <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontSize: 15, fontWeight: 700 }}>Ask me to check each purchase</span>
-              <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>A notification in Pockets for every Apple Pay purchase. Tap it to fix a strange store name or change the details. A name you fix is used for that store's next purchases.</span>
+              <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>A notification in Pockets for every Apple Pay purchase. Tap it to fix a strange store name or change the details. A name you fix goes to that store's other purchases too, past and next.</span>
             </span>
             <Toggle on={qa.review !== false} onChange={v => setData(x => ({ settings: { ...x.settings, quickAdd: { ...x.settings.quickAdd!, review: v ? undefined : false } } }))} label="Ask me to check each purchase" />
           </div>

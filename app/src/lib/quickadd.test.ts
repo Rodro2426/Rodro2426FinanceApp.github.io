@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import { sampleData } from './seed';
-import { cardAccount, importInbox, learnStoreName, newQuickKey, quickAccount, quickMenu, shortcutCats, storeKey } from './quickadd';
+import { cardAccount, importInbox, learnStoreName, renameStorePurchases, newQuickKey, quickAccount, quickMenu, shortcutCats, storeKey } from './quickadd';
 
 const ts = new Date(2026, 10, 9, 13, 30).getTime();
 
@@ -162,5 +162,20 @@ describe('quick add inbox', () => {
     expect(learnStoreName(d, ap, '   ')).toBeNull();
     expect(learnStoreName(d, ap, 'TOSTAO 12')).toBeNull();
     expect(learnStoreName({ ...d, settings: { ...d.settings, quickAdd: undefined } }, ap, 'Tostao')).toBeNull();
+  });
+
+  it('renames earlier purchases from the same store, but not ones named by hand', () => {
+    const e0 = sampleData().expenses[0];
+    const mk = (id: string, note: string, store?: string) => ({ ...e0, id, note, ...(store ? { store } : {}) });
+    const list = [
+      mk('a', 'PAYU*EXITO 0123', 'PAYU*EXITO 0123'),
+      mk('b', 'PAYU*EXITO 0456', 'PAYU*EXITO 0456'),
+      mk('c', 'Exito mercado mamá', 'PAYU*EXITO 0789'),
+      mk('d', 'Éxito viejo', 'PAYU*EXITO 0111'),
+      mk('e', 'PAYU*EXITO 0123'),
+      mk('f', 'TOSTAO 12', 'TOSTAO 12')
+    ];
+    const out = renameStorePurchases(list, list[0], 'Éxito', 'Éxito viejo');
+    expect(out.map(x => x.note)).toEqual(['PAYU*EXITO 0123', 'Éxito', 'Exito mercado mamá', 'Éxito', 'PAYU*EXITO 0123', 'TOSTAO 12']);
   });
 });

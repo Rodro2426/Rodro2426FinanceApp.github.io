@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { learnStoreName } from '../lib/quickadd';
+import { learnStoreName, renameStorePurchases, storeKey } from '../lib/quickadd';
 import { CategoryPicker, IncomeCategoryPicker } from '../ui/CategoryPicker';
 import { useApp, setData, setUI, flash, getState } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
@@ -76,8 +76,11 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
         // Undo the old charge, then apply the new one (handles account changes too).
         const accounts = chargeAccount(chargeAccount(x.accounts, e.a, -e.amt), acct, val);
         // An Apple Pay purchase renamed by hand: remember the name for that store's next purchases.
+        // The store's earlier purchases that still have the automatic name get the new name too.
         const settings = learnStoreName(x, e, note);
-        return { accounts, expenses: x.expenses.map(y => (y.id === e.id ? { ...y, amt: val, note: note.trim() || y.note, date, a: acct, p: pocket, cat, sub, tags, orig: val === roundAmt(y.amt) ? y.orig : undefined } : y)), ...(settings ? { settings } : {}) };
+        const edited = x.expenses.map(y => (y.id === e.id ? { ...y, amt: val, note: note.trim() || y.note, date, a: acct, p: pocket, cat, sub, tags, orig: val === roundAmt(y.amt) ? y.orig : undefined } : y));
+        const before = e.store ? x.settings.quickAdd?.names?.[storeKey(e.store)] : undefined;
+        return { accounts, expenses: settings ? renameStorePurchases(edited, e, note, before) : edited, ...(settings ? { settings } : {}) };
       });
     } else if (inc) {
       // Same rules as everywhere else: the account follows the difference, and the split shrinks to fit if needed.
