@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { glyph } from '../ui/PocketIcons';
 import { SwipeRow } from '../ui/SwipeRow';
 import { getLang } from '../lib/i18n';
 import { useApp, openSheet, setData, flash } from '../lib/store';
@@ -122,7 +123,7 @@ export default function CalendarScreen() {
         ))}
         {selSpent.map((v, i) => (
           <SwipeRow key={v.key} kind="expense" id={v.key}><div onClick={() => openSheet({ name: 'txn', kind: 'expense', id: v.key })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === selSpent.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
-            <span style={{ width: 40, height: 40, borderRadius: 999, backgroundColor: v.tint, position: 'relative', overflow: 'hidden', color: v.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{v.initial}<Fill src={v.photoBg} /></span>
+            <span style={{ width: 40, height: 40, borderRadius: 999, backgroundColor: v.tint, position: 'relative', overflow: 'hidden', color: v.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flex: 'none' }}>{glyph(v.initial)}<Fill src={v.photoBg} /></span>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{v.note}</span>
               <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{v.meta}</span>

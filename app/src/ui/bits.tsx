@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { glyph } from './PocketIcons';
 import type { Data, Expense } from '../lib/types';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
 import { catOf, curSymbol, fmt, fxText, initialOf, isCOP, pocketStats, type PocketStats } from '../lib/derive';
@@ -82,7 +83,7 @@ export function Fill({ src }: { src?: string | null }) {
 
 export function PocketDot({ st, size, fs, bg, color, radius = 999 }: { st: { initial: string; photoBg: string }; size: number; fs: number; bg: string; color: string; radius?: number }) {
   return (
-    <span style={{ width: size, height: size, borderRadius: radius, backgroundColor: bg, position: 'relative', overflow: 'hidden', color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fs, flex: 'none' }}>{st.initial}<Fill src={st.photoBg} /></span>
+    <span style={{ width: size, height: size, borderRadius: radius, backgroundColor: bg, position: 'relative', overflow: 'hidden', color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: fs, flex: 'none' }}>{glyph(st.initial)}<Fill src={st.photoBg} /></span>
   );
 }
 
@@ -90,7 +91,7 @@ export function PocketDot({ st, size, fs, bg, color, radius = 999 }: { st: { ini
 export function PickChip({ st, on, hue, onClick, icon }: { st: { name: string; initial?: string; photoBg?: string }; on: boolean; hue: number; onClick: () => void; icon?: ReactNode }) {
   return (
     <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 8px', borderRadius: 999, border: `2px solid ${on ? ink(hue) : 'var(--surface)'}`, background: on ? ink(hue) : 'var(--surface)', color: on ? 'var(--on-text)' : TEXT, cursor: 'pointer', transition: 'background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease' }}>
-      <span style={{ width: 24, height: 24, borderRadius: 999, backgroundColor: on ? 'rgba(255,255,255,.25)' : tint(hue), position: 'relative', overflow: 'hidden', color: on ? 'var(--on-text)' : ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{icon ?? st.initial}<Fill src={st.photoBg} /></span>
+      <span style={{ width: 24, height: 24, borderRadius: 999, backgroundColor: on ? 'rgba(255,255,255,.25)' : tint(hue), position: 'relative', overflow: 'hidden', color: on ? 'var(--on-text)' : ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>{icon ?? glyph(st.initial)}<Fill src={st.photoBg} /></span>
       <span style={{ fontSize: 14, fontWeight: 600 }}>{st.name}</span>
     </button>
   );

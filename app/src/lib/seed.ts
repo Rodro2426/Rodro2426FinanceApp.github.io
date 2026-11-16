@@ -51,11 +51,11 @@ function sampleDataRaw(today: string): Data {
     settings: { name: 'Sofía', currency: 'COP', weeks: 4, voiceLang: 'es-CO', profilePhoto: null },
     incomeStr: '4800000',
     pockets: [
-      { id: 'groc', name: 'Groceries', emoji: '🛒', weeklyStr: '350000', hue: 150 },
-      { id: 'trans', name: 'Transport', emoji: '🚌', weeklyStr: '120000', hue: 250 },
-      { id: 'dine', name: 'Eating out', emoji: '🍽️', weeklyStr: '200000', hue: 25 },
-      { id: 'fun', name: 'Fun', emoji: '🎟️', weeklyStr: '150000', hue: 300 },
-      { id: 'care', name: 'Personal care', emoji: '🧴', weeklyStr: '80000', hue: 80 }
+      { id: 'groc', name: 'Groceries', emoji: 'pk:cart', weeklyStr: '350000', hue: 150 },
+      { id: 'trans', name: 'Transport', emoji: 'pk:bus', weeklyStr: '120000', hue: 250 },
+      { id: 'dine', name: 'Eating out', emoji: 'pk:plate', weeklyStr: '200000', hue: 25 },
+      { id: 'fun', name: 'Fun', emoji: 'pk:ticket', weeklyStr: '150000', hue: 300 },
+      { id: 'care', name: 'Personal care', emoji: 'pk:bottle', weeklyStr: '80000', hue: 80 }
     ],
     accounts: [
       { id: 'a1', name: 'Bancolombia', kind: 'Checking', type: 'bank', bal: 3250000, hue: 80 },

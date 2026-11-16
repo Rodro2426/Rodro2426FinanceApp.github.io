@@ -1,4 +1,5 @@
 import { useApp, openSheet, setUI } from '../lib/store';
+import { glyph } from '../ui/PocketIcons';
 import { getLang } from '../lib/i18n';
 import { EyeToggle } from '../ui/EyeToggle';
 import { LINE, RED, ink, tint } from '../lib/constants';
@@ -142,7 +143,7 @@ export default function Home() {
               const pct = budget > 0 ? Math.max(0, Math.min(100, (left / budget) * 100)) : 0;
               return (
                 <button key={p.id} className="dh-line" onClick={() => openSheet({ name: 'pocket', id: p.id, view })}>
-                  <span className="dh-dot" style={{ backgroundColor: tint(p.hue), color: ink(p.hue) }}>{p.initial}<Fill src={p.photoBg} /></span>
+                  <span className="dh-dot" style={{ backgroundColor: tint(p.hue), color: ink(p.hue) }}>{glyph(p.initial)}<Fill src={p.photoBg} /></span>
                   <span className="dh-name"><b>{p.name}</b><small>{off || (p.period === 'half' ? 'Every 15 days' : 'Every week')}</small></span>
                   <span className="dh-track" style={{ backgroundColor: tint(p.hue) }}><span className="bar-fill" style={{ background: ink(p.hue), clipPath: `inset(0 ${100 - pct}% 0 0 round 999px)` }} /></span>
                   <span className="dh-amt"><b style={{ color: left < 0 ? RED : undefined }}>{fmt(left)}</b><small>left of {fmt(budget)}</small></span>
@@ -289,7 +290,7 @@ function PocketGrid({ items, tour, view }: { items: { p: PocketStats; left: numb
         <div key={p.id} data-tour={tour ? 'pocket' : undefined} onClick={() => openSheet({ name: 'pocket', id: p.id, view })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-              <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'var(--glass)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{p.initial}<Fill src={p.photoBg} /></span>
+              <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'var(--glass)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{glyph(p.initial)}<Fill src={p.photoBg} /></span>
               <span style={{ fontSize: 14, fontWeight: 600, color: ink(p.hue), lineHeight: 1.25 }}>{p.name}</span>
             </span>
             <svg width="34" height="34" viewBox="0 0 40 40" style={{ flex: 'none', transform: 'rotate(-90deg)' }}>

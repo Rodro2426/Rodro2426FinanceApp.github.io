@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { glyph } from '../ui/PocketIcons';
 import { Blocks } from '../ui/Blocks';
 import { useApp, openSheet, setData, flash } from '../lib/store';
 import { extraIncomes, findMismatches, markIncluded, monthSummary } from '../lib/plan';
@@ -105,7 +106,7 @@ export default function Budget() {
           const p = d.pockets.find(x => x.id === s.id)!;
           return (
             <div key={s.id} style={{ background: 'var(--surface)', borderRadius: 22, padding: '10px 10px 10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <button onClick={() => openSheet({ name: 'editPocket', id: s.id })} aria-label="Edit pocket" style={{ width: 40, height: 40, borderRadius: 999, border: 0, padding: 0, cursor: 'pointer', backgroundColor: tint(s.hue), position: 'relative', overflow: 'hidden', color: ink(s.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flex: 'none' }}>{s.initial}<Fill src={s.photoBg} /></button>
+              <button onClick={() => openSheet({ name: 'editPocket', id: s.id })} aria-label="Edit pocket" style={{ width: 40, height: 40, borderRadius: 999, border: 0, padding: 0, cursor: 'pointer', backgroundColor: tint(s.hue), position: 'relative', overflow: 'hidden', color: ink(s.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flex: 'none' }}>{glyph(s.initial)}<Fill src={s.photoBg} /></button>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <input value={p.name} onChange={e => setPocket(s.id, { name: e.target.value })} style={{ border: 0, background: 'transparent', fontSize: 16, fontWeight: 600, color: 'var(--color-text)', padding: '1px 0', outline: 'none', minWidth: 0 }} />
                 <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{fmt(num(p.weeklyStr) * periodsInMonth(p, weeks))} / month{isHalf(p) ? ' · every 15 days' : ''}</span>

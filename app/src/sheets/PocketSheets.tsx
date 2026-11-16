@@ -1,7 +1,8 @@
 import { moneyHidden } from '../lib/privacy';
+import { glyph, lastEmoji, POCKET_ICONS } from '../ui/PocketIcons';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
-import { EMOJIS, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
+import { HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, isCOP, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
 import { addDays, monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
@@ -822,7 +823,8 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const isNew = !base;
   const [name, setName] = useState(base?.name ?? '');
   const [weekly, setWeekly] = useState(base?.weeklyStr ?? '');
-  const [emoji, setEmoji] = useState(base ? base.emoji || '' : '💪');
+  const [emoji, setEmoji] = useState(base ? base.emoji || '' : 'pk:gym');
+  const emojiIn = useRef<HTMLInputElement>(null);
   const [photo, setPhoto] = useState<string | null>(base?.photo ?? null);
   const [confirmDel, setConfirmDel] = useState(false);
   const [days, setDays] = useState<number[]>(base?.days?.length ? base.days : [0, 1, 2, 3, 4, 5, 6]);
@@ -865,19 +867,27 @@ export function EditPocketSheet({ id }: { id: string | null }) {
     <SheetFrame title={isNew ? 'New pocket' : 'Edit pocket'}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14 }}>
-          <div style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: tint(hue), position: 'relative', overflow: 'hidden', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 32, flex: 'none' }}>{icon}<Fill src={photo} /></div>
+          <div style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: tint(hue), position: 'relative', overflow: 'hidden', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 32, flex: 'none' }}>{glyph(icon)}<Fill src={photo} /></div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
             <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
               <I.Image size={14} />{photo ? 'Change image' : 'Upload image'}
             </button>
-            {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Use emoji instead</button>}
+            {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Use icon instead</button>}
           </div>
         </div>
         <FieldLabel m="14px 4px 6px">Color</FieldLabel>
         <HuePicker value={hue} onChange={setHue} label="Pocket color" />
-        <FieldLabel m="14px 4px 6px">Emoji</FieldLabel>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8,minmax(0,1fr))', gap: 4, background: 'var(--surface)', borderRadius: 22, padding: 8 }}>
-          {EMOJIS.map(m => <button key={m} onClick={() => { setEmoji(m); setPhoto(null); }} style={{ aspectRatio: '1', borderRadius: 12, border: 0, background: !photo && emoji === m ? tint(hue) : 'transparent', fontSize: 20, cursor: 'pointer', padding: 0, transition: 'background .15s' }}>{m}</button>)}
+        <FieldLabel m="14px 4px 6px">Icon</FieldLabel>
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(8,minmax(0,1fr))', gap: 4, background: 'var(--surface)', borderRadius: 22, padding: 8 }}>
+          {POCKET_ICONS.map(m => { const on = !photo && emoji === m.code; return <button key={m.code} aria-label={m.name} aria-pressed={on} onClick={() => { setEmoji(m.code); setPhoto(null); }} style={{ aspectRatio: '1', minHeight: 36, borderRadius: 12, border: 0, background: on ? tint(hue) : 'transparent', color: on ? ink(hue) : 'var(--brand)', fontSize: 20, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .15s' }}>{glyph(m.code)}</button>; })}
+          {(() => { const own = !photo && !!emoji && !emoji.startsWith('pk:'); return (
+            <button aria-label="Choose any emoji" aria-pressed={own} onClick={() => { const el = emojiIn.current; if (el) { el.value = ''; el.focus(); } }} style={{ aspectRatio: '1', minHeight: 36, borderRadius: 12, border: own ? 0 : '1.5px dashed var(--color-neutral-300)', background: own ? tint(hue) : 'transparent', color: own ? ink(hue) : 'var(--brand)', fontSize: 20, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span aria-hidden="true">{own ? emoji : '😀'}</span>
+            </button>); })()}
+          {/* Invisible box: focusing it opens the phone keyboard, where the person picks any emoji. */}
+          <input ref={emojiIn} aria-label="Type or choose an emoji" autoComplete="off" enterKeyHint="done" tabIndex={-1}
+            onInput={e => { const m = lastEmoji(e.currentTarget.value); if (m) { setEmoji(m); setPhoto(null); e.currentTarget.blur(); } }}
+            style={{ position: 'absolute', bottom: 0, right: 0, width: 1, height: 1, opacity: 0, border: 0, padding: 0, fontSize: 16, pointerEvents: 'none' }} />
         </div>
         <FieldLabel m="14px 4px 6px">Name</FieldLabel>
         <input value={name} placeholder="Gym" onChange={e => setName(e.target.value)} style={textInput} />

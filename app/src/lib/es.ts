@@ -1,6 +1,20 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Use icon instead|Usar un ícono
+Choose any emoji|Elegir cualquier emoji
+Type or choose an emoji|Escribe o elige un emoji
+Money|Plata
+Vacation|Vacaciones
+Tickets|Entradas
+Fuel|Gasolina
+Flights|Vuelos
+Fast food|Comida rápida
+Drinks|Bebidas
+Music|Música
+Pets|Mascotas
+Car|Carro
+Phone & internet|Celular e internet
 All payments|Todos los pagos
 Shared trips|Viajes compartidos
 You're on track.|Vas bien.
