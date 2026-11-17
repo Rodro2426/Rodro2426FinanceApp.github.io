@@ -1,7 +1,7 @@
 // Data for the Insights reports: categories, accounts and budgets, over a period or over time.
 import type { Data, Income } from './types';
 import { debtsWorthAt } from './debts';
-import { addDays, daysInMonth, inRange, makeCtx, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
+import { addDays, ctxAt, daysInMonth, inRange, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
 import { acctTxns, catOf, ctxOf, daysOf, isSpan, spanOf, monthStats, pocketStats, myExpenses, weekdayOf, weekShare } from './derive';
 import { cdtView, cdtsOf } from './cdt';
 import { holdings } from './invest';
@@ -75,7 +75,7 @@ export const allIncomeCats = (d: Data) => [...new Set([...incomeCatList(d), ...d
  * its color when the period changes. The rest share one gray "Other" slice.
  */
 export function pieSlices(d: Data, rows: CatTotal[], kind: 'expense' | 'income', palette: string[], other: string) {
-  const all = kind === 'expense' ? expenseCats(d, makeCtx(d.settings.weeks), 'all') : incomeCats(d, makeCtx(d.settings.weeks), 'all');
+  const all = kind === 'expense' ? expenseCats(d, ctxAt(), 'all') : incomeCats(d, ctxAt(), 'all');
   const slot = new Map(all.slice(0, 7).map((t, i) => [t.name, i]));
   const named = rows.filter(r => slot.has(r.name) && r.sum > 0).sort((a, b) => slot.get(a.name)! - slot.get(b.name)!);
   const rest = rows.filter(r => !slot.has(r.name)).reduce((a, r) => a + r.sum, 0);
@@ -142,7 +142,7 @@ export function budgetWeeks(d: Data, c: Ctx, n: number, pocket: string | null) {
   const ids = pocket ? [pocket] : d.pockets.map(p => p.id);
   const out: { week: string; budget: number; spent: number; left: number }[] = [];
   for (let i = n - 1; i >= 0; i--) {
-    const ws = addDays(weekStart(c.today), -7 * i), cw = makeCtx(c.weeks, i === 0 ? c.today : addDays(ws, 6));
+    const ws = addDays(weekStart(c.today), -7 * i), cw = ctxAt(i === 0 ? c.today : addDays(ws, 6));
     const we = addDays(ws, 6);
     let budget = 0, spent = 0;
     for (const id of ids) {
@@ -157,7 +157,7 @@ export function budgetWeeks(d: Data, c: Ctx, n: number, pocket: string | null) {
         const [qa, qb] = spanOf(p, q);
         const from = ws > qa ? ws : qa, to = we < qb ? we : qb;
         const total = active(qa, qb);
-        if (total > 0) budget += pocketStats(d, id, makeCtx(c.weeks, from))!.budget * active(from, to) / total;
+        if (total > 0) budget += pocketStats(d, id, ctxAt(from))!.budget * active(from, to) / total;
         q = addDays(qb, 1);
       }
       spent += myExpenses(d).filter(e => e.p === id && inRange(e.date, ws, we)).reduce((a, e) => a + e.amt, 0);

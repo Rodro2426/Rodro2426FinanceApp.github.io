@@ -32,6 +32,11 @@ export interface Ctx {
   today: string; month: string; weekStart: string; weekEnd: string; lastWeekStart: string; lastWeekEnd: string;
   weekNo: number; weeks: number; daysLeft: number;
 }
+/** Weeks in a month for the plan: one per week whose Sunday falls in it (4 or 5), the same rule that decides
+ *  which month a week's moves and carry-over belong to. */
+export const weeksIn = (month: string) => { const firstSun = addDays(weekStart(month + '-01'), 6); return Math.floor(daysBetween(firstSun, `${month}-${String(daysInMonth(month)).padStart(2, '0')}`) / 7) + 1; };
+/** The calendar for a day, with that month's real number of weeks. */
+export const ctxAt = (today = todayISO()) => makeCtx(weeksIn(today.slice(0, 7)), today);
 export function makeCtx(weeks: number, today = todayISO()): Ctx {
   const ws = weekStart(today), we = addDays(ws, 6);
   // Week N = count of Mondays in this month up to this week's Monday (week 1 if it started last month).

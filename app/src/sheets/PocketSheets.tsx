@@ -820,6 +820,7 @@ export function RefillSheet({ id }: { id: string }) {
 
 /* ---------------- Edit / new pocket ---------------- */
 export function EditPocketSheet({ id }: { id: string | null }) {
+  const weeksNow = ctxOf().weeks;
   const { data: d } = useApp();
   const base = id ? d.pockets.find(p => p.id === id) : undefined;
   const isNew = !base;
@@ -838,9 +839,9 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const half = period === 'half', mon = period === 'month';
   // The amount can be typed for a whole month: it's then split evenly into the month's weeks (or its 2 quincenas).
   // A monthly pocket has just the month, so its amount is always the month's.
-  const periods = periodsInMonth({ period }, d.settings.weeks);
+  const periods = periodsInMonth({ period }, weeksNow);
   const [perMonth, setPerMonth] = useState(!!base?.perMonth && !mon);
-  const [monthStr, setMonthStr] = useState(base?.weeklyStr ? String(roundAmt(num(base.weeklyStr) * periodsInMonth(base, d.settings.weeks))) : '');
+  const [monthStr, setMonthStr] = useState(base?.weeklyStr ? String(roundAmt(num(base.weeklyStr) * periodsInMonth(base, weeksNow))) : '');
   const w = perMonth ? roundAmt(num(monthStr) / periods) : num(weekly), cant = !name.trim();
   // Starting partway through a week or quincena: the first period only gets the days that are left.
   const c = ctxOf(d), [ps, pe] = periodAt({ period }, c.today);
@@ -851,7 +852,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const switchPeriod = (v: 'week' | 'half' | 'month') => {
     if (v === period) return;
     // Keep the same money per month: weekly × weeks = per 15 days × 2 = the month.
-    const month = roundAmt(w * periods), next = periodsInMonth({ period: v }, d.settings.weeks);
+    const month = roundAmt(w * periods), next = periodsInMonth({ period: v }, weeksNow);
     if (v === 'month') { setWeekly(w > 0 ? String(perMonth ? num(monthStr) : month) : ''); setPerMonth(false); }
     else if (perMonth) { /* the typed month stays as it is */ }
     else if (w > 0) setWeekly(String(roundAmt(month / next)));
@@ -916,8 +917,8 @@ export function EditPocketSheet({ id }: { id: string | null }) {
             : <SmallAmount value={weekly} onChange={v => { setWeekly(v); setStartStr(null); }} />}
         </div>
         {!mon && <span style={{ margin: '8px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>{perMonth
-          ? (half ? `That's ${fmt(w)} every 15 days, split over 2 quincenas.` : `That's ${fmt(w)} a week, split over ${d.settings.weeks} weeks.`)
-          : (half ? `${fmt(w * 2)} a month over 2 quincenas` : `${fmt(w * d.settings.weeks)} a month over ${d.settings.weeks} weeks`)}</span>}
+          ? (half ? `That's ${fmt(w)} every 15 days, split over 2 quincenas.` : `That's ${fmt(w)} a week, split over ${weeksNow} weeks.`)
+          : (half ? `${fmt(w * 2)} a month over 2 quincenas` : `${fmt(w * weeksNow)} a month over ${weeksNow} weeks`)}</span>}
         {mid && w > 0 && <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>{mon ? 'This month is already underway' : half ? 'This quincena is already underway' : 'This week is already underway'}</span>
           <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{mon ? 'For this month only, it starts with:' : half ? 'For this quincena only, it starts with:' : 'For this week only, it starts with:'}</span>

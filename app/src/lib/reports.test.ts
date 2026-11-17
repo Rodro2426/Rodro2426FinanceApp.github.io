@@ -7,7 +7,7 @@ import { debtTotals } from './debts';
 import { balanceAt, breakdown, cashflow, catOverTime, compareBudgets, expenseCats, incCatOf, monthsIn, netWorthAt, worthAt } from './reports';
 
 const d = sampleData();
-const c = makeCtx(d.settings.weeks);
+const c = makeCtx(4);
 
 describe('reports', () => {
   it('net worth today equals accounts minus card debt, minus what you owe people', () => {

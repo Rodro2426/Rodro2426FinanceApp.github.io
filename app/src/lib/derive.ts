@@ -2,7 +2,7 @@ import { getLang, tr } from './i18n';
 import type { Account, Data, Expense, Income, Move } from './types';
 import { debtAcctLines } from './debts';
 import { POCKET_CAT } from './constants';
-import { addDays, daysBetween, fmtDay, inRange, makeCtx, monthKey, parse, type Ctx } from './dates';
+import { addDays, ctxAt, daysBetween, fmtDay, inRange, monthKey, parse, type Ctx } from './dates';
 import { getData } from './store';
 import { STARS, moneyHidden } from './privacy';
 import { unitsFor, weekShares } from './split';
@@ -32,7 +32,7 @@ export const uid = (p: string) => p + Date.now().toString(36) + Math.floor(Math.
 
 /** "US$20,00 at TRM $4.123" for converted dollar amounts. */
 export const fxText = (o?: { amt: number; rate: number; official: boolean }) => (o ? moneyHidden() ? `US$${STARS}` : `US$${o.amt.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} at ${o.official ? 'TRM ' : '≈'}${fmt(o.rate)}` : undefined);
-export const ctxOf = (d: Data) => makeCtx(d.settings.weeks);
+export const ctxOf = (_d?: Data) => ctxAt();
 export const catOf = (e: Expense): [string, string] => (e.cat ? [e.cat, e.sub || ''] : POCKET_CAT[e.p] || ['Other', 'Other']);
 export const byDateDesc = (x: { date: string; ts: number }, y: { date: string; ts: number }) => (y.date > x.date ? 1 : y.date < x.date ? -1 : y.ts - x.ts);
 export const sortedExpenses = (d: Data) => [...d.expenses].sort(byDateDesc);
@@ -135,7 +135,7 @@ function carryInto(d: Data, p: Data['pockets'][number], start: string): number {
   let acc = memo.get(key(q)) ?? 0;
   while (todo.length) {
     // q is the earlier period; add its balance to get the carry into the next one.
-    const s = periodParts(d, p, makeCtx(d.settings.weeks, periodAt(p, q)[1]));
+    const s = periodParts(d, p, ctxAt(periodAt(p, q)[1]));
     acc += s.weekly + s.mIn - s.mOut - s.spent;
     q = nextStart(p, q); todo.pop();
     memo.set(key(q), acc);
@@ -207,7 +207,7 @@ export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
   let carry = 0;
   if (p?.carry) {
     const m01 = c.month + '-01';
-    // Weekly: the first week whose Sunday is in the month (like moveMonth); 15-day: the quincena starting on the 1st.
+    // Weekly: the first week whose Sunday is in the month (like moveMonth and weeksIn); 15-day: the quincena starting on the 1st.
     carry = carryInto(d, p, isSpan(p) ? m01 : addDays(m01, -weekdayOf(m01)));
   }
   const budget = monthPlanOf(p, c) + extra + carry;

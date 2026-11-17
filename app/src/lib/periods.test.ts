@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import type { Data } from './types';
-import { makeCtx } from './dates';
+import { ctxAt, makeCtx, weeksIn } from './dates';
 import { emptyData, sampleData } from './seed';
 import { dayStats, halfOf, monthPlanOf, monthStats, pocketStats, weekShare } from './derive';
 import { addExtraIncome, monthSummary, transferLeftover } from './plan';
@@ -123,5 +123,19 @@ describe('weekShare: a pocket\'s part of the current week', () => {
     const c = makeCtx(4, '2026-11-12'), d = data();
     d.expenses = [exp('z', 'q', 400000, '2026-11-03')];
     expect(weekShare(d, 'q', c).left).toBe(-100000);
+  });
+});
+
+describe('weeks in a month come from the calendar', () => {
+  it('counts the weeks whose Sunday is in the month', () => {
+    expect(weeksIn('2026-11')).toBe(5); // Sundays Nov 1, 8, 15, 22, 29
+    expect(weeksIn('2026-12')).toBe(4); // Dec 6, 13, 20, 27
+    expect(weeksIn('2026-08')).toBe(5); // Aug 2, 9, 16, 23, 30
+    expect(weeksIn('2027-02')).toBe(4); // Feb 7, 14, 21, 28
+  });
+  it('gives the last week of a 5-Monday month its own number', () => {
+    expect(ctxAt('2026-11-30').weekNo).toBe(5);
+    expect(ctxAt('2026-11-30').weeks).toBe(5);
+    expect(ctxAt('2026-12-01').weekNo).toBe(1); // Dec 1 is a Tuesday, still week 1
   });
 });

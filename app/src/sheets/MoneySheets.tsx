@@ -516,8 +516,6 @@ export function SettingsSheet() {
         <input value={st.name} onChange={e => setS({ name: e.target.value })} style={textInput} />
         <FieldLabel m="14px 4px 0">Currency</FieldLabel>
         <Segmented<Currency> mt={6} items={[['COP', 'COP'], ['$', '$'], ['€', '€'], ['£', '£']]} value={st.currency} onPick={c => setS({ currency: c })} />
-        <FieldLabel m="14px 4px 0">Weeks per month</FieldLabel>
-        <Segmented mt={6} items={[['4', '4 weeks'], ['5', '5 weeks']]} value={String(st.weeks) as '4' | '5'} onPick={w => setS({ weeks: Number(w) as 4 | 5 })} />
         <FieldLabel m="18px 4px 0">Appearance</FieldLabel>
         <Segmented items={[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]} value={st.theme ?? 'system'} onPick={v => setS({ theme: v as 'system' | 'light' | 'dark' })} mt={8} />
         <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>System follows your iPhone's light or dark mode.</span>

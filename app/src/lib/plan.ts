@@ -1,6 +1,6 @@
 // The month's money in one place: income, plan, the two gaps, extra income splits and fixing mismatches.
 import type { Data, Income, Move } from './types';
-import { makeCtx, monthKey, type Ctx } from './dates';
+import { ctxAt, monthKey, type Ctx } from './dates';
 import { incomeMoves, monthPlanOf, monthStats, moveMonth, num, pocketStats, uid, weeksLeft } from './derive';
 import { largestRemainder, unitsFor } from './split';
 import { debtOutlook } from './debts';
@@ -48,7 +48,7 @@ export type SplitDist = 'budget' | 'even' | 'manual';
 export function splitAmong(d: Data, A: number, dist: SplitDist, manual: Record<string, number> = {}): Record<string, number> {
   const ps = d.pockets;
   if (dist === 'manual') return Object.fromEntries(ps.map(p => [p.id, whole(d, manual[p.id] || 0)]));
-  const parts = largestRemainder(A, ps.map(p => (dist === 'budget' ? monthPlanOf(p, makeCtx(d.settings.weeks)) : 1)), scale(d));
+  const parts = largestRemainder(A, ps.map(p => (dist === 'budget' ? monthPlanOf(p, ctxAt()) : 1)), scale(d));
   return Object.fromEntries(ps.map((p, i) => [p.id, parts[i]]));
 }
 

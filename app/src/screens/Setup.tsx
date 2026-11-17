@@ -7,7 +7,7 @@ import type { Data } from '../lib/types';
 import { emptyData } from '../lib/seed';
 import { pickPhoto } from '../lib/photo';
 import { findLogo, siteHost } from '../lib/logo';
-import { fmt, num, periodsInMonth } from '../lib/derive';
+import { ctxOf, fmt, num, periodsInMonth } from '../lib/derive';
 import { BANKS, BILLS, bankLogo, leftFree, makeAccount, makeBills, makeCard, makeIncome, makePockets, suggestPockets, weeklyOf, type BillPick, type PocketPick } from '../lib/setup';
 import { MoneyInput } from '../ui/MoneyInput';
 import { glyph } from '../ui/PocketIcons';
@@ -330,7 +330,7 @@ function IncomeStep({ onDone }: { onDone: () => void }) {
 
 function PocketsStep({ onDone }: { onDone: () => void }) {
   const { data: d } = useApp();
-  const income = num(d.incomeStr), weeks = d.settings.weeks || 4;
+  const income = num(d.incomeStr), weeks = ctxOf().weeks;
   const [picks, setPicks] = useState<PocketPick[]>(() => suggestPockets(income));
   const [onlyMonth, setOnlyMonth] = useState(false);
   const free = leftFree(income, picks, d.bills.filter(b => b.kind !== 'Income').map(b => ({ on: true, amt: b.amt })));
@@ -367,7 +367,7 @@ function PocketsStep({ onDone }: { onDone: () => void }) {
 /** The income as one bar: a slice per pocket, the fixed bills, and what's left to save. Sliders change each pocket's month. */
 function SplitStep({ onDone }: { onDone: () => void }) {
   const { data: d } = useApp();
-  const income = num(d.incomeStr), weeks = d.settings.weeks || 4;
+  const income = num(d.incomeStr), weeks = ctxOf().weeks;
   const bills = d.bills.filter(b => b.kind !== 'Income').reduce((a, b) => a + b.amt, 0);
   const [month, setMonth] = useState<Record<string, number>>(() => Object.fromEntries(d.pockets.map(p => [p.id, num(p.weeklyStr) * periodsInMonth(p, weeks)])));
   if (!income || !d.pockets.length) return <>

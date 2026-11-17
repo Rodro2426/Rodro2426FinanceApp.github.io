@@ -3,7 +3,7 @@
 import { cardDueLabel } from './cards';
 import type { Data } from './types';
 import { catOf, num, periodsInMonth, myExpenses, isHalf, isMonthly, roundAmt } from './derive';
-import { addDays, daysInMonth, fmtDay, inRange, monthLabel, shortDate, todayISO, weekStart } from './dates';
+import { addDays, daysInMonth, fmtDay, inRange, weeksIn, monthLabel, shortDate, todayISO, weekStart } from './dates';
 
 export type Cell = string | number | { v: number; fmt: 'money' | 'pct' };
 export interface AiSection { title: string; note?: string; header: string[]; rows: Cell[][] }
@@ -14,7 +14,7 @@ const pct = (v: number): Cell => ({ v, fmt: 'pct' });
 
 export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet {
   const today = todayISO(), curMonth = today.slice(0, 7);
-  const weeks = d.settings.weeks;
+  const weeks = weeksIn(curMonth);
   const acc = (id: string) => d.accounts.find(a => a.id === id);
   const pocketName = (id: string) => (id ? d.pockets.find(p => p.id === id)?.name || 'Deleted pocket' : 'No pocket (scheduled bill)');
   const goalOrPocket = (id: string) => (id === '_income' ? 'New income' : id === '_cover' ? 'Covered the shortfall' : d.pockets.find(p => p.id === id)?.name || d.goals.find(g => g.id === id)?.name || 'Deleted');
@@ -63,11 +63,11 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
 
   // Pockets against their plan for the period.
   sections.push({
-    title: 'Pockets (weekly budgets)', note: `"Planned" is the weekly budget × ${weeks} weeks × number of months.`,
+    title: 'Pockets (weekly budgets)', note: `"Planned" is the weekly budget × the weeks in each month (one per Sunday).`,
     header: ['Pocket', 'Weekly budget', 'Planned for period', 'Spent', 'Left vs plan', '% used', 'Expenses', 'Top category'],
     rows: d.pockets.map(p => {
       const es = exp.filter(e => e.p === p.id), spent = es.reduce((a, e) => a + e.amt, 0);
-      const planned = num(p.weeklyStr) * periodsInMonth(p, weeks) * months.length;
+      const planned = months.reduce((a, m) => a + num(p.weeklyStr) * periodsInMonth(p, weeksIn(m)), 0);
       const byCat: Record<string, number> = {};
       es.forEach(e => { const c = catOf(e)[0]; byCat[c] = (byCat[c] || 0) + e.amt; });
       const top = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
