@@ -294,12 +294,12 @@ function PocketGrid({ items, tour, view }: { items: { p: PocketStats; left: numb
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 10 }}>
       {items.map(({ p, left, budget, off }) => (
         <div key={p.id} data-tour={tour ? 'pocket' : undefined} onClick={() => openSheet({ name: 'pocket', id: p.id, view })} className="pr97" style={{ background: tint(p.hue), borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'transform .15s ease' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 4 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
               <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: 'var(--glass)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: ink(p.hue), flex: 'none' }}>{glyph(p.initial)}<Fill src={p.photoBg} /></span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: ink(p.hue), lineHeight: 1.25 }}>{p.name}</span>
+              <span style={{ minWidth: 0, fontSize: 14, fontWeight: 600, color: ink(p.hue), lineHeight: 1.25, hyphens: 'auto', WebkitHyphens: 'auto' }}>{p.name}</span>
             </span>
-            <svg width="34" height="34" viewBox="0 0 40 40" style={{ flex: 'none', transform: 'rotate(-90deg)' }}>
+            <svg width="28" height="28" viewBox="0 0 40 40" style={{ flex: 'none', transform: 'rotate(-90deg)' }}>
               <circle cx="20" cy="20" r="16" style={{ fill: 'none', stroke: 'var(--glass)', strokeWidth: 6 }} />
               <circle cx="20" cy="20" r="16" style={{ fill: 'none', stroke: ink(p.hue), strokeWidth: 6, strokeLinecap: 'round', strokeDasharray: `${(budget > 0 ? Math.max(0, left) / budget : 0) * C} ${C}`, transition: 'stroke-dasharray .5s ease' }} />
             </svg>

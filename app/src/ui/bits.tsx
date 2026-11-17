@@ -174,7 +174,7 @@ export function BillBadge({ b, size = 40, radius = 14 }: { b: { name: string; hu
   const hue = b.kind === 'Income' ? 150 : b.hue;
   return (
     <div style={{ width: size, height: size, borderRadius: radius, backgroundColor: b.photo ? '#fff' : tint(hue), position: 'relative', overflow: 'hidden', boxShadow: b.photo ? 'inset 0 0 0 1px var(--color-neutral-200)' : 'none', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: size * 0.38, flex: 'none' }}>
-      {b.photo ? <Fill src={b.photo} /> : b.name.trim().charAt(0).toUpperCase() || '·'}
+      {b.photo ? <Fill src={b.photo} /> : initialOf(b.name)}
     </div>
   );
 }

@@ -112,7 +112,7 @@ export default function Accounts() {
             <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={42} radius={14} bg={tint(a.hue)} color={ink(a.hue)} fs={16} />
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{a.name}</span>
-              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{a.notMine ? 'Not yours' : a.kind} · {plural(acctTxns(d, a.id).list.length, 'transaction')}</span>
+              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{a.notMine ? 'Not yours' : a.kind} · {plural(acctTxns(d, a.id).list.length, 'transaction')}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
               <span style={{ fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap' }}>{fmt(a.bal)}</span>

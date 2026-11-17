@@ -1,4 +1,4 @@
-import { getLang } from './i18n';
+import { getLang, tr } from './i18n';
 import type { Account, Data, Expense, Income, Move } from './types';
 import { debtAcctLines } from './debts';
 import { POCKET_CAT } from './constants';
@@ -373,6 +373,7 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
 export const chargeAccount = (accts: Account[], acctId: string, amt: number) =>
   accts.map(a => (a.id === acctId ? { ...a, bal: a.type === 'card' ? a.bal + amt : a.bal - amt } : a));
 
-export const initialOf = (s: string) => s.trim().charAt(0).toUpperCase() || '·';
+/** First letter of a name as the person sees it (translated), so "Food" shows C in Spanish. */
+export const initialOf = (s: string) => tr(s.trim()).charAt(0).toUpperCase() || '·';
 export const photoBg = (p?: string | null) => (p ? `url(${p})` : 'none');
 export const plural = (n: number, one: string, many = one + 's') => (n === 1 ? `1 ${one}` : `${n} ${many}`);

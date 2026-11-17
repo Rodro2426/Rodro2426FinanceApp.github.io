@@ -2,7 +2,7 @@
 // subcategories as you type, and "Create" when nothing matches. Once chosen, it shows as one clear row.
 import { useMemo, useState } from 'react';
 import { setData, useApp } from '../lib/store';
-import { catOf } from '../lib/derive';
+import { catOf, initialOf } from '../lib/derive';
 import { TEXT, ink, tint } from '../lib/constants';
 import * as I from './icons';
 import { INCOME_CATS } from '../lib/reports';
@@ -57,7 +57,7 @@ export function CategoryPicker({ value, onChange, compact }: { value: CatPick; o
     const h = catHue(v[0]);
     return (
       <button key={key} onClick={() => pick(v)} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 8px', border: 0, borderRadius: 14, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
-        <span style={{ width: 30, height: 30, borderRadius: 10, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, flex: 'none' }}>{v[0].charAt(0).toUpperCase()}</span>
+        <span style={{ width: 30, height: 30, borderRadius: 10, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, flex: 'none' }}>{initialOf(v[0])}</span>
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{v[0]}</span>
           {(label || (v[1] && v[1] !== 'General')) && <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{label ?? v[1]}</span>}
@@ -71,7 +71,7 @@ export function CategoryPicker({ value, onChange, compact }: { value: CatPick; o
     return (
       <div style={{ background: 'var(--surface)', borderRadius: compact ? 16 : 20, padding: compact ? 8 : 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ width: 36, height: 36, borderRadius: 12, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flex: 'none' }}>{cat.charAt(0).toUpperCase()}</span>
+          <span style={{ width: 36, height: 36, borderRadius: 12, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flex: 'none' }}>{initialOf(cat)}</span>
           <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cat}</span>
           <button onClick={() => setEditing(true)} style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Change</button>
         </div>
@@ -151,7 +151,7 @@ export function IncomeCategoryPicker({ value, onChange }: { value: string; onCha
   };
   const badge = (k: string, size: number, r: number, fs: number) => {
     const h = catHue(k);
-    return <span style={{ width: size, height: size, borderRadius: r, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: fs, fontWeight: 800, flex: 'none' }}>{k.charAt(0).toUpperCase()}</span>;
+    return <span style={{ width: size, height: size, borderRadius: r, background: tint(h), color: ink(h), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: fs, fontWeight: 800, flex: 'none' }}>{initialOf(k)}</span>;
   };
   const row = (k: string, key: string) => (
     <button key={key} onClick={() => pick(k)} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 8px', border: 0, borderRadius: 14, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
