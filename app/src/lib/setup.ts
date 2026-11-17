@@ -4,7 +4,7 @@ import type { Account, Bill, Data, Pocket } from './types';
 import { ACCT_KIND, HUES } from './constants';
 import { logoUrl } from './logo';
 import { tr } from './i18n';
-import { uid } from './derive';
+import { roundAmt, uid } from './derive';
 import { addDays, todayISO } from './dates';
 
 /** Banks people in Colombia pick most; the logo comes from the bank's website. `cash` is the wallet. */
@@ -24,7 +24,7 @@ export const BANKS: { name: string; site?: string; cash?: boolean; /** Logo draw
 /** The bank's logo address, or null for a bank typed by hand or cash. */
 export const bankLogo = (name: string) => { const b = BANKS.find(x => x.name === name); return b?.site ? logoUrl(b.site) : null; };
 
-export interface PocketPick { key: string; name: string; emoji: string; share: number; on: boolean; weekly: number }
+export interface PocketPick { key: string; name: string; emoji: string; share: number; on: boolean; /** What the person spends on it a month. */ monthly: number }
 
 /** Suggested pockets with the share of the monthly income each usually takes; the first four start selected. */
 const POCKETS: [string, string, number][] = [
@@ -32,12 +32,12 @@ const POCKETS: [string, string, number][] = [
   ['Personal care', 'pk:bottle', 0.04], ['Coffee', 'pk:coffee', 0.02], ['Pets', 'pk:paw', 0.04], ['Clothes', 'pk:shirt', 0.04], ['Gym', 'pk:gym', 0.03]
 ];
 
-/** A weekly amount rounded to $5.000, so the suggestions read like amounts a person would choose. */
+/** An amount rounded to $5.000, so the suggestions read like amounts a person would choose. */
 export const roundBudget = (n: number) => Math.max(0, Math.round(n / 5000) * 5000);
 
-/** The suggestions with a weekly budget worked out from the monthly income (0 when there's no income yet). */
-export function suggestPockets(income: number, weeks: number): PocketPick[] {
-  return POCKETS.map(([name, emoji, share], i) => ({ key: name, name: tr(name), emoji, share, on: i < 4, weekly: roundBudget((income * share) / weeks) }));
+/** The suggestions with a monthly amount worked out from the monthly income (0 when there's no income yet). */
+export function suggestPockets(income: number): PocketPick[] {
+  return POCKETS.map(([name, emoji, share], i) => ({ key: name, name: tr(name), emoji, share, on: i < 4, monthly: roundBudget(income * share) }));
 }
 
 export interface BillPick { key: string; name: string; kind: Bill['kind']; cat: string; sub: string; on: boolean; amt: number; day: number }
@@ -52,8 +52,8 @@ export const BILLS: Omit<BillPick, 'on' | 'amt' | 'day'>[] = [
 ];
 
 /** What's left of the monthly income after the pockets and the bills: shown live while choosing. Negative = over. */
-export function leftFree(income: number, weeks: number, pockets: { on: boolean; weekly: number }[], bills: { on: boolean; amt: number }[] = []) {
-  const planned = pockets.filter(p => p.on).reduce((a, p) => a + p.weekly * weeks, 0);
+export function leftFree(income: number, pockets: { on: boolean; monthly: number }[], bills: { on: boolean; amt: number }[] = []) {
+  const planned = pockets.filter(p => p.on).reduce((a, p) => a + p.monthly, 0);
   const fixed = bills.filter(b => b.on).reduce((a, b) => a + b.amt, 0);
   return income - planned - fixed;
 }
@@ -88,10 +88,13 @@ export function makeIncome(total: number, pay: 'month' | 'half', day: number, ac
   return { incomeStr: String(amt), bills };
 }
 
-/** The chosen pockets, in the person's language, each with its own colour. Own pockets typed by hand keep their name. */
-export function makePockets(picks: PocketPick[]): Pocket[] {
-  return picks.filter(p => p.on && clean(p.name)).map((p, i) => ({ id: uid('p'), name: clean(p.name), emoji: p.emoji, weeklyStr: String(roundBudget(p.weekly)), hue: hueAt(i) }));
+/** The chosen pockets, in the person's language, each with its own colour. Own pockets typed by hand keep their name.
+ *  The monthly amount is split evenly into the month's weeks (and the pocket's form opens on "A month"). */
+export function makePockets(picks: PocketPick[], weeks: number): Pocket[] {
+  return picks.filter(p => p.on && clean(p.name)).map((p, i) => ({ id: uid('p'), name: clean(p.name), emoji: p.emoji, weeklyStr: String(weeklyOf(p.monthly, weeks)), hue: hueAt(i), perMonth: true }));
 }
+/** A monthly amount as the budget of each week. */
+export const weeklyOf = (monthly: number, weeks: number) => Math.max(0, roundAmt(monthly / Math.max(1, weeks)));
 
 /** The chosen bills as monthly reminders that are ticked off by hand (paid from `acct`). */
 export function makeBills(picks: BillPick[], acct: string, today = todayISO()): Bill[] {

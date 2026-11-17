@@ -1,6 +1,17 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+What do you spend on each month?|¿Cuánto gastas al mes en cada cosa?
+How your income splits|Así se reparte tu ingreso
+Here's how your income splits|Así se reparte tu ingreso
+Each pocket takes a slice of what you earn. Slide to give one more or less; what's left goes to savings.|Cada bolsillo se lleva una parte de lo que ganas. Desliza para darle más o menos; lo que sobra va a tus ahorros.
+Money for each kind of spending. Type what you spend on each one a month; Pockets splits it into weeks. We suggested amounts from your income.|Plata para cada tipo de gasto. Escribe cuánto gastas en cada uno al mes; Pockets lo reparte en semanas. Te sugerimos montos según tu ingreso.
+Left to save|Queda para ahorrar
+Looks good|Se ve bien
+Each month|Cada mes
+Your split|Tu reparto
+Add your monthly income to see how it splits into your pockets. You can do it later in the Budget tab.|Agrega tu ingreso mensual para ver cómo se reparte en tus bolsillos. Puedes hacerlo después en la pestaña Presupuesto.
+Add a pocket to see how your income splits. You can do it later in the Budget tab.|Agrega un bolsillo para ver cómo se reparte tu ingreso. Puedes hacerlo después en la pestaña Presupuesto.
 A week|A la semana
 A month|Al mes
 Pin|Fijar
@@ -1888,6 +1899,11 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+{0} a month|{0} al mes
+{0} a week|{0} a la semana
+{0} every 15 days|{0} cada quincena
+Monthly budget for {0}|Presupuesto mensual de {0}
+{0} per month|{0} al mes
 That's {0} a week, split over {1} weeks.|Son {0} a la semana, repartidos en {1} semanas.
 That's {0} every 15 days, split over 2 quincenas.|Son {0} cada quincena, repartidos en 2 quincenas.
 {0} opens on {1}|{0} abre en {1}

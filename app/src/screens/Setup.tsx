@@ -7,8 +7,8 @@ import type { Data } from '../lib/types';
 import { emptyData } from '../lib/seed';
 import { pickPhoto } from '../lib/photo';
 import { findLogo, siteHost } from '../lib/logo';
-import { fmt, num } from '../lib/derive';
-import { BANKS, BILLS, bankLogo, leftFree, makeAccount, makeBills, makeCard, makeIncome, makePockets, suggestPockets, type BillPick, type PocketPick } from '../lib/setup';
+import { fmt, num, periodsInMonth } from '../lib/derive';
+import { BANKS, BILLS, bankLogo, leftFree, makeAccount, makeBills, makeCard, makeIncome, makePockets, suggestPockets, weeklyOf, type BillPick, type PocketPick } from '../lib/setup';
 import { newQuickKey, quickAccount } from '../lib/quickadd';
 import { pushQuickMenu } from '../lib/quickaddSync';
 import { useSync } from '../sheets/CloudSheet';
@@ -18,7 +18,7 @@ import { MoneyInput } from '../ui/MoneyInput';
 import { TutorialVideoButton } from '../ui/TutorialVideo';
 import { glyph } from '../ui/PocketIcons';
 
-type Step = 'hello' | 'account' | 'card' | 'income' | 'pockets' | 'bills' | 'applepay' | 'done';
+type Step = 'hello' | 'account' | 'card' | 'income' | 'bills' | 'pockets' | 'split' | 'applepay' | 'done';
 
 // Colours come from CSS (styles.css, .setup): dark or light with the app's theme, so the iPhone's top bar matches.
 const INK = 'var(--su-ink)', SOFT = 'var(--su-soft)', MINT = 'var(--su-accent)', DEEP = 'var(--su-on-accent)';
@@ -39,13 +39,13 @@ const shapes = (h: number) => {
 
 const QUESTION: Record<Step, string> = {
   hello: 'Welcome to Pockets', account: "What's your main bank?", card: 'Do you have a credit card?', income: 'How much do you earn a month?',
-  pockets: 'What do you spend on each week?', bills: 'Any fixed bills?', applepay: 'Add your Apple Pay purchases on their own?', done: 'All set'
+  pockets: 'What do you spend on each month?', split: 'How your income splits', bills: 'Any fixed bills?', applepay: 'Add your Apple Pay purchases on their own?', done: 'All set'
 };
 
 export default function Setup() {
   const { data: d } = useApp();
   const sync = useSync();
-  const steps: Step[] = ['hello', 'account', 'card', 'income', 'pockets', 'bills', ...(isIOS() && sync.uid ? ['applepay' as Step] : []), 'done'];
+  const steps: Step[] = ['hello', 'account', 'card', 'income', 'bills', 'pockets', 'split', ...(isIOS() && sync.uid ? ['applepay' as Step] : []), 'done'];
   const [step, setStep] = useState<Step>(() => { const s = getData().settings.setupStep as Step | undefined; return s && QUESTION[s] ? s : 'hello'; });
   // Reopened on a step that isn't in today's list (e.g. Apple Pay before the sign-in loaded): keep it, just before Done.
   if (!steps.includes(step)) steps.splice(steps.length - 1, 0, step);
@@ -163,6 +163,7 @@ export default function Setup() {
             {step === 'card' && <CardStep onDone={next} />}
             {step === 'income' && <IncomeStep onDone={next} />}
             {step === 'pockets' && <PocketsStep onDone={next} />}
+            {step === 'split' && <SplitStep onDone={next} />}
             {step === 'bills' && <BillsStep onDone={next} />}
             {step === 'applepay' && <ApplePayStep onDone={next} />}
             {step === 'done' && <Done name={name} onFinish={finish} />}
@@ -337,29 +338,89 @@ function IncomeStep({ onDone }: { onDone: () => void }) {
 function PocketsStep({ onDone }: { onDone: () => void }) {
   const { data: d } = useApp();
   const income = num(d.incomeStr), weeks = d.settings.weeks || 4;
-  const [picks, setPicks] = useState<PocketPick[]>(() => suggestPockets(income, weeks));
-  const free = leftFree(income, weeks, picks, d.bills.filter(b => b.kind !== 'Income').map(b => ({ on: true, amt: b.amt })));
+  const [picks, setPicks] = useState<PocketPick[]>(() => suggestPockets(income));
+  const free = leftFree(income, picks, d.bills.filter(b => b.kind !== 'Income').map(b => ({ on: true, amt: b.amt })));
   const upd = (key: string, patch: Partial<PocketPick>) => setPicks(p => p.map(x => (x.key === key ? { ...x, ...patch } : x)));
-  const save = () => { const ps = makePockets(picks); if (ps.length) setData(x => ({ pockets: [...x.pockets, ...ps] })); onDone(); };
+  const save = () => { const ps = makePockets(picks, weeks); if (ps.length) setData(x => ({ pockets: [...x.pockets, ...ps] })); onDone(); };
   return <>
     <H>Your pockets</H>
-    <Sub>Money for each kind of spending, every week. We suggested amounts from your income: change them, or add your own.</Sub>
+    <Sub>Money for each kind of spending. Type what you spend on each one a month; Pockets splits it into weeks. We suggested amounts from your income.</Sub>
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
       {picks.map(p => <Chip key={p.key} on={p.on} onClick={() => upd(p.key, { on: !p.on })} icon={<span style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{glyph(p.emoji)}</span>}>{p.name}</Chip>)}
     </div>
-    <OwnName placeholder="Your own pocket" label="Your own pocket name" onAdd={n => setPicks(p => [...p, { key: 'own:' + n + p.length, name: n, emoji: 'pk:pocket', share: 0, on: true, weekly: 0 }])} />
-    {picks.some(p => p.on) && <Label>Each week</Label>}
+    <OwnName placeholder="Your own pocket" label="Your own pocket name" onAdd={n => setPicks(p => [...p, { key: 'own:' + n + p.length, name: n, emoji: 'pk:pocket', share: 0, on: true, monthly: 0 }])} />
+    {picks.some(p => p.on) && <Label>Each month</Label>}
     {picks.filter(p => p.on).map(p => (
       <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
         <span style={{ width: 28, display: 'inline-flex', justifyContent: 'center', fontSize: 20 }}>{glyph(p.emoji)}</span>
         <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-        <div style={{ width: '48%' }}><Money value={p.weekly ? String(p.weekly) : ''} onChange={v => upd(p.key, { weekly: num(v) })} label={`Weekly budget for ${p.name}`} /></div>
+        <div style={{ width: '48%' }}><Money value={p.monthly ? String(p.monthly) : ''} onChange={v => upd(p.key, { monthly: num(v) })} label={`Monthly budget for ${p.name}`} /></div>
       </div>
     ))}
     {income > 0 && <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 16, background: free < 0 ? 'rgba(229,72,77,0.16)' : 'var(--su-good)', fontSize: 15, fontWeight: 600 }}>
       {free < 0 ? `Over your income by ${fmt(-free)} a month` : `Left free each month: ${fmt(free)}`}
     </div>}
     <Main onClick={save} disabled={!picks.some(p => p.on)}>Continue</Main>
+  </>;
+}
+
+/** The income as one bar: a slice per pocket, the fixed bills, and what's left to save. Sliders change each pocket's month. */
+function SplitStep({ onDone }: { onDone: () => void }) {
+  const { data: d } = useApp();
+  const income = num(d.incomeStr), weeks = d.settings.weeks || 4;
+  const bills = d.bills.filter(b => b.kind !== 'Income').reduce((a, b) => a + b.amt, 0);
+  const [month, setMonth] = useState<Record<string, number>>(() => Object.fromEntries(d.pockets.map(p => [p.id, num(p.weeklyStr) * periodsInMonth(p, weeks)])));
+  if (!income || !d.pockets.length) return <>
+    <H>Your split</H>
+    <Sub>{!income ? 'Add your monthly income to see how it splits into your pockets. You can do it later in the Budget tab.' : 'Add a pocket to see how your income splits. You can do it later in the Budget tab.'}</Sub>
+    <Main onClick={onDone}>Continue</Main>
+  </>;
+  const used = Object.values(month).reduce((a, m) => a + m, 0) + bills, rest = income - used;
+  const max = Math.max(income / 2, ...Object.values(month));
+  const pct = (n: number) => `${Math.round(n / income * 100)}%`;
+  const color = (h: number) => `oklch(0.74 0.12 ${h})`;
+  const whole = Math.max(income, used);
+  const segs: [string, number][] = [...d.pockets.map(p => [color(p.hue), month[p.id] ?? 0] as [string, number]), ['var(--su-soft)', bills], ['var(--su-accent)', Math.max(0, rest)]];
+  const save = () => {
+    setData(x => ({ pockets: x.pockets.map(p => (p.id in month ? { ...p, weeklyStr: String(weeklyOf(month[p.id], periodsInMonth(p, weeks))), perMonth: true } : p)) }));
+    onDone();
+  };
+  return <>
+    <H>Here's how your income splits</H>
+    <Sub>Each pocket takes a slice of what you earn. Slide to give one more or less; what's left goes to savings.</Sub>
+    <div style={{ marginTop: 18, padding: 16, borderRadius: 24, background: 'var(--su-card)', boxShadow: '0 0 0 1px var(--su-line)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: SOFT }}>Monthly income</span>
+        <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }}>{fmt(income)}</span>
+      </div>
+      <div aria-hidden="true" style={{ marginTop: 12, height: 22, borderRadius: 999, background: 'var(--su-fill)', display: 'flex', gap: 2, overflow: 'hidden' }}>
+        {segs.map(([c, v], i) => <div key={i} style={{ flex: `0 0 calc(${(v / whole) * 100}% - 2px)`, background: c, opacity: i === segs.length - 1 ? 0.35 : 1, transition: 'flex-basis .25s cubic-bezier(0.23, 1, 0.32, 1)' }} />)}
+      </div>
+      <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: '6px 12px', fontSize: 12, fontWeight: 600, color: SOFT }}>
+        {[...d.pockets.map(p => [color(p.hue), p.name]), ...(bills ? [['var(--su-soft)', 'Bills']] : []), ['var(--su-accent)', 'Savings']].map(([c, n]) => <span key={n} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><i style={{ width: 8, height: 8, borderRadius: 4, background: c }} />{n}</span>)}
+      </div>
+      <div aria-live="polite" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--su-line)', display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 14, fontWeight: 700, color: rest < 0 ? 'var(--su-red)' : INK }}>
+        {rest >= 0 ? <><span>Left to save</span><span>{`${fmt(rest)} · ${pct(rest)}`}</span></> : <><span>Over your income by</span><span>{fmt(-rest)}</span></>}
+      </div>
+    </div>
+    {d.pockets.map(p => {
+      const m = month[p.id] ?? 0, c = color(p.hue), txt = `oklch(var(--su-hue-l) 0.13 ${p.hue})`, per = periodsInMonth(p, weeks);
+      return <div key={p.id} style={{ marginTop: 10, padding: 14, borderRadius: 22, background: 'var(--su-card)', boxShadow: '0 0 0 1px var(--su-line)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ width: 28, display: 'inline-flex', justifyContent: 'center', fontSize: 20, color: txt }}>{glyph(p.emoji || 'pk:pocket')}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 16, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+          <span style={{ fontSize: 16, fontWeight: 800, color: txt, fontVariantNumeric: 'tabular-nums' }}>{pct(m)}</span>
+        </div>
+        <input type="range" className="su-range" min={0} max={max} step={10000} value={m} aria-label={`${p.name} per month`} aria-valuetext={fmt(m)}
+          onChange={e => setMonth(x => ({ ...x, [p.id]: Number(e.target.value) }))}
+          style={{ '--c': c, '--p': `${(m / max) * 100}%` } as CSSProperties} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13, color: SOFT, fontVariantNumeric: 'tabular-nums' }}>
+          <span>{`${fmt(m)} a month`}</span>
+          <span>{p.period === 'half' ? `${fmt(weeklyOf(m, per))} every 15 days` : `${fmt(weeklyOf(m, per))} a week`}</span>
+        </div>
+      </div>;
+    })}
+    <Main onClick={save}>Looks good</Main>
   </>;
 }
 

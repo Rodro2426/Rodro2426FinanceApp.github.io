@@ -519,8 +519,8 @@ input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*
 
 /* ---------------- First-time setup (screens/Setup.tsx) ---------------- */
 /* Its colours: dark by default, light with the app's light theme. The ground is the page colour, so the iPhone's top bar matches it. */
-.setup { --su-bg: var(--page); --su-ink: #f2efea; --su-soft: #a9a49e; --su-accent: #8fd6cb; --su-on-accent: #0f2b28; --su-fill: rgba(255,255,255,0.08); --su-fill2: rgba(255,255,255,0.1); --su-dot: rgba(255,255,255,0.18); --su-line: rgba(255,255,255,0.12); --su-card: rgba(255,255,255,0.06); --su-card2: rgba(255,255,255,0.04); --su-panel: rgba(22,22,21,0.95); --su-row: #1d1c1b; --su-good: rgba(143,214,203,0.12); --su-ph: rgba(242,239,234,0.38); --su-g1: rgba(47,143,132,0.55); --su-g2: rgba(122,104,184,0.5); --su-g3: rgba(143,214,203,0.45); --su-glow: rgba(143,214,203,0.7); --su-glow2: rgba(122,104,184,0.45); }
-:root[data-theme="light"] .setup { --su-ink: #1f2a28; --su-soft: #5d6a67; --su-accent: #1f5f5a; --su-on-accent: #ffffff; --su-fill: rgba(31,42,40,0.06); --su-fill2: rgba(31,42,40,0.08); --su-dot: rgba(31,95,90,0.2); --su-line: rgba(31,42,40,0.1); --su-card: rgba(31,42,40,0.045); --su-card2: rgba(31,42,40,0.035); --su-panel: rgba(255,255,255,0.94); --su-row: #ffffff; --su-good: rgba(31,95,90,0.1); --su-ph: rgba(31,42,40,0.4); --su-g1: rgba(143,214,203,0.5); --su-g2: rgba(217,205,234,0.7); --su-g3: rgba(185,168,230,0.45); --su-glow: rgba(143,214,203,0.55); --su-glow2: rgba(122,104,184,0.25); }
+.setup { --su-bg: var(--page); --su-ink: #f2efea; --su-soft: #a9a49e; --su-accent: #8fd6cb; --su-on-accent: #0f2b28; --su-fill: rgba(255,255,255,0.08); --su-fill2: rgba(255,255,255,0.1); --su-dot: rgba(255,255,255,0.18); --su-line: rgba(255,255,255,0.12); --su-card: rgba(255,255,255,0.06); --su-card2: rgba(255,255,255,0.04); --su-panel: rgba(22,22,21,0.95); --su-row: #1d1c1b; --su-good: rgba(143,214,203,0.12); --su-ph: rgba(242,239,234,0.38); --su-g1: rgba(47,143,132,0.55); --su-g2: rgba(122,104,184,0.5); --su-g3: rgba(143,214,203,0.45); --su-glow: rgba(143,214,203,0.7); --su-glow2: rgba(122,104,184,0.45); --su-red: #ff8a80; --su-hue-l: 0.78; }
+:root[data-theme="light"] .setup { --su-ink: #1f2a28; --su-soft: #5d6a67; --su-accent: #1f5f5a; --su-on-accent: #ffffff; --su-fill: rgba(31,42,40,0.06); --su-fill2: rgba(31,42,40,0.08); --su-dot: rgba(31,95,90,0.2); --su-line: rgba(31,42,40,0.1); --su-card: rgba(31,42,40,0.045); --su-card2: rgba(31,42,40,0.035); --su-panel: rgba(255,255,255,0.94); --su-row: #ffffff; --su-good: rgba(31,95,90,0.1); --su-ph: rgba(31,42,40,0.4); --su-g1: rgba(143,214,203,0.5); --su-g2: rgba(217,205,234,0.7); --su-g3: rgba(185,168,230,0.45); --su-glow: rgba(143,214,203,0.55); --su-glow2: rgba(122,104,184,0.25); --su-red: #c0392b; --su-hue-l: 0.5; }
 .su-mark-light { display: none !important; }
 :root[data-theme="light"] .setup .su-mark-dark { display: none !important; }
 :root[data-theme="light"] .setup .su-mark-light { display: block !important; }
@@ -538,6 +538,13 @@ input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*
 .setup-logo { width: 64px; height: 64px; animation: setup-turn 90s linear infinite; }
 .setup-logo img { display: block; filter: drop-shadow(0 0 12px var(--su-glow)) drop-shadow(0 0 26px var(--su-glow2)); }
 .setup input::placeholder { color: var(--su-ph); }
+/* The setup's income-split sliders: the track fills with the pocket's colour up to the thumb (--c, --p set inline). */
+.su-range { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 32px; margin: 6px 0 2px; background: transparent; cursor: pointer; touch-action: pan-y; }
+.su-range::-webkit-slider-runnable-track { height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--c) 0 var(--p), var(--su-fill2) var(--p)); }
+.su-range::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -10px; border-radius: 50%; background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.35), 0 0 0 4px var(--c); }
+.su-range::-moz-range-track { height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--c) 0 var(--p), var(--su-fill2) var(--p)); }
+.su-range::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 4px solid var(--c); }
+.su-range:focus-visible { outline: 2px solid var(--su-accent); outline-offset: 2px; border-radius: 8px; }
 @keyframes setup-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .setup-glow, .setup-glow i, .setup-spin, .setup-logo, .setup [style*="setup-in"] { animation: none !important; transition: none !important; } }
 
