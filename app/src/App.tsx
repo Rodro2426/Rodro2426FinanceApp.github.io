@@ -120,6 +120,9 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
   }
 }
 
+/** How old the last full read of shared debts can be before opening the app reads them again. */
+const DEBT_MAX_AGE = 6 * 3600e3;
+
 export default function App() {
   const { ui, data } = useApp();
   const scroll = useRef<HTMLDivElement>(null);
@@ -178,14 +181,19 @@ export default function App() {
     const t = setInterval(() => { if (document.visibilityState === 'visible') syncNow(); }, 60_000);
     return () => clearInterval(t);
   }, [desk, sync.uid]);
+  // Each check only looks inside trips that changed. It runs when the app opens or comes back (at most every
+  // 5 minutes), and every 90 seconds only while a trip, its chat or a conversation is on screen.
+  const onTrip = !!ui.page && /^(trip|tripchat|tripstats|dm):/.test(ui.page);
   useEffect(() => {
     if (!sync.uid) return;
-    const run = () => { if (document.visibilityState === 'visible') pollTrips(); };
-    run();
-    const t = setInterval(run, 90_000);
-    document.addEventListener('visibilitychange', run);
-    return () => { clearInterval(t); document.removeEventListener('visibilitychange', run); };
-  }, [sync.uid]);
+    let last = 0;
+    const run = (force = false) => { if (document.visibilityState !== 'visible' || (!force && Date.now() - last < 5 * 60_000)) return; last = Date.now(); pollTrips(); };
+    run(true);
+    const t = onTrip ? setInterval(() => run(true), 90_000) : undefined;
+    const back = () => run();
+    document.addEventListener('visibilitychange', back);
+    return () => { if (t) clearInterval(t); document.removeEventListener('visibilitychange', back); };
+  }, [sync.uid, onTrip]);
 
   // Your profile picture: a small copy goes to your public profile so friends see it (only when it changes).
   const photo = data.settings.profilePhoto;
@@ -209,14 +217,17 @@ export default function App() {
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
   // Shared debts: send and receive changes when the app opens or comes back, and shortly after a shared debt changes.
   const debtKey = sync.uid ? JSON.stringify((data.debts ?? []).filter(x => x.friend).map(x => [x.id, x.dir, x.amt, x.date, x.due, x.note, x.pays.map(p => [p.id, p.amt, p.date])])) : '';
+  // Opening the app (or coming back) reads them at most every 6 hours; a change you made is sent right away.
+  const debtFirst = useRef(true);
   useEffect(() => {
     if (!sync.uid) return;
-    const t = setTimeout(() => { syncDebts().catch(() => {}); }, 1200);
+    const first = debtFirst.current; debtFirst.current = false;
+    const t = setTimeout(() => { syncDebts(first ? { maxAge: DEBT_MAX_AGE } : {}).catch(() => {}); }, 1200);
     return () => clearTimeout(t);
-  }, [debtKey, sync.uid]);
+  }, [debtKey, sync.uid, sync.syncedAt > 0]);
   useEffect(() => {
     if (!sync.uid) return;
-    const run = () => { if (document.visibilityState === 'visible') syncDebts().catch(() => {}); };
+    const run = () => { if (document.visibilityState === 'visible') syncDebts({ maxAge: DEBT_MAX_AGE }).catch(() => {}); };
     document.addEventListener('visibilitychange', run);
     return () => document.removeEventListener('visibilitychange', run);
   }, [sync.uid]);

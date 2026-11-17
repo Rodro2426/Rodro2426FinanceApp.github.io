@@ -4,7 +4,7 @@ import { setUI, flash } from '../lib/store';
 import { LINE, TEXT } from '../lib/constants';
 import { fmt, moneyScale } from '../lib/derive';
 import { fmtDay, monthLabel, shortDate } from '../lib/dates';
-import { deleteMessage, dmKey, loadItems, loadMessages, loadPhotos, markRead, myUid, sendMessage, tripMembers, type Attachment, type Message } from '../lib/social';
+import { deleteMessage, dmKey, loadItems, loadMessages, loadTrips, loadPhotos, markRead, myUid, sendMessage, tripMembers, type Attachment, type Message } from '../lib/social';
 import { prepGifFile, prepPhoto, type GifHit } from '../lib/chatMedia';
 import { AttachPreview, BubbleMedia, GifPanel, MediaViewer } from './ChatMedia';
 import { tripMonths, tripSpending, type TripItem } from '../lib/settle';
@@ -133,8 +133,8 @@ function ChatPage({ id, friend }: { id: string; friend?: string }) {
   // While the chat is open, check for new messages every few seconds (and for new expenses less often).
   useEffect(() => {
     let n = 0;
-    const tick = () => { if (document.visibilityState !== 'visible') return; loadMessages(id).then(() => markRead(id)).catch(() => {}); if (!friend && ++n % 5 === 0) loadItems(id).catch(() => {}); };
-    tick(); const h = setInterval(tick, 3000);
+    const tick = () => { if (document.visibilityState !== 'visible') return; loadMessages(id).then(() => markRead(id)).catch(() => {}); if (!friend && ++n % 8 === 0) loadTrips().then(() => loadItems(id)).catch(() => {}); };
+    tick(); const h = setInterval(tick, 8000);
     return () => clearInterval(h);
   }, [id]);
   const memberKey = (friend ? [friend] : so.trips.find(x => x.id === id)?.members ?? []).join(',');

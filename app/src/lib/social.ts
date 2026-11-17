@@ -5,7 +5,7 @@
 //   trips/{tripId}            { name, emoji, owner, members: [uid], guests: [{id, name}], names }
 //   trips/{tripId}/items/{id} expenses and payments (see settle.ts)
 import { addDoc, collection, deleteDoc, deleteField, doc, getDoc, getDocs, limit, orderBy, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore/lite';
-import { auth, db } from './cloud';
+import { auth, db, getSync } from './cloud';
 import { notifyThread } from './push';
 import { getData, setData, flash } from './store';
 import { debtsOf, saveDebt } from './debts';
@@ -14,7 +14,7 @@ import { fmtPlain } from './derive';
 import { groupWideItems, relinkPerson, withMorePeople, type Member, type TripItem } from './settle';
 
 export interface Friend { uid: string; name: string; email: string; status: 'pending' | 'accepted'; incoming: boolean; id: string }
-export interface Trip { id: string; name: string; emoji: string; owner: string; members: string[]; guests: Member[]; names: Record<string, string>; createdAt: number; updatedAt: number }
+export interface Trip { id: string; name: string; emoji: string; owner: string; members: string[]; guests: Member[]; names: Record<string, string>; createdAt: number; updatedAt: number; /** When the last chat message was sent (expenses use updatedAt). */ chatAt?: number }
 
 const me = () => auth.currentUser;
 /** Your name as friends see it: the name in your Profile, then your account's name, then your email's first part. */
@@ -137,9 +137,17 @@ export async function loadTrips() {
   const trips = snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<Trip, 'id'>) })).sort((a, b) => b.updatedAt - a.updatedAt);
   setS({ trips });
 }
-export async function loadItems(tripId: string) {
+const ITEMS_KEY = 'pockets-trip-items';
+/** Expenses of each trip as last read, with the trip's updatedAt at that moment (kept on this phone between opens). */
+let itemsAt: Record<string, { at: number; items: TripItem[] }> = (() => { try { return JSON.parse(localStorage.getItem(ITEMS_KEY) || '{}'); } catch { return {}; } })();
+/** A trip's expenses. Skipped (0 reads) when the trip hasn't changed since the last read, unless `force`. */
+export async function loadItems(tripId: string, force = false) {
+  const at = state.trips.find(t => t.id === tripId)?.updatedAt ?? 0, kept = itemsAt[tripId];
+  if (!force && at && kept && kept.at === at) { if (state.items[tripId] !== kept.items) setS({ items: { ...state.items, [tripId]: kept.items } }); return; }
   const snap = await getDocs(collection(db, 'trips', tripId, 'items'));
   const items = snap.docs.map(d => ({ ...(d.data() as TripItem), id: d.id })).sort((a, b) => (b.date > a.date ? 1 : b.date < a.date ? -1 : b.createdAt - a.createdAt));
+  itemsAt = { ...itemsAt, [tripId]: { at, items } };
+  try { localStorage.setItem(ITEMS_KEY, JSON.stringify(itemsAt)); } catch { /* full: read again next time */ }
   setS({ items: { ...state.items, [tripId]: items } });
 }
 /** Friends, trips and every trip's items. */
@@ -198,7 +206,7 @@ export async function addPeople(t: Trip, add: { friends: string[]; guests: strin
     });
     items.filter(i => orig.get(i.id) !== JSON.stringify(i)).forEach(({ id, ...rest }) => batch.set(doc(db, 'trips', t.id, 'items', id), rest));
     await batch.commit();
-    await loadTrips(); await loadItems(t.id);
+    await loadTrips(); await loadItems(t.id, true);
     return null;
   } catch (e) { return fail(e); }
 }
@@ -216,7 +224,7 @@ export async function saveItem(tripId: string, item: Omit<TripItem, 'id'> & { id
     if (id) await setDoc(doc(db, 'trips', tripId, 'items', id), body);
     else await addDoc(collection(db, 'trips', tripId, 'items'), body);
     await updateDoc(doc(db, 'trips', tripId), { updatedAt: Date.now() });
-    await loadItems(tripId);
+    await loadTrips(); await loadItems(tripId, true);
     if (!id) {
       const t = state.trips.find(x => x.id === tripId), who = (x?: string) => (t ? tripMembers(t).find(m => m.id === x)?.name : undefined) ?? 'someone';
       const amt = fmtPlain(item.amount);
@@ -226,7 +234,12 @@ export async function saveItem(tripId: string, item: Omit<TripItem, 'id'> & { id
   } catch (e) { return fail(e); }
 }
 export async function deleteItem(tripId: string, id: string) {
-  try { await deleteDoc(doc(db, 'trips', tripId, 'items', id)); await loadItems(tripId); return null; } catch (e) { return fail(e); }
+  try {
+    await deleteDoc(doc(db, 'trips', tripId, 'items', id));
+    // Stamp the trip so everyone's phone knows to read its expenses again.
+    await updateDoc(doc(db, 'trips', tripId), { updatedAt: Date.now() });
+    await loadTrips(); await loadItems(tripId, true); return null;
+  } catch (e) { return fail(e); }
 }
 
 /** Everyone in a trip: members with accounts, then guests. */
@@ -282,6 +295,7 @@ export async function sendMessage(tripId: string, text: string, att?: Attachment
     }
     if (att?.gif) msg.gif = att.gif;
     await addDoc(collection(db, ...threadPath(tripId), 'messages'), msg);
+    if (!tripId.startsWith('dm:')) await updateDoc(doc(db, 'trips', tripId), { chatAt: msg.createdAt }).catch(() => {});
     await loadMessages(tripId); markRead(tripId);
     const shown = msg.gif || msg.img?.gif ? (msg.text ? `GIF · ${msg.text}` : 'GIF') : msg.img ? (msg.text ? `📷 ${msg.text}` : '📷 Photo') : msg.text;
     if (tripId.startsWith('dm:')) notifyThread(tripId, { title: msg.name, body: shown, url: `#dm:${u.uid}`, tag: tripId });
@@ -358,6 +372,13 @@ export async function checkDmActivity(): Promise<DmActivity[]> {
   return out;
 }
 
+/** What to read in a trip since `since`: expenses when updatedAt moved, chat when chatAt did. A trip from before
+ *  chatAt existed has its chat read only when the trip itself changed. Nothing new = no reads at all. */
+export function tripNeeds(trip: Pick<Trip, 'updatedAt' | 'chatAt'>, since: number) {
+  const itemsNew = (trip.updatedAt ?? Infinity) > since;
+  return { itemsNew, chatNew: (trip.chatAt ?? (itemsNew ? Infinity : 0)) > since };
+}
+
 export async function checkTripActivity(): Promise<TripActivity[]> {
   const u = me(); if (!u) return [];
   await loadTrips();
@@ -372,9 +393,14 @@ export async function checkTripActivity(): Promise<TripActivity[]> {
       if (!first && trip.owner !== u.uid) out.push({ trip, items: [], messages: [], joined: true });
       return;
     }
+    // Look inside only what changed since the last check: expenses when updatedAt moved, chat when chatAt did.
+    // (Trips from before chatAt existed: their chat is checked when the trip itself changed.)
+    const { itemsNew, chatNew } = tripNeeds(trip, since);
+    if (!itemsNew && !chatNew) return;
+    const none = { docs: [] as { data: () => Record<string, unknown>; id: string }[] };
     const [it, ms] = await Promise.all([
-      getDocs(query(collection(db, 'trips', trip.id, 'items'), where('createdAt', '>', since))),
-      getDocs(query(collection(db, 'trips', trip.id, 'messages'), where('createdAt', '>', since), orderBy('createdAt')))
+      itemsNew ? getDocs(query(collection(db, 'trips', trip.id, 'items'), where('createdAt', '>', since))) : none,
+      chatNew ? getDocs(query(collection(db, 'trips', trip.id, 'messages'), where('createdAt', '>', since), orderBy('createdAt'))) : none
     ]);
     const items = it.docs.map(d => ({ ...(d.data() as TripItem), id: d.id })).filter(x => x.createdBy !== u.uid);
     const messages = ms.docs.map(d => ({ ...(d.data() as Omit<Message, 'id'>), id: d.id })).filter(m => m.uid !== u.uid);
@@ -392,9 +418,19 @@ let debtSyncing = false;
  * Sends new debts with friends as requests, sends your changes, takes your friends' changes, and lists the
  * requests waiting for you. Runs when the app opens, after you change a shared debt, and on Friends & trips.
  */
-export async function syncDebts(): Promise<void> {
+const DEBT_SYNC_KEY = 'pockets-debt-sync';
+/**
+ * `maxAge`: skip if the last full sync is newer than this (app opened again, came back to the app). Without it
+ * (you changed a shared debt, opened Friends & trips), it always runs.
+ */
+export async function syncDebts(opts: { maxAge?: number } = {}): Promise<void> {
   const u = me();
   if (!u || debtSyncing) return;
+  // Not before your own data has come down from the cloud: an empty phone would otherwise unshare every debt.
+  const sync = getSync();
+  if (!sync.syncedAt || sync.status === 'conflict' || sync.status === 'syncing') return;
+  let last = 0; try { last = Number(localStorage.getItem(DEBT_SYNC_KEY) || 0); } catch { /* none */ }
+  if (opts.maxAge && Date.now() - last < opts.maxAge) return;
   debtSyncing = true;
   try {
     if (!state.loadedAt && !state.friends.length) await loadFriends().catch(() => {});
@@ -412,6 +448,7 @@ export async function syncDebts(): Promise<void> {
     // Replaced as they are: a friend's change never moves your account balances (see lib/debtShare.ts).
     if (local.length) setData(x => { const by = new Map(local.map(y => [y.id, y])); return { debts: debtsOf(x).map(y => by.get(y.id) ?? y) }; });
     setS({ debtRequests: plan.requests });
+    try { localStorage.setItem(DEBT_SYNC_KEY, String(Date.now())); } catch { /* not saved */ }
   } catch (e) { fail(e); } finally { debtSyncing = false; }
 }
 
