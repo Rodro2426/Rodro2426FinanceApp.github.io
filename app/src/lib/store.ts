@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { SITE_URL, iPhoneSafariFrontDoor, shouldShowSite } from './handoff';
 import { get, set } from 'idb-keyval';
 import type { Data, UI } from './types';
-import { emptyData, sampleData } from './seed';
+import { sampleData } from './seed';
 
 const KEY = 'pockets-data-v1';
 
@@ -21,7 +21,7 @@ let persistOn = true;
 /** Called on every change that will be saved (the cloud sync listens to this). */
 const persistListeners = new Set<() => void>();
 export const onPersist = (l: () => void) => { persistListeners.add(l); return () => { persistListeners.delete(l); }; };
-/** False during the welcome screen and the practice tour: nothing is saved or synced then. */
+/** False during the welcome screen: nothing is saved or synced then. */
 export const isPersisting = () => persistOn;
 function persist() {
   if (!persistOn) return;
@@ -77,40 +77,6 @@ export async function loadData() {
   state.ui.lastAdd = { pocket: d.pockets[0]?.id ?? '', acct: (d.accounts.find(a => a.type === 'bank') || d.accounts[0])?.id ?? '' };
 }
 
-/* ---------- Guided tour on a practice copy ---------- */
-let realData: Data | null = null;
-/** Starts the tour on an empty practice copy; nothing is saved until it ends. */
-export function startTour(mode: 'first' | 'replay', name?: string) {
-  realData = mode === 'replay' ? state.data : null;
-  // Save the real data right now (a pending save could otherwise land after the switch), then stop saving.
-  clearTimeout(saveTimer);
-  if (mode === 'replay' && persistOn) set(KEY, state.data).catch(err => console.warn('Could not save data', err));
-  persistOn = false;
-  const base = emptyData(state.data);
-  const practice: Data = { ...base, settings: { ...base.settings, name: name || state.data.settings.name, lastBackup: undefined } };
-  state = { ...state, data: normalize(practice), ui: { ...state.ui, welcome: false, install: false, tab: 'home', sheet: null, page: null, lastAdd: { pocket: '', acct: '' }, tour: { step: 0, mode } } };
-  emit();
-}
-/** Ends the tour: keep the practice data, start fresh, or (replay) go back to the real data. */
-export async function endTour(choice: 'keep' | 'fresh' | 'restore') {
-  const mode = state.ui.tour?.mode;
-  // A replay never keeps practice data: it always goes back to the real data.
-  if (mode === 'replay') choice = 'restore';
-  let d: Data;
-  if (choice === 'restore') {
-    const saved = realData ?? await get<Data>(KEY).catch(() => undefined);
-    if (!saved) { flash('Could not find your data. Close and reopen the app.'); return mode; }
-    d = saved;
-  }
-  else if (choice === 'fresh') { const e = emptyData(state.data); d = { ...e, settings: { ...e.settings, tourSeen: true } }; }
-  else d = { ...state.data, settings: { ...state.data.settings, tourSeen: true } };
-  realData = null;
-  persistOn = true;
-  replaceData(d);
-  setUI({ tour: null, sheet: null, page: null, tab: 'home', lastAdd: { pocket: d.pockets[0]?.id ?? '', acct: (d.accounts.find(a => a.type === 'bank') || d.accounts[0])?.id ?? '' } });
-  return mode;
-}
-export const setTourStep = (step: number) => setUI(u => ({ tour: u.tour ? { ...u.tour, step } : u.tour }));
 
 /** Ends the welcome screen with the chosen starting data and starts saving. */
 export function finishWelcome(d: Data) {

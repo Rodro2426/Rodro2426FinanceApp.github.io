@@ -54,7 +54,7 @@ export function dmNotifs(acts: DmActivity[], today: string, existing: Notif[], n
 let busy = false;
 /** Checks the trips once and adds what's new to the notifications. Skipped during the tour (practice data). */
 export async function pollTrips() {
-  if (busy || getState().ui.tour) return;
+  if (busy) return;
   busy = true;
   try {
     const [acts, dmActs] = await Promise.all([checkTripActivity(), checkDmActivity().catch(() => [] as DmActivity[])]);

@@ -3,7 +3,7 @@ import { useApp, setData, closeSheet, openSheet, flash, getData } from '../lib/s
 import { LINE, RED, TEXT } from '../lib/constants';
 import { fmt, num, uid } from '../lib/derive';
 import { todayISO } from '../lib/dates';
-import { FINNHUB_KEY, colorOf, finnhubKey, holdings, refreshQuotes, refreshUsdRate, searchSymbols, toLocal, type SymbolMatch } from '../lib/invest';
+import { colorOf, finnhubKey, holdings, refreshQuotes, refreshUsdRate, searchSymbols, toLocal, type SymbolMatch } from '../lib/invest';
 import type { Trade } from '../lib/types';
 import { FieldLabel, GhostDanger, PrimaryBtn, Segmented, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -212,13 +212,7 @@ export function PriceSettingsSheet() {
   return (
     <SheetFrame title="Prices">
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ margin: '0 4px', fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>
-          Live prices come from Finnhub. Create a free account at <a href="https://finnhub.io/register" target="_blank" rel="noreferrer">finnhub.io</a>, copy your API key from the dashboard and paste it here. It stays on this phone. US stocks and ETFs update during market hours; others you can price yourself.
-        </span>
-        {FINNHUB_KEY && <span style={{ margin: '10px 4px 0', fontSize: 13, lineHeight: 1.45, color: 'oklch(0.45 0.11 150)', fontWeight: 600 }}>Live prices are already on for everyone. You only need your own key if you want a separate limit.</span>}
-        <FieldLabel m="14px 4px 6px">Finnhub API key</FieldLabel>
-        <input value={key} onChange={e => setKey(e.target.value.trim())} placeholder="Paste your key" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{ ...textInput, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 16 }} />
-        <PrimaryBtn onClick={saveKey} disabled={testing} mt={12} h={50} fs={15}>{testing ? 'Checking…' : 'Save key'}</PrimaryBtn>
+        <span style={{ margin: '0 4px', fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>US stocks and ETFs update on their own when you open Investments. For anything without a live price, open the stock and type its price yourself.</span>
 
         {d.settings.currency === 'COP' && <>
           <FieldLabel m="20px 4px 6px">Dollar rate (1 USD in COP)</FieldLabel>
@@ -231,7 +225,15 @@ export function PriceSettingsSheet() {
             {inv.usdManual && <button onClick={() => { setData(x => ({ investments: { ...x.investments, usdManual: false } })); refreshUsdRate(true).then(() => setRate(String(Math.round(getData().investments.usdRate)))); }} style={{ border: 0, padding: 0, background: 'transparent', color: 'var(--brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Update automatically</button>}
           </span>
         </>}
-        {d.settings.finnhubKey && <GhostDanger onClick={() => { setKey(''); setData(x => ({ settings: { ...x.settings, finnhubKey: undefined } })); flash('Key removed'); }}>Remove key</GhostDanger>}
+        <details style={{ marginTop: 20, background: 'var(--surface)', borderRadius: 20, padding: '12px 14px' }}>
+          <summary style={{ cursor: 'pointer', fontSize: 15, fontWeight: 700 }}>Advanced</summary>
+          <span style={{ display: 'block', margin: '10px 0 0', fontSize: 13, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Prices come from Finnhub. If they stop updating, you can use your own free key: create an account at finnhub.io, copy the key and paste it here. It stays on this phone.</span>
+          <a href="https://finnhub.io/register" target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: 6, fontSize: 13, fontWeight: 700, color: 'var(--brand)' }}>Open finnhub.io</a>
+          <FieldLabel m="12px 0 6px">Finnhub key</FieldLabel>
+          <input value={key} onChange={e => setKey(e.target.value.trim())} placeholder="Paste your key" autoCapitalize="off" autoCorrect="off" spellCheck={false} style={{ ...textInput, fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 16 }} />
+          <PrimaryBtn onClick={saveKey} disabled={testing} mt={10} h={46} fs={15}>{testing ? 'Checking…' : 'Save key'}</PrimaryBtn>
+          {d.settings.finnhubKey && <GhostDanger onClick={() => { setKey(''); setData(x => ({ settings: { ...x.settings, finnhubKey: undefined } })); flash('Key removed'); }}>Remove key</GhostDanger>}
+        </details>
       </div>
     </SheetFrame>
   );

@@ -1,6 +1,35 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+More options|Más opciones
+Your privacy|Tu privacidad
+I already have an account|Ya tengo una cuenta
+Split your income into pockets and always know what's safe to spend.|Divide tu ingreso en bolsillos y sabe siempre cuánto puedes gastar.
+Your data lives on your phone. We never sell or share it.|Tus datos viven en tu teléfono. Nunca los vendemos ni los compartimos.
+How we protect your privacy|Cómo protegemos tu privacidad
+Your money is personal. This is exactly what Pockets keeps, where, and who can see it.|Tu plata es personal. Esto es exactamente lo que Pockets guarda, dónde y quién puede verlo.
+On your phone|En tu teléfono
+Your accounts, pockets, expenses and photos are saved on this phone.|Tus cuentas, bolsillos, gastos y fotos se guardan en este teléfono.
+Without an account, nothing leaves your phone.|Sin una cuenta, nada sale de tu teléfono.
+We never sell your information, and Pockets has no ads.|Nunca vendemos tu información y Pockets no tiene anuncios.
+If you turn on cloud backup|Si activas la copia en la nube
+A copy of your data is kept in Google Firebase, linked to your account.|Una copia de tus datos se guarda en Google Firebase, vinculada a tu cuenta.
+It travels encrypted, and the app only lets your own account read it.|Viaja cifrada y la app solo deja que tu propia cuenta la lea.
+You can sign out at any time and keep using Pockets on this phone.|Puedes cerrar sesión cuando quieras y seguir usando Pockets en este teléfono.
+With friends|Con amigos
+Friends find you by your email, and they see your name and photo.|Tus amigos te encuentran por tu correo y ven tu nombre y tu foto.
+A trip or a debt you share is seen only by the people in it.|Un viaje o una deuda que compartes solo lo ven las personas que están en él.
+Your accounts and balances are never shared.|Tus cuentas y saldos nunca se comparten.
+To reach your lock screen, the text of each reminder waits on our notification server until it is sent.|Para llegar a tu pantalla de bloqueo, el texto de cada recordatorio espera en nuestro servidor de notificaciones hasta que se envía.
+That text can include the name and amount of a bill.|Ese texto puede incluir el nombre y el valor de una cuenta por pagar.
+Prices and exchange rates|Precios y tasas de cambio
+Stock prices are asked for by ticker, like AAPL, and exchange rates by currency.|Los precios de acciones se piden por su símbolo, como AAPL, y las tasas de cambio por moneda.
+Neither request carries your name or your money data.|Ninguna de esas consultas lleva tu nombre ni tus datos de dinero.
+US stocks and ETFs update on their own when you open Investments. For anything without a live price, open the stock and type its price yourself.|Las acciones y ETF de EE. UU. se actualizan solos cuando abres Inversiones. Para lo que no tenga precio en vivo, abre la acción y escribe el precio tú mismo.
+Advanced|Avanzado
+Prices come from Finnhub. If they stop updating, you can use your own free key: create an account at finnhub.io, copy the key and paste it here. It stays on this phone.|Los precios vienen de Finnhub. Si dejan de actualizarse, puedes usar tu propia clave gratis: crea una cuenta en finnhub.io, copia la clave y pégala aquí. Se queda en este teléfono.
+Finnhub key|Clave de Finnhub
+Open finnhub.io|Abrir finnhub.io
 Add a debt, trip or friend|Agregar una deuda, un viaje o un amigo
 Trips and people|Viajes y personas
 Requests, your trips, and everyone you share money with|Solicitudes, tus viajes y todas las personas con las que compartes plata

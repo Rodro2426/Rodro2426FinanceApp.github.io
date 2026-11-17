@@ -84,14 +84,15 @@ function sampleDataRaw(today: string): Data {
       { id: 'dj', ts: 5, dir: 'owed', name: 'Juan', amt: 78000, date: addDays(today, -2), due: addDays(today, 24), acct: 'c1', note: 'Concert tickets', pays: [] },
       { id: 'dm', ts: 6, dir: 'owe', name: 'Mamá', amt: 300000, date: addDays(today, -20), due: addDays(today, 40), acct: 'a1', note: 'Help with rent', pays: [{ id: 'dmp', ts: 7, amt: 100000, date: addDays(today, -5), acct: 'a1' }] }
     ],
-    bills: [
+    // Sample bills whose day already passed this month show as paid, so a first look never says "overdue".
+    bills: ([
       { id: 'i1', name: 'Salary', kind: 'Income', amt: 4800000, dueDay: 1, hue: 150, paidMonths: [], acct: 'a1', auto: true, start: today },
       { id: 'b1', name: 'Netflix', kind: 'Subscription', amt: 44900, dueDay: 8, hue: 25, paidMonths: [], acct: 'c1', auto: true, start: today, cat: 'Entertainment', sub: 'Movies' },
       { id: 'b2', name: 'Spotify', kind: 'Subscription', amt: 16900, dueDay: 12, hue: 150, paidMonths: [], acct: 'c1', auto: true, start: today, cat: 'Entertainment', sub: 'Events' },
       { id: 'b3', name: 'Internet', kind: 'Bill', amt: 95000, dueDay: 18, hue: 250, paidMonths: [], acct: 'a1', auto: true, start: today, cat: 'Home', sub: 'Internet' },
       { id: 'b4', name: 'Phone plan', kind: 'Bill', amt: 55000, dueDay: 20, hue: 80, paidMonths: [], acct: 'a1', auto: false, start: today, cat: 'Home', sub: 'Utilities' },
       { id: 'b5', name: 'Rent', kind: 'Bill', amt: 1400000, dueDay: 30, hue: 300, paidMonths: [], acct: 'a1', auto: true, start: today, cat: 'Home', sub: 'Rent' }
-    ],
+    ] as Data['bills']).map(x => (x.dueDay < Number(today.slice(8)) ? { ...x, paidMonths: [today.slice(0, 7)] } : x)),
     goals: [
       { id: 'g1', name: 'Trip to Cartagena', saved: 1200000, target: 3000000, months: 4, hue: 195 },
       { id: 'g2', name: 'Emergency fund', saved: 4500000, target: 10000000, months: 14, hue: 150 }

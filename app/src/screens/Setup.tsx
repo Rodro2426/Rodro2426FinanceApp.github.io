@@ -9,16 +9,10 @@ import { pickPhoto } from '../lib/photo';
 import { findLogo, siteHost } from '../lib/logo';
 import { fmt, num, periodsInMonth } from '../lib/derive';
 import { BANKS, BILLS, bankLogo, leftFree, makeAccount, makeBills, makeCard, makeIncome, makePockets, suggestPockets, weeklyOf, type BillPick, type PocketPick } from '../lib/setup';
-import { newQuickKey, quickAccount } from '../lib/quickadd';
-import { pushQuickMenu } from '../lib/quickaddSync';
-import { useSync } from '../sheets/CloudSheet';
-import { SHORTCUT_LINK } from '../sheets/QuickAddSheet';
-import { isIOS } from './InstallGuide';
 import { MoneyInput } from '../ui/MoneyInput';
-import { TutorialVideoButton } from '../ui/TutorialVideo';
 import { glyph } from '../ui/PocketIcons';
 
-type Step = 'hello' | 'account' | 'card' | 'income' | 'bills' | 'pockets' | 'split' | 'applepay' | 'done';
+type Step = 'hello' | 'account' | 'card' | 'income' | 'bills' | 'pockets' | 'split' | 'done';
 
 // Colours come from CSS (styles.css, .setup): dark or light with the app's theme, so the iPhone's top bar matches.
 const INK = 'var(--su-ink)', SOFT = 'var(--su-soft)', MINT = 'var(--su-accent)', DEEP = 'var(--su-on-accent)';
@@ -39,13 +33,13 @@ const shapes = (h: number) => {
 
 const QUESTION: Record<Step, string> = {
   hello: 'Welcome to Pockets', account: "What's your main bank?", card: 'Do you have a credit card?', income: 'How much do you earn a month?',
-  pockets: 'What do you spend on each month?', split: 'How your income splits', bills: 'Any fixed bills?', applepay: 'Add your Apple Pay purchases on their own?', done: 'All set'
+  pockets: 'What do you spend on each month?', split: 'How your income splits', bills: 'Any fixed bills?', done: 'All set'
 };
 
 export default function Setup() {
   const { data: d } = useApp();
-  const sync = useSync();
-  const steps: Step[] = ['hello', 'account', 'card', 'income', 'bills', 'pockets', 'split', ...(isIOS() && sync.uid ? ['applepay' as Step] : []), 'done'];
+  // Apple Pay purchases are an optional extra in Profile, never part of the first setup.
+  const steps: Step[] = ['hello', 'account', 'card', 'income', 'bills', 'pockets', 'split', 'done'];
   const [step, setStep] = useState<Step>(() => { const s = getData().settings.setupStep as Step | undefined; return s && QUESTION[s] ? s : 'hello'; });
   // Reopened on a step that isn't in today's list (e.g. Apple Pay before the sign-in loaded): keep it, just before Done.
   if (!steps.includes(step)) steps.splice(steps.length - 1, 0, step);
@@ -165,7 +159,6 @@ export default function Setup() {
             {step === 'pockets' && <PocketsStep onDone={next} />}
             {step === 'split' && <SplitStep onDone={next} />}
             {step === 'bills' && <BillsStep onDone={next} />}
-            {step === 'applepay' && <ApplePayStep onDone={next} />}
             {step === 'done' && <Done name={name} onFinish={finish} />}
           </div>
         </div>
@@ -453,78 +446,6 @@ function BillsStep({ onDone }: { onDone: () => void }) {
       </div>
     ))}
     <Main onClick={save}>{picks.some(b => b.on && b.amt > 0) ? 'Continue' : 'No fixed bills'}</Main>
-  </>;
-}
-
-function ApplePayStep({ onDone }: { onDone: () => void }) {
-  const { data: d } = useApp();
-  const qa = d.settings.quickAdd;
-  const [busy, setBusy] = useState(false);
-  // 'ready' → tap Get the Shortcut; 'away' → came back from Shortcuts, confirm it was added; 'added' → build the automation.
-  const [stage, setStage] = useState<'ready' | 'away' | 'added'>('ready');
-  const turnOn = async () => {
-    setBusy(true);
-    setData(x => ({ settings: { ...x.settings, quickAdd: { key: newQuickKey(), acct: quickAccount(x) } } }));
-    const ok = await pushQuickMenu(true);
-    setBusy(false);
-    if (!ok) { setData(x => ({ settings: { ...x.settings, quickAdd: undefined } })); flash("Couldn't reach the Pockets server. You can turn this on later in Profile."); }
-  };
-  const getShortcut = async () => {
-    const key = getData().settings.quickAdd?.key;
-    try { if (key) await navigator.clipboard.writeText(key); } catch { /* the key is also shown below */ }
-    setStage('away');
-    // A fresh address each time: opening the very same link again only brought Shortcuts forward without the add screen.
-    window.open(`${SHORTCUT_LINK}?open=${Date.now()}`, '_blank');
-  };
-  const copyKey = async () => { try { await navigator.clipboard.writeText(qa?.key ?? ''); flash('Key copied'); } catch { flash('Press and hold the key to copy it'); } };
-  const card = (n: number, title: string, done: boolean, children: ReactNode) => (
-    <div style={{ marginTop: 12, padding: 14, borderRadius: 20, background: 'var(--su-card)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ width: 28, height: 28, borderRadius: 14, background: MINT, color: DEEP, fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{done ? '✓' : n}</span>
-        <span style={{ fontSize: 16, fontWeight: 700, opacity: done ? 0.6 : 1 }}>{title}</span>
-      </div>
-      {children && <div style={{ marginTop: 10 }}>{children}</div>}
-    </div>
-  );
-  const row = (icon: string, text: ReactNode, tint: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 14, background: 'var(--su-row)', marginTop: 6, fontSize: 14, fontWeight: 600 }}>
-      <span style={{ width: 26, height: 26, borderRadius: 7, background: tint, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, flex: 'none' }}>{icon}</span><span>{text}</span>
-    </div>
-  );
-  const btn = (label: string, onClick: () => void, light = false) => <button onClick={onClick} className="pr97" style={{ width: '100%', height: 48, marginTop: 10, borderRadius: 24, border: 0, background: light ? 'var(--su-fill2)' : INK, color: light ? INK : DEEP, fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>{label}</button>;
-  return <>
-    <H>Apple Pay</H>
-    <Sub>When you pay with your iPhone, it asks for the pocket and Pockets adds the purchase for you.</Sub>
-    {!qa ? <>
-      <Main onClick={turnOn} disabled={busy}>{busy ? 'Turning on…' : 'Yes, set it up'}</Main>
-      <button onClick={onDone} style={{ display: 'block', margin: '14px auto 0', border: 0, background: 'transparent', color: SOFT, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Not now</button>
-    </> : <>
-      <TutorialVideoButton style={{ marginTop: 16, background: MINT, color: DEEP }} />
-      {card(1, 'Add the Shortcut', stage === 'added', stage === 'added' ? null : <>
-        {stage === 'ready' && <>
-          <Sub>We copy your key and open the Shortcut. There: tap Set Up Shortcut, paste the key in the box, then tap Add Shortcut. If nothing happens, tap Skip Setup: your key is kept. Then come back to Pockets.</Sub>
-          <Sub>Already have a Pockets shortcut from before? Delete it first in Shortcuts, so there's only one "Pockets Apple Pay".</Sub>
-          {btn('Get the Shortcut', getShortcut)}
-        </>}
-        {stage === 'away' && <>
-          <Sub>Did the Shortcut get added? If Pockets shows a blank page when you come back, tap ✕ at the top left.</Sub>
-          {btn('Yes, I added it', () => setStage('added'))}
-          {btn('Open it again', getShortcut, true)}
-          <div style={{ marginTop: 10, fontSize: 13, color: SOFT }}>Your key, if it asks again: <span onClick={copyKey} style={{ color: INK, fontWeight: 600, userSelect: 'all', WebkitUserSelect: 'all', wordBreak: 'break-all', cursor: 'pointer' }}>{qa.key}</span></div>
-        </>}
-      </>)}
-      {stage === 'added' && <>
-        {card(2, 'Create the automation', false, <>
-          <Sub>In Shortcuts → Automation → +, choose Transaction and your cards, turn Automation on, then add these two actions:</Sub>
-          {row('▤', <span>Dictionary: <b>amount</b>, <b>merchant</b>, <b>card</b></span>, '#f2994a')}
-          <div style={{ margin: '4px 0 0 46px', fontSize: 13, color: SOFT }}>Each one: Shortcut Input → Type Transaction → Amount, Merchant, Card or Pass</div>
-          {row('◆', <span>Run Shortcut (not Open): <b>Pockets Apple Pay</b> · Input: Dictionary</span>, '#7a68b8')}
-        </>)}
-        {card(3, 'Pay and pick the pocket', false, <Sub>Right after you tap to pay, choose the pocket and category. The purchase shows up next time you open Pockets.</Sub>)}
-        <Main onClick={onDone}>Done</Main>
-      </>}
-      {stage !== 'added' && <button onClick={onDone} style={{ display: 'block', margin: '14px auto 0', border: 0, background: 'transparent', color: SOFT, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Finish this later in Profile</button>}
-    </>}
   </>;
 }
 

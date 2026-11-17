@@ -1,3 +1,4 @@
+import { PrivacySheet } from './sheets/PrivacySheet';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud, syncNow } from './lib/cloud';
@@ -32,7 +33,6 @@ import Insights from './screens/Insights';
 import CalendarScreen from './screens/Calendar';
 import Welcome from './screens/Welcome';
 import { ArrivalVeil } from './ui/ArrivalVeil';
-import Tour from './screens/Tour';
 import InstallGuide, { isInstalled, shouldShowInstallGuide } from './screens/InstallGuide';
 import Setup from './screens/Setup';
 import GuidedTour from './screens/GuidedTour';
@@ -101,6 +101,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'settings': return <SettingsSheet />;
     case 'reminder': return <ReminderSheet id={sheet.id} />;
     case 'quickAdd': return <QuickAddSheet />;
+    case 'privacy': return <PrivacySheet />;
     case 'schedule': return <ScheduleSheet id={sheet.id} day={sheet.day} kind={sheet.kind} />;
     case 'notifications': return <NotificationsSheet />;
     case 'trade': return <TradeSheet ticker={sheet.ticker} side={sheet.side} />;
@@ -163,10 +164,9 @@ export default function App() {
     return () => { navigator.serviceWorker?.removeEventListener('message', onMsg); window.removeEventListener('hashchange', onHash); };
   }, []);
   useEffect(() => {
-    if (ui.tour) return;
     const t = setTimeout(() => { syncReminders(getData()).catch(() => {}); }, 5000);
     return () => clearTimeout(t);
-  }, [data, ui.tour]);
+  }, [data]);
 
   // Shared trips: while signed in and the app is open, check for friends' expenses and messages every 90 seconds
   // (and right away when you come back to the app). There is no push, so this only runs while Pockets is open.
@@ -190,12 +190,12 @@ export default function App() {
   // Your profile picture: a small copy goes to your public profile so friends see it (only when it changes).
   const photo = data.settings.profilePhoto;
   useEffect(() => {
-    if (!sync.uid || ui.tour) return;
+    if (!sync.uid) return;
     const mark = photo ? `${sync.uid}:${photo.length}:${photo.slice(-40)}` : `${sync.uid}:none`;
     let last = ''; try { last = localStorage.getItem('pockets-photo-pub') ?? ''; } catch { /* none */ }
     if (last === mark) return;
     publishPhoto(photo).then(() => { try { localStorage.setItem('pockets-photo-pub', mark); } catch { /* not saved */ } }).catch(() => {});
-  }, [sync.uid, photo, ui.tour]);
+  }, [sync.uid, photo]);
 
   // Today's newest notification shows as a banner at the top until dismissed or it times out.
   const banner = data.notifications.find(n => n.date === todayISO() && !n.dismissed && !n.bannered);
@@ -210,10 +210,10 @@ export default function App() {
   // Shared debts: send and receive changes when the app opens or comes back, and shortly after a shared debt changes.
   const debtKey = sync.uid ? JSON.stringify((data.debts ?? []).filter(x => x.friend).map(x => [x.id, x.dir, x.amt, x.date, x.due, x.note, x.pays.map(p => [p.id, p.amt, p.date])])) : '';
   useEffect(() => {
-    if (!sync.uid || ui.tour) return;
+    if (!sync.uid) return;
     const t = setTimeout(() => { syncDebts().catch(() => {}); }, 1200);
     return () => clearTimeout(t);
-  }, [debtKey, sync.uid, ui.tour]);
+  }, [debtKey, sync.uid]);
   useEffect(() => {
     if (!sync.uid) return;
     const run = () => { if (document.visibilityState === 'visible') syncDebts().catch(() => {}); };
@@ -240,7 +240,7 @@ export default function App() {
   if (lastPage.current !== ui.page) { nav.current = lastPage.current && ui.page ? 'swap' : 'push'; lastPage.current = ui.page; }
   // Quick add from an iPhone Shortcut: collect the inbox when the app opens or comes back, and keep the Shortcut's pocket list current.
   const quickKey = data.settings.quickAdd?.key;
-  const quickOn = !!quickKey && !ui.tour && !ui.welcome;
+  const quickOn = !!quickKey && !ui.welcome;
   useEffect(() => {
     if (!quickOn) return;
     const run = () => { if (document.visibilityState === 'visible') { pullQuickInbox(); pushQuickMenu().catch(() => {}); } };
@@ -261,7 +261,7 @@ export default function App() {
     if (shouldShowInstallGuide()) setUI({ install: 'auto' });
   }, []);
   // Closed the app in the middle of the first-time setup: open it again at the same step.
-  useEffect(() => { if (getData().settings.setupStep && !ui.welcome && !ui.tour) setUI({ setup: true }); }, [ui.welcome]);
+  useEffect(() => { if (getData().settings.setupStep && !ui.welcome) setUI({ setup: true }); }, [ui.welcome]);
   // Light/dark: follow the setting, or the iPhone when it's "System".
   const theme = data.settings.theme ?? 'system';
   const bgKey = JSON.stringify(data.settings.bg ?? {});
@@ -317,7 +317,7 @@ export default function App() {
       {ui.page?.startsWith('person:') && <PersonPage k={ui.page.slice(7)} />}
       </div>
 
-      {!ui.sheet && !ui.tour && <div className="conflict-slot" style={{ position: 'absolute', left: 14, right: 14, top: 'calc(var(--top) - 6px)', zIndex: 32 }}><ConflictChoice /></div>}
+      {!ui.sheet && <div className="conflict-slot" style={{ position: 'absolute', left: 14, right: 14, top: 'calc(var(--top) - 6px)', zIndex: 32 }}><ConflictChoice /></div>}
 
       {ui.toast && (
         <div role="status" style={{ position: 'absolute', left: 18, right: 18, bottom: 'calc(var(--tb) + 82px)', zIndex: 30, background: 'var(--color-text)', color: 'var(--on-text)', padding: '14px 18px', borderRadius: 999, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-lg)' }}>
@@ -326,7 +326,7 @@ export default function App() {
         </div>
       )}
 
-      {banner && !ui.sheet && !ui.tour && (
+      {banner && !ui.sheet && (
         <div className="banner" role="alert" onClick={() => { if (banner.kind === 'reminder') { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'add' }); } else if (banner.txn) { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'txn', kind: 'expense', id: banner.txn }); } else if (banner.link) { patchNotif(banner.id, { bannered: true, dismissed: true }); openTripLink(banner.link); } else { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); } }}
           style={{ position: 'absolute', left: 12, right: 12, top: 'calc(var(--top) - 10px)', zIndex: 35, background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 22, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 10px 30px rgba(45,43,43,.18),0 0 0 1px rgba(45,43,43,.05)', cursor: 'pointer' }}>
           <div style={{ width: 38, height: 38, borderRadius: 999, background: NOTIF_TONE[banner.kind].bg, color: NOTIF_TONE[banner.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={banner.kind} /></div>
@@ -360,7 +360,6 @@ export default function App() {
 
 
       {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
-      {ui.tour && <Tour />}
       {ui.welcome && <Welcome />}
       {ui.setup && <Setup />}
       {ui.guide && <GuidedTour />}

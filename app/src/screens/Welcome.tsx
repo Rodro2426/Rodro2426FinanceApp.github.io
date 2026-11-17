@@ -4,7 +4,8 @@ import { getSync, pullForWelcome, subscribeSync, withoutMarking } from '../lib/c
 import { takeHandoff, type Handoff } from '../lib/handoff';
 import { ArrivalScreen, dropVeil, holdVeil } from '../ui/ArrivalVeil';
 import { SignInForm } from '../sheets/CloudSheet';
-import { finishWelcome, flash, normalize, setUI, startTour } from '../lib/store';
+import { finishWelcome, flash, normalize, setUI } from '../lib/store';
+import { PrivacyBody } from '../sheets/PrivacySheet';
 import { emptyData, sampleData } from '../lib/seed';
 import { pickBackupFile, readBackup } from '../lib/backup';
 import { TEXT } from '../lib/constants';
@@ -15,8 +16,8 @@ import { LangSwitch } from '../ui/LangSwitch';
 const NAVY = '#1f5f5a', NAVY2 = '#3c6b66';
 
 /**
- * First open on a device. The first screen is the account: sign in to bring your data back, or create an
- * account so it's backed up from day one. Scrolling down shows the other ways to start, without an account.
+ * First open on a device. On the phone: one big "Start" that opens the setup, "I have an account" for people
+ * coming back, and "More options" (sample data, a backup file). On a computer the account comes first.
  */
 // The website's note, read once per page load (outside React so StrictMode's double render can't lose it).
 let pending: Handoff | null | undefined;
@@ -27,6 +28,8 @@ export default function Welcome() {
   const [arriving, setArriving] = useState(() => { const h = pendingHandoff(); return h?.kind === 'signedin' || h?.kind === 'sample'; });
   const [name, setName] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
+  const [signIn, setSignIn] = useState(false);
+  const [privacy, setPrivacy] = useState(false);
   const who = name.trim();
   const desk = useDesk();
 
@@ -82,6 +85,27 @@ export default function Welcome() {
     </button>
   );
 
+  const link = { border: 0, background: 'transparent', color: NAVY, fontSize: 14.5, fontWeight: 700, cursor: 'pointer', textAlign: 'center' as const, padding: '8px 0', width: '100%' };
+  const promise = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,.6)', borderRadius: 22, padding: '12px 14px', boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.08)' }}>
+      <span aria-hidden="true" style={{ display: 'flex', fontSize: 22, color: NAVY }}>{glyph('pk:lock')}</span>
+      <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.35, color: NAVY }}>Your data lives on your phone. We never sell or share it.</span>
+        <button onClick={() => setPrivacy(true)} style={{ alignSelf: 'flex-start', border: 0, background: 'transparent', padding: 0, color: NAVY2, fontSize: 13, fontWeight: 600, textDecoration: 'underline', cursor: 'pointer' }}>How we protect your privacy</button>
+      </span>
+    </div>
+  );
+
+  const privacyModal = privacy && (
+    <div data-modal role="dialog" aria-label="Your privacy" className="noscroll" style={{ position: 'fixed', inset: 0, zIndex: 90, overflowY: 'auto', background: 'var(--page)', padding: 'calc(var(--top) + 14px) 20px calc(var(--tb) + 24px)', display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.025em', color: TEXT }}>Your privacy</span>
+        <button onClick={() => setPrivacy(false)} aria-label="Close" style={{ width: 36, height: 36, borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><I.X size={16} sw={2.5} /></button>
+      </div>
+      <PrivacyBody />
+    </div>
+  );
+
   const features: [string, string, string][] = [
     ['pk:pocket', 'Weekly pockets', "Split your income into pockets and see what's safe to spend today, this week and this month."],
     ['pk:cloud', 'Same data everywhere', 'Sign in on your iPhone and here: every change backs up to the cloud and shows up on both.'],
@@ -120,12 +144,12 @@ export default function Welcome() {
               : <SignInForm onDone={afterSignIn} askName dark />}
           </div>
           <span style={{ margin: '0 10px', fontSize: 12.5, lineHeight: 1.45, color: NAVY2, opacity: 0.85 }}>Use the same account as on your iPhone and your data comes right back. Only you can see it.</span>
+          {promise}
           <details style={{ marginTop: 6, background: 'rgba(255,255,255,.45)', borderRadius: 24, padding: '14px 16px' }}>
             <summary style={{ cursor: 'pointer', fontSize: 15, fontWeight: 700, color: NAVY }}>Start without an account</summary>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
               <input value={name} onChange={e => setName(e.target.value)} placeholder="What should we call you?" autoComplete="given-name" aria-label="Name for starting without an account"
                 style={{ border: 0, borderRadius: 16, background: 'var(--surface)', fontSize: 15, color: TEXT, padding: '13px 16px', outline: 'none' }} />
-              {option('pk:compass', 'Quick tour', 'Try every feature on a practice copy', () => startTour('first', who || 'there'))}
               {option('pk:sparkle', 'Start from scratch', 'Data stays only in this browser', () => scratch())}
               {option('pk:flask', 'Try it with sample data', 'Made-up accounts and expenses', sample)}
               {option('pk:folder', 'Restore a backup file', 'Bring back a Pockets backup', restore)}
@@ -133,47 +157,44 @@ export default function Welcome() {
           </details>
         </section>
       </main>
+      {privacyModal}
     </div>
   );
 
   return (
     <div className="noscroll force-light" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)' }}>
-      {/* Screen 1: the account */}
-      <section aria-label="Your account" style={{ minHeight: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', padding: 'calc(var(--top) + 18px) 22px 18px' }}>
+      <section aria-label="Start" style={{ minHeight: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12, padding: 'calc(var(--top) + 18px) 22px calc(var(--tb) + 24px)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
           <img src="./pockets-mark.svg" alt="" width={64} height={64} />
           <span className="wordmark" style={{ fontSize: 32, fontWeight: 800, color: NAVY }}>Pockets</span>
-          <span style={{ fontSize: 14.5, lineHeight: 1.4, color: NAVY2, maxWidth: 300 }}>Split your income into weekly pockets and always know what's safe to spend.</span>
+          <span style={{ fontSize: 14.5, lineHeight: 1.4, color: NAVY2, maxWidth: 300 }}>Split your income into pockets and always know what's safe to spend.</span>
           <div style={{ marginTop: 6 }}><LangSwitch /></div>
         </div>
-        <div style={{ marginTop: 16, background: 'rgba(255,255,255,.55)', borderRadius: 26, padding: '12px 14px 14px' }}>
-          {busy ? <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 15, fontWeight: 600, color: NAVY }}>{busy}</div>
-            : <SignInForm onDone={afterSignIn} askName dark />}
-        </div>
-        <span style={{ margin: '10px 8px 0', fontSize: 12, lineHeight: 1.4, color: NAVY2, opacity: 0.8, textAlign: 'center' }}>With an account, your data is backed up to the cloud after every change, and only you can see it.</span>
-        <div style={{ flex: 1, minHeight: 12 }} />
-        <button onClick={e => (e.currentTarget.closest('.noscroll') as HTMLElement)?.scrollTo({ top: (e.currentTarget.closest('section') as HTMLElement).offsetHeight, behavior: 'smooth' })}
-          style={{ alignSelf: 'center', marginTop: 12, border: 0, background: 'transparent', color: NAVY, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, paddingBottom: 'var(--tb)' }}>
-          More ways to start, without an account
-          <span aria-hidden="true" style={{ fontSize: 18, lineHeight: 1 }}>⌄</span>
-        </button>
+        {promise}
+        <div style={{ flex: 1, minHeight: 8 }} />
+        {busy ? <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 15, fontWeight: 600, color: NAVY }}>{busy}</div> : signIn ? (
+          <div style={{ background: 'rgba(255,255,255,.55)', borderRadius: 26, padding: '12px 14px 14px' }}>
+            <SignInForm onDone={afterSignIn} askName dark />
+            <button onClick={() => setSignIn(false)} style={{ ...link, marginTop: 8 }}>Back</button>
+          </div>
+        ) : <>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: NAVY2 }}>What should we call you?</span>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" autoComplete="given-name" aria-label="Your name"
+              style={{ border: 0, borderRadius: 18, background: 'var(--surface)', fontSize: 16, color: TEXT, padding: '15px 18px', outline: 'none' }} />
+          </label>
+          <button onClick={() => scratch()} className="pr97" style={{ height: 58, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 18, fontWeight: 800, cursor: 'pointer' }}>Start</button>
+          <button onClick={() => setSignIn(true)} style={{ height: 50, borderRadius: 999, border: 0, background: 'rgba(255,255,255,.7)', color: NAVY, fontSize: 15.5, fontWeight: 700, cursor: 'pointer' }}>I already have an account</button>
+          <details style={{ marginTop: 2 }}>
+            <summary style={{ ...link, listStyle: 'none' }}>More options</summary>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+              {option('pk:flask', 'Try it with sample data', 'Explore with made-up accounts and expenses', sample)}
+              {option('pk:folder', 'Restore a backup file', 'Bring back your data from a backup file', restore)}
+            </div>
+          </details>
+        </>}
       </section>
-
-      {/* Screen 2: the other ways to start */}
-      <section aria-label="Other ways to start" style={{ padding: '8px 22px calc(var(--tb) + 24px)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <span style={{ margin: '0 4px', fontSize: 19, fontWeight: 800, letterSpacing: '-0.02em', color: NAVY }}>Start without an account</span>
-        <span style={{ margin: '-4px 4px 4px', fontSize: 13, lineHeight: 1.4, color: NAVY2 }}>Your data stays only on this phone. You can turn on cloud backup later in Profile.</span>
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 4 }}>
-          <span style={{ margin: '0 4px', fontSize: 13, fontWeight: 600, color: NAVY2 }}>What should we call you?</span>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" autoComplete="given-name" aria-label="Name for starting without an account"
-            style={{ border: 0, borderRadius: 18, background: 'var(--surface)', fontSize: 16, color: TEXT, padding: '15px 18px', outline: 'none' }} />
-        </label>
-        {option('pk:compass', 'Quick tour', 'Try every feature on a practice copy, then keep it or start clean', () => startTour('first', who || 'there'))}
-        {option('pk:sparkle', 'Start from scratch', 'Add your own accounts, pockets and income', () => scratch())}
-        {option('pk:flask', 'Try it with sample data', 'Explore with made-up accounts and expenses', sample)}
-        {option('pk:folder', 'Restore a backup file', 'Bring back your data from a backup file', restore)}
-        <span style={{ marginTop: 6, fontSize: 12, color: NAVY2, opacity: 0.75, textAlign: 'center' }}>You can replay the tour anytime from Profile.</span>
-      </section>
+      {privacyModal}
     </div>
   );
 }

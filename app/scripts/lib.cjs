@@ -29,10 +29,10 @@ async function openApp({ url = 'http://localhost:5199/', size = 'phone', theme =
   await page.route(BLOCK, r => r.abort());
   await page.goto(url);
   await page.waitForTimeout(2500);
-  // Install guide (phone) and welcome screen → sample data.
+  // Install guide (phone) and welcome screen → "More options" → sample data.
   await page.locator('[role=dialog] button').last().click({ timeout: 1500 }).catch(() => {});
   if (desk) await page.locator('summary').first().click({ timeout: 3000 }).catch(() => {});
-  else await page.getByText(/More ways to start|Más formas de empezar/).first().click({ timeout: 5000 });
+  else await page.getByText(/More options|Más opciones/).first().click({ timeout: 5000 });
   await page.waitForTimeout(400);
   await page.getByText(/Try it with sample data|Probar con datos de ejemplo/).first().click({ timeout: 5000 });
   await page.waitForTimeout(1500);
