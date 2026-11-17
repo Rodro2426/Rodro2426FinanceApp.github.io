@@ -5,7 +5,7 @@ import { fmt, num, roundAmt, uid } from '../lib/derive';
 import { todayISO } from '../lib/dates';
 import { groupValue } from '../lib/networth';
 import type { AssetGroup, AssetItem } from '../lib/types';
-import { FieldLabel, GhostDanger, PrimaryBtn, Segmented, Toggle, textInput } from '../ui/bits';
+import { FieldLabel, GhostDanger, Segmented, Toggle, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { SheetFrame } from './Sheet';
 
@@ -34,7 +34,7 @@ export function GroupSheet({ id }: { id: string | null }) {
     closeSheet(); flash(`${base!.name} deleted`);
   };
   return (
-    <SheetFrame title={base ? 'Edit group' : 'New group'}>
+    <SheetFrame title={base ? 'Edit group' : 'New group'} action={{ label: base ? 'Save' : 'Create', onClick: save, disabled: cant }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {!base && <>
           <span style={{ margin: '0 4px 8px', fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Groups hold things you own, or owe, outside your bank accounts: an apartment, a car, a loan. You set their value by hand.</span>
@@ -59,7 +59,6 @@ export function GroupSheet({ id }: { id: string | null }) {
           </span>
           <Toggle on={inNW} onChange={setInNW} label="Count in net worth" />
         </div>
-        <PrimaryBtn onClick={save} disabled={cant} mt={18}>{base ? 'Save changes' : 'Create group'}</PrimaryBtn>
         {base && <GhostDanger onClick={remove}>{confirm ? `Tap again to delete it and its ${base.items.length} item${base.items.length === 1 ? '' : 's'}` : 'Delete group'}</GhostDanger>}
       </div>
     </SheetFrame>
@@ -91,7 +90,7 @@ export function GroupItemSheet({ group, id }: { group: string; id: string | null
     closeSheet(); flash(`${base!.name} removed`);
   };
   return (
-    <SheetFrame title={base ? 'Edit item' : `Add to ${g.name}`}>
+    <SheetFrame title={base ? 'Edit item' : `Add to ${g.name}`} action={{ label: base ? 'Save' : 'Add', onClick: save, disabled: cant }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <Segmented items={[['asset', 'I own it'], ['debt', 'I owe it']]} value={debt ? 'debt' : 'asset'} onPick={k => setDebt(k === 'debt')} mt={4} />
         <FieldLabel m="14px 4px 6px">Name</FieldLabel>
@@ -106,7 +105,6 @@ export function GroupItemSheet({ group, id }: { group: string; id: string | null
         <span style={{ margin: '10px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>
           {g.name} total: <b style={{ color: TEXT }}>{fmt(groupValue(g))} → {fmt(after)}</b>{g.inNetWorth ? ', counted in your net worth.' : ' (not counted in net worth).'} Update the value whenever it changes.
         </span>
-        <PrimaryBtn onClick={save} disabled={cant} mt={16}>{base ? 'Save changes' : 'Add item'}</PrimaryBtn>
         {base && <GhostDanger onClick={remove}>{confirm ? 'Tap again to remove' : 'Remove item'}</GhostDanger>}
         {!base && g.items.length === 0 && <button onClick={() => openSheet({ name: 'group', id: g.id })} style={{ marginTop: 10, border: 0, background: 'transparent', color: 'var(--color-neutral-700)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Edit the group instead</button>}
       </div>

@@ -241,7 +241,8 @@ const cycleFields = (f: { cutDay?: string; payDay?: string; due: string }) => ({
   due: num(f.payDay) ? undefined : f.due.trim() || undefined
 });
 
-function AcctForm({ initial, isNew, onSave, onDelete }: {
+function AcctForm({ title, initial, isNew, onSave, onDelete }: {
+  title: string;
   initial: { name: string; type: AcctType; bal: string; limit: string; due: string; cutDay?: string; payDay?: string; photo: string | null; hue: number; rate: string; cardImg?: string | null; cardText?: 'light' | 'dark'; notMine?: boolean };
   isNew: boolean; onSave: (v: typeof initial) => void; onDelete?: () => void;
 }) {
@@ -260,6 +261,7 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
   const cant = !f.name.trim() || (isCard && !(num(f.limit) > 0));
   const namePh = { bank: 'Davivienda', savings: 'Emergency savings', cash: 'Wallet', card: 'Visa Platinum' }[f.type];
   return (
+    <SheetFrame title={title} action={{ label: isNew ? 'Add' : 'Save', onClick: () => onSave(f), disabled: cant }}>
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       <FieldLabel m={isNew ? '10px 4px 6px' : '0 4px 6px'}>Name</FieldLabel>
       <input value={f.name} placeholder={namePh} onChange={e => set('name')(e.target.value)} style={textInput} />
@@ -338,9 +340,9 @@ function AcctForm({ initial, isNew, onSave, onDelete }: {
       </div>
       <FieldLabel m="14px 4px 6px">Color</FieldLabel>
       <HuePicker value={f.hue} onChange={h => setF(x => ({ ...x, hue: h }))} label="Account color" />
-      <PrimaryBtn onClick={() => onSave(f)} disabled={cant} mt={20}>{isNew ? `Add ${isCard ? 'card' : 'account'}` : 'Save changes'}</PrimaryBtn>
       {onDelete && <GhostDanger onClick={() => (confirmDel ? onDelete() : setConfirmDel(true))}>{confirmDel ? 'Tap again to delete' : 'Delete account'}</GhostDanger>}
     </div>
+    </SheetFrame>
   );
 }
 
@@ -349,8 +351,8 @@ export function EditAcctSheet({ id }: { id: string }) {
   const a = d.accounts.find(x => x.id === id);
   if (!a) return null;
   return (
-    <SheetFrame title="Edit account">
-      <AcctForm isNew={false}
+    <>
+      <AcctForm title="Edit account" isNew={false}
         initial={{ name: a.name, type: a.type, bal: String(roundAmt(a.bal)), limit: String(a.limit || ''), due: a.due || '', cutDay: a.cutDay ? String(a.cutDay) : '', payDay: payDayOf(a) ? String(payDayOf(a)) : '', photo: a.photo || null, hue: a.hue, rate: a.rate ? String(a.rate) : '', cardImg: a.cardImg ?? null, cardText: a.cardText, notMine: a.notMine }}
         onSave={f => {
           const card = f.type === 'card';
@@ -362,22 +364,22 @@ export function EditAcctSheet({ id }: { id: string }) {
           setUI(u => ({ sheet: null, lastAdd: { ...u.lastAdd, acct: u.lastAdd.acct === id ? '' : u.lastAdd.acct } }));
           flash(`${a.name} deleted`);
         }} />
-    </SheetFrame>
+    </>
   );
 }
 
 export function AddAcctSheet() {
   const { data: d } = useApp();
   return (
-    <SheetFrame title="New account">
-      <AcctForm isNew initial={{ name: '', type: 'bank', bal: '', limit: '', due: '', photo: null, hue: HUES[d.accounts.length % HUES.length], rate: '' }}
+    <>
+      <AcctForm title="New account" isNew initial={{ name: '', type: 'bank', bal: '', limit: '', due: '', photo: null, hue: HUES[d.accounts.length % HUES.length], rate: '' }}
         onSave={f => {
           const card = f.type === 'card';
           const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card && f.cardImg ? { cardImg: f.cardImg, cardText: f.cardText } : {}), ...(card ? { limit: num(f.limit), ...cycleFields(f) } : {}), ...(f.notMine ? { notMine: true } : {}), ...rateFields(null, f) };
           setData(x => ({ accounts: [...x.accounts, a] }));
           setUI({ sheet: null, tab: 'accounts' }); flash(`${a.name} added`);
         }} />
-    </SheetFrame>
+    </>
   );
 }
 
@@ -604,7 +606,7 @@ export function NewGoalSheet() {
     closeSheet(); flash(`${name.trim()} created`);
   };
   return (
-    <SheetFrame title="New savings goal">
+    <SheetFrame title="New savings goal" action={{ label: 'Create', onClick: save, disabled: cant }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <FieldLabel m="6px 4px 6px">Name</FieldLabel>
         <input value={name} placeholder="Trip to Cartagena" onChange={e => setName(e.target.value)} autoFocus style={textInput} />
@@ -623,7 +625,6 @@ export function NewGoalSheet() {
         <span style={{ margin: '10px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>
           {t > 0 ? `Save ${fmt(Math.max(0, t - s0) / m)} a month to reach it in ${m === 1 ? '1 month' : m + ' months'}.` : 'How much do you want to save?'}
         </span>
-        <PrimaryBtn onClick={save} disabled={cant} mt={18}>Create goal</PrimaryBtn>
       </div>
     </SheetFrame>
   );

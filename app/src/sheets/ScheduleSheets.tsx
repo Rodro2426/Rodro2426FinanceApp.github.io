@@ -9,7 +9,7 @@ import { ensureTrm, fmtUsd, latestRate, trmFor } from '../lib/trm';
 import { KIND_LABEL, describeDay, ordinal } from '../lib/schedule';
 import { DEFAULT_BEFORE, DEFAULT_DAY, notifyTime } from '../lib/reminders';
 import type { Bill, NotifKind, ScheduleKind } from '../lib/types';
-import { BillBadge, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
+import { BillBadge, FieldLabel, GhostDanger, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
 import { pickPhoto } from '../lib/photo';
 import { makeBackup } from '../lib/backup';
 import { SheetFrame } from './Sheet';
@@ -103,7 +103,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   };
 
   return (
-    <SheetFrame title={base ? `Edit ${KIND_LABEL[base.kind].toLowerCase()}` : 'New scheduled item'}>
+    <SheetFrame title={base ? `Edit ${KIND_LABEL[base.kind].toLowerCase()}` : 'New scheduled item'} action={{ label: base ? 'Save' : 'Add', onClick: save, disabled: cant }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 4, marginTop: 6, background: 'var(--color-neutral-200)', borderRadius: 22, padding: 4 }}>
           {KIND_ITEMS.map(([k, label]) => (
@@ -230,7 +230,6 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           {notifRow('On the day', income ? 'When it arrives' : auto && !notMineOn ? 'When it\'s charged' : 'When it\'s due', onDay, setOnDay, DEFAULT_DAY)}
         </div>
         <span style={{ margin: '6px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Lock-screen notifications (turn them on in Profile). They arrive within a few minutes of the time you pick.</span>
-        <PrimaryBtn onClick={save} disabled={cant} mt={18}>{base ? 'Save changes' : `Schedule ${KIND_LABEL[kind].toLowerCase()}`}</PrimaryBtn>
         {base && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : `Delete ${KIND_LABEL[base.kind].toLowerCase()}`}</GhostDanger>}
         {base && <span style={{ margin: '4px 4px 0', fontSize: 12, color: 'var(--color-neutral-600)', textAlign: 'center' }}>{describeDay(base)}. Past transactions stay in your history.</span>}
       </div>

@@ -5,7 +5,7 @@ import { fmt, num, roundAmt } from '../lib/derive';
 import { addDays, fmtDay, todayISO } from '../lib/dates';
 import { OFFERS, OFFERS_AS_OF, PAYOUT_LABEL, WITHHOLD, addCdt, cashOutCdt, cdtView, cdtsOf, deleteCdt, hueFor, newCdtId, payouts, renewCdt, updateCdt, type Term } from '../lib/cdt';
 import type { Cdt, CdtPayout } from '../lib/types';
-import { Bar, FieldLabel, GhostDanger, PrimaryBtn, Segmented, Toggle, textInput } from '../ui/bits';
+import { Bar, FieldLabel, GhostDanger, Segmented, Toggle, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { SheetFrame } from './Sheet';
 
@@ -66,7 +66,7 @@ export function CdtSheet({ id }: { id: string | null }) {
   };
 
   return (
-    <SheetFrame title={old ? 'Edit CDT' : 'New CDT'}>
+    <SheetFrame title={old ? 'Edit CDT' : 'New CDT'} action={{ label: old ? 'Save' : 'Add', onClick: save, disabled: cant || !!short }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {!old && <Segmented items={[['popular', 'Popular CDTs'], ['custom', 'Custom']]} value={view} onPick={setView} mt={6} />}
 
@@ -178,7 +178,6 @@ export function CdtSheet({ id }: { id: string | null }) {
                 <span style={{ fontSize: 12, color: 'oklch(0.42 0.09 155)' }}>About {fmt(v.perDay || draft.amount * (Math.pow(1 + r / 100, 1 / 365) - 1) * (withholding ? 1 - WITHHOLD : 1))} a day.</span>
               </div>
             )}
-            <PrimaryBtn onClick={save} disabled={cant || !!short}>{old ? 'Save changes' : 'Add CDT'}</PrimaryBtn>
             {!old && <span style={{ margin: '8px 4px 0', fontSize: 12, color: 'var(--color-neutral-600)', textAlign: 'center' }}>This tracks your CDT. To open one for real, do it with your bank.</span>}
           </>
         )}

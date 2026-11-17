@@ -193,7 +193,7 @@ export function TripItemSheet({ trip, id, payment }: { trip: string; id: string 
   const remove = async () => { if (!confirmDel) { setConfirmDel(true); return; } const e = await deleteItem(trip, base!.id); closeSheet(); flash(e ?? 'Deleted'); };
 
   return (
-    <SheetFrame title={base ? (kind === 'payment' ? 'Payment' : 'Edit expense') : kind === 'payment' ? 'Record a payment' : 'Add an expense'}>
+    <SheetFrame title={base ? (kind === 'payment' ? 'Payment' : 'Edit expense') : kind === 'payment' ? 'Record a payment' : 'Add an expense'} action={{ label: busy ? 'Saving…' : base ? 'Save' : 'Add', onClick: save, disabled: cant }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {!base && !payment && <Segmented items={[['expense', 'Expense'], ['payment', 'Payment']]} value={kind} onPick={setKind} mt={2} />}
         <BigAmount value={amt} onChange={setAmt} mt={12} />
@@ -253,7 +253,6 @@ export function TripItemSheet({ trip, id, payment }: { trip: string; id: string 
           </div>
         )}
         {alreadyLogged && <span style={{ margin: '12px 4px 0', fontSize: 12.5, color: 'var(--color-neutral-700)' }}>Your share of this is already in your budget.</span>}
-        <PrimaryBtn onClick={save} disabled={cant} mt={16}>{busy ? 'Saving…' : base ? 'Save changes' : kind === 'payment' ? `Record ${v > 0 ? fmt(v) : 'payment'}` : 'Add expense'}</PrimaryBtn>
         {base && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete it for everyone' : 'Delete'}</GhostDanger>}
         <span style={{ margin: '8px 4px 0', fontSize: 12, color: 'var(--color-neutral-600)', textAlign: 'center' }}>Everyone in the trip sees this. {kind === 'payment' ? 'It doesn\'t move money in your accounts.' : ''}</span>
       </div>

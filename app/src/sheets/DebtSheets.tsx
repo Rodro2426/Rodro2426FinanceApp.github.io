@@ -84,7 +84,7 @@ function DebtForm({ old, dir0, friend, lastAcct, onDone }: { old?: Debt; dir0?: 
     : owed ? (a.type === 'card' ? `${a.name} will owe ${fmt(v)} more. It isn't counted as your spending.` : `${a.name} goes down ${fmt(v)}. It isn't counted as your spending.`)
       : (a.type === 'card' ? `${a.name} will owe ${fmt(v)} less. It isn't counted as income.` : `${a.name} goes up ${fmt(v)}. It isn't counted as income.`);
   return (
-    <SheetFrame title={old ? 'Edit debt' : owed ? 'Someone owes me' : 'I owe someone'}>
+    <SheetFrame title={old ? 'Edit debt' : owed ? 'Someone owes me' : 'I owe someone'} action={{ label: old ? 'Save' : 'Add', onClick: save, disabled: bad }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {old?.share ? <span style={{ margin: '0 4px', fontSize: 13, color: 'var(--color-neutral-700)' }}>{`Shared with ${old.name}: who owes whom can't change. Delete it and make a new one if it's the other way around.`}</span>
           : <Segmented items={[['owed', 'They owe me'], ['owe', 'I owe them']]} value={dir} onPick={setDir} mt={0} />}
@@ -116,7 +116,6 @@ function DebtForm({ old, dir0, friend, lastAcct, onDone }: { old?: Debt; dir0?: 
         </div>
         {!!due && due < draft.date && <span style={{ margin: '6px 4px 0', fontSize: 12.5, color: RED }}>The pay-back date is before the debt started.</span>}
         {name.trim() && v > 0 && <div style={{ marginTop: 12 }}><TimingNote d={d} x={draft} today={today} /></div>}
-        <PrimaryBtn onClick={save} disabled={bad}>{old ? 'Save changes' : 'Save debt'}</PrimaryBtn>
       </div>
     </SheetFrame>
   );

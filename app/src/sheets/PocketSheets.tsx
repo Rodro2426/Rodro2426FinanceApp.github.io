@@ -864,7 +864,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   };
 
   return (
-    <SheetFrame title={isNew ? 'New pocket' : 'Edit pocket'}>
+    <SheetFrame title={isNew ? 'New pocket' : 'Edit pocket'} action={{ label: isNew ? 'Create' : 'Save', onClick: save, disabled: cant }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <FieldLabel m="10px 4px 6px">Name</FieldLabel>
         <input value={name} placeholder="Gym" onChange={e => setName(e.target.value)} style={textInput} />
@@ -929,7 +929,6 @@ export function EditPocketSheet({ id }: { id: string | null }) {
         </div>
         <FieldLabel m="14px 4px 6px">Color</FieldLabel>
         <HuePicker value={hue} onChange={setHue} label="Pocket color" />
-        <PrimaryBtn onClick={save} disabled={cant} mt={18}>{isNew ? 'Create pocket' : 'Save changes'}</PrimaryBtn>
         {!isNew && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : 'Delete pocket'}</GhostDanger>}
       </div>
     </SheetFrame>

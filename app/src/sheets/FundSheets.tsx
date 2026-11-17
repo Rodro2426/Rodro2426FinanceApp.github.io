@@ -83,7 +83,7 @@ export function FundSheet({ id }: { id: string | null }) {
   };
 
   return (
-    <SheetFrame title={old ? 'Edit fund' : 'New investment fund'}>
+    <SheetFrame title={old ? 'Edit fund' : 'New investment fund'} action={{ label: old ? 'Save' : 'Add', onClick: save, disabled: cant }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <FieldLabel m="4px 4px 6px">Fund name</FieldLabel>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Fiducuenta" aria-label="Fund name" style={textInput} />
@@ -157,7 +157,6 @@ export function FundSheet({ id }: { id: string | null }) {
         <FieldLabel m="14px 4px 6px">Notes</FieldLabel>
         <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Account number, goal, contact…" aria-label="Notes" style={{ ...textInput, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.4 }} />
 
-        <PrimaryBtn onClick={save} disabled={cant} mt={18}>{old ? 'Save changes' : 'Add fund'}</PrimaryBtn>
         {!old && cant && name.trim() && <span style={{ margin: '8px 4px 0', fontSize: 12, textAlign: 'center', color: 'var(--color-neutral-600)' }}>Type how much you put in or your current balance.</span>}
         {old && <GhostDanger onClick={() => { if (!confirmDel) { setConfirmDel(true); return; } setData(x => deleteFund(x, old.id)); closeSheet(); flash(`${old.name} deleted · money moved back to your accounts`); }}>{confirmDel ? 'Tap again to delete (undoes its account moves)' : 'Delete fund'}</GhostDanger>}
       </div>

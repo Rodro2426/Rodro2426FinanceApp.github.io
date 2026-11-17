@@ -5,7 +5,7 @@ import { useApp, setData, setUI, flash, getState } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
 import { catOf, chargeAccount, fmt, incomeMoves, num, roundAmt } from '../lib/derive';
 import type { Sheet } from '../lib/types';
-import { BigAmount, FieldLabel, GhostDanger, PickChip, PrimaryBtn, textInput } from '../ui/bits';
+import { BigAmount, FieldLabel, GhostDanger, PickChip, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import { deleteIncome, editIncomeAmount } from '../lib/plan';
 import { incCatOf } from '../lib/reports';
@@ -94,7 +94,7 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
   };
 
   return (
-    <SheetFrame title={kind === 'income' ? 'Edit income' : 'Edit expense'}>
+    <SheetFrame title={kind === 'income' ? 'Edit income' : 'Edit expense'} action={{ label: 'Save', onClick: save, disabled: cant }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <BigAmount value={amt} onChange={setAmt} mt={6} />
         {t.orig && <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>Converted from US${t.orig.amt.toLocaleString('es-CO', { minimumFractionDigits: 2 })} at {fmt(t.orig.rate)}. Changing the amount drops the dollar note.</span>}
@@ -149,7 +149,6 @@ export function EditTxnSheet({ kind, id, back }: { kind: 'expense' | 'income'; i
             {fmt(splitTotal)} of this income was split into {splitNames || 'your pockets'}. Deleting it takes that money back out of those pockets{num(amt) > 0 && num(amt) < splitTotal ? `. With ${fmt(num(amt))}, each pocket's share is reduced to match` : ''}.
           </div>
         )}
-        <PrimaryBtn onClick={save} disabled={cant} mt={18}>Save changes</PrimaryBtn>
         <GhostDanger onClick={remove}>{confirmDel ? (splitTotal > 0 ? `Tap again to delete (and remove ${fmt(splitTotal)} from pockets)` : 'Tap again to delete') : `Delete ${kind}`}</GhostDanger>
       </div>
     </SheetFrame>
