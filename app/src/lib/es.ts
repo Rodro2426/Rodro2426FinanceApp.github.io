@@ -1,6 +1,11 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Where your money goes|En qué se va tu plata
+Spending month by month|Gastos mes a mes
+Money in vs. money out|Lo que entra vs. lo que sale
+Pockets: budget vs. spent|Bolsillos: presupuesto vs. gastado
+Your net worth over time|Tu patrimonio en el tiempo
 More options|Más opciones
 Your privacy|Tu privacidad
 I already have an account|Ya tengo una cuenta

@@ -1,32 +1,24 @@
 import { useState, type ReactNode } from 'react';
 import { useApp, setUI } from '../lib/store';
 import { TEXT } from '../lib/constants';
-import { ctxOf, curSymbol, fmt } from '../lib/derive';
-import { fmtDay, shortDate } from '../lib/dates';
+import { ctxOf, fmt } from '../lib/derive';
+import { fmtDay } from '../lib/dates';
 import {
-  PERIODS, RANGES, allExpenseCats, allIncomeCats, balanceSeries, breakdown, budgetWeeks, cashflow, catOverTime, compareBudgets,
-  expenseCats, incomeCats, monthsIn, netWorthSeries, pieSlices, worthAt, type Period, type Range
+  PERIODS, RANGES, allExpenseCats, cashflow, catOverTime, compareBudgets, expenseCats, monthsIn, netWorthSeries, pieSlices, type Period, type Range
 } from '../lib/reports';
-import { Columns, DataTable, Lines, Meters, Pie, RankedBars, VIZ, compactNum, heat, type Series } from '../ui/charts';
+import { Columns, DataTable, Lines, Meters, Pie, RankedBars, VIZ } from '../ui/charts';
 import * as I from '../ui/icons';
 
 type Icon = 'pie' | 'bars' | 'table' | 'pulse';
-export interface ReportDef { id: string; group: 'Categories' | 'Accounts' | 'Budgets'; title: string; icon: Icon; tone: string }
+export interface ReportDef { id: string; title: string; icon: Icon; tone: string }
+/** The charts people use most, in plain words. Ids stay the same so older links still open. */
 export const REPORTS: ReportDef[] = [
-  { id: 'cat-exp', group: 'Categories', title: 'Compare expense categories', icon: 'pie', tone: '#e5484d' },
-  { id: 'cat-inc', group: 'Categories', title: 'Compare income categories', icon: 'pie', tone: '#30a46c' },
-  { id: 'cattime-exp', group: 'Categories', title: 'Expense category over time', icon: 'bars', tone: '#e5484d' },
-  { id: 'cattime-inc', group: 'Categories', title: 'Income category over time', icon: 'bars', tone: '#30a46c' },
-  { id: 'break-exp', group: 'Categories', title: 'Breakdown expenses over time', icon: 'table', tone: '#e5484d' },
-  { id: 'break-inc', group: 'Categories', title: 'Breakdown incomes over time', icon: 'table', tone: '#30a46c' },
-  { id: 'networth', group: 'Accounts', title: 'Net worth over time', icon: 'pulse', tone: '#3fb6c9' },
-  { id: 'balance', group: 'Accounts', title: 'Balance over time', icon: 'pulse', tone: '#ef8f3c' },
-  { id: 'compare-bal', group: 'Accounts', title: 'Compare balances', icon: 'pie', tone: '#e5484d' },
-  { id: 'compare-bal-time', group: 'Accounts', title: 'Compare balances over time', icon: 'bars', tone: '#e7b416' },
-  { id: 'cashflow', group: 'Accounts', title: 'Cashflow (incomes / expenses)', icon: 'bars', tone: '#30a46c' },
-  { id: 'compare-budgets', group: 'Budgets', title: 'Compare budgets', icon: 'pie', tone: '#e5484d' },
-  { id: 'budget-time', group: 'Budgets', title: 'Budget balance over time', icon: 'bars', tone: '#e7b416' }
-];
+  { id: 'cat-exp', title: 'Where your money goes', icon: 'pie', tone: '#e5484d' },
+  { id: 'cattime-exp', title: 'Spending month by month', icon: 'bars', tone: '#ef8f3c' },
+  { id: 'cashflow', title: 'Money in vs. money out', icon: 'bars', tone: '#30a46c' },
+  { id: 'compare-budgets', title: 'Pockets: budget vs. spent', icon: 'pie', tone: '#e7b416' },
+  { id: 'networth', title: 'Your net worth over time', icon: 'pulse', tone: '#3fb6c9' }
+]
 
 export function ReportIcon({ icon, tone, size = 34 }: { icon: Icon; tone: string; size?: number }) {
   const s = { fill: 'none', stroke: '#fff', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -42,27 +34,19 @@ export function ReportIcon({ icon, tone, size = 34 }: { icon: Icon; tone: string
   );
 }
 
-/** The grouped list of reports shown in Insights. */
+/** The list of reports shown in Insights. */
 export function ReportList() {
-  const groups: ReportDef['group'][] = ['Categories', 'Accounts', 'Budgets'];
   return (
-    <>
-      {groups.map(g => (
-        <div key={g} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <span style={{ padding: '6px 4px 0', fontSize: 15, fontWeight: 700, color: 'var(--color-neutral-700)' }}>{g}</span>
-          <div style={{ background: 'var(--surface)', borderRadius: 24, padding: '2px 0' }}>
-            {REPORTS.filter(r => r.group === g).map((r, i, arr) => (
-              <button key={r.id} onClick={() => setUI({ page: `report:${r.id}` })} className="hv-n100"
-                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', border: 0, background: 'transparent', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
-                <ReportIcon icon={r.icon} tone={r.tone} />
-                <span style={{ flex: 1, fontSize: 15.5, fontWeight: 500, padding: '6px 0', borderBottom: i === arr.length - 1 ? 0 : '1px solid var(--color-neutral-200)' }}>{r.title}</span>
-                <I.Chevron size={16} color="var(--color-neutral-500)" />
-              </button>
-            ))}
-          </div>
-        </div>
+    <div style={{ background: 'var(--surface)', borderRadius: 24, padding: '2px 0' }}>
+      {REPORTS.map((r, i, arr) => (
+        <button key={r.id} onClick={() => setUI({ page: `report:${r.id}` })} className="hv-n100"
+          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', border: 0, background: 'transparent', cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+          <ReportIcon icon={r.icon} tone={r.tone} />
+          <span style={{ flex: 1, fontSize: 15.5, fontWeight: 500, padding: '6px 0', borderBottom: i === arr.length - 1 ? 0 : '1px solid var(--color-neutral-200)' }}>{r.title}</span>
+          <I.Chevron size={16} color="var(--color-neutral-500)" />
+        </button>
       ))}
-    </>
+    </div>
   );
 }
 
@@ -82,8 +66,6 @@ function Picker({ label, value, options, onChange }: { label: string; value: str
   );
 }
 const card = (children: ReactNode, label?: string) => <div aria-label={label} style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>;
-/** Short money for wide month-by-month tables: $469K, $1,4M. */
-const short = (n: number) => (n < 0 ? '−' : '') + curSymbol() + compactNum(Math.abs(n));
 const pct = (v: number, t: number) => (t ? `${Math.round((v / t) * 100)}%` : '—');
 
 /** One report, full screen. */
@@ -93,10 +75,8 @@ export default function ReportPage({ id }: { id: string }) {
   const def = REPORTS.find(r => r.id === id) ?? REPORTS[0];
   const [period, setPeriod] = useState<Period>('month');
   const [range, setRange] = useState<Range>(6);
-  const expCats = allExpenseCats(d), incCats = allIncomeCats(d);
+  const expCats = allExpenseCats(d);
   const [cat, setCat] = useState<string>('');
-  const [acct, setAcct] = useState<string>(d.accounts[0]?.id ?? '');
-  const [pocket, setPocket] = useState<string>('');
   const [scope, setScope] = useState<'week' | 'month'>('week');
   const [view, setView] = useState<'bars' | 'pie'>(() => { try { return localStorage.getItem('pockets-cat-view') === 'pie' ? 'pie' : 'bars'; } catch { return 'bars'; } });
   const pickView = (v: 'bars' | 'pie') => { setView(v); try { localStorage.setItem('pockets-cat-view', v); } catch { /* not saved */ } };
@@ -108,8 +88,8 @@ export default function ReportPage({ id }: { id: string }) {
   const rangeChips = chipRow(RANGES.map(([k, l]) => <Chip key={k} on={range === k} onClick={() => setRange(k)}>{l}</Chip>));
   let body: ReactNode = null;
 
-  if (id === 'cat-exp' || id === 'cat-inc') {
-    const rows = id === 'cat-exp' ? expenseCats(d, c, period) : incomeCats(d, c, period);
+  if (id === 'cat-exp') {
+    const rows = expenseCats(d, c, period);
     const total = rows.reduce((a, r) => a + r.sum, 0);
     body = <>
       {periodChips}
@@ -122,8 +102,8 @@ export default function ReportPage({ id }: { id: string }) {
       </>, 'Chart')}
       {rows.length > 0 && card(<DataTable head={['Category', '#', 'Total', '%']} rows={rows.map(r => [r.name, r.n, fmt(r.sum), pct(r.sum, total)])} foot={['Total', rows.reduce((a, r) => a + r.n, 0), fmt(total), '100%']} />, 'Table')}
     </>;
-  } else if (id === 'cattime-exp' || id === 'cattime-inc') {
-    const kind = id === 'cattime-exp' ? 'expense' : 'income', names = kind === 'expense' ? expCats : incCats;
+  } else if (id === 'cattime-exp') {
+    const kind = 'expense', names = expCats;
     const values = catOverTime(d, months, kind, cat || null), total = values.reduce((a, x) => a + x, 0);
     body = <>
       <Picker label="Category" value={cat} onChange={setCat} options={[['', `All ${kind === 'expense' ? 'expenses' : 'income'}`], ...names.map(n => [n, n] as [string, string])]} />
@@ -132,16 +112,6 @@ export default function ReportPage({ id }: { id: string }) {
       {card(<DataTable head={['Month', 'Total']} rows={months.map((m, i) => [monthShort(m, true), fmt(values[i])]).reverse()} foot={['Total', fmt(total)]} />, 'Table')}
       <span style={{ margin: '0 4px', fontSize: 12.5, color: 'var(--color-neutral-700)' }}>Monthly average: <b>{fmt(total / Math.max(1, months.length))}</b></span>
     </>;
-  } else if (id === 'break-exp' || id === 'break-inc') {
-    const b = breakdown(d, months, id === 'break-exp' ? 'expense' : 'income');
-    const max = Math.max(0, ...b.rows.flatMap(r => r.values));
-    body = <>
-      {rangeChips}
-      {card(b.rows.length ? <DataTable head={['Category', ...labels, 'Total']}
-        rows={b.rows.map(r => [r.name, ...r.values.map((v, i) => <span key={i} style={{ display: 'inline-block', minWidth: 44, padding: '3px 5px', borderRadius: 6, ...heat(v, max) }}>{v ? short(v) : '—'}</span>), short(r.total)])}
-        foot={['Total', ...b.totals.map(t => short(t)), short(b.grand)]} /> : <Empty />, 'Table')}
-      <Note>Darker cells are bigger amounts (K = thousand, M = million). Scroll the table sideways for more months; open the category over time report for exact amounts.</Note>
-    </>;
   } else if (id === 'networth') {
     const values = netWorthSeries(d, months, c);
     body = <>
@@ -149,39 +119,6 @@ export default function ReportPage({ id }: { id: string }) {
       {card(<Lines labels={labels} series={[{ name: 'Net worth', values, color: S[0] }]} fmt={fmt} />, 'Chart')}
       {card(<DataTable head={['Month end', 'Net worth', 'Change']} rows={months.map((m, i) => [monthShort(m, true), fmt(values[i]), i ? fmt(values[i] - values[i - 1], true) : '—']).reverse()} />, 'Table')}
       <Note>Accounts minus card debt{d.settings.excludeInvestments ? '' : ', plus stocks and open CDTs'}{(d.groups ?? []).some(g => g.inNetWorth) ? ', plus your groups at their current value' : ''}, at the end of each month (today for this month). Rebuilt from your transactions; past stock values use today's prices.</Note>
-    </>;
-  } else if (id === 'balance') {
-    const a = d.accounts.find(x => x.id === acct) ?? d.accounts[0];
-    const values = a ? balanceSeries(d, a.id, months, c).map(v => (a.type === 'card' ? -v : v)) : [];
-    body = <>
-      <Picker label="Account" value={a?.id ?? ''} onChange={setAcct} options={d.accounts.map(x => [x.id, x.name])} />
-      {rangeChips}
-      {a ? <>
-        {card(<Lines labels={labels} series={[{ name: a.name, values, color: S[0] }]} fmt={fmt} />, 'Chart')}
-        {card(<DataTable head={['Month end', a.type === 'card' ? 'Owed' : 'Balance']} rows={months.map((m, i) => [monthShort(m, true), fmt(values[i])]).reverse()} />, 'Table')}
-      </> : <Empty />}
-    </>;
-  } else if (id === 'compare-bal') {
-    const rows = d.accounts.map(a => ({ label: a.name, value: worthAt(d, a.id, c.today), note: a.type === 'card' ? 'owed' : undefined })).sort((x, y) => y.value - x.value);
-    const total = rows.reduce((s, r) => s + r.value, 0);
-    body = <>
-      {card(<>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}><span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Net of all accounts</span><span style={{ fontSize: 24, fontWeight: 700 }}>{fmt(total)}</span></div>
-        {rows.length ? <RankedBars rows={rows} color={S[0]} fmt={fmt} /> : <Empty />}
-      </>, 'Chart')}
-      {rows.length > 0 && card(<DataTable head={['Account', 'Balance', 'Share of assets']} rows={rows.map(r => [r.label, fmt(r.value), r.value > 0 ? pct(r.value, rows.filter(x => x.value > 0).reduce((s, x) => s + x.value, 0)) : '—'])} foot={['Net', fmt(total), '']} />, 'Table')}
-      <Note>Cards show what you owe as a negative amount.</Note>
-    </>;
-  } else if (id === 'compare-bal-time') {
-    // Color follows the account (its position in your list), never its rank. Past 7 accounts, the rest fold into Other.
-    const accts = d.accounts.slice(0, 7), rest = d.accounts.slice(7);
-    const series: Series[] = accts.map((a, i) => ({ name: a.name, color: S[i], values: months.map(m => worthAt(d, a.id, monthEnd(m))) }));
-    if (rest.length) series.push({ name: 'Other', color: '#9b9797', values: months.map(m => rest.reduce((s, a) => s + worthAt(d, a.id, monthEnd(m)), 0)) });
-    body = <>
-      {rangeChips}
-      {card(series.length ? <Lines labels={labels} series={series} fmt={fmt} /> : <Empty />, 'Chart')}
-      {series.length > 0 && card(<DataTable head={['Account', ...labels]} rows={series.map(s => [s.name, ...s.values.map(v => short(v))])} />, 'Table')}
-      <Note>Balance at the end of each month. Cards show what you owe as a negative amount.</Note>
     </>;
   } else if (id === 'cashflow') {
     const rows = cashflow(d, months);
@@ -200,18 +137,7 @@ export default function ReportPage({ id }: { id: string }) {
       {card(rows.length ? <Meters rows={rows.map(r => ({ label: r.name, used: r.spent, total: r.budget }))} fmt={fmt} /> : <Empty text="No pockets yet." />, 'Chart')}
       {rows.length > 0 && card(<DataTable head={['Pocket', 'Budget', 'Spent', 'Left', 'Used']} rows={rows.map(r => [r.name, fmt(r.budget), fmt(r.spent), fmt(r.left), pct(r.spent, r.budget)])} foot={['Total', fmt(tb), fmt(ts), fmt(tb - ts), pct(ts, tb)]} />, 'Table')}
     </>;
-  } else if (id === 'budget-time') {
-    const weeks = budgetWeeks(d, c, 8, pocket || null);
-    const wl = weeks.map(w => shortDate(w.week));
-    body = <>
-      <Picker label="Pocket" value={pocket} onChange={setPocket} options={[['', 'All pockets'], ...d.pockets.map(p => [p.id, p.name] as [string, string])]} />
-      {card(<Columns labels={wl} series={[{ name: 'Left at the end of the week', values: weeks.map(w => w.left), color: S[0] }]} fmt={v => fmt(v)} />, 'Chart')}
-      {card(<DataTable head={['Week of', 'Budget', 'Spent', 'Left']} rows={weeks.map((w, i) => [shortDate(w.week) + (i === weeks.length - 1 ? ' (now)' : ''), fmt(w.budget), fmt(w.spent), fmt(w.left)]).reverse()} />, 'Table')}
-      <Note>What was left in the pocket at the end of each week; below zero means it went over. Past weeks use each pocket's current weekly budget.</Note>
-    </>;
   }
-
-  function monthEnd(m: string) { return m === c.month ? c.today : `${m}-${String(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 0).getDate()).padStart(2, '0')}`; }
 
   return <SubPage title={def.title} icon={<ReportIcon icon={def.icon} tone={def.tone} size={30} />} back={() => setUI({ page: 'reports' })} backLabel="Back to reports">{body}</SubPage>;
 }
