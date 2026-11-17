@@ -15,7 +15,7 @@ export const dropVeil = () => { held = false; tell(); };
 /** Called once at start-up when the app opens on saved data: cover it until the cloud copy is in. */
 export const holdOnOpen = () => { held = true; label = ''; };
 
-const MIN_MS = 450, MAX_MS = 3000, FADE_MS = 260;
+const MIN_MS = 250, MAX_MS = 1800, FADE_MS = 220;
 const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
 const frame = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 const imagesLoaded = () => Promise.all([...document.images].filter(i => !i.complete).map(i => new Promise(r => { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }); })));

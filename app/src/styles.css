@@ -5,7 +5,7 @@
 :root {
   /* Cards are clear glass: mostly see-through white, blurred (see the glass rules below). Things that float over
      other content use --surface-solid; rows that hide buttons under them use --surface-row (the glass's look, solid). */
-  --surface: rgba(255,255,255,0.32);
+  --surface: rgba(255,255,255,0.58);
   --surface-solid: #fff;
   --surface-row: color-mix(in srgb, var(--page) 68%, #fff);
   --glass-edge: rgba(255,255,255,0.55);
@@ -200,7 +200,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 /* Same tokens, dark values. Set by Profile > Appearance (System follows the iPhone setting). */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --surface: rgba(40,40,38,0.48);
+  --surface: rgba(40,40,38,0.72);
   --surface-solid: #1d1c1b;
   --surface-row: color-mix(in srgb, var(--page) 52%, #282826);
   --glass-edge: rgba(255,255,255,0.08);
@@ -484,11 +484,12 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .arrive-mark { animation: arrive-breathe 1.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .arrive-mark { animation: none; } }
 
-/* ---------- Clear glass cards ----------
-   Every box drawn with var(--surface) lets the page show through, blurred, with a thin light edge.
-   Only the outermost box blurs (a blur inside a blur adds nothing and costs a lot on iPhone). */
-[style*="var(--surface)"] { -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5); box-shadow: inset 0 0 0 1px var(--glass-edge), 0 0 0 1px var(--glass-line); }
-[style*="var(--surface)"] [style*="var(--surface)"] { -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* ---------- Glass cards ----------
+   Every box drawn with var(--surface) lets the page show softly through, with a thin light edge.
+   No live blur on cards: a dozen blurred layers re-drawn on every scroll, swipe and sheet made the iPhone drop
+   frames (measured: 10 slow frames per swipe+sheet+scroll with it, 1 without). Only the few floating parts blur
+   (tab bar, + button, banner). */
+[style*="var(--surface)"] { box-shadow: inset 0 0 0 1px var(--glass-edge), 0 0 0 1px var(--glass-line); }
 /* Things floating over other content stay solid so what's under them doesn't show through. */
 [style*="var(--surface)"][style*="position: absolute"], [style*="var(--surface)"][style*="position: fixed"], [style*="var(--surface)"][style*="position: sticky"] { background: var(--surface-solid) !important; }
 /* Text boxes keep a visible outline now that their fill is see-through. */
