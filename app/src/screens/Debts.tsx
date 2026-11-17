@@ -1,6 +1,6 @@
 // Friends & trips: the Debts tab, the money summary at the top, and the Home block.
 import { glyph } from '../ui/PocketIcons';
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import { useApp, setUI, openSheet, flash } from '../lib/store';
 import { LINE, RED, TEXT } from '../lib/constants';
 import { ctxOf, fmt } from '../lib/derive';
@@ -27,22 +27,6 @@ export function tripTotals() {
 /** Debts with one friend: + they owe you, − you owe them. */
 export const friendDebt = (d: Data, uid: string) => debtsOf(d).filter(x => x.friend === uid && isOpen(x)).reduce((a, x) => a + (x.dir === 'owed' ? leftOf(x) : -leftOf(x)), 0);
 
-/** A short explanation of what a tab is for. */
-const PURPOSE_ICONS: Record<string, ReactNode> = {
-  debts: <><path d="M7 7h11l-3-3M17 17H6l3 3" /></>,
-  trips: <><rect x="4" y="8" width="16" height="12" rx="3" /><path d="M9 8V5h6v3M4 13h16" /></>,
-  friends: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.7.8 2.8 2.6 3 5.2" /></>
-};
-/** A short line that says what a section is for, with a small drawn icon (debts, trips or friends). */
-export function Purpose({ icon, children }: { icon: 'debts' | 'trips' | 'friends'; children: ReactNode }) {
-  return (
-    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '2px 6px' }}>
-      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-neutral-700)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none', marginTop: 1 }}>{PURPOSE_ICONS[icon]}</svg>
-      <span style={{ fontSize: 13, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{children}</span>
-    </div>
-  );
-}
-
 /* ---------------- Summary at the top of Friends & trips ---------------- */
 export function MoneyBetween() {
   const { data: d } = useApp();
@@ -50,17 +34,18 @@ export function MoneyBetween() {
   const dt = debtTotals(d), tt = tripTotals();
   const owed = dt.owedToMe + tt.owedToMe, owe = dt.iOwe + tt.iOwe;
   const sub = (a: number, b: number) => (a > 0.004 && b > 0.004 ? `${fmt(a)} in debts · ${fmt(b)} in trips` : b > 0.004 ? 'From trips' : a > 0.004 ? 'From debts' : 'Nothing right now');
-  const tile = (label: string, v: number, color: string, s: string) => (
-    <div style={{ background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+  const half = (label: string, v: number, color: string, s: string) => (
+    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>{label}</span>
-      <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em', color: v > 0.004 ? color : TEXT }}>{fmt(v)}</span>
+      <span style={{ fontSize: 21, fontWeight: 800, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums', color: v > 0.004 ? color : TEXT }}>{fmt(v)}</span>
       <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s}</span>
     </div>
   );
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 10 }}>
-      {tile('People owe you', owed, GREEN, sub(dt.owedToMe, tt.owedToMe))}
-      {tile('You owe', owe, RED, sub(dt.iOwe, tt.iOwe))}
+    <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 16px', display: 'flex', gap: 14 }}>
+      {half('People owe you', owed, GREEN, sub(dt.owedToMe, tt.owedToMe))}
+      <span aria-hidden="true" style={{ width: 1, background: LINE, flex: 'none' }} />
+      {half('You owe', owe, RED, sub(dt.iOwe, tt.iOwe))}
     </div>
   );
 }
@@ -76,7 +61,7 @@ export function shareLabel(x: Debt): { text: string; color: string } | null {
 }
 
 /** Debts friends sent you: accept to add it to your Debts (from your side), or decline. */
-function DebtRequests() {
+export function DebtRequests() {
   const so = useSocial();
   const [busy, setBusy] = useState<string | null>(null);
   const me = myUid();
@@ -113,7 +98,7 @@ function DebtRequests() {
   );
 }
 
-function DebtRow({ x, last, d, today }: { x: Debt; last: boolean; d: Data; today: string }) {
+export function DebtRow({ x, last, d, today }: { x: Debt; last: boolean; d: Data; today: string }) {
   const left = leftOf(x), owed = x.dir === 'owed', t = debtTiming(d, x, today), done = !isOpen(x);
   const sub = done ? `Paid back ${shortDate(settledOn(x) ?? x.date)}` : x.due ? `${owed ? 'Pays you back by' : 'Pay back by'} ${shortDate(x.due)}` : 'No pay-back date';
   const share = shareLabel(x);
@@ -136,40 +121,13 @@ function DebtRow({ x, last, d, today }: { x: Debt; last: boolean; d: Data; today
   );
 }
 
-export function DebtList() {
+/** How open debts touch your pockets and net worth (under the people list). */
+export function DebtNotes() {
   const { data: d } = useApp();
   const today = todayISO(), c = ctxOf(d);
-  const all = debtsOf(d), open = all.filter(isOpen), done = all.filter(x => !isOpen(x));
-  const owed = open.filter(x => x.dir === 'owed').sort((a, b) => (a.due ?? '9') < (b.due ?? '9') ? -1 : 1);
-  const owe = open.filter(x => x.dir === 'owe').sort((a, b) => (a.due ?? '9') < (b.due ?? '9') ? -1 : 1);
   const tot = debtTotals(d), out = debtOutlook(d, today), sum = monthSummary(d, c);
-  const [showDone, setShowDone] = useState(false);
-  const section = (title: string, total: number, color: string, list: Debt[], empty: string) => (
-    <div style={card}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-        <span style={{ fontSize: 15, fontWeight: 700 }}>{title}</span>
-        {list.length > 0 && <span style={{ fontSize: 15, fontWeight: 800, color }}>{fmt(total)}</span>}
-      </div>
-      {list.length ? <div style={{ display: 'flex', flexDirection: 'column' }}>{list.map((x, i) => <DebtRow key={x.id} x={x} d={d} today={today} last={i === list.length - 1} />)}</div>
-        : <span style={{ fontSize: 13.5, color: 'var(--color-neutral-700)' }}>{empty}</span>}
-    </div>
-  );
-  const addBtn = (dir: 'owed' | 'owe', label: string) => (
-    <button onClick={() => openSheet({ name: 'debt', id: null, dir })} className="hv-n200" style={{ height: 50, borderRadius: 18, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-      <I.Plus size={16} />{label}
-    </button>
-  );
   const affects = out.late > 0.004 || out.oweSoon > 0.004;
   return <>
-    <Purpose icon="debts">Money between you and one person: you lent it, paid for them, or borrowed. It doesn't count as spending. With a friend who uses Pockets, they get a request to accept it and you both see changes and payments.</Purpose>
-    <DebtRequests />
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 8 }}>
-      {addBtn('owed', 'Someone owes me')}
-      {addBtn('owe', 'I owe someone')}
-    </div>
-    {section('Owed to you', tot.owedToMe, GREEN, owed, 'Nobody owes you money right now.')}
-    {section('You owe', tot.iOwe, RED, owe, "You don't owe anyone right now.")}
-
     {affects && (
       <div style={{ ...card, gap: 8 }}>
         <span style={{ fontSize: 15, fontWeight: 700 }}>Your pockets</span>
@@ -191,15 +149,6 @@ export function DebtList() {
       </button>
     )}
 
-    {done.length > 0 && (
-      <div style={card}>
-        <button onClick={() => setShowDone(s => !s)} aria-expanded={showDone} style={{ display: 'flex', alignItems: 'center', gap: 8, border: 0, background: 'transparent', color: TEXT, padding: 0, cursor: 'pointer', fontSize: 15, fontWeight: 700 }}>
-          <span style={{ flex: 1, textAlign: 'left' }}>{`Paid back · ${done.length}`}</span>
-          <span style={{ transform: showDone ? 'rotate(90deg)' : 'none', transition: 'transform .2s', display: 'flex' }}><I.Chevron size={16} color="var(--color-neutral-500)" /></span>
-        </button>
-        {showDone && <div style={{ display: 'flex', flexDirection: 'column' }}>{done.map((x, i) => <DebtRow key={x.id} x={x} d={d} today={today} last={i === done.length - 1} />)}</div>}
-      </div>
-    )}
   </>;
 }
 

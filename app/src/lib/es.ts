@@ -1,6 +1,38 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Add a debt, trip or friend|Agregar una deuda, un viaje o un amigo
+Trips and people|Viajes y personas
+Requests, your trips, and everyone you share money with|Solicitudes, tus viajes y todas las personas con las que compartes plata
+New trip|Nuevo viaje
+Nothing between you|Nada pendiente entre ustedes
+Request sent|Solicitud enviada
+Lent|Prestado
+Borrowed|Te prestaron
+owes you|te debe
+you owe|debes
+Even|A paz y salvo
+Add a debt|Agregar una deuda
+Remove friend|Quitar amigo
+Cancel the friend request|Cancelar la solicitud de amistad
+What happened?|¿Qué pasó?
+I lent money or paid for someone|Presté plata o pagué por alguien
+They owe you. It doesn’t count as your spending.|Te deben. No cuenta como tu gasto.
+Someone lent me money|Alguien me prestó plata
+You owe them, with a pay-back date if you want.|Le debes, con fecha para pagar si quieres.
+Split a trip or a bill|Dividir un viaje o una cuenta
+A group adds what they paid. Pockets says who pays whom.|Un grupo agrega lo que pagó. Pockets dice quién le paga a quién.
+A group adds what they paid. Needs a Pockets account.|Un grupo agrega lo que pagó. Necesita una cuenta de Pockets.
+By email, if they use Pockets.|Por correo, si usa Pockets.
+By email, if they use Pockets. Needs a Pockets account.|Por correo, si usa Pockets. Necesita una cuenta de Pockets.
+They need a Pockets account with a confirmed email. They'll see your request at the top of Friends & trips.|Necesita una cuenta de Pockets con el correo confirmado. Verá tu solicitud arriba en Amigos y viajes.
+Money between you and other people|La plata entre tú y otras personas
+Lent someone money, borrowed, or split a trip or a bill? Add it here and Pockets keeps the count, without counting it as spending.|¿Le prestaste plata a alguien, te prestaron, o dividieron un viaje o una cuenta? Agrégalo aquí y Pockets lleva la cuenta, sin contarlo como gasto.
+Add the first one|Agregar el primero
+There's nothing with this person anymore.|Ya no hay nada con esta persona.
+Trip · pays you to settle up|Viaje · te paga para quedar a paz y salvo
+Trip · you pay to settle up|Viaje · le pagas para quedar a paz y salvo
+Tap Refresh to see what others added. Tap an expense to edit it or add your share to your budget.|Toca Actualizar para ver lo que agregaron los demás. Toca un gasto para editarlo o sumar tu parte a tu presupuesto.
 Weekly|Semanal
 Monthly pockets|Bolsillos mensuales
 Monthly|Mensual
@@ -1455,7 +1487,6 @@ Say hi|Saluda
 Unread|Sin leer
 Add a friend|Agregar un amigo
 Friend's email|Correo de tu amigo
-They need a Pockets account with a confirmed email. They'll see your request in their Friends tab.|Necesita una cuenta de Pockets con el correo confirmado. Verá tu solicitud en su pestaña Amigos.
 Requests for you|Solicitudes para ti
 Wants to be your friend|Quiere ser tu amigo
 Accept|Aceptar
@@ -1479,7 +1510,6 @@ or link a guest|o vincular un invitado
 Chat|Chat
 Activity|Actividad
 Nothing yet. Add the first expense.|Aún nada. Agrega el primer gasto.
-Tap Refresh on the Trips page to see what others added. Tap an expense to edit it or add your share to your budget.|Toca Actualizar en Viajes para ver lo que agregaron los demás. Toca un gasto para editarlo o agregar tu parte a tu presupuesto.
 Trip deleted|Viaje eliminado
 Delete trip|Eliminar viaje
 You left the trip|Saliste del viaje
@@ -1920,6 +1950,8 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+{0} wants to be your friend|{0} quiere ser tu amigo
+Nothing open with {0}. Add a debt when one of you pays for the other.|No hay nada pendiente con {0}. Agrega una deuda cuando uno pague por el otro.
 {0} moves to {1}'s next month|{0} pasa al próximo mes de {1}
 {0} next month · only this once|{0} el próximo mes · solo esta vez
 {0} a month|{0} al mes

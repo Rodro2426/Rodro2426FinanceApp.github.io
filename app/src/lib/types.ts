@@ -156,7 +156,9 @@ export type Sheet =
   | { name: 'acct'; id: string }
   | { name: 'editAcct'; id: string }
   | { name: 'addAcct' }
-  | { name: 'debt'; id: string | null; dir?: 'owed' | 'owe'; friend?: { uid: string; name: string } }
+  | { name: 'debt'; id: string | null; dir?: 'owed' | 'owe'; friend?: { uid: string; name: string }; person?: string }
+  | { name: 'friendNew' }
+  | { name: 'friendAdd' }
   | { name: 'debtPay'; id: string }
   | { name: 'pay'; id: string }
   | { name: 'adjust'; id: string }
@@ -187,7 +189,7 @@ export interface UI {
   toast: string | null;
   lastAdd: { pocket: string; acct: string };
   /** A full-screen page shown over the tabs. */
-  page?: 'investments' | 'categories' | 'reports' | `report:${string}` | `trip:${string}` | `tripstats:${string}` | `tripchat:${string}` | `dm:${string}` | null;
+  page?: 'investments' | 'categories' | 'reports' | `report:${string}` | `trip:${string}` | `tripstats:${string}` | `tripchat:${string}` | `dm:${string}` | `person:${string}` | null;
   /** First open on this device: choose sample data, a fresh start or a backup. */
   welcome?: boolean;
   /** Home-screen install guide: shown in iPhone Safari, or opened from Profile. */

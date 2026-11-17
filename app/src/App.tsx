@@ -39,7 +39,7 @@ import GuidedTour from './screens/GuidedTour';
 import Investments from './screens/Investments';
 import ReportPage, { ReportsIndex } from './screens/Reports';
 import CategoriesPage from './screens/Categories';
-import SocialPage, { TripPage } from './screens/Social';
+import SocialPage, { FriendAddSheet, PersonPage, TripPage, WhatHappenedSheet } from './screens/Social';
 import { DmPage, TripChatPage, TripStatsPage } from './screens/TripExtras';
 import { TripItemSheet, TripNewSheet, TripPeopleSheet } from './sheets/TripSheets';
 import { HoldingSheet, PriceSettingsSheet, TradeSheet } from './sheets/InvestSheets';
@@ -90,7 +90,9 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'acct': return <AcctSheet id={sheet.id} />;
     case 'editAcct': return <EditAcctSheet id={sheet.id} />;
     case 'addAcct': return <AddAcctSheet />;
-    case 'debt': return <DebtSheet id={sheet.id} dir={sheet.dir} friend={sheet.friend} />;
+    case 'debt': return <DebtSheet id={sheet.id} dir={sheet.dir} friend={sheet.friend} name={sheet.person} />;
+    case 'friendNew': return <WhatHappenedSheet />;
+    case 'friendAdd': return <FriendAddSheet />;
     case 'debtPay': return <DebtPaySheet id={sheet.id} />;
     case 'pay': return <PaySheet id={sheet.id} />;
     case 'adjust': return <AdjustSheet id={sheet.id} />;
@@ -312,6 +314,7 @@ export default function App() {
       {ui.page?.startsWith('tripstats:') && <TripStatsPage id={ui.page.slice(10)} />}
       {ui.page?.startsWith('tripchat:') && <TripChatPage id={ui.page.slice(9)} />}
       {ui.page?.startsWith('dm:') && <DmPage uid={ui.page.slice(3)} />}
+      {ui.page?.startsWith('person:') && <PersonPage k={ui.page.slice(7)} />}
       </div>
 
       {!ui.sheet && !ui.tour && <div className="conflict-slot" style={{ position: 'absolute', left: 14, right: 14, top: 'calc(var(--top) - 6px)', zIndex: 32 }}><ConflictChoice /></div>}

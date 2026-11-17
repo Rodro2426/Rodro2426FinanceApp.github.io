@@ -75,6 +75,7 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 - Net worth: what you owe always counts; the "Include what people owe you" switch sits in Accounts → Net worth, next to Include investments.
 - Pockets: money owed to you counts if it comes back before you need it (the card's due date when lent with a card, else the end of the month); what you owe counts if due this month. "Adjust my pockets" opens Cover the shortfall.
 - Friends & trips page redesigned: money summary on top, then Debts / Trips / Friends tabs, each with a one-line purpose. Friends show what they owe you and have a "Debt" button. Home has a "Friends & trips" block.
+- Friends & trips, people first (2026-11-17): no tabs. Totals, friend and debt requests, a row of trip cards, then one list of people where each person shows one number (open debts plus their part of each trip's settle-up, `lib/people.ts`). Tapping a person opens `person:<key>` with their debts, trips, Message and Add a debt. The + button opens "What happened?" (lent, borrowed, split a trip, add a friend). Not built from the mock: a "Remind" button.
 
 **Social** (needs a Firebase account)
 - Friends by email (verified emails only).

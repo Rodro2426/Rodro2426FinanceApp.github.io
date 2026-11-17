@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { glyph } from '../ui/PocketIcons';
-import { useApp, setUI, openSheet, flash } from '../lib/store';
+import { useApp, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { fmt, moneyScale } from '../lib/derive';
 import { shortDate } from '../lib/dates';
@@ -11,11 +11,14 @@ import {
   type Trip
 } from '../lib/social';
 import { balances, personTotals, settleUp, sharesOf } from '../lib/settle';
-import { Fill, Segmented, textInput } from '../ui/bits';
+import { Fill, textInput } from '../ui/bits';
 import { Blocks } from '../ui/Blocks';
 import * as I from '../ui/icons';
 import { isOpen } from '../lib/debts';
-import { DebtList, MoneyBetween, Purpose, friendDebt } from './Debts';
+import { DebtNotes, DebtRequests, DebtRow, MoneyBetween } from './Debts';
+import { SheetFrame } from '../sheets/Sheet';
+import { isEven, peopleOf, type Person } from '../lib/people';
+import { todayISO } from '../lib/dates';
 
 export const useSocial = () => useSyncExternalStore(subscribeSocial, getSocial);
 const GREEN = 'var(--money-in)';
@@ -44,54 +47,228 @@ const page = (children: React.ReactNode, title: string, back: () => void, right?
 const card = { background: 'var(--surface)', borderRadius: 24, padding: 16, display: 'flex', flexDirection: 'column' as const, gap: 10 };
 
 /* ---------------- Friends & trips ---------------- */
-type SocialTab = 'debts' | 'trips' | 'friends';
-/** The tab you were on, so coming back from a chat or a trip returns to it. */
-let lastTab: SocialTab = 'debts';
+/** Everyone you have money, a trip or a chat with, one entry each (lib/people.ts). */
+export function usePeople() {
+  const so = useSocial();
+  const { data: d } = useApp();
+  return peopleOf(d, so, myUid(), moneyScale());
+}
+
 export default function SocialPage() {
   const sync = useSync();
   const so = useSocial();
-  const { data: d } = useApp();
-  const [tab, setTabState] = useState<SocialTab>(lastTab);
-  const setTab = (t: SocialTab) => { lastTab = t; setTabState(t); };
   useEffect(() => { if (sync.uid) refreshSocial(); }, [sync.uid]);
-  const refresh = sync.uid ? <button onClick={() => refreshSocial()} aria-label="Refresh" className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: so.loading ? 0.5 : 1 }}>{so.loading ? 'Loading…' : 'Refresh'}</button> : undefined;
-  const openDebts = (d.debts ?? []).filter(isOpen).length;
-  const newFriends = so.friends.filter(f => f.status === 'pending' && f.incoming).length > 0 || so.dms.some(x => hasUnread(x.key));
-  const signIn = (title: string, body: string) => (
-    <div style={card}>
-      <span style={{ fontSize: 17, fontWeight: 700 }}>{title}</span>
-      <span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{body}</span>
-      <button onClick={() => openSheet({ name: 'cloud' })} style={{ height: 48, borderRadius: 999, border: 0, background: TEXT, color: 'var(--surface)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Sign in or create an account</button>
-    </div>
-  );
-  // A main tab now (bottom bar), so it has a big title like the other tabs and no back button.
   return <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
       <span style={{ flex: 1, fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Friends & trips</span>
-      {refresh}
+      {sync.uid && <button onClick={() => refreshSocial()} className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: so.loading ? 0.5 : 1 }}>{so.loading ? 'Loading…' : 'Refresh'}</button>}
+      <button onClick={() => openSheet({ name: 'friendNew' })} aria-label="Add a debt, trip or friend" className="pr97" style={{ width: 40, height: 40, borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0, flex: 'none' }}><I.Plus size={20} sw={2.5} /></button>
     </div>
     {sync.uid && <VerifyBanner />}
+    {so.error && sync.uid && <div role="alert" style={{ background: 'var(--color-accent-100)', color: 'var(--color-accent-900)', borderRadius: 16, padding: '10px 12px', fontSize: 13 }}>{so.error}</div>}
     <Blocks page="social" title="Friends & trips" gap={12} blocks={[
       { id: 'totals', name: 'Who owes whom', desc: 'People owe you and you owe', node: <MoneyBetween /> },
-      { id: 'lists', name: 'Debts, trips and friends', desc: 'Your debts, shared trips and friends', node: <>
-    <Segmented items={[
-      ['debts', openDebts ? `Debts · ${openDebts}` : 'Debts'],
-      ['trips', so.trips.length ? `Trips · ${so.trips.length}` : 'Trips'],
-      ['friends', newFriends ? 'Friends · new' : 'Friends']
-    ]} value={tab} onPick={setTab} mt={0} />
-    {so.error && sync.uid && <div role="alert" style={{ background: 'var(--color-accent-100)', color: 'var(--color-accent-900)', borderRadius: 16, padding: '10px 12px', fontSize: 13 }}>{so.error}</div>}
-    {tab === 'debts' && <DebtList />}
-    {tab === 'trips' && <>
-      <Purpose icon="trips">For a group that shares costs: a trip, a dinner, a shared apartment. Everyone adds what they paid and Pockets says who pays whom, in the fewest payments.</Purpose>
-      {sync.uid ? <TripList /> : signIn('Share trips with friends', 'Trips are shared with your friends, so you need a Pockets account. Debts with one person work without one.')}
-    </>}
-    {tab === 'friends' && <>
-      <Purpose icon="friends">People with a Pockets account. Add them by email to share trips, send messages, and link them to your debts.</Purpose>
-      {sync.uid ? <FriendList /> : signIn('Add your friends', 'Friends are people with a Pockets account. Sign in to add them by email.')}
-    </>}
+      { id: 'lists', name: 'Trips and people', desc: 'Requests, your trips, and everyone you share money with', node: <>
+        <FriendRequests />
+        <DebtRequests />
+        {sync.uid && <TripRow />}
+        <PeopleList />
+        <DebtNotes />
       </> }
     ]} />
   </div>;
+}
+
+/** Friend requests for you, as a strip you can answer in place. */
+function FriendRequests() {
+  const so = useSocial();
+  const incoming = so.friends.filter(f => f.status === 'pending' && f.incoming);
+  return <>{incoming.map(f => (
+    <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--brand-tint)', color: 'var(--brand)', borderRadius: 18, padding: '10px 12px' }}>
+      <Avatar name={f.name} uid={f.uid} size={30} />
+      <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, lineHeight: 1.3 }}>{`${f.name} wants to be your friend`}</span>
+      <button onClick={async () => { await removeFriend(f.id); }} style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>Decline</button>
+      <button onClick={async () => { const e = await acceptFriend(f.id); flash(e ?? `${f.name} is now your friend`); }} style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 13, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>Accept</button>
+    </div>
+  ))}</>;
+}
+
+/** Your trips as a row of coloured cards, with a New trip card at the end. */
+function TripRow() {
+  const so = useSocial();
+  const tile = (key: string, onClick: () => void, children: React.ReactNode, style: React.CSSProperties) => (
+    <button key={key} onClick={onClick} className="pr97" style={{ flex: 'none', width: 158, minHeight: 132, borderRadius: 22, border: 0, padding: 13, display: 'flex', flexDirection: 'column', gap: 6, textAlign: 'left', cursor: 'pointer', ...style }}>{children}</button>
+  );
+  return <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '0 4px' }}>
+      <span style={{ fontSize: 15, fontWeight: 700 }}>Trips</span>
+      {so.trips.length > 0 && <span style={{ fontSize: 12.5, color: 'var(--color-neutral-600)', fontWeight: 600 }}>{so.trips.length}</span>}
+    </span>
+    <div className="noscroll" style={{ display: 'flex', gap: 10, overflowX: 'auto', margin: '0 -18px', padding: '0 18px 2px', scrollSnapType: 'x proximity' }}>
+      {so.trips.map(t => {
+        const h = hueOf(t.name), mb = myBalance(t, so.items[t.id]), people = tripMembers(t);
+        return tile(t.id, () => setUI({ page: `trip:${t.id}` }), <>
+          <span style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <span aria-hidden="true" style={{ width: 34, height: 34, borderRadius: 11, background: 'color-mix(in oklab, var(--surface) 60%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{t.emoji}</span>
+            {hasUnread(t.id) && <span aria-label="New messages" style={{ width: 9, height: 9, borderRadius: 99, background: 'var(--color-accent)' }} />}
+          </span>
+          <span translate="no" style={{ fontSize: 15, fontWeight: 800, color: TEXT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.name}</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: mb.value < -0.004 ? RED : ink(h) }}>{mb.text}</span>
+          <span style={{ display: 'flex', marginTop: 'auto' }}>{people.slice(0, 4).map((m, i) => <span key={m.id} style={{ marginLeft: i ? -8 : 0, borderRadius: 999, boxShadow: `0 0 0 2px ${tint(h)}`, display: 'flex' }}><Avatar name={m.name} uid={m.id.startsWith('g:') ? undefined : m.id} size={24} /></span>)}{people.length > 4 && <span style={{ marginLeft: 4, fontSize: 11.5, fontWeight: 700, color: ink(h), alignSelf: 'center' }}>{`+${people.length - 4}`}</span>}</span>
+        </>, { background: tint(h), color: ink(h), scrollSnapAlign: 'start' });
+      })}
+      {tile('new', () => openSheet({ name: 'tripNew' }), <>
+        <span style={{ margin: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}><I.Plus size={20} />New trip</span>
+      </>, { background: 'transparent', boxShadow: `inset 0 0 0 1.5px ${LINE}`, color: 'var(--color-neutral-700)', fontSize: 13.5, fontWeight: 700 })}
+    </div>
+  </div>;
+}
+
+/** What a person row says under their name. */
+function personLine(p: Person) {
+  const unread = p.dm && hasUnread(p.dm.key) && p.dm.last;
+  if (unread) return { text: `“${p.dm!.last!.text || 'Message'}”`, strong: true, user: true };
+  const bits = [...p.debts.filter(isOpen).map(x => x.note || (x.dir === 'owed' ? 'Lent' : 'Borrowed')), ...p.trips.map(x => x.trip.name)];
+  if (bits.length) return { text: bits.join(' · '), strong: false, user: true };
+  if (p.friend?.status === 'pending') return { text: 'Request sent', strong: false, user: false };
+  return { text: 'Nothing between you', strong: false, user: false };
+}
+/** The money between you and someone, in two lines: the amount and who owes. */
+function NetAmount({ v, big }: { v: number; big?: boolean }) {
+  if (isEven(v)) return <span style={{ fontSize: big ? 26 : 14.5, fontWeight: 700, color: 'var(--color-neutral-600)' }}>Even</span>;
+  return <span style={{ display: 'flex', flexDirection: 'column', alignItems: big ? 'center' : 'flex-end' }}>
+    <span style={{ fontSize: big ? 30 : 15, fontWeight: 800, letterSpacing: big ? '-0.03em' : undefined, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', color: v > 0 ? GREEN : RED }}>{big ? (v > 0 ? `Owes you ${fmt(v)}` : `You owe ${fmt(-v)}`) : fmt(Math.abs(v))}</span>
+    {!big && <span style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--color-neutral-600)' }}>{v > 0 ? 'owes you' : 'you owe'}</span>}
+  </span>;
+}
+
+function PeopleList() {
+  const people = usePeople();
+  const so = useSocial();
+  if (!people.length) return (
+    <div style={{ ...card, alignItems: 'flex-start' }}>
+      <span style={{ fontSize: 17, fontWeight: 700 }}>Money between you and other people</span>
+      <span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Lent someone money, borrowed, or split a trip or a bill? Add it here and Pockets keeps the count, without counting it as spending.</span>
+      <button onClick={() => openSheet({ name: 'friendNew' })} className="pr97" style={{ marginTop: 4, height: 44, padding: '0 18px', borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 14.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}><I.Plus size={16} sw={2.5} />Add the first one</button>
+    </div>
+  );
+  return (
+    <div style={{ ...card, gap: 0, padding: '4px 16px' }}>
+      {people.map((p, i) => {
+        const line = personLine(p), unread = !!(p.dm && hasUnread(p.dm.key));
+        return (
+          <button key={p.key} onClick={() => setUI({ page: `person:${p.key}` })} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 8px', margin: '0 -8px', border: 0, borderTop: i ? `1px solid ${LINE}` : 0, borderRadius: 12, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left', opacity: so.loading && !p.debts.length ? 0.6 : 1 }}>
+            <span style={{ position: 'relative', display: 'flex' }}>
+              <Avatar name={p.name} uid={p.uid} size={38} />
+              {unread && <span aria-label="Unread" style={{ position: 'absolute', top: -1, right: -1, width: 10, height: 10, borderRadius: 99, background: 'var(--color-accent)', boxShadow: '0 0 0 2px var(--surface-solid, #fff)' }} />}
+            </span>
+            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span translate="no" style={{ fontSize: 15, fontWeight: unread ? 800 : 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+              <span translate={line.user ? 'no' : undefined} style={{ fontSize: 12.5, color: line.strong ? TEXT : 'var(--color-neutral-700)', fontWeight: line.strong ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{line.text}</span>
+            </span>
+            <NetAmount v={p.net} />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------------- One person ---------------- */
+export function PersonPage({ k }: { k: string }) {
+  const { data: d } = useApp();
+  const people = usePeople();
+  const p = people.find(x => x.key === k);
+  const [showDone, setShowDone] = useState(false);
+  const back = () => setUI({ tab: 'social', page: null });
+  if (!p) return page(<div style={card}><span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>There's nothing with this person anymore.</span></div>, '', back);
+  const today = todayISO();
+  const open = p.debts.filter(isOpen), done = p.debts.filter(x => !isOpen(x));
+  const friend = p.friend?.status === 'accepted' ? p.friend : undefined;
+  const canChat = !!p.uid && (!!friend || !!p.dm);
+  const btn = (main: boolean): React.CSSProperties => ({ height: 48, borderRadius: 999, border: 0, background: main ? 'var(--action)' : 'var(--surface)', color: main ? 'var(--action-ink)' : TEXT, fontSize: 14.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 });
+  const addDebt = () => openSheet(friend ? { name: 'debt', id: null, friend: { uid: friend.uid, name: friend.name } } : { name: 'debt', id: null, person: p.name, dir: p.net < 0 ? 'owe' : 'owed' });
+  return page(<>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '0 0 6px' }}>
+      <Avatar name={p.name} uid={p.uid} size={68} />
+      <span translate="no" style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }}>{p.name}</span>
+      <NetAmount v={p.net} big />
+      {p.friend?.status === 'pending' && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Friend request sent</span>}
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: canChat ? '1fr 1fr' : '1fr', gap: 8 }}>
+      <button onClick={addDebt} className="pr97" style={btn(true)}><I.Plus size={17} sw={2.5} />Add a debt</button>
+      {canChat && <button onClick={() => setUI({ page: `dm:${p.uid}` })} className="hv-n200" style={btn(false)}>Message</button>}
+    </div>
+
+    {(open.length > 0 || p.trips.length > 0) && <div style={{ ...card, gap: 0, padding: '4px 16px' }}>
+      {open.map((x, i) => <DebtRow key={x.id} x={x} d={d} today={today} last={i === open.length - 1 && !p.trips.length} />)}
+      {p.trips.map((x, i) => (
+        <button key={x.trip.id} onClick={() => setUI({ page: `trip:${x.trip.id}` })} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 6px', margin: '0 -6px', border: 0, borderTop: i || open.length ? `1px solid ${LINE}` : 0, borderRadius: 12, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
+          <span aria-hidden="true" style={{ width: 34, height: 34, borderRadius: 11, background: tint(hueOf(x.trip.name)), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flex: 'none' }}>{x.trip.emoji}</span>
+          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <span translate="no" style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.trip.name}</span>
+            <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{x.amount > 0 ? 'Trip · pays you to settle up' : 'Trip · you pay to settle up'}</span>
+          </span>
+          <span style={{ fontSize: 15, fontWeight: 700, whiteSpace: 'nowrap', color: x.amount > 0 ? GREEN : RED }}>{fmt(Math.abs(x.amount))}</span>
+        </button>
+      ))}
+    </div>}
+    {!open.length && !p.trips.length && <div style={card}><span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{`Nothing open with ${p.name}. Add a debt when one of you pays for the other.`}</span></div>}
+
+    {done.length > 0 && (
+      <div style={card}>
+        <button onClick={() => setShowDone(s => !s)} aria-expanded={showDone} style={{ display: 'flex', alignItems: 'center', gap: 8, border: 0, background: 'transparent', color: TEXT, padding: 0, cursor: 'pointer', fontSize: 15, fontWeight: 700 }}>
+          <span style={{ flex: 1, textAlign: 'left' }}>{`Paid back · ${done.length}`}</span>
+          <span style={{ transform: showDone ? 'rotate(90deg)' : 'none', transition: 'transform .2s', display: 'flex' }}><I.Chevron size={16} color="var(--color-neutral-500)" /></span>
+        </button>
+        {showDone && <div style={{ display: 'flex', flexDirection: 'column' }}>{done.map((x, i) => <DebtRow key={x.id} x={x} d={d} today={today} last={i === done.length - 1} />)}</div>}
+      </div>
+    )}
+
+    {p.friend && <button onClick={async () => { const f = p.friend!; if (f.status === 'pending' || confirm(`Remove ${f.name} from your friends? Shared trips and debts stay.`)) { await removeFriend(f.id); if (!p.debts.length && !p.trips.length) back(); } }} style={{ border: 0, background: 'transparent', color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer', padding: 10 }}>{p.friend.status === 'pending' ? 'Cancel the friend request' : 'Remove friend'}</button>}
+  </>, '', back);
+}
+
+/* ---------------- The + sheet ---------------- */
+export function WhatHappenedSheet() {
+  const on = !!useSync().uid;
+  const choice = (icon: React.ReactNode, bg: string, fg: string, title: string, text: string, go: () => void) => (
+    <button onClick={go} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, margin: '0 -12px', border: 0, borderRadius: 18, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
+      <span aria-hidden="true" style={{ width: 44, height: 44, borderRadius: 14, background: bg, color: fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{icon}</span>
+      <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <span style={{ fontSize: 15.5, fontWeight: 700 }}>{title}</span>
+        <span style={{ fontSize: 13, lineHeight: 1.35, color: 'var(--color-neutral-700)' }}>{text}</span>
+      </span>
+    </button>
+  );
+  const svg = (d: React.ReactNode) => <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">{d}</svg>;
+  return (
+    <SheetFrame title="What happened?">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {choice(svg(<path d="M7 17 17 7M9 7h8v8" />), 'oklch(0.94 0.05 150)', 'oklch(0.42 0.11 150)', 'I lent money or paid for someone', 'They owe you. It doesn’t count as your spending.', () => openSheet({ name: 'debt', id: null, dir: 'owed' }))}
+        {choice(svg(<path d="M17 7 7 17M7 9v8h8" />), 'var(--color-accent-100)', 'var(--color-accent-700)', 'Someone lent me money', 'You owe them, with a pay-back date if you want.', () => openSheet({ name: 'debt', id: null, dir: 'owe' }))}
+        {choice(svg(<><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5" /><circle cx="17" cy="9" r="2.6" /><path d="M17 14.5c2.4 0 4 1.6 4.5 4" /></>), tint(200), ink(200), 'Split a trip or a bill', on ? 'A group adds what they paid. Pockets says who pays whom.' : 'A group adds what they paid. Needs a Pockets account.', () => openSheet({ name: on ? 'tripNew' : 'cloud' }))}
+        {choice(svg(<><circle cx="12" cy="8" r="4" /><path d="M4 21c.8-4 4-6.5 8-6.5s7.2 2.5 8 6.5" /></>), 'var(--color-neutral-100)', TEXT, 'Add a friend', on ? 'By email, if they use Pockets.' : 'By email, if they use Pockets. Needs a Pockets account.', () => openSheet({ name: on ? 'friendAdd' : 'cloud' }))}
+      </div>
+    </SheetFrame>
+  );
+}
+
+export function FriendAddSheet() {
+  const [email, setEmail] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const ok = email.includes('@') && !busy;
+  const add = async () => { if (!ok) return; setBusy(true); setMsg(null); const e = await addFriendByEmail(email); setBusy(false); if (e) setMsg(e); else { flash('Friend request sent'); closeSheet(); } };
+  return (
+    <SheetFrame title="Add a friend" topOnFocus action={{ label: busy ? '…' : 'Send', onClick: add, disabled: !ok }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <input type="email" inputMode="email" autoCapitalize="off" autoFocus value={email} onChange={e => setEmail(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') add(); }} placeholder="friend@email.com" aria-label="Friend's email" style={textInput} />
+        {msg && <span role="alert" style={{ fontSize: 13, lineHeight: 1.4, color: RED }}>{msg}</span>}
+        <span style={{ fontSize: 13, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>They need a Pockets account with a confirmed email. They'll see your request at the top of Friends & trips.</span>
+      </div>
+    </SheetFrame>
+  );
 }
 
 function VerifyBanner() {
@@ -111,101 +288,10 @@ function VerifyBanner() {
   );
 }
 
-function FriendList() {
-  const so = useSocial();
-  const { data: d } = useApp();
-  const [email, setEmail] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const incoming = so.friends.filter(f => f.status === 'pending' && f.incoming), outgoing = so.friends.filter(f => f.status === 'pending' && !f.incoming), friends = so.friends.filter(f => f.status === 'accepted');
-  const add = async () => { setBusy(true); setMsg(null); const e = await addFriendByEmail(email); setBusy(false); if (e) setMsg(e); else { flash('Friend request sent'); setEmail(''); } };
-  const uidOf = new Map(so.friends.map(f => [f.id, f.uid]));
-  const row = (key: string, name: string, sub: string, actions: React.ReactNode, last: boolean, subColor?: string) => (
-    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: `1px solid ${last ? 'transparent' : LINE}` }}>
-      <Avatar name={name} uid={uidOf.get(key)} />
-      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: 15, fontWeight: 600 }}>{name}</span>
-        <span style={{ fontSize: 12, color: subColor ?? 'var(--color-neutral-700)', fontWeight: subColor ? 700 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub}</span>
-      </span>
-      {actions}
-    </div>
-  );
-  const small = (label: string, onClick: () => void, primary?: boolean) => <button onClick={onClick} style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: primary ? TEXT : 'var(--color-neutral-100)', color: primary ? 'var(--surface)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>{label}</button>;
-  return <>
-    {so.dms.length > 0 && <div style={card}>
-      <span style={{ fontSize: 15, fontWeight: 700 }}>Messages</span>
-      {so.dms.map((c, i) => {
-        const unread = hasUnread(c.key), mineLast = c.last?.uid === myUid();
-        return (
-          <button key={c.key} onClick={() => setUI({ page: `dm:${c.other}` })} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 6px', margin: '0 -6px', border: 0, borderBottom: `1px solid ${i === so.dms.length - 1 ? 'transparent' : LINE}`, borderRadius: 12, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
-            <Avatar name={c.name} uid={c.other} />
-            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-              <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ flex: 1, fontSize: 15, fontWeight: unread ? 800 : 600 }}>{c.name}</span>
-                {c.last && <span style={{ fontSize: 11.5, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap' }}>{shortDate(new Date(c.last.at).toISOString().slice(0, 10))}</span>}
-              </span>
-              <span style={{ fontSize: 13, color: unread ? TEXT : 'var(--color-neutral-700)', fontWeight: unread ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.last ? `${mineLast ? 'You: ' : ''}${c.last.text || 'Message'}` : 'Say hi'}</span>
-            </span>
-            {unread && <span aria-label="Unread" style={{ width: 10, height: 10, borderRadius: 99, background: 'var(--color-accent)', flex: 'none' }} />}
-          </button>
-        );
-      })}
-    </div>}
-    <div style={card}>
-      <span style={{ fontSize: 15, fontWeight: 700 }}>Add a friend</span>
-      <div style={{ display: 'flex', gap: 8 }}>
-        <input type="email" inputMode="email" autoCapitalize="off" value={email} onChange={e => setEmail(e.target.value)} placeholder="friend@email.com" aria-label="Friend's email" style={{ ...textInput, flex: 1, background: 'var(--color-neutral-100)', padding: '12px 14px' }} />
-        <button onClick={add} disabled={busy || !email.includes('@')} style={{ height: 48, padding: '0 16px', borderRadius: 16, border: 0, background: TEXT, color: 'var(--surface)', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: busy || !email.includes('@') ? 0.5 : 1 }}>{busy ? '…' : 'Add'}</button>
-      </div>
-      {msg && <span role="alert" style={{ fontSize: 13, lineHeight: 1.4, color: RED }}>{msg}</span>}
-      <span style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>They need a Pockets account with a confirmed email. They'll see your request in their Friends tab.</span>
-    </div>
-    {incoming.length > 0 && <div style={card}><span style={{ fontSize: 15, fontWeight: 700 }}>Requests for you</span>
-      {incoming.map((f, i) => row(f.id, f.name, f.email || 'Wants to be your friend', <div style={{ display: 'flex', gap: 6 }}>{small('Accept', async () => { const e = await acceptFriend(f.id); flash(e ?? `${f.name} is now your friend`); }, true)}{small('Decline', async () => { await removeFriend(f.id); })}</div>, i === incoming.length - 1))}</div>}
-    <div style={card}>
-      <span style={{ fontSize: 15, fontWeight: 700 }}>Friends{friends.length ? ` · ${friends.length}` : ''}</span>
-      {friends.map((f, i) => {
-        const owes = friendDebt(d, f.uid);
-        const sub = owes > 0.004 ? `Owes you ${fmt(owes)}` : owes < -0.004 ? `You owe ${fmt(-owes)}` : f.email;
-        return row(f.id, f.name, sub, <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          {small('Debt', () => openSheet({ name: 'debt', id: null, friend: { uid: f.uid, name: f.name } }))}
-          {small('Message', () => setUI({ page: `dm:${f.uid}` }), true)}
-          <button onClick={async () => { if (confirm(`Remove ${f.name} from your friends? Shared trips and debts stay.`)) await removeFriend(f.id); }} aria-label={`Remove ${f.name}`} style={{ width: 30, height: 30, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-neutral-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}><I.X size={15} /></button>
-        </div>, i === friends.length - 1 && !outgoing.length, owes > 0.004 ? GREEN : owes < -0.004 ? RED : undefined);
-      })}
-      {outgoing.map((f, i) => row(f.id, f.name, `Request sent${f.email ? ` · ${f.email}` : ''}`, small('Cancel', async () => { await removeFriend(f.id); }), i === outgoing.length - 1))}
-      {!friends.length && !outgoing.length && <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>No friends yet. Add one by email above.</span>}
-    </div>
-  </>;
-}
-
 /** Your balance in a trip, in words. */
 export function myBalance(t: Trip, items = getSocial().items[t.id] ?? []) {
   const b = balances(tripMembers(t), items, moneyScale())[myUid()] ?? 0;
   return { value: b, text: b > 0.004 ? `You're owed ${fmt(b)}` : b < -0.004 ? `You owe ${fmt(-b)}` : 'You\'re even', color: b > 0.004 ? GREEN : b < -0.004 ? RED : 'var(--color-neutral-700)' };
-}
-
-function TripList() {
-  const so = useSocial();
-  return <>
-    {so.trips.map(t => {
-      const mb = myBalance(t, so.items[t.id]), total = (so.items[t.id] ?? []).filter(i => i.kind === 'expense').reduce((a, i) => a + i.amount, 0);
-      return (
-        <button key={t.id} onClick={() => setUI({ page: `trip:${t.id}` })} className="pr98" style={{ ...card, border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <span style={{ width: 48, height: 48, borderRadius: 16, background: tint(hueOf(t.name)), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flex: 'none' }}>{t.emoji}</span>
-          <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 16, fontWeight: 700 }}>{t.name}</span>
-            <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tripMembers(t).map(m => (m.id === myUid() ? 'You' : m.name)).join(', ')} · {fmt(total)} total</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: mb.color }}>{mb.text}</span>
-            {hasUnread(t.id) && <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-accent-700)' }}>● New messages</span>}
-          </span>
-          <I.Chevron size={16} color="var(--color-neutral-500)" />
-        </button>
-      );
-    })}
-    {!so.trips.length && !so.loading && <div style={card}><span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>No shared trips yet. Create one for a trip, a dinner or a shared apartment, and add your friends.</span></div>}
-    <button onClick={() => openSheet({ name: 'tripNew' })} className="hv-white" style={{ height: 54, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><I.Plus size={18} />New shared trip</button>
-  </>;
 }
 
 /* ---------------- One trip ---------------- */
@@ -283,7 +369,7 @@ export function TripPage({ id }: { id: string }) {
       })}
       {!items.length && <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing yet. Add the first expense.</span>}
     </div>
-    <span style={{ margin: '0 4px', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-600)' }}>Tap Refresh on the Trips page to see what others added. Tap an expense to edit it or add your share to your budget.</span>
+    <span style={{ margin: '0 4px', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-600)' }}>Tap Refresh to see what others added. Tap an expense to edit it or add your share to your budget.</span>
     {t.owner === uid && <button onClick={async () => { if (!confirm(`Delete "${t.name}" for everyone? This can't be undone.`)) return; const e = await deleteTrip(t.id); flash(e ?? 'Trip deleted'); if (!e) setUI({ tab: 'social', page: null }); }} style={{ border: 0, background: 'transparent', color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer', padding: 10 }}>Delete trip</button>}
     {t.owner !== uid && <button onClick={async () => { if (!confirm(`Leave "${t.name}"? Your expenses stay so the balances stay right.`)) return; const e = await updateTrip(t.id, { members: t.members.filter(m => m !== uid) }); if (!e) { flash('You left the trip'); setUI({ tab: 'social', page: null }); await refreshSocial(); } }} style={{ border: 0, background: 'transparent', color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer', padding: 10 }}>Leave trip</button>}
   </>, t.name, () => setUI({ tab: 'social', page: null }), <button onClick={() => refreshSocial()} className="hv-n200" style={{ height: 40, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: so.loading ? 0.5 : 1 }}>{so.loading ? '…' : 'Refresh'}</button>);

@@ -47,22 +47,22 @@ const dateInput = (value: string, onChange: (v: string) => void, label: string) 
 );
 
 /* ---------------- Add, edit or see a debt ---------------- */
-export function DebtSheet({ id, dir: dir0, friend }: { id: string | null; dir?: 'owed' | 'owe'; friend?: { uid: string; name: string } }) {
+export function DebtSheet({ id, dir: dir0, friend, name }: { id: string | null; dir?: 'owed' | 'owe'; friend?: { uid: string; name: string }; name?: string }) {
   const { data: d, ui } = useApp();
   const old = id ? (d.debts ?? []).find(x => x.id === id) : undefined;
   const [editing, setEditing] = useState(!old);
   if (id && !old) return <SheetFrame title="Debt"><span style={{ fontSize: 14 }}>This debt was deleted.</span></SheetFrame>;
   if (old && !editing) return <DebtView x={old} onEdit={() => setEditing(true)} />;
-  return <DebtForm old={old} dir0={dir0} friend={friend} lastAcct={ui.lastAdd?.acct} onDone={x => { if (old) setEditing(false); else openSheet({ name: 'debt', id: x.id }); }} />;
+  return <DebtForm old={old} dir0={dir0} friend={friend} name0={name} lastAcct={ui.lastAdd?.acct} onDone={x => { if (old) setEditing(false); else openSheet({ name: 'debt', id: x.id }); }} />;
 }
 
-function DebtForm({ old, dir0, friend, lastAcct, onDone }: { old?: Debt; dir0?: 'owed' | 'owe'; friend?: { uid: string; name: string }; lastAcct?: string; onDone: (x: Debt) => void }) {
+function DebtForm({ old, dir0, friend, name0, lastAcct, onDone }: { old?: Debt; dir0?: 'owed' | 'owe'; friend?: { uid: string; name: string }; name0?: string; lastAcct?: string; onDone: (x: Debt) => void }) {
   const { data: d } = useApp();
   const so = useSocial();
   const today = todayISO();
   const friends = so.friends.filter(f => f.status === 'accepted' && f.uid && f.uid !== myUid());
   const [dir, setDir] = useState<'owed' | 'owe'>(old?.dir ?? dir0 ?? 'owed');
-  const [name, setName] = useState(old?.name ?? friend?.name ?? '');
+  const [name, setName] = useState(old?.name ?? friend?.name ?? name0 ?? '');
   const [fr, setFr] = useState<string | undefined>(old?.friend ?? friend?.uid);
   const [amt, setAmt] = useState(old ? String(old.amt) : '');
   const [note, setNote] = useState(old?.note ?? '');
