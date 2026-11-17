@@ -1,3 +1,4 @@
+import { infoOf } from '../lib/currency';
 import { STARS, moneyHidden } from '../lib/privacy';
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { getData } from '../lib/store';
@@ -6,7 +7,7 @@ import { getData } from '../lib/store';
  * Amount box that shows thousands separators while you type (10.000.000 for COP,
  * 10,000.50 otherwise). `value` and `onChange` use a plain number string ("10000000").
  */
-const sep = () => (getData().settings.currency === 'COP' ? { group: '.', dec: ',', decimals: false } : { group: ',', dec: '.', decimals: true });
+const sep = () => { const i = infoOf(getData().settings.currency); return { group: i.group, dec: i.dec, decimals: i.decimals > 0 }; };
 
 export function formatTyping(raw: string) {
   const { group, dec, decimals } = sep();

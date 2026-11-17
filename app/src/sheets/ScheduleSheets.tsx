@@ -3,7 +3,8 @@ import { cardCycle, cardDueLabel, payDayOf } from '../lib/cards';
 import { openTripLink } from '../lib/tripNotify';
 import { useApp, setData, closeSheet, flash, openSheet } from '../lib/store';
 import { HUES, TEXT, ink, tint } from '../lib/constants';
-import { fmt, num, roundAmt, uid } from '../lib/derive';
+import { curCode, fmt, isCOP, num, roundAmt, uid } from '../lib/derive';
+import { refreshUsdRate } from '../lib/invest';
 import { relDay, todayISO } from '../lib/dates';
 import { ensureTrm, fmtUsd, latestRate, trmFor } from '../lib/trm';
 import { KIND_LABEL, describeDay, ordinal } from '../lib/schedule';
@@ -29,11 +30,11 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
   const [name, setName] = useState(base?.name ?? '');
   const [amt, setAmt] = useState(base ? String(base.amt) : '');
   const [currency, setCurrency] = useState<'USD' | 'COP'>(base?.currency ?? 'COP');
-  const canUsd = d.settings.currency === 'COP';
+  const canUsd = curCode() !== 'USD';
   const usd = canUsd && currency === 'USD';
   const todayTrm = trmFor(d, todayISO());
-  useEffect(() => { if (usd) ensureTrm([todayISO()]); }, [usd]);
-  const rate = todayTrm ?? latestRate(d);
+  useEffect(() => { if (usd && isCOP()) ensureTrm([todayISO()]); else if (usd) refreshUsdRate(); }, [usd]);
+  const rate = (isCOP() ? todayTrm : undefined) ?? latestRate(d);
   const [dueDay, setDueDay] = useState(base?.dueDay ?? day ?? 1);
   const [acct, setAcct] = useState(base?.acct ?? (d.accounts.find(a => a.type === 'bank') || d.accounts[0])?.id ?? '');
   const [auto, setAuto] = useState(base ? !!base.auto : true);
@@ -144,7 +145,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
           {canUsd && (
             <div style={{ display: 'flex', gap: 2, background: 'var(--color-neutral-200)', borderRadius: 999, padding: 3 }}>
               {(['COP', 'USD'] as const).map(c => (
-                <button key={c} onClick={() => { if (c !== currency) { setCurrency(c); setAmt(''); } }} style={{ height: 28, padding: '0 12px', borderRadius: 999, border: 0, background: currency === c ? 'var(--surface)' : 'transparent', boxShadow: currency === c ? 'var(--shadow-sm)' : 'none', color: TEXT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{c === 'COP' ? 'Pesos' : 'Dollars'}</button>
+                <button key={c} onClick={() => { if (c !== currency) { setCurrency(c); setAmt(''); } }} style={{ height: 28, padding: '0 12px', borderRadius: 999, border: 0, background: currency === c ? 'var(--surface)' : 'transparent', boxShadow: currency === c ? 'var(--shadow-sm)' : 'none', color: TEXT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{c === 'COP' ? curCode() : 'USD'}</button>
               ))}
             </div>
           )}
@@ -158,7 +159,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
         ) : <SmallAmount value={amt} onChange={setAmt} />}
         {usd && (
           <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
-            {todayTrm ? `Today's TRM is ${fmt(todayTrm)}` : `About ${fmt(rate)} per dollar`}{v > 0 ? `, so ${fmtUsd(v)} ≈ ${fmt(v * rate)}` : ''}. {auto ? 'On the day it runs, it uses that day\'s official TRM.' : ''}
+            {isCOP() && todayTrm ? `Today's TRM is ${fmt(todayTrm)}` : `About ${fmt(rate)} per dollar`}{v > 0 ? `, so ${fmtUsd(v)} ≈ ${fmt(v * rate)}` : ''}. {auto ? (isCOP() ? 'On the day it runs, it uses that day\'s official TRM.' : 'On the day it runs, it uses that day\'s rate.') : ''}
           </span>
         )}
         </>}

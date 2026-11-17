@@ -1,6 +1,7 @@
 // Stock portfolio: holdings from trades, live prices from Finnhub (free key), USD→COP rate.
 import type { Data, Investments, Quote, Trade } from './types';
 import { getData, setData } from './store';
+import { CURRENCY_LIST, codeOf } from './currency';
 
 export interface Holding {
   ticker: string; name: string; currency: 'USD' | 'COP'; qty: number; avgCost: number; invested: number; realized: number;
@@ -9,14 +10,14 @@ export interface Holding {
   valueLocal: number; investedLocal: number; gainLocal: number; dayChangeLocal: number;
 }
 
-/** Rough euro and pound rates, used only until the first live update arrives. */
-const FX_FALLBACK = { EUR: 0.92, GBP: 0.79 };
+/** Rough rates per US dollar, used only until the first live update arrives (they move; the live ones win). */
+const FX_FALLBACK: Record<string, number> = { EUR: 0.92, GBP: 0.79, MXN: 18, ARS: 1000, CLP: 950, PEN: 3.7, UYU: 40, PYG: 7500, BOB: 6.9, BRL: 5.5, CRC: 510, GTQ: 7.7, HNL: 25, NIO: 36.7, DOP: 60 };
 /** How much of the app's currency one US dollar is worth. */
 export function perUsd(inv: Investments, app: string) {
-  if (app === 'COP') return inv.usdRate || 4000;
-  if (app === '€') return inv.fxPerUsd?.EUR || FX_FALLBACK.EUR;
-  if (app === '£') return inv.fxPerUsd?.GBP || FX_FALLBACK.GBP;
-  return 1;
+  const code = codeOf(app);
+  if (code === 'COP') return inv.usdRate || 4000;
+  if (code === 'USD') return 1;
+  return inv.fxPerUsd?.[code] || FX_FALLBACK[code] || 1;
 }
 /** A dollar or peso amount in the app's currency `app` (dollars go straight; pesos go through dollars). */
 export function convert(inv: Investments, amt: number, cur: 'USD' | 'COP', app: string) {
@@ -94,21 +95,26 @@ export async function refreshQuotes(): Promise<{ ok: number; failed: string[]; e
 
 /** Updates the USD→COP rate (free service, no key) at most every 6 hours, unless typed in. */
 export async function refreshUsdRate(force = false) {
-  const inv = getData().investments;
-  if (inv.usdManual || (!force && Date.now() - inv.usdRateAt < 6 * 3600e3)) return;
-  // Prefer Colombia's official TRM for today; fall back to a market rate.
+  const inv = getData().investments, code = codeOf(getData().settings.currency);
+  // A currency picked just now has no live rate yet: fetch it right away instead of waiting out the 6 hours.
+  const have = code === 'COP' || code === 'USD' || !!inv.fxPerUsd?.[code];
+  if (!force && have && Date.now() - inv.usdRateAt < 6 * 3600e3) return;
+  if (inv.usdManual && code === 'COP') return;
+  // Prefer Colombia's official TRM for today (unless you typed your own rate); fall back to a market rate.
   const { fetchTrm } = await import('./trm');
   const { todayISO } = await import('./dates');
-  const trm = await fetchTrm(todayISO());
+  const trm = inv.usdManual ? null : await fetchTrm(todayISO());
   if (trm) setData(x => ({ investments: { ...x.investments, usdRate: trm, usdRateAt: Date.now() }, fx: { ...x.fx, trm: { ...x.fx.trm, [todayISO()]: trm } } }));
-  // The market service is only needed without a TRM, or for euros and pounds.
-  const app = getData().settings.currency;
-  if (trm && app !== '€' && app !== '£') return;
+  // The market service is only needed without a TRM, or when the app isn't in pesos or dollars.
+  const app = codeOf(getData().settings.currency);
+  if (trm && (app === 'COP' || app === 'USD')) return;
   try {
     const r = await fetch('https://open.er-api.com/v6/latest/USD');
     const j = await r.json();
-    const cop = j?.rates?.COP, eur = j?.rates?.EUR, gbp = j?.rates?.GBP;
-    setData(x => ({ investments: { ...x.investments, ...(!trm && cop > 0 ? { usdRate: cop } : {}), ...(eur > 0 && gbp > 0 ? { fxPerUsd: { EUR: eur, GBP: gbp } } : {}), usdRateAt: Date.now() } }));
+    const rates = (j?.rates ?? {}) as Record<string, number>, cop = rates.COP;
+    // Keep only the currencies Pockets offers, and only real positive numbers.
+    const fx = Object.fromEntries(CURRENCY_LIST.filter(k => k !== 'COP' && k !== 'USD' && rates[k] > 0).map(k => [k, rates[k]]));
+    setData(x => ({ investments: { ...x.investments, ...(!trm && cop > 0 ? { usdRate: cop } : {}), ...(Object.keys(fx).length ? { fxPerUsd: { ...x.investments.fxPerUsd, ...fx } } : {}), usdRateAt: Date.now() } }));
   } catch { /* keep the last rate */ }
 }
 

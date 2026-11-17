@@ -3,7 +3,10 @@ import { glyph, lastEmoji, POCKET_ICONS } from '../ui/PocketIcons';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { isMonthly, periodsInMonth, DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, isCOP, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
+import { curCode, moneyScale, curInfo, isMonthly, periodsInMonth, DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
+import { formatNumber } from '../lib/currency';
+import { latestRate } from '../lib/trm';
+import { refreshUsdRate } from '../lib/invest';
 import { addDays, monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { COVER, NEXT, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, overBy, refillFrom, splitAmong, suggestCover, suggestRefill, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
@@ -247,6 +250,10 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
   const c = ctxOf(d);
   const first = [pocket, ui.lastAdd.pocket].find(id => id && d.pockets.some(p => p.id === id)) || d.pockets[0]?.id || '';
   const [amt, setAmt] = useState('');
+  // In dollars: what's typed is USD; the expense is saved in the app's currency at today's rate, keeping the dollar amount.
+  const [usd, setUsd] = useState(false);
+  useEffect(() => { if (usd) refreshUsdRate(); }, [usd]);
+  const rate = latestRate(d), canUsd = curCode() !== 'USD';
   const [p, setP] = useState(first);
   const [a, setA] = useState(d.accounts.some(x => x.id === ui.lastAdd.acct) ? ui.lastAdd.acct : d.accounts[0]?.id || '');
   const [note, setNote] = useState('');
@@ -259,7 +266,7 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
   const [parts, setParts] = useState<{ id: string; cat: CatPick; amt: string }[]>([]);
 
   const all = allStats(d, c), addS = all.find(x => x.id === p), payA = d.accounts.find(x => x.id === a);
-  const v = num(amt), after = addS ? addS.left - v : 0;
+  const v = usd ? roundAmt(num(amt) * rate) : num(amt), after = addS ? addS.left - v : 0;
   let preview = 'Enter an amount, a category and a pocket.', previewColor = 'var(--color-neutral-700)';
   if (!p && v > 0) preview = `Not in any pocket: it won't touch your weekly budgets, but it still counts in ${monthName(c.month)}'s spending and comes out of ${payA?.name ?? 'the account'}.`;
   if (addS && v > 0) {
@@ -294,7 +301,7 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
       const rows = parts.map((x, i) => ({ id: uid('e') + i, ts: ts + i, p, a, amt: partNums[i], note: name, date: c.today, tags: tagSel, cat: x.cat[0], sub: x.cat[1], split: group }));
       setData(x => ({ expenses: [...rows, ...x.expenses], accounts: chargeAccount(x.accounts, a, val) }));
     } else setData(x => ({
-      expenses: [{ id: uid('e'), ts, p, a, amt: val, note: note.trim() || (sub && sub !== 'General' ? sub : cat), date: c.today, tags: tagSel, cat, sub }, ...x.expenses],
+      expenses: [{ id: uid('e'), ts, p, a, amt: val, note: note.trim() || (sub && sub !== 'General' ? sub : cat), date: c.today, tags: tagSel, cat, sub, ...(usd ? { orig: { amt: Math.round(num(amt) * 100) / 100, cur: 'USD' as const, rate, official: false } } : {}) }, ...x.expenses],
       accounts: chargeAccount(x.accounts, a, val)
     }));
     if (p) setUI({ sheet: { name: 'saved', id: p }, lastAdd: { pocket: p, acct: a } });
@@ -304,12 +311,29 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <BigAmount value={amt} onChange={setAmt} mt={10} />
+        {usd
+          ? <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 10, background: 'var(--surface)', borderRadius: 24, padding: '16px 20px' }}>
+              <span style={{ fontSize: 40, fontWeight: 700, color: 'var(--color-neutral-400)' }}>US$</span>
+              <input type="text" inputMode="decimal" aria-label="Amount in US dollars" placeholder="0.00" value={amt} onChange={e => setAmt(e.target.value.replace(',', '.').replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1'))}
+                style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 40, fontWeight: 700, letterSpacing: '-0.03em', color: TEXT, padding: 0, outline: 'none' }} />
+            </div>
+          : <BigAmount value={amt} onChange={setAmt} mt={10} />}
+        {canUsd && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '8px 4px 0' }}>
+            <span style={{ flex: 1, fontSize: 12.5, color: 'var(--color-neutral-700)' }}>{usd && v > 0 ? `≈ ${fmt(v)} at ${fmt(rate)} per dollar` : usd ? `1 USD ≈ ${fmt(rate)}` : ''}</span>
+            <div role="group" aria-label="Currency of this expense" style={{ display: 'flex', gap: 2, background: 'var(--color-neutral-200)', borderRadius: 999, padding: 3 }}>
+              {([[false, curCode()], [true, 'USD']] as const).map(([on, label]) => (
+                <button key={label} onClick={() => { if (on !== usd) { setUsd(on); setAmt(''); setSplit(false); } }} aria-pressed={on === usd}
+                  style={{ height: 28, padding: '0 12px', borderRadius: 999, border: 0, background: on === usd ? 'var(--surface)' : 'transparent', boxShadow: on === usd ? 'var(--shadow-sm)' : 'none', color: TEXT, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>{label}</button>
+              ))}
+            </div>
+          </div>
+        )}
         <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
         <input placeholder="e.g. Lunch at Crepes & Waffles" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 4px 8px', gap: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>{split ? 'Categories' : 'Category'} {!split && !cat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</span>
-          <button onClick={() => (split ? (setSplit(false), setCat(parts[0]?.cat[0] ? parts[0].cat : [cat, sub])) : startSplit())} style={{ border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{split ? 'Use one category' : 'Split into categories'}</button>
+          {!usd && <button onClick={() => (split ? (setSplit(false), setCat(parts[0]?.cat[0] ? parts[0].cat : [cat, sub])) : startSplit())} style={{ border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{split ? 'Use one category' : 'Split into categories'}</button>}
         </div>
         {!split ? <CategoryPicker value={[cat, sub]} onChange={setCat} /> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -577,10 +601,11 @@ function DayPlanner({ id, hue, ds }: { id: string; hue: number; ds: DayStats }) 
 const startChip = (on: boolean, hue: number): CSSProperties => ({ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: on ? tint(hue) : 'var(--color-neutral-100)', color: on ? ink(hue) : TEXT, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' });
 /** 18.000 → 18k, 1.250.000 → 1,3M, for the small day tiles. */
 const compactAmt = (n: number) => {
-  const a = Math.abs(n), loc = isCOP() ? 'es-CO' : 'en-US';
+  const a = Math.abs(n), i = curInfo();
   if (moneyHidden() && n) return '***';
-  // Pesos have no cents; in $, € and £ small amounts keep them (0.60, 12.5).
-  return a >= 1e6 ? `${(n / 1e6).toLocaleString(loc, { maximumFractionDigits: 1 })}M` : a >= 1e3 ? `${Math.round(n / 1e3)}k` : n.toLocaleString(loc, { maximumFractionDigits: isCOP() ? 0 : 2 });
+  // Currencies without cents round; the others keep cents on small amounts (0.60, 12.5).
+  const num1 = (v: number) => formatNumber(v, i, Number.isInteger(Math.round(v * 10) / 10) ? 0 : 1);
+  return a >= 1e6 ? `${n < 0 ? '-' : ''}${num1(a / 1e6)}M` : a >= 1e3 ? `${Math.round(n / 1e3)}k` : `${n < 0 ? '-' : ''}${formatNumber(a, i, i.decimals && !Number.isInteger(a) ? 2 : 0)}`;
 };
 
 /* ---------------- Saved confirmation ---------------- */
@@ -621,7 +646,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
   /** Everything to one place (for the shortfall, only as much as it needs). */
   const allTo = (key: string): Record<string, string> => {
     const v = key === COVER ? Math.min(leftover, shortfall) : leftover;
-    return v > 0 ? { [key]: String(d.settings.currency === 'COP' ? Math.floor(v) : v) } : {};
+    return v > 0 ? { [key]: String(Math.floor(v * moneyScale()) / moneyScale()) } : {};
   };
   const [parts, setParts] = useState<Record<string, string>>(() => (to ? allTo(to) : {}));
   if (!s) return null;

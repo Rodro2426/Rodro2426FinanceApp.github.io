@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { glyph } from './PocketIcons';
 import type { Data, Expense } from '../lib/types';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
-import { catOf, curSymbol, fmt, fxText, initialOf, isCOP, pocketStats, type PocketStats } from '../lib/derive';
+import { catOf, curSymbol, fmt, fxText, initialOf, moneyScale, pocketStats, type PocketStats } from '../lib/derive';
 import { relDay, type Ctx } from '../lib/dates';
 import { MoneyInput } from './MoneyInput';
 import { tr } from '../lib/i18n';
@@ -149,7 +149,7 @@ export function PctSlider({ amount, total, max = total, hue, label, onChange }: 
   const pick = (v: number) => {
     const raw = v >= 100 ? total : (total * v) / 100;
     const amt = Math.max(0, Math.min(max, raw));
-    onChange(isCOP() ? Math.floor(amt) : Math.floor(amt * 100) / 100);
+    onChange(Math.floor(amt * moneyScale()) / moneyScale());
   };
   return (
     <div style={{ flexBasis: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '0 0 2px 42px' }}>

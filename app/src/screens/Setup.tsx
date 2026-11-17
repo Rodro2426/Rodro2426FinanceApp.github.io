@@ -1,6 +1,8 @@
 // First-time setup after creating an account (or starting from scratch): one question at a time, each a glass pill
 // that opens into a card, over a dark screen with the glowing Pockets flower and a breathing mint/lavender light.
 // The motion copies the approved mock (mocks/welcome-motion/compositions/opt-a.html). Every step saves as you go.
+import { refreshUsdRate } from '../lib/invest';
+import { CURRENCIES, CURRENCY_LIST, codeOf, type CurrencyCode } from '../lib/currency';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { closeSheet, flash, getData, replaceData, setData, setUI, useApp } from '../lib/store';
 import type { Data } from '../lib/types';
@@ -12,7 +14,7 @@ import { BANKS, BILLS, bankLogo, leftFree, makeAccount, makeBills, makeCard, mak
 import { MoneyInput } from '../ui/MoneyInput';
 import { glyph } from '../ui/PocketIcons';
 
-type Step = 'hello' | 'account' | 'card' | 'income' | 'bills' | 'pockets' | 'split' | 'done';
+type Step = 'hello' | 'currency' | 'account' | 'card' | 'income' | 'bills' | 'pockets' | 'split' | 'done';
 
 // Colours come from CSS (styles.css, .setup): dark or light with the app's theme, so the iPhone's top bar matches.
 const INK = 'var(--su-ink)', SOFT = 'var(--su-soft)', MINT = 'var(--su-accent)', DEEP = 'var(--su-on-accent)';
@@ -32,14 +34,14 @@ const shapes = (h: number) => {
 };
 
 const QUESTION: Record<Step, string> = {
-  hello: 'Welcome to Pockets', account: "What's your main bank?", card: 'Do you have a credit card?', income: 'How much do you earn a month?',
+  hello: 'Welcome to Pockets', currency: 'Which currency do you use?', account: "What's your main bank?", card: 'Do you have a credit card?', income: 'How much do you earn a month?',
   pockets: 'What do you spend on each month?', split: 'How your income splits', bills: 'Any fixed bills?', done: 'All set'
 };
 
 export default function Setup() {
   const { data: d } = useApp();
   // Apple Pay purchases are an optional extra in Profile, never part of the first setup.
-  const steps: Step[] = ['hello', 'account', 'card', 'income', 'bills', 'pockets', 'split', 'done'];
+  const steps: Step[] = ['hello', 'currency', 'account', 'card', 'income', 'bills', 'pockets', 'split', 'done'];
   const [step, setStep] = useState<Step>(() => { const s = getData().settings.setupStep as Step | undefined; return s && QUESTION[s] ? s : 'hello'; });
   // Reopened on a step that isn't in today's list (e.g. Apple Pay before the sign-in loaded): keep it, just before Done.
   if (!steps.includes(step)) steps.splice(steps.length - 1, 0, step);
@@ -153,6 +155,7 @@ export default function Setup() {
           <div ref={q} aria-live="polite" style={{ position: 'absolute', left: 24, right: 24, top: 0, height: PILL, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: 18, fontWeight: 600, pointerEvents: 'none' }}>{QUESTION[step]}</div>
           <div ref={body} style={{ position: 'relative', padding: '28px 22px 22px', minHeight: 180, pointerEvents: busy ? 'none' : undefined }}>
             {step === 'hello' && <Hello name={name} onStart={next} />}
+            {step === 'currency' && <CurrencyStep onDone={next} />}
             {step === 'account' && <AccountStep onDone={next} />}
             {step === 'card' && <CardStep onDone={next} />}
             {step === 'income' && <IncomeStep onDone={next} />}
@@ -232,6 +235,29 @@ function Hello({ name, onStart }: { name: string; onStart: () => void }) {
   </>;
 }
 
+/** The country's currency, asked first so every amount after it looks right. Changeable later in Profile. */
+function CurrencyStep({ onDone }: { onDone: () => void }) {
+  const { data: d } = useApp();
+  const now = codeOf(d.settings.currency);
+  const pick = (k: CurrencyCode) => { setData(x => ({ settings: { ...x.settings, currency: k } })); refreshUsdRate(); onDone(); };
+  return <>
+    <H>Which currency do you use?</H>
+    <Sub>Amounts in Pockets use it. You can still add a purchase in dollars, and change this later in Profile.</Sub>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 18 }}>
+      {CURRENCY_LIST.map(k => (
+        <button key={k} onClick={() => pick(k)} aria-pressed={k === now} className="pr97" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 18, border: 0, background: k === now ? MINT : 'var(--su-fill)', color: k === now ? DEEP : INK, fontSize: 16, fontWeight: 600, cursor: 'pointer', textAlign: 'left' }}>
+          <span aria-hidden="true" style={{ fontSize: 22 }}>{CURRENCIES[k].flag}</span>
+          <span style={{ flex: 1 }}>{CURRENCIES[k].country}</span>
+          <span style={{ fontSize: 14, opacity: 0.75 }}>{k}</span>
+        </button>
+      ))}
+    </div>
+  </>;
+}
+
+/** Suggested banks are Colombian; elsewhere only Cash is offered and people type their own bank. */
+const banksFor = () => (codeOf(getData().settings.currency) === 'COP' ? BANKS : BANKS.filter(b => b.cash));
+
 function AccountStep({ onDone }: { onDone: () => void }) {
   const [rows, setRows] = useState<{ name: string; bal: string; photo?: string | null }[]>([]);
   const own = (n: string) => !BANKS.some(b => b.name === n);
@@ -248,7 +274,7 @@ function AccountStep({ onDone }: { onDone: () => void }) {
     <H>Your accounts</H>
     <Sub>Tap your bank (or several) and add its logo in one go. Not on the list? Type it below.</Sub>
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
-      {BANKS.map(b => <Chip key={b.name} on={has(b.name)} onClick={() => toggle(b.name)} icon={<Logo src={bankLogo(b.name)} pad={b.pad} />}>{b.name}</Chip>)}
+      {banksFor().map(b => <Chip key={b.name} on={has(b.name)} onClick={() => toggle(b.name)} icon={<Logo src={bankLogo(b.name)} pad={b.pad} />}>{b.name}</Chip>)}
       {rows.filter(r => own(r.name)).map(r => <Chip key={r.name} on onClick={() => toggle(r.name)} icon={<Logo src={r.photo ?? null} />}>{r.name}</Chip>)}
     </div>
     <OwnName placeholder="Another bank or wallet" label="Your own bank name" onAdd={n => !has(n) && setRows(r => [...r, { name: n, bal: '' }])} />

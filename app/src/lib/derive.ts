@@ -1,4 +1,5 @@
 import { getLang, tr } from './i18n';
+import { codeOf, formatNumber, infoOf, unitsOf } from './currency';
 import type { Account, Data, Expense, Income, Move } from './types';
 import { debtAcctLines } from './debts';
 import { POCKET_CAT } from './constants';
@@ -8,30 +9,32 @@ import { STARS, moneyHidden } from './privacy';
 import { unitsFor, weekShares } from './split';
 
 export const num = (s: unknown) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
-export const isCOP = () => getData().settings.currency === 'COP';
-export const curSymbol = () => (isCOP() ? '$' : getData().settings.currency);
-/** Units per currency unit for splitting money: whole pesos, or cents in $, € and £. */
-export const moneyScale = () => (isCOP() ? 1 : 100);
+/** The app's currency: its code and how its amounts look. */
+export const curCode = () => codeOf(getData().settings.currency);
+export const curInfo = () => infoOf(getData().settings.currency);
+export const isCOP = () => curCode() === 'COP';
+export const curSymbol = () => curInfo().symbol;
+/** Units per currency unit for splitting money: 1 without cents (COP, CLP, PYG), 100 with them. */
+export const moneyScale = () => unitsOf(getData().settings.currency);
+const money = (n: number) => { const i = curInfo(); return i.symbol + (i.space ? ' ' : '') + formatNumber(n, i); };
 /** Like `fmt`, but never hidden by the eye (for notifications sent to friends). */
 export function fmtPlain(n: number) {
-  const cop = isCOP();
-  const s = curSymbol() + Math.abs(n).toLocaleString(cop ? 'es-CO' : 'en-US', { minimumFractionDigits: cop ? 0 : 2, maximumFractionDigits: cop ? 0 : 2 });
+  const s = money(n);
   return n < 0 ? '−' + s : s;
 }
 export function fmt(n: number, sign?: boolean) {
-  const cop = isCOP();
   if (moneyHidden()) return (n < 0 ? '−' : sign && n > 0 ? '+' : '') + curSymbol() + STARS;
-  const s = curSymbol() + Math.abs(n).toLocaleString(cop ? 'es-CO' : 'en-US', { minimumFractionDigits: cop ? 0 : 2, maximumFractionDigits: cop ? 0 : 2 });
+  const s = money(n);
   return n < 0 ? '−' + s : sign && n > 0 ? '+' + s : s;
 }
-export const roundAmt = (n: number) => (isCOP() ? Math.round(n) : Math.round(n * 100) / 100);
+export const roundAmt = (n: number) => { const u = moneyScale(); return Math.round(n * u) / u; };
 /** New account balance after editing it: the old exact balance if the box still shows it (interest adds tiny fractions), else what was typed. */
 export const editedBalance = (typed: number, old: number) => (typed === roundAmt(old) ? old : roundAmt(typed));
 export const pctOf = (a: number, b: number) => (b > 0 ? Math.max(0, Math.min(100, (a / b) * 100)) : 0).toFixed(1) + '%';
 export const uid = (p: string) => p + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
 
 /** "US$20,00 at TRM $4.123" for converted dollar amounts. */
-export const fxText = (o?: { amt: number; rate: number; official: boolean }) => (o ? moneyHidden() ? `US$${STARS}` : `US$${o.amt.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} at ${o.official ? 'TRM ' : '≈'}${fmt(o.rate)}` : undefined);
+export const fxText = (o?: { amt: number; rate: number; official: boolean }) => (o ? moneyHidden() ? `US$${STARS}` : `US$${formatNumber(o.amt, curInfo(), 2)} at ${o.official ? 'TRM ' : '≈'}${fmt(o.rate)}` : undefined);
 export const ctxOf = (_d?: Data) => ctxAt();
 export const catOf = (e: Expense): [string, string] => (e.cat ? [e.cat, e.sub || ''] : POCKET_CAT[e.p] || ['Other', 'Other']);
 export const byDateDesc = (x: { date: string; ts: number }, y: { date: string; ts: number }) => (y.date > x.date ? 1 : y.date < x.date ? -1 : y.ts - x.ts);

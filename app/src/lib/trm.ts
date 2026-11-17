@@ -3,16 +3,21 @@ import { STARS, moneyHidden } from './privacy';
 // cached per day. Weekends and holidays use the TRM in force that day.
 import type { Bill, Data } from './types';
 import { getData, setData } from './store';
+import { codeOf, formatNumber, infoOf } from './currency';
+import { perUsd } from './invest';
 
 const DATASET = 'https://www.datos.gov.co/resource/32sa-8pi3.json';
 
-/** Bills priced in dollars are converted only when the app itself is in pesos. */
-export const isUsd = (b: Bill) => b.currency === 'USD' && getData().settings.currency === 'COP';
+/** Bills priced in dollars are converted whenever the app itself isn't in dollars. (`currency: 'COP'` means the app's own currency.) */
+export const isUsd = (b: Bill) => b.currency === 'USD' && codeOf(getData().settings.currency) !== 'USD';
+/** Colombia has an official daily dollar rate (TRM); other currencies use the latest market rate. */
+export const usesTrm = () => codeOf(getData().settings.currency) === 'COP';
 
 /** TRM for a date, if already fetched. */
 export const trmFor = (d: Data, date: string): number | undefined => d.fx?.trm[date];
 /** Best rate available right now: newest cached TRM, else the investments rate. */
 export function latestRate(d: Data) {
+  if (codeOf(d.settings.currency) !== 'COP') return perUsd(d.investments, d.settings.currency);
   const days = Object.keys(d.fx?.trm || {}).sort();
   return days.length ? d.fx.trm[days[days.length - 1]] : d.investments.usdRate;
 }
@@ -46,4 +51,4 @@ export async function ensureTrm(dates: string[]) {
 }
 
 /** "US$20,00" */
-export const fmtUsd = (n: number) => moneyHidden() ? 'US$' + STARS : 'US$' + n.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const fmtUsd = (n: number) => moneyHidden() ? 'US$' + STARS : 'US$' + formatNumber(n, infoOf(getData().settings.currency), 2);

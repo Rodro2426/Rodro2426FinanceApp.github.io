@@ -1,7 +1,8 @@
+import { unitsOf } from './currency';
 // Splitting money into whole units (pesos, or cents for other currencies) so the parts add up exactly.
 
 /** Units per currency unit: COP has no cents. */
-export const unitsFor = (currency: string) => (currency === 'COP' ? 1 : 100);
+export const unitsFor = (currency: string) => unitsOf(currency);
 
 /**
  * Largest-remainder split of `total` by `weights`. Every part is a whole unit and the parts add up to

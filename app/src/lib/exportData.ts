@@ -1,4 +1,5 @@
 import type { Data } from './types';
+import { codeOf, infoOf } from './currency';
 import { acctTxns, catOf, num, periodsInMonth, myExpenses } from './derive';
 import { fmtDay, weeksIn, monthLabel, todayISO } from './dates';
 import { buildAiSheet, type AiSheet } from './aiSheet';
@@ -54,7 +55,7 @@ export function exportData(d: Data, month: string, acctId: string): ExportPayloa
   }
   const label = monthLabel(month), accLabel = acctId === 'all' ? 'All accounts' : a?.name || '';
   const cur = d.settings.currency;
-  const curName = cur === 'COP' ? 'Colombian pesos (COP)' : cur === '€' ? 'Euros' : cur === '£' ? 'Pounds' : 'Dollars';
+  const curName = `${infoOf(cur).name} (${codeOf(cur)})`;
   const endOfMonth = fmtDay(curMonth + '-01', { month: 'short' }) + ' ' + new Date(+curMonth.slice(0, 4), +curMonth.slice(5, 7), 0).getDate();
   const notes = [
     'Card payments are listed on the "Card payments" sheet and are not counted as spending.',

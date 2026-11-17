@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { refreshUsdRate } from '../lib/invest';
+import { CURRENCIES, CURRENCY_LIST, codeOf, infoOf } from '../lib/currency';
 import { lookOf, restartSoon, takeScrollBack } from '../lib/restart';
 import { glyph } from '../ui/PocketIcons';
 import { cardCycle, payDayOf } from '../lib/cards';
-import { getLang, setLang, type Lang } from '../lib/i18n';
+import { tr, getLang, setLang, type Lang } from '../lib/i18n';
 import { dateLocale } from '../lib/i18n';
 import { LockSetting } from '../ui/LockSetting';
 import { StartOverButton } from '../screens/Setup';
@@ -444,7 +446,7 @@ export function GoalSheet({ id }: { id: string }) {
     setData(x => ({ goals: x.goals.filter(y => y.id !== g.id) }));
     closeSheet(); flash(`${g.name} deleted`);
   };
-  const v = num(amt), q = d.settings.currency === 'COP' ? [50000, 100000, 250000] : [25, 50, 100];
+  const v = num(amt), q = infoOf(d.settings.currency).quick;
   const confirm = () => {
     if (!(v > 0)) return;
     const val = roundAmt(v);
@@ -515,7 +517,11 @@ export function SettingsSheet() {
         <FieldLabel m="14px 4px 6px">Your name</FieldLabel>
         <input value={st.name} onChange={e => setS({ name: e.target.value })} style={textInput} />
         <FieldLabel m="14px 4px 0">Currency</FieldLabel>
-        <Segmented<Currency> mt={6} items={[['COP', 'COP'], ['$', '$'], ['€', '€'], ['£', '£']]} value={st.currency} onPick={c => setS({ currency: c })} />
+        <select aria-label="Currency" value={codeOf(st.currency)} onChange={e => { const c = e.target.value as Currency; if (c === codeOf(st.currency)) return; if ((d.accounts.length || d.expenses.length) && !confirm(tr('Your saved amounts keep their numbers, they are not converted. For example, 1.000.000 stays 1.000.000 in the new currency. Change it?'))) return; setS({ currency: c }); refreshUsdRate(); }}
+          style={{ marginTop: 6, height: 50, borderRadius: 16, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 16, fontWeight: 600, padding: '0 14px' }}>
+          {CURRENCY_LIST.map(k => <option key={k} value={k}>{`${CURRENCIES[k].flag} ${k} · ${CURRENCIES[k].country}`}</option>)}
+        </select>
+        <span style={{ margin: '6px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Changing it changes how amounts look, not the numbers you saved.</span>
         <FieldLabel m="18px 4px 0">Appearance</FieldLabel>
         <Segmented items={[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]} value={st.theme ?? 'system'} onPick={v => setS({ theme: v as 'system' | 'light' | 'dark' })} mt={8} />
         <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>System follows your iPhone's light or dark mode.</span>

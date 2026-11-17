@@ -6,7 +6,7 @@ import { ringingToday } from './customReminders';
 import type { Account, Bill, Data, Expense, FxOrig, Income, Notif, NotifKind } from './types';
 import { allStats, ctxOf, fmt, roundAmt, uid } from './derive';
 import { addDays, daysInMonth, monthKey, prevMonthKey, shortDate, todayISO } from './dates';
-import { fmtUsd, isUsd, latestRate, trmFor } from './trm';
+import { fmtUsd, isUsd, latestRate, trmFor, usesTrm } from './trm';
 import { cardCycle } from './cards';
 
 /**
@@ -16,6 +16,7 @@ import { cardCycle } from './cards';
 export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig?: FxOrig } | null {
   if (isCardPay(b)) return { amt: roundAmt(cardPayAmount(d, b, date)) };
   if (!isUsd(b)) return { amt: b.amt };
+  if (!usesTrm()) { const rate = latestRate(d); return { amt: roundAmt(b.amt * rate), orig: { amt: b.amt, cur: 'USD', rate, official: false } }; }
   const trm = trmFor(d, date);
   if (!trm && !d.fx?.tried[date]) return null;
   const rate = trm ?? latestRate(d);
@@ -139,7 +140,7 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
       if (isCardPay(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'card', `${acctName(b.toCard)} payment tomorrow`, `${b.payMode === 'fixed' ? fmt(b.amt) : `The minimum payment (now ${fmt(cardPayAmount({ ...d, accounts: d.accounts.map(x => (x.id === b.acct ? { ...x, bal: Infinity } : x)) }, b, tomorrow))})`}${auto ? ` will be paid from ${acctName(b.acct)}` : ''}.`);
       else if (isIncome(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'income', `${b.name} arrives tomorrow`, `+${billAmount(b)}${auto ? ` will be added to ${acctName(b.acct)}` : ''}.`);
       else if (notMine(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}, paid by someone else. Nothing is taken from your accounts.`);
-      else notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}${isUsd(b) ? ' (converted with that day\'s TRM)' : ''}${auto ? ` will be paid automatically from ${acctName(b.acct)}` : '. Remember to pay it'}.`);
+      else notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}${isUsd(b) ? (usesTrm() ? ' (converted with that day\'s TRM)' : ' (converted at that day\'s rate)') : ''}${auto ? ` will be paid automatically from ${acctName(b.acct)}` : '. Remember to pay it'}.`);
     }
     const m = monthKey(today);
     if (!isAuto(b, d) && !isIncome(b) && dueDate(b, m) === today && !handled(m)) notify(`today:${b.id}:${today}`, today, 'bill', `${b.name} is due today`, notMine(b) ? `${billAmount(b)}, paid by someone else. Nothing is taken from your accounts.` : `${billAmount(b)}. Tick it off in Insights once it's paid.`);
@@ -198,7 +199,7 @@ export const shortDue = (b: Bill, m: string) => shortDate(dueDate(b, m));
 
 /** Dates whose TRM is needed: today, plus any dollar item waiting to run. */
 export function trmNeeded(d: Data, today = todayISO()): string[] {
-  if (!d.bills.some(isUsd)) return [];
+  if (!usesTrm() || !d.bills.some(isUsd)) return [];
   const out = [today];
   for (const b of d.bills) {
     if (!isUsd(b) || !isAuto(b, d)) continue;

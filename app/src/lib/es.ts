@@ -1,6 +1,21 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Your saved amounts keep their numbers, they are not converted. For example, 1.000.000 stays 1.000.000 in the new currency. Change it?|Tus montos guardados mantienen sus números, no se convierten. Por ejemplo, 1.000.000 sigue siendo 1.000.000 en la nueva moneda. ¿Cambiarla?
+Which currency do you use?|¿Qué moneda usas?
+Amounts in Pockets use it. You can still add a purchase in dollars, and change this later in Profile.|Los montos en Pockets la usan. Igual puedes agregar una compra en dólares y cambiarla luego en Perfil.
+Changing it changes how amounts look, not the numbers you saved.|Cambiarla cambia cómo se ven los montos, no los números que guardaste.
+Currency of this expense|Moneda de este gasto
+Amount in US dollars|Monto en dólares
+On the day it runs, it uses that day's rate.|El día que se ejecuta, usa la tasa de ese día.
+ (converted at that day's rate)| (convertido con la tasa de ese día)
+Mexico|México
+Peru|Perú
+Brazil|Brasil
+Dominican Republic|República Dominicana
+Ecuador, El Salvador, Panama, USA|Ecuador, El Salvador, Panamá, EE. UU.
+Europe|Europa
+United Kingdom|Reino Unido
 Where your money goes|En qué se va tu plata
 Spending month by month|Gastos mes a mes
 Money in vs. money out|Lo que entra vs. lo que sale
@@ -1984,6 +1999,7 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+≈ {0} at {1} per dollar|≈ {0} a {1} por dólar
 {0} wants to be your friend|{0} quiere ser tu amigo
 Nothing open with {0}. Add a debt when one of you pays for the other.|No hay nada pendiente con {0}. Agrega una deuda cuando uno pague por el otro.
 {0} moves to {1}'s next month|{0} pasa al próximo mes de {1}

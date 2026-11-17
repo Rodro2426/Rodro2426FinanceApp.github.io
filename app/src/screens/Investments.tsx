@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { EyeToggle } from '../ui/EyeToggle';
 import { useApp, setUI, openSheet, setData, flash } from '../lib/store';
 import { LINE, TEXT, ink, tint } from '../lib/constants';
-import { fmt, isCOP, num } from '../lib/derive';
+import { curCode, curInfo, fmt, isCOP, num } from '../lib/derive';
+import { formatNumber } from '../lib/currency';
 import { dailyRate, monthlyRate } from '../lib/interest';
 import { OTHER, colorOf, finnhubKey, holdings, perUsd, refreshQuotes, refreshUsdRate, type Holding } from '../lib/invest';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -20,11 +21,11 @@ const signed = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(
 const compact = (s: string) => {
   const m = /^([+−]?)(\D*)([\d.,]+)$/.exec(s);
   if (!m || s.length <= 9) return s;
-  const cop = isCOP(), n = Number(cop ? m[3].replace(/\./g, '').replace(',', '.') : m[3].replace(/,/g, ''));
+  const i = curInfo(), n = Number(m[3].split(i.group).join('').replace(i.dec, '.'));
   const [v, u] = n >= 1e9 ? [n / 1e9, ' mil M'] : n >= 1e6 ? [n / 1e6, ' M'] : [n / 1e3, ' mil'];
-  return `${m[1]}${m[2]}${v.toLocaleString(cop ? 'es-CO' : 'en-US', { maximumFractionDigits: 1 })}${u}`;
+  return `${m[1]}${m[2]}${formatNumber(v, i, Number.isInteger(Math.round(v * 10) / 10) ? 0 : 1)}${u}`;
 };
-const pctTxt = (p: number) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p * 100).toFixed(2).replace('.', isCOP() ? ',' : '.')}%`;
+const pctTxt = (p: number) => `${p > 0 ? '+' : p < 0 ? '−' : ''}${Math.abs(p * 100).toFixed(2).replace('.', curInfo().dec)}%`;
 const ago = (t: number) => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'just now' : m < 60 ? `${m} min ago` : m < 1440 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} d ago`; };
 
 export default function Investments() {
@@ -113,7 +114,7 @@ function Portfolio() {
           ))}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', fontSize: 12, color: 'var(--color-neutral-600)', gap: 8 }}>
-          <span>{d.settings.currency === 'COP' ? `1 USD = ${fmt(inv.usdRate)}${inv.usdManual ? ' (typed in)' : ''}` : d.settings.currency !== '$' ? `1 USD = ${fmt(perUsd(inv, d.settings.currency))}` : ''}{lastAt ? ` · prices ${ago(lastAt)}` : ''}</span>
+          <span>{isCOP() ? `1 USD = ${fmt(inv.usdRate)}${inv.usdManual ? ' (typed in)' : ''}` : curCode() !== 'USD' ? `1 USD = ${fmt(perUsd(inv, d.settings.currency))}` : ''}{lastAt ? ` · prices ${ago(lastAt)}` : ''}</span>
           <button onClick={() => refresh()} disabled={busy} aria-label="Refresh prices" className="d-ink" style={{ border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, opacity: busy ? 0.5 : 1 }}><I.Refresh size={13} />{busy ? 'Updating…' : 'Refresh'}</button>
         </div>
       </div>

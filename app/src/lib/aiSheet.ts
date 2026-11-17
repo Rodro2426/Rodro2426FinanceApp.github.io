@@ -1,5 +1,6 @@
 // Builds the "For AI" sheet: one page with every budget and figure of the period,
 // written so an AI assistant given the Excel file can answer questions about it.
+import { codeOf, infoOf } from './currency';
 import { cardDueLabel } from './cards';
 import type { Data } from './types';
 import { catOf, num, periodsInMonth, myExpenses, isHalf, isMonthly, roundAmt } from './derive';
@@ -21,7 +22,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const period = months.length === 1 ? monthLabel(months[0]) : `${monthLabel(months[0])} to ${monthLabel(months[months.length - 1])}`;
   const acctLabel = acctId === 'all' ? 'All accounts' : acc(acctId)?.name || '';
   const cur = d.settings.currency;
-  const curName = cur === 'COP' ? 'Colombian pesos (COP)' : cur === '€' ? 'euros' : cur === '£' ? 'pounds' : 'dollars';
+  const curName = `${infoOf(cur).name} (${codeOf(cur)})`;
 
   const exp = (acctId === 'all' ? myExpenses(d) : d.expenses).filter(e => months.includes(e.date.slice(0, 7)) && (acctId === 'all' || e.a === acctId));
   const total = exp.reduce((a, e) => a + e.amt, 0);
