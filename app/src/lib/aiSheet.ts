@@ -2,7 +2,7 @@
 // written so an AI assistant given the Excel file can answer questions about it.
 import { cardDueLabel } from './cards';
 import type { Data } from './types';
-import { catOf, num, periodsInMonth, myExpenses, isHalf, roundAmt } from './derive';
+import { catOf, num, periodsInMonth, myExpenses, isHalf, isMonthly, roundAmt } from './derive';
 import { addDays, daysInMonth, fmtDay, inRange, monthLabel, shortDate, todayISO, weekStart } from './dates';
 
 export type Cell = string | number | { v: number; fmt: 'money' | 'pct' };
@@ -27,7 +27,8 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const total = exp.reduce((a, e) => a + e.amt, 0);
   const income = num(d.incomeStr);
   const weeklyTotal = d.pockets.reduce((a, p) => a + num(p.weeklyStr), 0);
-  const plannedMonth = weeklyTotal * weeks;
+  // Each pocket counts once per period in the month: weeks, 2 quincenas, or 1 for a monthly pocket.
+  const plannedMonth = d.pockets.reduce((a, p) => a + num(p.weeklyStr) * periodsInMonth(p, weeks), 0);
   const incs = (d.incomes || []).filter(t => months.includes(t.date.slice(0, 7)) && (acctId === 'all' || t.a === acctId));
   const pays = d.payments.filter(p => !p.cdt && months.includes(p.date.slice(0, 7)) && (acctId === 'all' || p.from === acctId || p.to === acctId));
   const days = months.reduce((a, m) => a + (m === curMonth ? Number(today.slice(8, 10)) : daysInMonth(m)), 0);
@@ -48,8 +49,8 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
       ['Accounts included', acctLabel],
       ['Monthly income', money(income)],
       ['Weeks per month in the plan', weeks],
-      ['Total of weekly pocket budgets', money(weeklyTotal)],
-      [`Planned spending per month (weekly total × ${weeks})`, money(plannedMonth)],
+      ['Total of pocket budgets, each for its own period (week, 15 days or month)', money(weeklyTotal)],
+      [`Planned spending per month (each pocket × its periods in the month; a week counts ${weeks} times)`, money(plannedMonth)],
       ['Income not assigned to pockets', money(income - plannedMonth)],
       ['Income received in the period', money(incs.reduce((a, t) => a + t.amt, 0))],
       ['Total spent in the period', money(total)],
@@ -141,7 +142,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const moves = d.moves.filter(m => periodWeeks.has(`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`));
   sections.push({
     title: 'Money moved between pockets and goals', header: ['Week', 'From', 'To', 'Amount'],
-    rows: moves.map(m => [`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`, goalOrPocket(m.from), m.next ? `${goalOrPocket(m.to)} (${isHalf(d.pockets.find(p => p.id === m.to)) ? 'next quincena' : 'next week'})` : goalOrPocket(m.to), money(m.amt)])
+    rows: moves.map(m => [`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`, goalOrPocket(m.from), m.next ? `${goalOrPocket(m.to)} (${isMonthly(d.pockets.find(p => p.id === m.to)) ? 'next month' : isHalf(d.pockets.find(p => p.id === m.to)) ? 'next quincena' : 'next week'})` : goalOrPocket(m.to), money(m.amt)])
   });
 
   sections.push({

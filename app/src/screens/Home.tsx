@@ -147,7 +147,7 @@ export default function Home() {
               return (
                 <button key={p.id} className="dh-line" onClick={() => openSheet({ name: 'pocket', id: p.id, view })}>
                   <span className="dh-dot" style={{ backgroundColor: tint(p.hue), color: ink(p.hue) }}>{glyph(p.initial)}<Fill src={p.photoBg} /></span>
-                  <span className="dh-name"><b>{p.name}</b><small>{off || (p.period === 'half' ? 'Every 15 days' : 'Every week')}</small></span>
+                  <span className="dh-name"><b>{p.name}</b><small>{off || (p.period === 'month' ? 'Every month' : p.period === 'half' ? 'Every 15 days' : 'Every week')}</small></span>
                   <span className="dh-track" style={{ backgroundColor: tint(p.hue) }}><span className="bar-fill" style={{ background: ink(p.hue), clipPath: `inset(0 ${100 - pct}% 0 0 round 999px)` }} /></span>
                   <span className="dh-amt"><b style={{ color: left < 0 ? RED : undefined }}>{fmt(left)}</b><small>left of {fmt(budget)}</small></span>
                 </button>
@@ -310,7 +310,7 @@ function PocketGrid({ items, tour, view }: { items: { p: PocketStats; left: numb
               <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>{off}</span>
             </> : <>
               <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.025em', color: left < 0 ? RED : ink(p.hue) }}>{fmt(left)}</span>
-              <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>left of {fmt(budget)}{view === 'day' ? ' today' : view === 'week' && p.period === 'half' ? ` · until ${shortDate(p.to)}` : ''}</span>
+              <span style={{ fontSize: 12, color: ink(p.hue), opacity: 0.8 }}>left of {fmt(budget)}{view === 'day' ? ' today' : view === 'week' && p.period !== 'week' ? ` · until ${shortDate(p.to)}` : ''}</span>
             </>}
           </div>
         </div>

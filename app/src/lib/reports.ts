@@ -2,7 +2,7 @@
 import type { Data, Income } from './types';
 import { debtsWorthAt } from './debts';
 import { addDays, daysInMonth, inRange, makeCtx, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
-import { acctTxns, catOf, ctxOf, daysOf, halfOf, isHalf, monthStats, pocketStats, myExpenses, weekdayOf, weekShare } from './derive';
+import { acctTxns, catOf, ctxOf, daysOf, isSpan, spanOf, monthStats, pocketStats, myExpenses, weekdayOf, weekShare } from './derive';
 import { cdtView, cdtsOf } from './cdt';
 import { holdings } from './invest';
 import { groupValue } from './networth';
@@ -148,13 +148,13 @@ export function budgetWeeks(d: Data, c: Ctx, n: number, pocket: string | null) {
     for (const id of ids) {
       const p = d.pockets.find(x => x.id === id), s = pocketStats(d, id, cw);
       if (!p || !s) continue;
-      if (!isHalf(p)) { budget += s.budget; spent += s.spent; continue; }
+      if (!isSpan(p)) { budget += s.budget; spent += s.spent; continue; }
       if (i === 0) { const w = weekShare(d, id, cw, s); budget += w.budget; spent += w.spent; continue; }
       const on = new Set(daysOf(p));
       const active = (a: string, b: string) => { let n = 0; for (let x = a; x <= b; x = addDays(x, 1)) if (on.has(weekdayOf(x))) n++; return n; };
-      let q = halfOf(ws)[0];
+      let q = spanOf(p, ws)[0];
       while (q <= we) {
-        const [qa, qb] = halfOf(q);
+        const [qa, qb] = spanOf(p, q);
         const from = ws > qa ? ws : qa, to = we < qb ? we : qb;
         const total = active(qa, qb);
         if (total > 0) budget += pocketStats(d, id, makeCtx(c.weeks, from))!.budget * active(from, to) / total;

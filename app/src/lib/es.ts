@@ -1,11 +1,32 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Weekly|Semanal
+Monthly pockets|Bolsillos mensuales
+Monthly|Mensual
+Just one amount for the whole month, from the 1st to the last day. No weekly budget to think about.|Un solo monto para todo el mes, del 1 al último día. Sin presupuesto semanal en qué pensar.
+Budget for the month|Presupuesto del mes
+This month is already underway|Este mes ya empezó
+For this month only, it starts with:|Solo por este mes, empieza con:
+Every day. The Today view shares the month’s money across the days left.|Todos los días. La vista de Hoy reparte la plata del mes entre los días que quedan.
+Carry over to next month|Pasar lo que sobre al próximo mes
+To next month|Al próximo mes
+From last month|Del mes pasado
+per month|al mes
+per period|por periodo
+ · just the month| · solo el mes
+How you want to follow them|Cómo quieres seguirlos
+Week by week|Semana a semana
+Just the month|Solo el mes
+One amount per pocket for the whole month. It starts over on the 1st.|Un monto por bolsillo para todo el mes. Empieza de nuevo el 1.
+Each pocket gets a weekly budget that starts over every Monday.|Cada bolsillo tiene un presupuesto semanal que empieza de nuevo cada lunes.
+For the whole month|Para todo el mes
+next month|próximo mes
 What do you spend on each month?|¿Cuánto gastas al mes en cada cosa?
 How your income splits|Así se reparte tu ingreso
 Here's how your income splits|Así se reparte tu ingreso
 Each pocket takes a slice of what you earn. Slide to give one more or less; what's left goes to savings.|Cada bolsillo se lleva una parte de lo que ganas. Desliza para darle más o menos; lo que sobra va a tus ahorros.
-Money for each kind of spending. Type what you spend on each one a month; Pockets splits it into weeks. We suggested amounts from your income.|Plata para cada tipo de gasto. Escribe cuánto gastas en cada uno al mes; Pockets lo reparte en semanas. Te sugerimos montos según tu ingreso.
+Money for each kind of spending. Type what you spend on each one a month. We suggested amounts from your income.|Plata para cada tipo de gasto. Escribe cuánto gastas en cada uno al mes. Te sugerimos montos según tu ingreso.
 Left to save|Queda para ahorrar
 Looks good|Se ve bien
 Each month|Cada mes
@@ -1899,6 +1920,8 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+{0} moves to {1}'s next month|{0} pasa al próximo mes de {1}
+{0} next month · only this once|{0} el próximo mes · solo esta vez
 {0} a month|{0} al mes
 {0} a week|{0} a la semana
 {0} every 15 days|{0} cada quincena

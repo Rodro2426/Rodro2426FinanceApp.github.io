@@ -51,29 +51,40 @@ export interface PocketStats {
   /** What came in from the previous periods (0 when carry over is off); already part of `budget`. */
   carry: number;
   initial: string; photoBg: string; emoji: string; photo: string | null;
-  /** 'week' or 'half' (every 15 days), and the first and last day of the current period. */
-  period: 'week' | 'half'; from: string; to: string;
+  /** 'week', 'half' (every 15 days) or 'month', and the first and last day of the current period. */
+  period: 'week' | 'half' | 'month'; from: string; to: string;
 }
 
 /* ---------------- Periods: a week, or half a month ---------------- */
-type PocketLike = { period?: 'week' | 'half'; weeklyStr?: string; start?: { from: string; amt: number } } | undefined;
+type PocketLike = { period?: 'week' | 'half' | 'month'; weeklyStr?: string; start?: { from: string; amt: number } } | undefined;
 export const isHalf = (p: PocketLike) => p?.period === 'half';
+/** A pocket that only has a monthly budget: it starts over on the 1st. */
+export const isMonthly = (p: PocketLike) => p?.period === 'month';
+/** Pockets whose period is a stretch of the calendar (a quincena or the whole month) instead of a Mon–Sun week. */
+export const isSpan = (p: PocketLike) => isHalf(p) || isMonthly(p);
+/** The calendar month a day is in: the 1st to its last day. */
+export function monthOf(iso: string): [string, string] {
+  const m = iso.slice(0, 7);
+  return [m + '-01', `${m}-${String(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 0).getDate()).padStart(2, '0')}`];
+}
+/** The quincena or month (for a span pocket) that contains `iso`. */
+export const spanOf = (p: PocketLike, iso: string): [string, string] => (isMonthly(p) ? monthOf(iso) : halfOf(iso));
 /** The quincena a day is in: 1st–15th or 16th–last day. */
 export function halfOf(iso: string): [string, string] {
   const m = iso.slice(0, 7);
   return Number(iso.slice(8, 10)) <= 15 ? [m + '-01', m + '-15'] : [m + '-16', `${m}-${String(new Date(Number(m.slice(0, 4)), Number(m.slice(5, 7)), 0).getDate()).padStart(2, '0')}`];
 }
-/** The context for one pocket: for a 15-day pocket "the week" becomes its current quincena. */
+/** The context for one pocket: for a 15-day or monthly pocket "the week" becomes its current quincena or month. */
 export function pocketCtx(p: PocketLike, c: Ctx): Ctx {
-  if (!isHalf(p)) return c;
-  const [a, b] = halfOf(c.today);
+  if (!isSpan(p)) return c;
+  const [a, b] = spanOf(p, c.today);
   return { ...c, weekStart: a, weekEnd: b, daysLeft: daysBetween(c.today, b) };
 }
 /** First and last day of the period that contains `iso`. */
-export const periodAt = (p: PocketLike, iso: string): [string, string] => (isHalf(p) ? halfOf(iso) : [weekStartOf(iso), addDays(weekStartOf(iso), 6)]);
+export const periodAt = (p: PocketLike, iso: string): [string, string] => (isSpan(p) ? spanOf(p, iso) : [weekStartOf(iso), addDays(weekStartOf(iso), 6)]);
 const weekStartOf = (iso: string) => addDays(iso, -((parse(iso).getDay() + 6) % 7));
-/** Periods in a month: 2 quincenas, or the plan's weeks. */
-export const periodsInMonth = (p: PocketLike, weeks: number) => (isHalf(p) ? 2 : weeks);
+/** Periods in a month: 1 for a monthly pocket, 2 quincenas, or the plan's weeks. */
+export const periodsInMonth = (p: PocketLike, weeks: number) => (isMonthly(p) ? 1 : isHalf(p) ? 2 : weeks);
 /** The budget a pocket plans for a whole month (a smaller first period counts too). */
 export function monthPlanOf(p: PocketLike, c: Ctx): number {
   const amt = num(p?.weeklyStr);
@@ -83,16 +94,16 @@ export function monthPlanOf(p: PocketLike, c: Ctx): number {
 /** Whether a move was made in the period that starts on `start` (a week's Monday, or a quincena's first day). */
 function moveAtStart(m: Move, p: PocketLike, start: string): boolean {
   if (m.month) return false;
-  if (!isHalf(p)) return m.week === start;
-  const [a, b] = halfOf(start);
+  if (!isSpan(p)) return m.week === start;
+  const [a, b] = spanOf(p, start);
   return inRange(m.day ?? addDays(m.week, 6), a, b);
 }
 /** Whether a pocket-to-pocket move counts in this pocket's current period. */
 export function moveInPeriod(m: Move, p: PocketLike, c: Ctx): boolean {
-  return moveAtStart(m, p, isHalf(p) ? halfOf(c.today)[0] : c.weekStart);
+  return moveAtStart(m, p, isSpan(p) ? spanOf(p, c.today)[0] : c.weekStart);
 }
-const prevStart = (p: PocketLike, s: string) => (isHalf(p) ? halfOf(addDays(s, -1))[0] : addDays(s, -7));
-const nextStart = (p: PocketLike, s: string) => (isHalf(p) ? addDays(halfOf(s)[1], 1) : addDays(s, 7));
+const prevStart = (p: PocketLike, s: string) => (isSpan(p) ? spanOf(p, addDays(s, -1))[0] : addDays(s, -7));
+const nextStart = (p: PocketLike, s: string) => (isSpan(p) ? addDays(spanOf(p, s)[1], 1) : addDays(s, 7));
 
 /** A period's budget without any carry, and what was spent in it (moves in/out, spread income, and "next" moves arriving from the period before). */
 function periodParts(d: Data, p: Data['pockets'][number], c: Ctx) {
@@ -142,7 +153,7 @@ export function pocketStats(d: Data, id: string, c: Ctx = ctxOf(d)): PocketStats
     id, name: p.name, hue: p.hue, weekly, mIn, mOut, spent, budget, left: budget - spent, carry,
     initial: p.photo ? '' : p.emoji || p.name.trim().charAt(0).toUpperCase() || '·',
     photoBg: p.photo ? `url(${p.photo})` : 'none', emoji: p.emoji || '', photo: p.photo || null,
-    period: isHalf(p) ? 'half' : 'week', from: pc.weekStart, to: pc.weekEnd
+    period: p.period ?? 'week', from: pc.weekStart, to: pc.weekEnd
   };
 }
 export const allStats = (d: Data, c: Ctx = ctxOf(d)) => d.pockets.map(p => pocketStats(d, p.id, c)!);
@@ -150,8 +161,8 @@ export const allStats = (d: Data, c: Ctx = ctxOf(d)) => d.pockets.map(p => pocke
 export function weekShare(d: Data, id: string, c: Ctx = ctxOf(d), s: PocketStats | null = pocketStats(d, id, c)): { budget: number; spent: number; left: number } {
   const p = d.pockets.find(x => x.id === id);
   if (!p || !s) return { budget: 0, spent: 0, left: 0 };
-  if (!isHalf(p)) return { budget: s.budget, spent: s.spent, left: s.left };
-  const [qa, qb] = halfOf(c.today), weekEnd = addDays(c.weekStart, 6);
+  if (!isSpan(p)) return { budget: s.budget, spent: s.spent, left: s.left };
+  const [qa, qb] = spanOf(p, c.today), weekEnd = addDays(c.weekStart, 6);
   const from = c.weekStart > qa ? c.weekStart : qa, to = weekEnd < qb ? weekEnd : qb;
   const ds = dayStats(d, id, c, s);
   const n = ds.week.filter(x => x.date > c.today && x.date <= to && x.active).length;
@@ -184,10 +195,10 @@ export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
   const p = d.pockets.find(x => x.id === id);
   const moves = d.moves.filter(m => moveMonth(m) === c.month);
   // A "next" move leaves in its own month and arrives in the month the following period belongs to.
-  const arrives = (m: Move) => monthKey(isHalf(p) ? nextStart(p, periodAt(p, m.day ?? addDays(m.week, 6))[0]) : addDays(m.week, 13));
+  const arrives = (m: Move) => monthKey(isSpan(p) ? nextStart(p, periodAt(p, m.day ?? addDays(m.week, 6))[0]) : addDays(m.week, 13));
   const nextIn = d.moves.filter(m => m.next && m.to === id && arrives(m) === c.month).reduce((a, m) => a + m.amt, 0);
   // A "next" move out of a 15-day pocket leaves in the quincena it was made in, which can be in the month before moveMonth.
-  const halfNext = (m: Move) => !!m.next && isHalf(p);
+  const halfNext = (m: Move) => !!m.next && isSpan(p);
   const leaveMonth = (m: Move) => monthKey(periodAt(p, m.day ?? addDays(m.week, 6))[0]);
   const outNow = moves.filter(m => m.from === id && !halfNext(m)).reduce((a, m) => a + m.amt, 0);
   const outHalfNext = d.moves.filter(m => m.from === id && halfNext(m) && leaveMonth(m) === c.month).reduce((a, m) => a + m.amt, 0);
@@ -197,7 +208,7 @@ export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
   if (p?.carry) {
     const m01 = c.month + '-01';
     // Weekly: the first week whose Sunday is in the month (like moveMonth); 15-day: the quincena starting on the 1st.
-    carry = carryInto(d, p, isHalf(p) ? m01 : addDays(m01, -weekdayOf(m01)));
+    carry = carryInto(d, p, isSpan(p) ? m01 : addDays(m01, -weekdayOf(m01)));
   }
   const budget = monthPlanOf(p, c) + extra + carry;
   return { id, budget, spent, left: budget - spent, extra };

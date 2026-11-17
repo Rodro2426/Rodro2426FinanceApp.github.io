@@ -339,16 +339,23 @@ function PocketsStep({ onDone }: { onDone: () => void }) {
   const { data: d } = useApp();
   const income = num(d.incomeStr), weeks = d.settings.weeks || 4;
   const [picks, setPicks] = useState<PocketPick[]>(() => suggestPockets(income));
+  const [onlyMonth, setOnlyMonth] = useState(false);
   const free = leftFree(income, picks, d.bills.filter(b => b.kind !== 'Income').map(b => ({ on: true, amt: b.amt })));
   const upd = (key: string, patch: Partial<PocketPick>) => setPicks(p => p.map(x => (x.key === key ? { ...x, ...patch } : x)));
-  const save = () => { const ps = makePockets(picks, weeks); if (ps.length) setData(x => ({ pockets: [...x.pockets, ...ps] })); onDone(); };
+  const save = () => { const ps = makePockets(picks, weeks, onlyMonth); if (ps.length) setData(x => ({ pockets: [...x.pockets, ...ps] })); onDone(); };
   return <>
     <H>Your pockets</H>
-    <Sub>Money for each kind of spending. Type what you spend on each one a month; Pockets splits it into weeks. We suggested amounts from your income.</Sub>
+    <Sub>Money for each kind of spending. Type what you spend on each one a month. We suggested amounts from your income.</Sub>
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
       {picks.map(p => <Chip key={p.key} on={p.on} onClick={() => upd(p.key, { on: !p.on })} icon={<span style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{glyph(p.emoji)}</span>}>{p.name}</Chip>)}
     </div>
     <OwnName placeholder="Your own pocket" label="Your own pocket name" onAdd={n => setPicks(p => [...p, { key: 'own:' + n + p.length, name: n, emoji: 'pk:pocket', share: 0, on: true, monthly: 0 }])} />
+    <Label>How you want to follow them</Label>
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <Chip on={!onlyMonth} onClick={() => setOnlyMonth(false)}>Week by week</Chip>
+      <Chip on={onlyMonth} onClick={() => setOnlyMonth(true)}>Just the month</Chip>
+    </div>
+    <div style={{ marginTop: 8, fontSize: 13.5, lineHeight: 1.4, color: SOFT }}>{onlyMonth ? 'One amount per pocket for the whole month. It starts over on the 1st.' : 'Each pocket gets a weekly budget that starts over every Monday.'}</div>
     {picks.some(p => p.on) && <Label>Each month</Label>}
     {picks.filter(p => p.on).map(p => (
       <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
@@ -382,7 +389,7 @@ function SplitStep({ onDone }: { onDone: () => void }) {
   const whole = Math.max(income, used);
   const segs: [string, number][] = [...d.pockets.map(p => [color(p.hue), month[p.id] ?? 0] as [string, number]), ['var(--su-soft)', bills], ['var(--su-accent)', Math.max(0, rest)]];
   const save = () => {
-    setData(x => ({ pockets: x.pockets.map(p => (p.id in month ? { ...p, weeklyStr: String(weeklyOf(month[p.id], periodsInMonth(p, weeks))), perMonth: true } : p)) }));
+    setData(x => ({ pockets: x.pockets.map(p => (p.id in month ? { ...p, weeklyStr: String(weeklyOf(month[p.id], periodsInMonth(p, weeks))), perMonth: p.period === 'month' ? undefined : true } : p)) }));
     onDone();
   };
   return <>
@@ -416,7 +423,7 @@ function SplitStep({ onDone }: { onDone: () => void }) {
           style={{ '--c': c, '--p': `${(m / max) * 100}%` } as CSSProperties} />
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 13, color: SOFT, fontVariantNumeric: 'tabular-nums' }}>
           <span>{`${fmt(m)} a month`}</span>
-          <span>{p.period === 'half' ? `${fmt(weeklyOf(m, per))} every 15 days` : `${fmt(weeklyOf(m, per))} a week`}</span>
+          <span>{p.period === 'month' ? 'For the whole month' : p.period === 'half' ? `${fmt(weeklyOf(m, per))} every 15 days` : `${fmt(weeklyOf(m, per))} a week`}</span>
         </div>
       </div>;
     })}

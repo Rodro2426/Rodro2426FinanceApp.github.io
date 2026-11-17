@@ -90,8 +90,12 @@ export function makeIncome(total: number, pay: 'month' | 'half', day: number, ac
 
 /** The chosen pockets, in the person's language, each with its own colour. Own pockets typed by hand keep their name.
  *  The monthly amount is split evenly into the month's weeks (and the pocket's form opens on "A month"). */
-export function makePockets(picks: PocketPick[], weeks: number): Pocket[] {
-  return picks.filter(p => p.on && clean(p.name)).map((p, i) => ({ id: uid('p'), name: clean(p.name), emoji: p.emoji, weeklyStr: String(weeklyOf(p.monthly, weeks)), hue: hueAt(i), perMonth: true }));
+export function makePockets(picks: PocketPick[], weeks: number, onlyMonth = false): Pocket[] {
+  return picks.filter(p => p.on && clean(p.name)).map((p, i) => ({
+    id: uid('p'), name: clean(p.name), emoji: p.emoji, hue: hueAt(i),
+    // "Just the month": the pocket starts over on the 1st and its budget is the whole month.
+    ...(onlyMonth ? { weeklyStr: String(Math.max(0, roundAmt(p.monthly))), period: 'month' as const } : { weeklyStr: String(weeklyOf(p.monthly, weeks)), perMonth: true })
+  }));
 }
 /** A monthly amount as the budget of each week. */
 export const weeklyOf = (monthly: number, weeks: number) => Math.max(0, roundAmt(monthly / Math.max(1, weeks)));
