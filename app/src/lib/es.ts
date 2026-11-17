@@ -1,6 +1,10 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+A week|A la semana
+A month|Al mes
+Pin|Fijar
+Pinned|Fijado
 Use icon instead|Usar un ícono
 Choose any emoji|Elegir cualquier emoji
 Type or choose an emoji|Escribe o elige un emoji
@@ -1884,6 +1888,10 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+That's {0} a week, split over {1} weeks.|Son {0} a la semana, repartidos en {1} semanas.
+That's {0} every 15 days, split over 2 quincenas.|Son {0} cada quincena, repartidos en 2 quincenas.
+{0} opens on {1}|{0} abre en {1}
+Always open {0} on {1}|Abrir siempre {0} en {1}
 Reminder set for {0}|Recordatorio a las {0}
 Notification center · {0} new|Centro de notificaciones · {0} nuevas
 {0} on|{0} activado

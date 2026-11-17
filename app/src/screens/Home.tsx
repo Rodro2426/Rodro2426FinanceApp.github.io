@@ -1,4 +1,4 @@
-import { useApp, openSheet, setUI } from '../lib/store';
+import { useApp, openSheet, setUI, setData } from '../lib/store';
 import { glyph } from '../ui/PocketIcons';
 import { getLang } from '../lib/i18n';
 import { EyeToggle } from '../ui/EyeToggle';
@@ -62,9 +62,12 @@ export default function Home() {
   const monthBudget = months.reduce((a, x) => a + x.budget, 0), monthLeft = months.reduce((a, x) => a + x.left, 0);
   const monthTone = toneOf(monthBudget > 0 ? monthLeft / monthBudget : 0);
   const monthDaysLeft = daysBetween(c.today, `${c.month}-${String(daysInMonth(c.month)).padStart(2, '0')}`) + 1;
-  const [pocketPage, setPocketPage] = useState(1);
+  // The page each card opens on can be pinned (Profile isn't needed: the pin sits by the dots).
+  const faces = d.settings.homeFaces ?? {}, safeFace = faces.safe ?? 1, pocketFace = faces.pockets ?? 1;
+  const pinFace = (k: 'safe' | 'pockets', i: number) => setData(x => ({ settings: { ...x.settings, homeFaces: { ...x.settings.homeFaces, [k]: i } } }));
+  const [pocketPage, setPocketPage] = useState(pocketFace);
   const desk = useDesk();
-  const [view, setView] = useState<'day' | 'week' | 'month'>('week');
+  const [view, setView] = useState<'day' | 'week' | 'month'>((['day', 'week', 'month'] as const)[safeFace] ?? 'week');
   const comingList = (
       <ListCard>
         {upcoming.map((b, i) => (
@@ -186,7 +189,7 @@ export default function Home() {
 
       <Blocks page="home" title="Home" blocks={[
         { id: 'safe', name: 'Safe to spend', desc: 'Today, week and month cards', node: <>
-      <Pager label="Safe to spend" names={['today', 'this week', 'this month']} initial={1} pages={[
+      <Pager label="Safe to spend" names={['today', 'this week', 'this month']} initial={safeFace} pinned={safeFace} onPin={i => pinFace('safe', i)} pages={[
         <SafeCard key="d" tone={todayTone} title="Safe to spend today" left={todayLeft} budget={todayBudget} spent={todaySpent}
           sub={todayActive.length ? `of ${fmt(todayBudget)} for ${todayActive.length === all.length ? 'all your pockets' : todayActive.length === 1 ? '1 pocket' : `${todayActive.length} pockets`} today` : 'No pocket has today as a spending day'} />,
         <SafeCard key="w" tour tone={tone} title="Safe to spend this week" left={weekLeft} budget={weekBudget} spent={weekSpent} sub={`of ${fmt(weekBudget)} · ${c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left`} />,
@@ -211,7 +214,7 @@ export default function Home() {
       </> },
         { id: 'pockets', name: 'Pockets', desc: 'What is left in each pocket', node: <>
       <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={pocketPage === 0 ? 'Today' : pocketPage === 1 ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
-      {all.length > 0 && <Pager label="Pockets" names={['today', 'this week', 'this month']} initial={1} onPage={setPocketPage} pages={[
+      {all.length > 0 && <Pager label="Pockets" names={['today', 'this week', 'this month']} initial={pocketFace} pinned={pocketFace} onPin={i => pinFace('pockets', i)} onPage={setPocketPage} pages={[
         <PocketGrid key="d" view="day" items={all.map((p, i) => ({ p, left: days[i].left, budget: days[i].allowance, off: !days[i].active ? (days[i].spentToday > 0 ? `Spent ${fmt(days[i].spentToday)} today` : days[i].next ? `Not today · ${dayLabel(days[i].next!.date, c).slice(0, 3)} ${fmt(days[i].next!.amount)}` : 'Not today') : undefined }))} />,
         <PocketGrid key="w" view="week" items={all.map(p => ({ p, left: p.left, budget: p.budget }))} tour />,
         <PocketGrid key="m" view="month" items={all.map((p, i) => ({ p, left: months[i].left, budget: months[i].budget }))} />
@@ -237,7 +240,7 @@ export default function Home() {
 const toneOf = (r: number) => (r > 0.5 ? SAFE_TONES.green : r >= 0.3 ? SAFE_TONES.yellow : SAFE_TONES.red);
 
 /** Side-by-side pages you swipe between, with dots below. Opens on page `initial`. */
-function Pager({ pages, label, names, initial = 0, onPage }: { pages: ReactNode[]; label: string; names: string[]; initial?: number; onPage?: (i: number) => void }) {
+function Pager({ pages, label, names, initial = 0, onPage, pinned, onPin }: { pages: ReactNode[]; label: string; names: string[]; initial?: number; onPage?: (i: number) => void; pinned?: number; onPin?: (i: number) => void }) {
   const [i, setI] = useState(initial);
   const box = useRef<HTMLDivElement>(null);
   const step = () => (box.current ? box.current.clientWidth + 10 : 1);
@@ -253,9 +256,15 @@ function Pager({ pages, label, names, initial = 0, onPage }: { pages: ReactNode[
         style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', overscrollBehaviorX: 'contain', alignItems: 'stretch' }}>
         {pages.map((pg, k) => <div key={k} aria-hidden={k !== i} style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', scrollSnapStop: 'always', display: 'flex', flexDirection: 'column' }}>{pg}</div>)}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}>
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, minHeight: 7 }}>
         {pages.map((_, k) => <button key={k} aria-label={`${label}: ${names[k]}`} aria-current={k === i} onClick={() => go(k)}
           style={{ width: k === i ? 18 : 7, height: 7, borderRadius: 99, border: 0, padding: 0, cursor: 'pointer', background: k === i ? 'var(--color-text)' : 'var(--color-neutral-300)', transition: 'width .2s, background .2s' }} />)}
+        {/* Pin: this page is the one the card opens on. Filled when the page showing is the pinned one. */}
+        {onPin && <button onClick={() => onPin(i)} aria-pressed={pinned === i} aria-label={pinned === i ? `${label} opens on ${names[i]}` : `Always open ${label} on ${names[i]}`}
+          className="pr97" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', height: 28, padding: '0 10px', borderRadius: 999, border: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700,
+            background: pinned === i ? 'transparent' : 'var(--surface)', color: pinned === i ? 'var(--color-neutral-500)' : 'var(--color-text)' }}>
+          <I.Pin size={13} />{pinned === i ? 'Pinned' : 'Pin'}
+        </button>}
       </div>
     </div>
   );

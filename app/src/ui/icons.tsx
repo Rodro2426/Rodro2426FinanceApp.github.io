@@ -8,6 +8,7 @@ const mk = (paths: ReactNode, defSw = 2.25) => ({ size = 18, sw = defSw, color =
 export const Search = mk(<><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></>);
 export const Download = mk(<><path d="M12 15V3" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="m7 10 5 5 5-5" /></>);
 export const Chevron = mk(<path d="m9 18 6-6-6-6" />);
+export const Pin = mk(<><path d="M12 17v5" /><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" /></>);
 export const Plus = mk(<><path d="M5 12h14" /><path d="M12 5v14" /></>);
 export const X = mk(<><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>);
 export const Check = mk(<path d="M20 6 9 17l-5-5" />, 3);
