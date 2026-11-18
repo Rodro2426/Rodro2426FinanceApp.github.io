@@ -312,3 +312,16 @@ describe('refilling across pocket kinds, mid-period start and cents', () => {
     expect(suggestRefill(d, cc, 'o')).toEqual({ x: 300 });
   });
 });
+
+describe('extra income already counted in the monthly income', () => {
+  it('goes into the account, is not added to the month again, and is never split', () => {
+    const d = { ...sampleData('2026-11-11'), moves: [] }, c = makeCtx(4, '2026-11-11');
+    const before = monthSummary(d, c).income;
+    const p = addExtraIncome(d, c, { amt: 300000, acct: 'a1', note: 'Bono', toPockets: 300000, mode: 'month', dist: 'even', inBase: true });
+    const after = { ...d, ...p } as Data;
+    expect(after.incomes[0].inBase).toBe(true);
+    expect(after.moves.length).toBe(0);
+    expect(after.accounts.find(a => a.id === 'a1')!.bal).toBe(d.accounts.find(a => a.id === 'a1')!.bal + 300000);
+    expect(monthSummary(after, c).income).toBe(before);
+  });
+});

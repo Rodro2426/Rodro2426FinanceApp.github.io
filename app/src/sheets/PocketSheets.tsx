@@ -7,7 +7,7 @@ import { curCode, moneyScale, curInfo, isMonthly, periodsInMonth, DAY_LETTERS, D
 import { formatNumber } from '../lib/currency';
 import { latestRate } from '../lib/trm';
 import { refreshUsdRate } from '../lib/invest';
-import { addDays, monthName, relDay, shortDate } from '../lib/dates';
+import { addDays, daysBetween, monthName, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { COVER, NEXT, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, overBy, refillFrom, splitAmong, suggestCover, suggestRefill, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
@@ -107,6 +107,8 @@ function IncomeForm() {
   const [mode, setMode] = useState<SplitMode>('month');
   const [dist, setDist] = useState<SplitDist>('budget');
   const [manual, setManual] = useState<Record<string, string>>({});
+  // Already part of the monthly income typed in Budget: it goes into the account but isn't added again or split.
+  const [counted, setCounted] = useState(false);
   const nWeeks = weeksLeft(c), scale = unitsFor(d.settings.currency);
   const X = roundAmt(num(amt));
   const manualNums = Object.fromEntries(d.pockets.map(p => [p.id, roundAmt(num(manual[p.id]))]));
@@ -115,7 +117,7 @@ function IncomeForm() {
   const cant = !(X > 0) || !accounts.some(x => x.id === a) || tooMuch || !incCat;
 
   const before = monthSummary(d, c);
-  const input: ExtraIncome = { amt: X, acct: a, note, toPockets: A, mode, dist, manual: manualNums, cat: incCat };
+  const input: ExtraIncome = counted ? { amt: X, acct: a, note, toPockets: 0, mode, dist: 'budget', cat: incCat, inBase: true } : { amt: X, acct: a, note, toPockets: A, mode, dist, manual: manualNums, cat: incCat };
   const preview = X > 0 && !tooMuch && accounts.some(x => x.id === a) ? { ...d, ...addExtraIncome(d, c, { ...input, id: 'preview' }) } : null;
   const after = preview ? monthSummary(preview, c) : null;
   const parts = A > 0 && !tooMuch ? splitAmong(d, A, dist, manualNums) : {};
@@ -137,7 +139,7 @@ function IncomeForm() {
     setData(x => addExtraIncome(x, ctxOf(x), input));
     closeSheet();
     const warn = after && after.real > 0.004 ? ` · Your pockets add up to ${fmt(after.real)} more than you have in your accounts` : '';
-    flash(`+${fmt(X)} to ${acctName}${A > 0 ? ` · ${fmt(A)} to pockets` : ' · all saved'}${warn}`);
+    flash(counted ? `+${fmt(X)} to ${acctName} · already in your monthly income` : `+${fmt(X)} to ${acctName}${A > 0 ? ` · ${fmt(A)} to pockets` : ' · all saved'}${warn}`);
   };
   const chipBtn = (label: string, on: boolean, f: () => void, key?: string) => (
     <button key={key ?? label} onClick={f} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--color-neutral-100)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{label}</button>
@@ -167,6 +169,16 @@ function IncomeForm() {
         {accounts.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add a bank or cash account first, in the Accounts tab.</span>}
       </div>
 
+      <div style={{ marginTop: 14, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <span style={{ fontSize: 14, fontWeight: 600 }}>Is this money extra, or already part of your monthly income?</span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {chipBtn("It's extra", !counted, () => setCounted(false))}
+          {chipBtn('Already counted', counted, () => setCounted(true))}
+        </div>
+        {counted && <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>It goes into the account, but isn't added to your month again.</span>}
+      </div>
+
+      {!counted && <>
       <FieldLabel m="16px 4px 6px">How much goes to pockets?</FieldLabel>
       <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: 'var(--color-neutral-100)', borderRadius: 16, padding: '10px 14px', opacity: dist === 'manual' ? 0.6 : 1 }}>
@@ -226,6 +238,7 @@ function IncomeForm() {
           {d.pockets.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Create pockets in the Budget tab first.</span>}
         </div>
       )}
+      </>}
 
       <div aria-label="Preview" style={{ marginTop: 10, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Before → after</span>
@@ -450,6 +463,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
           </>}
         </div>
 
+        {vw !== 'day' && <PocketNudge id={id} />}
         {vw === 'day' && <DayPlanner id={id} hue={s.hue} ds={ds} />}
         {vw !== 'day' && <MovesCard id={id} />}
 
@@ -479,6 +493,52 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
       </div>
     </SheetFrame>
   );
+}
+
+/**
+ * Plain-words help that shows up only when it applies: "you went over, where do we take it from?" or, on the
+ * period's last day, "you have some left, what do we do with it?". Each choice is one tap on the usual moves.
+ */
+function PocketNudge({ id }: { id: string }) {
+  const { data: d } = useApp();
+  const c = ctxOf(d);
+  const s = pocketStats(d, id, c);
+  const [hidden, setHidden] = useState(false);
+  if (!s || hidden) return null;
+  const done = (p: Partial<Data> | null, msg: string) => { if (!p) return; setData(p); flash(msg); };
+  const btn = (label: string, onClick: () => void) => (
+    <button key={label} onClick={onClick} className="pr97" style={{ textAlign: 'left', minHeight: 44, padding: '10px 14px', borderRadius: 16, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{label}</button>
+  );
+  const box = (bg: string, ink0: string, title: string, sub: string, buttons: ReturnType<typeof btn>[]) => (
+    <div role="region" aria-label={title} style={{ marginTop: 10, background: bg, borderRadius: 24, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <span style={{ fontSize: 16, fontWeight: 700, color: ink0 }}>{title}</span>
+      <span style={{ fontSize: 13, color: ink0 }}>{sub}</span>
+      {buttons}
+      {btn('Leave it as it is', () => setHidden(true))}
+    </div>
+  );
+  const over = overBy(d, c, id);
+  if (over > 0) {
+    const from = leftovers(d, c).find(x => x.id !== id), name = (pid: string) => d.pockets.find(p => p.id === pid)?.name ?? '';
+    const take = from ? Math.min(from.left, over) : 0;
+    return box('var(--color-accent-100)', RED, `You went ${fmt(over)} over in ${s.name}`, 'Where do we take it from?', [
+      ...(from ? [btn(take < over ? `Take ${fmt(take)} from ${name(from.id)} (all it has left)` : `Take it from ${name(from.id)} (it has ${fmt(from.left)} left)`,
+        () => done(refillFrom(d, c, id, { [from.id]: take }), `${fmt(take)} moved from ${name(from.id)} to ${s.name}`))] : []),
+      ...(leftovers(d, c).filter(x => x.id !== id).length > 1 ? [btn('Choose from several pockets', () => openSheet({ name: 'refill', id }))] : [])
+    ]);
+  }
+  // On the last day of the week (or quincena, or month), offer what to do with what's left.
+  const left = whole(s.left);
+  if (left > 0 && daysBetween(c.today, s.to) <= 1) {
+    const goal = d.goals.find(g => g.saved < g.target) ?? d.goals[0];
+    return box('oklch(0.95 0.05 150)', 'oklch(0.38 0.1 150)', `You have ${fmt(left)} left in ${s.name}`, 'What do we do with it?', [
+      ...(goal ? [btn(`Save it for ${goal.name}`, () => done(transferLeftover(d, c, id, { [goal.id]: left }), `${fmt(left)} saved for ${goal.name}`))] : []),
+      btn(isMonthly(d.pockets.find(p => p.id === id)) ? 'Move it to next month' : isHalf(d.pockets.find(p => p.id === id)) ? 'Move it to the next quincena' : 'Move it to next week',
+        () => done(transferLeftover(d, c, id, { [NEXT]: left }), `${fmt(left)} goes to ${s.name}'s next period`))
+    ]);
+  }
+  return null;
+  function whole(n: number) { return Math.floor(n * moneyScale()) / moneyScale(); }
 }
 
 /** Every move in or out of a pocket this month, each one editable or reversible. */

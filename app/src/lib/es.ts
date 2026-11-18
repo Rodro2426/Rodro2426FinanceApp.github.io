@@ -1,6 +1,24 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Money counted twice?|¿Plata contada dos veces?
+Money you split into pockets should come from an income you saved, and not be part of your monthly income already. Here you can fix anything counted twice.|La plata que repartes en bolsillos debe venir de un ingreso que guardaste, y no ser ya parte de tu ingreso mensual. Aquí puedes arreglar lo que esté contado dos veces.
+Pocket money with no income behind it|Plata en bolsillos sin un ingreso detrás
+It came from an income that was later deleted.|Vino de un ingreso que luego se borró.
+Already in your monthly income|Ya está en tu ingreso mensual
+Extra money you said was already part of your monthly income.|Plata extra que dijiste que ya era parte de tu ingreso mensual.
+Turn it on if this money was already part of the monthly income you typed in Budget.|Actívalo si esta plata ya era parte del ingreso mensual que escribiste en Presupuesto.
+Is this money extra, or already part of your monthly income?|¿Esta plata es extra, o ya es parte de tu ingreso del mes?
+It's extra|Es extra
+Already counted|Ya la conté
+It goes into the account, but isn't added to your month again.|Entra a la cuenta, pero no se suma otra vez a tu mes.
+Where do we take it from?|¿De dónde lo sacamos?
+Choose from several pockets|Elegir de varios bolsillos
+Leave it as it is|Dejarlo así
+What do we do with it?|¿Qué hacemos con eso?
+Move it to next week|Pasarlo a la próxima semana
+Move it to the next quincena|Pasarlo a la próxima quincena
+Move it to next month|Pasarlo al próximo mes
 Your saved amounts keep their numbers, they are not converted. For example, 1.000.000 stays 1.000.000 in the new currency. Change it?|Tus montos guardados mantienen sus números, no se convierten. Por ejemplo, 1.000.000 sigue siendo 1.000.000 en la nueva moneda. ¿Cambiarla?
 Which currency do you use?|¿Qué moneda usas?
 Amounts in Pockets use it. You can still add a purchase in dollars, and change this later in Profile.|Los montos en Pockets la usan. Igual puedes agregar una compra en dólares y cambiarla luego en Perfil.
@@ -1999,6 +2017,15 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+You went {0} over in {1}|Te pasaste {0} en {1}
+Take it from {0} (it has {1} left)|Tomarlo de {0} (le quedan {1})
+Take {0} from {1} (all it has left)|Tomar {0} de {1} (todo lo que le queda)
+You have {0} left in {1}|Te sobraron {0} en {1}
+Save it for {0}|Guardarlo para {0}
+{0} moved from {1} to {2}|{0} pasaron de {1} a {2}
+{0} saved for {1}|{0} guardados para {1}
+{0} goes to {1}'s next period|{0} pasan al próximo período de {1}
++{0} to {1} · already in your monthly income|+{0} a {1} · ya está en tu ingreso mensual
 ≈ {0} at {1} per dollar|≈ {0} a {1} por dólar
 {0} wants to be your friend|{0} quiere ser tu amigo
 Nothing open with {0}. Add a debt when one of you pays for the other.|No hay nada pendiente con {0}. Agrega una deuda cuando uno pague por el otro.

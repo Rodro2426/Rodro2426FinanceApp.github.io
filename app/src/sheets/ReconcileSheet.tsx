@@ -32,27 +32,27 @@ export function ReconcileSheet() {
   ));
 
   return (
-    <SheetFrame title="Review mismatches">
+    <SheetFrame title="Money counted twice?">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <span style={{ margin: '0 4px', fontSize: 13, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>
-          Pocket money that came from income ("New income") should be backed by an income you registered, and not already be part of your typed monthly income. Otherwise it's counted twice.
+          Money you split into pockets should come from an income you saved, and not be part of your monthly income already. Here you can fix anything counted twice.
         </span>
 
         <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 16px' }}>
-          <span style={{ fontSize: 15, fontWeight: 700 }}>No income behind it</span>
-          <span style={{ display: 'block', fontSize: 12, color: 'var(--color-neutral-700)', marginTop: 2 }}>Usually from an income that was deleted before splits were linked to it.</span>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>Pocket money with no income behind it</span>
+          <span style={{ display: 'block', fontSize: 12, color: 'var(--color-neutral-700)', marginTop: 2 }}>It came from an income that was later deleted.</span>
           {mm.orphan.length ? list(mm.orphan, 'no income') : <div style={{ padding: '10px 0 2px', fontSize: 13, color: 'oklch(0.45 0.11 150)', fontWeight: 600 }}>None found.</div>}
         </div>
 
         <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 16px' }}>
-          <span style={{ fontSize: 15, fontWeight: 700 }}>Already in your typed income</span>
-          <span style={{ display: 'block', fontSize: 12, color: 'var(--color-neutral-700)', marginTop: 2 }}>Splits of income you marked as already included below.</span>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>Already in your monthly income</span>
+          <span style={{ display: 'block', fontSize: 12, color: 'var(--color-neutral-700)', marginTop: 2 }}>Extra money you said was already part of your monthly income.</span>
           {mm.included.length ? list(mm.included, 'already included') : <div style={{ padding: '10px 0 2px', fontSize: 13, color: 'oklch(0.45 0.11 150)', fontWeight: 600 }}>None found.</div>}
         </div>
 
         <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 16px' }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>Extra income in {monthName(c.month)}</span>
-          <span style={{ display: 'block', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)', marginTop: 2 }}>Turn on if you already added it to the monthly income you typed in Budget, so it isn't added again.</span>
+          <span style={{ display: 'block', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)', marginTop: 2 }}>Turn it on if this money was already part of the monthly income you typed in Budget.</span>
           {extras.map((t, i) => {
             const split = incomeMoves(d.moves, t).reduce((a, m) => a + m.amt, 0);
             return (
