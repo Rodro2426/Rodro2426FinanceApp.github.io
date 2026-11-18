@@ -14,11 +14,11 @@ const EDGE = 28;        // px from the left edge that counts as an edge swipe
 const LOCK = 10;        // px of movement before deciding sideways vs. up-and-down
 const COMMIT = 0.28;    // back swipe: share of the width past which a released swipe completes
 const TAB_COMMIT = 0.5; // tab swipe: a slow drag opens the next tab only if more than half of it is showing when you let go
-const FLICK = 0.5;      // px/ms: a quick flick completes even if short
+export const FLICK = 0.5; // px/ms: a quick flick completes even if short
 const MS = 300;         // longest slide after letting go (a fast flick finishes sooner)
 const TAB_FLICK = 0.3;  // px/ms: tabs take a gentler flick than the back swipe
 const TAB_MS = [380, 480]; // a tab change glides in a bit slower, so it reads as smooth rather than snappy
-const EASE = 'cubic-bezier(.22,1,.36,1)'; // quick start, soft landing, like iOS
+export const EASE = 'cubic-bezier(.22,1,.36,1)'; // quick start, soft landing, like iOS
 
 /** True once after a finger swipe changed the tab (so the App doesn't animate it a second time). */
 let swiped = false;

@@ -331,7 +331,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
     padding: 24px 26px 26px !important; box-shadow: -24px 0 60px -30px rgba(32,30,29,.45), 0 0 0 1px var(--color-neutral-200);
     animation: panel-in .32s var(--ease-drawer);
   }
-  .desk [data-sheet] > .sheet-panel > .grabber { display: none !important; }
+  .desk [data-sheet] > .sheet-panel > .grab { display: none !important; }
   .desk [data-sheet].closing > .sheet-panel { animation: panel-out .22s var(--ease-drawer) forwards; }
   @keyframes panel-in { from { transform: translateX(calc(100% + 24px)); } }
   @keyframes panel-out { to { transform: translateX(calc(100% + 24px)); } }
