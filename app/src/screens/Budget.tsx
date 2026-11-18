@@ -5,7 +5,7 @@ import { useApp, openSheet, setData, flash } from '../lib/store';
 import { extraIncomes, findMismatches, markIncluded, monthSummary } from '../lib/plan';
 import { incomeMoves } from '../lib/derive';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { allStats, ctxOf, curSymbol, fmt, isHalf, isMonthly, num, pctOf, periodsInMonth } from '../lib/derive';
+import { allStats, ctxOf, curSymbol, fmt, isHalf, isMonthly, monthPlanOf, num, pctOf, periodsInMonth } from '../lib/derive';
 import { monthLabel } from '../lib/dates';
 import { Bar, Fill } from '../ui/bits';
 import * as I from '../ui/icons';
@@ -110,7 +110,7 @@ export default function Budget() {
               <button onClick={() => openSheet({ name: 'editPocket', id: s.id })} aria-label="Edit pocket" style={{ width: 40, height: 40, borderRadius: 999, border: 0, padding: 0, cursor: 'pointer', backgroundColor: tint(s.hue), position: 'relative', overflow: 'hidden', color: ink(s.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18, flex: 'none' }}>{glyph(s.initial)}<Fill src={s.photoBg} /></button>
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                 <input value={p.name} onChange={e => setPocket(s.id, { name: e.target.value })} style={{ border: 0, background: 'transparent', fontSize: 15, fontWeight: 600, color: 'var(--color-text)', padding: '1px 0', outline: 'none', minWidth: 0, textOverflow: 'ellipsis' }} />
-                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{fmt(num(p.weeklyStr) * periodsInMonth(p, weeks))} / month{isHalf(p) ? ' · every 15 days' : isMonthly(p) ? ' · just the month' : ''}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{fmt(monthPlanOf(p, c))} / month{isHalf(p) ? ' · every 15 days' : isMonthly(p) ? ' · just the month' : ''}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, background: tint(s.hue), borderRadius: 14, padding: '9px 12px', width: 116, flex: 'none' }}>
                 <span style={{ fontSize: 14, color: ink(s.hue) }}>{cur}</span>

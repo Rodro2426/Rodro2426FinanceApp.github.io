@@ -59,7 +59,7 @@ export interface PocketStats {
 }
 
 /* ---------------- Periods: a week, or half a month ---------------- */
-type PocketLike = { period?: 'week' | 'half' | 'month'; weeklyStr?: string; start?: { from: string; amt: number } } | undefined;
+type PocketLike = { period?: 'week' | 'half' | 'month'; weeklyStr?: string; start?: { from: string; amt: number; until?: string } } | undefined;
 export const isHalf = (p: PocketLike) => p?.period === 'half';
 /** A pocket that only has a monthly budget: it starts over on the 1st. */
 export const isMonthly = (p: PocketLike) => p?.period === 'month';
@@ -91,7 +91,11 @@ export const periodsInMonth = (p: PocketLike, weeks: number) => (isMonthly(p) ? 
 /** The budget a pocket plans for a whole month (a smaller first period counts too). */
 export function monthPlanOf(p: PocketLike, c: Ctx): number {
   const amt = num(p?.weeklyStr);
-  const cut = p?.start && monthKey(p.start.from) === c.month ? amt - p.start.amt : 0;
+  const st = p?.start;
+  // Created mid-month: the month plans only what was left (`amt` for each remaining week).
+  const startMonth = st && monthKey(addDays(st.from, 6));
+  if (st?.until && startMonth === c.month) return st.amt * (daysBetween(st.from, st.until) / 7 + 1);
+  const cut = st && startMonth === c.month ? amt - st.amt : 0;
   return amt * periodsInMonth(p, c.weeks) - cut;
 }
 /** Whether a move was made in the period that starts on `start` (a week's Monday, or a quincena's first day). */
@@ -112,7 +116,10 @@ const nextStart = (p: PocketLike, s: string) => (isSpan(p) ? addDays(spanOf(p, s
 function periodParts(d: Data, p: Data['pockets'][number], c: Ctx) {
   const pc = pocketCtx(p, c), id = p.id;
   const amount = num(p.weeklyStr);
-  const weekly = p.start && p.start.from === pc.weekStart ? p.start.amt : amount;
+  const st = p.start, ws = pc.weekStart;
+  const weekly = !st ? amount
+    : st.until ? (ws < st.from ? (monthKey(addDays(ws, 6)) === monthKey(addDays(st.from, 6)) ? 0 : amount) : ws <= st.until ? st.amt : amount)
+    : st.from === ws ? st.amt : amount;
   const moves = d.moves.filter(m => moveInPeriod(m, p, c));
   const before = prevStart(p, pc.weekStart);
   const arriving = d.moves.filter(m => m.next && m.to === id && moveAtStart(m, p, before)).reduce((a, m) => a + m.amt, 0);

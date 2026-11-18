@@ -6,8 +6,10 @@ export type AcctType = 'bank' | 'savings' | 'cash' | 'card';
 /**
  * `weeklyStr` is the budget for one period: a week (Monday–Sunday), or with `period: 'half'` a quincena (1st–15th, 16th–end), or with `period: 'month'` the whole calendar month.
  * `start`: a pocket created partway through a period gets `amt` for that first period only (`from` = that period's first day).
+ *  With `until` (a weekly pocket entered per month, created mid-month): every week from `from` to `until` (the month's
+ *  last week) gets `amt`, the month's weeks before `from` get nothing, and the full amount starts the next month.
  */
-export interface Pocket { id: string; name: string; emoji?: string; photo?: string | null; weeklyStr: string; hue: number; days?: number[]; period?: 'week' | 'half' | 'month'; start?: { from: string; amt: number }; /** Carry over: the first day of the period in which the switch was turned on. What's left (or overspent) in each period then moves into the next one. Missing = off. */ carry?: string; /** The amount was typed per month (the form reopens that way); `weeklyStr` is still the month split into its periods. */ perMonth?: boolean }
+export interface Pocket { id: string; name: string; emoji?: string; photo?: string | null; weeklyStr: string; hue: number; days?: number[]; period?: 'week' | 'half' | 'month'; start?: { from: string; amt: number; until?: string }; /** Carry over: the first day of the period in which the switch was turned on. What's left (or overspent) in each period then moves into the next one. Missing = off. */ carry?: string; /** The amount was typed per month (the form reopens that way); `weeklyStr` is still the month split into its periods. */ perMonth?: boolean }
 /**
  * `rate` is an annual return (% E.A.) for bank/savings accounts, like Nu's Cajitas.
  * Interest is added daily (compound) up to `accruedTo`; `earned` is the total so far.

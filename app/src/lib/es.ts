@@ -2033,6 +2033,14 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+How much is left for {0}?|¿Cuánto te queda para {0}?
+{0} is already underway, so you probably have less this month.|{0} ya empezó, así que probablemente tienes menos este mes.
+Days left · {0}|Días que quedan · {0}
+Full month · {0}|Mes completo · {0}
+Shared over the {0} weeks left in {1}. From {2} it gets the full {3} a week.|Repartido en las {0} semanas que quedan de {1}. Desde el {2} recibe los {3} completos a la semana.
+For the rest of {0}. From {1} it gets the full {2} a week.|Para el resto de {0}. Desde el {1} recibe los {2} completos a la semana.
+That's {0} a week in {1} ({2} weeks).|Son {0} a la semana en {1} ({2} semanas).
+{0} in {1} ({2} weeks)|{0} en {1} ({2} semanas)
 Fills up again {0}|Se llena otra vez el {0}
 From other pockets {0}|De otros bolsillos {0}
 Given to other pockets {0}|Dado a otros bolsillos {0}

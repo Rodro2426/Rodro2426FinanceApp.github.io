@@ -3,8 +3,8 @@
 import { codeOf, infoOf } from './currency';
 import { cardDueLabel } from './cards';
 import type { Data } from './types';
-import { catOf, num, periodsInMonth, myExpenses, isHalf, isMonthly, roundAmt } from './derive';
-import { addDays, daysInMonth, fmtDay, inRange, weeksIn, monthLabel, shortDate, todayISO, weekStart } from './dates';
+import { catOf, monthPlanOf, num, myExpenses, isHalf, isMonthly, roundAmt } from './derive';
+import { addDays, ctxAt, daysInMonth, fmtDay, inRange, weeksIn, monthLabel, shortDate, todayISO, weekStart } from './dates';
 
 export type Cell = string | number | { v: number; fmt: 'money' | 'pct' };
 export interface AiSection { title: string; note?: string; header: string[]; rows: Cell[][] }
@@ -29,7 +29,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const income = num(d.incomeStr);
   const weeklyTotal = d.pockets.reduce((a, p) => a + num(p.weeklyStr), 0);
   // Each pocket counts once per period in the month: weeks, 2 quincenas, or 1 for a monthly pocket.
-  const plannedMonth = d.pockets.reduce((a, p) => a + num(p.weeklyStr) * periodsInMonth(p, weeks), 0);
+  const plannedMonth = d.pockets.reduce((a, p) => a + monthPlanOf(p, ctxAt(today)), 0);
   const incs = (d.incomes || []).filter(t => months.includes(t.date.slice(0, 7)) && (acctId === 'all' || t.a === acctId));
   const pays = d.payments.filter(p => !p.cdt && months.includes(p.date.slice(0, 7)) && (acctId === 'all' || p.from === acctId || p.to === acctId));
   const days = months.reduce((a, m) => a + (m === curMonth ? Number(today.slice(8, 10)) : daysInMonth(m)), 0);
@@ -68,7 +68,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
     header: ['Pocket', 'Weekly budget', 'Planned for period', 'Spent', 'Left vs plan', '% used', 'Expenses', 'Top category'],
     rows: d.pockets.map(p => {
       const es = exp.filter(e => e.p === p.id), spent = es.reduce((a, e) => a + e.amt, 0);
-      const planned = months.reduce((a, m) => a + num(p.weeklyStr) * periodsInMonth(p, weeksIn(m)), 0);
+      const planned = months.reduce((a, m) => a + monthPlanOf(p, ctxAt(m + '-15')), 0);
       const byCat: Record<string, number> = {};
       es.forEach(e => { const c = catOf(e)[0]; byCat[c] = (byCat[c] || 0) + e.amt; });
       const top = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];

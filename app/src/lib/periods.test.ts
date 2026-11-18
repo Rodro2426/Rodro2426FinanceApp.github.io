@@ -139,3 +139,62 @@ describe('weeks in a month come from the calendar', () => {
     expect(ctxAt('2026-12-01').weekNo).toBe(1); // Dec 1 is a Tuesday, still week 1
   });
 });
+
+describe('weekly pocket entered per month, created mid-month', () => {
+  // Nov 2026 has 5 weeks (Sundays 1, 8, 15, 22, 29). Created Wed Nov 18 with 1.000.000 a month (200.000 a week),
+  // and 300.000 left for November: shared over the weeks of Nov 16 and Nov 23 (150.000 each).
+  const mk = (): Data => ({
+    ...emptyData(sampleData()), settings: { ...emptyData(sampleData()).settings, currency: 'COP' },
+    pockets: [{ id: 'm', name: 'Market', weeklyStr: '200000', hue: 150, perMonth: true, start: { from: '2026-11-16', amt: 150000, until: '2026-11-23' } }],
+    expenses: [], incomes: [], moves: [], goals: []
+  });
+  it('this month plans only what was left', () => {
+    expect(monthPlanOf(mk().pockets[0], ctxAt('2026-11-18'))).toBe(300000);
+    expect(monthStats(mk(), 'm', ctxAt('2026-11-18')).budget).toBe(300000);
+  });
+  it('each remaining week gets its share, and weeks before it existed get nothing', () => {
+    expect(pocketStats(mk(), 'm', ctxAt('2026-11-18'))!.budget).toBe(150000);
+    expect(pocketStats(mk(), 'm', ctxAt('2026-11-27'))!.budget).toBe(150000);
+    expect(pocketStats(mk(), 'm', ctxAt('2026-11-10'))!.budget).toBe(0);
+  });
+  it('next month starts from scratch with the full amount', () => {
+    expect(pocketStats(mk(), 'm', ctxAt('2026-12-02'))!.budget).toBe(200000); // week Nov 30 – Dec 6 belongs to December
+    expect(monthPlanOf(mk().pockets[0], ctxAt('2026-12-10'))).toBe(800000);
+  });
+});
+
+describe('mid-month weekly start: risks', () => {
+  const mk = (start: NonNullable<Data['pockets'][number]['start']>, extra: Partial<Data['pockets'][number]> = {}): Data => ({
+    ...emptyData(sampleData()), settings: { ...emptyData(sampleData()).settings, currency: 'COP' },
+    pockets: [{ id: 'm', name: 'Market', weeklyStr: '200000', hue: 150, perMonth: true, start, ...extra }],
+    expenses: [], incomes: [], moves: [], goals: []
+  });
+  it('carry turned on at creation: weeks of the start run add up (150.000 each, spent 100.000 in week 1)', () => {
+    const d = mk({ from: '2026-11-16', amt: 150000, until: '2026-11-23' }, { carry: '2026-11-16' });
+    d.expenses = [exp('s', 'm', 100000, '2026-11-17')];
+    expect(pocketStats(d, 'm', ctxAt('2026-11-24'))!.carry).toBe(50000);
+    expect(pocketStats(d, 'm', ctxAt('2026-11-24'))!.budget).toBe(200000);
+    // Week of Nov 30 belongs to December: full 200.000 plus the 50.000 + 150.000 left from before.
+    expect(pocketStats(d, 'm', ctxAt('2026-11-30'))!.carry).toBe(200000);
+  });
+  it('rounding: the plan shows the rounded shares, not the amount typed', () => {
+    // 100.000 left over 3 weeks: 33.333 x 3 = 99.999 (1 peso lost)
+    const d = mk({ from: '2026-11-09', amt: 33333, until: '2026-11-23' });
+    expect(monthPlanOf(d.pockets[0], ctxAt('2026-11-18'))).toBe(99999);
+  });
+  it('created on the Monday of the last week: one week gets the whole amount', () => {
+    const d = mk({ from: '2026-11-23', amt: 80000, until: '2026-11-23' });
+    expect(monthPlanOf(d.pockets[0], ctxAt('2026-11-24'))).toBe(80000);
+    expect(pocketStats(d, 'm', ctxAt('2026-11-24'))!.budget).toBe(80000);
+  });
+  it('a week that starts last month but ends this month belongs to this month (Mon Jun 29 - Sun Jul 5)', () => {
+    // July 2026: Sundays 5, 12, 19, 26 = 4 weeks. Created Wed Jul 1: 2 weeks left (Jun 29 and Jul 6... until Jul 20) -> 3 weeks
+    const d = mk({ from: '2026-06-29', amt: 100000, until: '2026-07-20' });
+    expect(monthPlanOf(d.pockets[0], ctxAt('2026-07-01'))).toBe(400000); // 4 weeks x 100.000
+    expect(pocketStats(d, 'm', ctxAt('2026-07-01'))!.budget).toBe(100000);
+  });
+  it('June does not take the July plan', () => {
+    const d = mk({ from: '2026-06-29', amt: 100000, until: '2026-07-20' });
+    expect(monthPlanOf(d.pockets[0], ctxAt('2026-06-15'))).toBe(200000 * weeksIn('2026-06'));
+  });
+});

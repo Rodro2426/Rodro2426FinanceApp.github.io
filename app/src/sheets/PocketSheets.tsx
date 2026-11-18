@@ -7,7 +7,7 @@ import { curCode, moneyScale, curInfo, isMonthly, periodsInMonth, DAY_LETTERS, D
 import { formatNumber } from '../lib/currency';
 import { latestRate } from '../lib/trm';
 import { refreshUsdRate } from '../lib/invest';
-import { addDays, daysBetween, monthName, relDay, shortDate } from '../lib/dates';
+import { addDays, daysBetween, daysInMonth, monthName, parse, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { COVER, NEXT, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, overBy, refillFrom, splitAmong, suggestCover, suggestRefill, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
@@ -935,7 +935,14 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const c = ctxOf(d), [ps, pe] = periodAt({ period }, c.today);
   const spendDays = (a: string, b: string) => { let n = 0; for (let x = a; x <= b; x = addDays(x, 1)) if (days.includes(weekdayOf(x))) n++; return n; };
   const mid = isNew && c.today > ps;
-  const suggested = roundAmt(w * spendDays(c.today, pe) / Math.max(1, spendDays(ps, pe)));
+  // A weekly pocket entered per month, created after the month's first week started: ask what's left for the
+  // month and share it over the month's remaining weeks (those whose Sunday is still in this month).
+  const monthEnd = `${c.month}-${String(daysInMonth(c.month)).padStart(2, '0')}`, lastWeek = addDays(monthEnd, -parse(monthEnd).getDay() - 6);
+  const weeksLeftHere = Math.max(1, daysBetween(ps, lastWeek) / 7 + 1);
+  // (A week that ends next month already belongs to next month: no question then.)
+  const midMonth = isNew && perMonth && period === 'week' && ps <= lastWeek && (c.today > ps || weeksLeftHere < weeksNow);
+  const monthAmt = num(monthStr);
+  const suggested = midMonth ? roundAmt(monthAmt * (daysBetween(c.today, monthEnd) + 1) / daysInMonth(c.month)) : roundAmt(w * spendDays(c.today, pe) / Math.max(1, spendDays(ps, pe)));
   const startAmt = startStr === null ? suggested : num(startStr);
   const switchPeriod = (v: 'week' | 'half' | 'month') => {
     if (v === period) return;
@@ -951,9 +958,11 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const save = () => {
     if (cant) return;
     const patch = { name: name.trim(), weeklyStr: String(w), emoji, photo, hue, days: days.length === 7 ? undefined : [...days].sort(), period: period === 'week' ? undefined : period, carry: carry ? (base?.carry && !resetCarry ? base.carry : periodAt({ period }, c.today)[0]) : undefined, perMonth: (perMonth && !mon) || undefined };
-    const start = mid && Math.abs(startAmt - w) > 0.004 ? { from: ps, amt: Math.max(0, startAmt) } : undefined;
+    // shortcut: one amount per week, so splitting what's left can drop a peso or two of rounding; store a total if that ever matters.
+    const start = midMonth ? { from: ps, amt: Math.max(0, roundAmt(startAmt / weeksLeftHere)), until: lastWeek }
+      : mid && Math.abs(startAmt - w) > 0.004 ? { from: ps, amt: Math.max(0, startAmt) } : undefined;
     if (isNew) { setData(x => ({ pockets: [...x.pockets, { id: uid('p'), ...patch, ...(start ? { start } : {}) }] })); closeSheet(); }
-    else { setData(x => ({ pockets: x.pockets.map(p => (p.id === id ? { ...p, ...patch } : p)) })); openSheet({ name: 'pocket', id: id! }); }
+    else { setData(x => ({ pockets: x.pockets.map(p => (p.id === id ? { ...p, ...patch, ...((p.period ?? 'week') !== period ? { start: undefined } : {}) } : p)) })); openSheet({ name: 'pocket', id: id! }); }
     flash(isNew ? `${patch.name} created` : 'Pocket updated');
   };
   const remove = () => {
@@ -991,9 +1000,19 @@ export function EditPocketSheet({ id }: { id: string | null }) {
             : <SmallAmount value={weekly} onChange={v => { setWeekly(v); setStartStr(null); }} />}
         </div>
         {!mon && <span style={{ margin: '8px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>{perMonth
-          ? (half ? `That's ${fmt(w)} every 15 days, split over 2 quincenas.` : `That's ${fmt(w)} a week, split over ${weeksNow} weeks.`)
-          : (half ? `${fmt(w * 2)} a month over 2 quincenas` : `${fmt(w * weeksNow)} a month over ${weeksNow} weeks`)}</span>}
-        {mid && w > 0 && <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          ? (half ? `That's ${fmt(w)} every 15 days, split over 2 quincenas.` : `That's ${fmt(w)} a week in ${monthName(c.month)} (${weeksNow} weeks).`)
+          : (half ? `${fmt(w * 2)} a month over 2 quincenas` : `${fmt(w * weeksNow)} in ${monthName(c.month)} (${weeksNow} weeks)`)}</span>}
+        {midMonth && monthAmt > 0 && <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>{`How much is left for ${monthName(c.month)}?`}</span>
+          <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{`${monthName(c.month).replace(/^./, x => x.toUpperCase())} is already underway, so you probably have less this month.`}</span>
+          <SmallAmount value={startStr ?? String(suggested)} onChange={setStartStr} />
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <button onClick={() => setStartStr(null)} aria-pressed={startStr === null} style={startChip(startStr === null, hue)}>{`Days left · ${fmt(suggested)}`}</button>
+            <button onClick={() => setStartStr(String(monthAmt))} aria-pressed={startStr !== null && num(startStr) === monthAmt} style={startChip(startStr !== null && num(startStr) === monthAmt, hue)}>{`Full month · ${fmt(monthAmt)}`}</button>
+          </div>
+          <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{weeksLeftHere > 1 ? `Shared over the ${weeksLeftHere} weeks left in ${monthName(c.month)}. From ${shortDate(addDays(lastWeek, 7))} it gets the full ${fmt(w)} a week.` : `For the rest of ${monthName(c.month)}. From ${shortDate(addDays(lastWeek, 7))} it gets the full ${fmt(w)} a week.`}</span>
+        </div>}
+        {!midMonth && mid && w > 0 && <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>{mon ? 'This month is already underway' : half ? 'This quincena is already underway' : 'This week is already underway'}</span>
           <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{mon ? 'For this month only, it starts with:' : half ? 'For this quincena only, it starts with:' : 'For this week only, it starts with:'}</span>
           <SmallAmount value={startStr ?? String(suggested)} onChange={setStartStr} />
