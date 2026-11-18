@@ -244,8 +244,8 @@ function IncomeForm() {
         <span style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Before → after</span>
         {row('Month income', before.income, after?.income)}
         {row('Month plan', before.plan, after?.plan)}
-        {row(after && after.planGap < 0 || (!after && before.planGap < 0) ? 'Plan vs income (short)' : 'Plan vs income (free)', before.planGap, after?.planGap, true)}
-        {row('Real shortfall', Math.max(0, before.real), after ? Math.max(0, after.real) : undefined)}
+        {row(after && after.planGap < 0 || (!after && before.planGap < 0) ? 'Missing this month' : 'Free this month', before.planGap, after?.planGap, true)}
+        {row('Missing to cover your pockets', Math.max(0, before.real), after ? Math.max(0, after.real) : undefined)}
         {after && after.real > 0.004 && (
           <div role="alert" style={{ marginTop: 8, background: 'var(--color-accent-100)', borderRadius: 14, padding: '9px 11px', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-accent-900)' }}>
             Your pockets add up to <b>{fmt(after.real)}</b> more than you have in your accounts.
@@ -448,8 +448,10 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
               <span style={pill(k)}>Planned {fmt(s.weekly)}</span>
               <span style={pill(k)}>Spent {fmt(s.spent)}</span>
-              <span style={pill(k)}>Moved {fmt(s.mIn - s.mOut, true)}</span>
-              {s.carry !== 0 && <span style={pill(k)}>Carried {fmt(s.carry, true)}</span>}
+              {s.mIn - s.mOut > 0.004 && <span style={pill(k)}>{`From other pockets ${fmt(s.mIn - s.mOut, true)}`}</span>}
+              {s.mIn - s.mOut < -0.004 && <span style={pill(k)}>{`Given to other pockets ${fmt(s.mIn - s.mOut, true)}`}</span>}
+              {s.carry !== 0 && <span style={pill(k)}>{`${mon ? 'From last month' : half ? 'From last quincena' : 'From last week'} ${fmt(s.carry, true)}`}</span>}
+              <span style={pill(k)}>{`Fills up again ${shortDate(addDays(s.to, 1))}`}</span>
             </div>
           </> : <>
             {big(ms.left < 0 ? `Over budget in ${monthName(c.month)}` : `Left in ${monthName(c.month)}`, ms.left)}
@@ -457,7 +459,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
               <span style={pill(k)}>Planned {fmt(monthPlanOf(pk, c))}</span>
               <span style={pill(k)}>Spent {fmt(ms.spent)}</span>
-              <span style={pill(k)}>Moved {fmt(ms.extra, true)}</span>
+              {Math.abs(ms.extra) > 0.004 && <span style={pill(k)}>{`${ms.extra > 0 ? 'From other pockets' : 'Given to other pockets'} ${fmt(ms.extra, true)}`}</span>}
             </div>
             <span style={{ marginTop: 8, fontSize: 12.5, color: k }}>{half ? `${fmt(num(pk?.weeklyStr))} every 15 days × 2` : `${fmt(num(pk?.weeklyStr))} a week × ${c.weeks} weeks`}{ms.extra ? `, ${ms.extra > 0 ? 'plus' : 'minus'} ${fmt(Math.abs(ms.extra))} moved this month` : ''}.</span>
           </>}
@@ -772,7 +774,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
         <div aria-label="Move check" style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13 }}>
           <span style={{ fontWeight: 700 }}>{onlyNext ? 'Only moved in time' : nums[COVER] > 0 ? 'Only for this week' : 'Only a transfer for this week'}</span>
           <span style={{ lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{onlyNext ? `Nothing is created or lost: this money leaves ${s.name} now and is added to it when the next ${mon ? 'month' : half ? 'quincena' : 'week'} starts. Your month income and plan stay the same.` : nums[COVER] > 0 ? <>Money given up to the shortfall leaves {s.name} for this week and stays in your account. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</> : <>No new money is created: what {s.name} gives, the others get. Your month income and plan stay the same, and next Monday every pocket starts again from its own budget.</>}</span>
-          {sumB.real > 0.004 && <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ color: 'var(--color-neutral-700)' }}>Real shortfall</span><span style={{ whiteSpace: 'nowrap' }}>{fmt(Math.max(0, sumB.real))} → <b style={{ color: sumA.real > 0.004 ? RED : 'oklch(0.5 0.12 150)' }}>{fmt(Math.max(0, sumA.real))}</b></span></div>}
+          {sumB.real > 0.004 && <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}><span style={{ color: 'var(--color-neutral-700)' }}>Missing to cover your pockets</span><span style={{ whiteSpace: 'nowrap' }}>{fmt(Math.max(0, sumB.real))} → <b style={{ color: sumA.real > 0.004 ? RED : 'oklch(0.5 0.12 150)' }}>{fmt(Math.max(0, sumA.real))}</b></span></div>}
           {[['Month income', sumB.income, sumA.income], ['Month plan', sumB.plan, sumA.plan], ['All pockets this week', all.reduce((a, x) => a + x.budget, 0), allStats(after, c).reduce((a, x) => a + x.budget, 0)]].map(([l, b, a]) => (
             <div key={l as string} style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
               <span style={{ color: 'var(--color-neutral-700)' }}>{l as string}</span>
@@ -925,7 +927,8 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   // The amount can be typed for a whole month: it's then split evenly into the month's weeks (or its 2 quincenas).
   // A monthly pocket has just the month, so its amount is always the month's.
   const periods = periodsInMonth({ period }, weeksNow);
-  const [perMonth, setPerMonth] = useState(!!base?.perMonth && !mon);
+  // New pockets ask for one amount a month; the app spreads it over the weeks.
+  const [perMonth, setPerMonth] = useState((base ? !!base.perMonth : true) && !mon);
   const [monthStr, setMonthStr] = useState(base?.weeklyStr ? String(roundAmt(num(base.weeklyStr) * periodsInMonth(base, weeksNow))) : '');
   const w = perMonth ? roundAmt(num(monthStr) / periods) : num(weekly), cant = !name.trim();
   // Starting partway through a week or quincena: the first period only gets the days that are left.
@@ -964,15 +967,6 @@ export function EditPocketSheet({ id }: { id: string | null }) {
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <FieldLabel m="10px 4px 6px">Name</FieldLabel>
         <input value={name} placeholder="Gym" onChange={e => setName(e.target.value)} style={textInput} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14, marginTop: 14 }}>
-          <div style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: tint(hue), position: 'relative', overflow: 'hidden', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 32, flex: 'none' }}>{glyph(icon)}<Fill src={photo} /></div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
-            <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <I.Image size={14} />{photo ? 'Change image' : 'Upload image'}
-            </button>
-            {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Use icon instead</button>}
-          </div>
-        </div>
         <FieldLabel m="14px 4px 6px">Icon</FieldLabel>
         <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(8,minmax(0,1fr))', gap: 4, background: 'var(--surface)', borderRadius: 22, padding: 8 }}>
           {POCKET_ICONS.map(m => { const on = !photo && emoji === m.code; return <button key={m.code} aria-label={m.name} aria-pressed={on} onClick={() => { setEmoji(m.code); setPhoto(null); }} style={{ aspectRatio: '1', minHeight: 36, borderRadius: 12, border: 0, background: on ? tint(hue) : 'transparent', color: on ? ink(hue) : 'var(--brand)', fontSize: 20, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background .15s' }}>{glyph(m.code)}</button>; })}
@@ -985,11 +979,6 @@ export function EditPocketSheet({ id }: { id: string | null }) {
             onInput={e => { const m = lastEmoji(e.currentTarget.value); if (m) { setEmoji(m); setPhoto(null); e.currentTarget.blur(); } }}
             style={{ position: 'absolute', bottom: 0, right: 0, width: 1, height: 1, opacity: 0, border: 0, padding: 0, fontSize: 16, pointerEvents: 'none' }} />
         </div>
-        <FieldLabel m="14px 4px 6px">Starts over</FieldLabel>
-        <Segmented items={[['week', 'Weekly'], ['half', 'Every 15 days'], ['month', 'Monthly']]} value={period} onPick={v => switchPeriod(v as 'week' | 'half' | 'month')} />
-        <span style={{ margin: '6px 4px 0', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
-          {mon ? 'Just one amount for the whole month, from the 1st to the last day. No weekly budget to think about.' : half ? 'Every quincena: from the 1st to the 15th, and from the 16th to the end of the month.' : 'Every week, Monday to Sunday.'}
-        </span>
         <FieldLabel m="14px 4px 6px">{mon ? 'Budget for the month' : 'Budget'}</FieldLabel>
         {!mon && <Segmented items={[['period', half ? 'Every 15 days' : 'A week'], ['month', 'A month']]} value={perMonth ? 'month' : 'period'} onPick={v => {
           const m = v === 'month'; if (m === perMonth) return;
@@ -1016,6 +1005,14 @@ export function EditPocketSheet({ id }: { id: string | null }) {
             {half || mon ? `Until ${shortDate(pe)}. From ${shortDate(addDays(pe, 1))} it gets the full ${fmt(w)}.` : `Until Sunday. From Monday it gets the full ${fmt(w)}.`} Type what you actually have left if it's different.
           </span>
         </div>}
+        <details style={{ marginTop: 16, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px' }}>
+          <summary style={{ cursor: 'pointer', fontSize: 15, fontWeight: 700 }}>More options</summary>
+          <span style={{ display: 'block', margin: '4px 0 2px', fontSize: 12.5, color: 'var(--color-neutral-700)' }}>When it starts over, which days you spend from it, carrying over, color and photo. Most pockets don't need them.</span>
+        <FieldLabel m="12px 4px 6px">Starts over</FieldLabel>
+        <Segmented items={[['week', 'Weekly'], ['half', 'Every 15 days'], ['month', 'Monthly']]} value={period} onPick={v => switchPeriod(v as 'week' | 'half' | 'month')} />
+        <span style={{ margin: '6px 4px 0', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
+          {mon ? 'Just one amount for the whole month, from the 1st to the last day. No weekly budget to think about.' : half ? 'Every quincena: from the 1st to the 15th, and from the 16th to the end of the month.' : 'Every week, Monday to Sunday.'}
+        </span>
         <FieldLabel m="14px 4px 6px">Spending days</FieldLabel>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 4 }}>
           {DAY_LETTERS.map((l, wd) => {
@@ -1036,6 +1033,16 @@ export function EditPocketSheet({ id }: { id: string | null }) {
         </div>
         <FieldLabel m="14px 4px 6px">Color</FieldLabel>
         <HuePicker value={hue} onChange={setHue} label="Pocket color" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14, marginTop: 14 }}>
+          <div style={{ width: 68, height: 68, borderRadius: 999, backgroundColor: tint(hue), position: 'relative', overflow: 'hidden', color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 32, flex: 'none' }}>{glyph(icon)}<Fill src={photo} /></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+            <button onClick={() => pickPhoto().then(p => p && setPhoto(p))} style={{ height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--color-neutral-200)', color: TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <I.Image size={14} />{photo ? 'Change image' : 'Upload image'}
+            </button>
+            {photo && <button onClick={() => setPhoto(null)} style={{ padding: '0 4px', border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Use icon instead</button>}
+          </div>
+        </div>
+        </details>
         {!isNew && <GhostDanger onClick={remove}>{confirmDel ? 'Tap again to delete' : 'Delete pocket'}</GhostDanger>}
       </div>
     </SheetFrame>

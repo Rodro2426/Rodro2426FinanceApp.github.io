@@ -1,6 +1,22 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Each pocket is what you can spend on one thing. It fills up again every week (or quincena).|Cada bolsillo es lo que puedes gastar en algo. Se llena otra vez cada semana (o quincena).
+Each pocket is what you can spend on one thing. It fills up again every month.|Cada bolsillo es lo que puedes gastar en algo. Se llena otra vez cada mes.
+More options|Más opciones
+When it starts over, which days you spend from it, carrying over, color and photo. Most pockets don't need them.|Cuándo vuelve a empezar, qué días gastas de él, pasar lo que sobra, color y foto. La mayoría de bolsillos no los necesita.
+From other pockets|De otros bolsillos
+Given to other pockets|Dado a otros bolsillos
+From last week|De la semana pasada
+From last quincena|De la quincena pasada
+From last month|Del mes pasado
+Missing this month|Falta este mes
+Free this month|Libre este mes
+Missing to cover your pockets|Falta para cubrir tus bolsillos
+your pockets promise more than your accounts have|tus bolsillos prometen más de lo que tienen tus cuentas
+Free this month (or missing, below zero)|Libre este mes (o lo que falta, bajo cero)
+Money counted twice?|¿Plata contada dos veces?
+Income vs plan, and what is missing|Ingreso vs plan, y lo que falta
 Money counted twice?|¿Plata contada dos veces?
 Money you split into pockets should come from an income you saved, and not be part of your monthly income already. Here you can fix anything counted twice.|La plata que repartes en bolsillos debe venir de un ingreso que guardaste, y no ser ya parte de tu ingreso mensual. Aquí puedes arreglar lo que esté contado dos veces.
 Pocket money with no income behind it|Plata en bolsillos sin un ingreso detrás
@@ -2017,6 +2033,13 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+Fills up again {0}|Se llena otra vez el {0}
+From other pockets {0}|De otros bolsillos {0}
+Given to other pockets {0}|Dado a otros bolsillos {0}
+From last week {0}|De la semana pasada {0}
+From last quincena {0}|De la quincena pasada {0}
+From last month {0}|Del mes pasado {0}
+Money counted twice? ({0})|¿Plata contada dos veces? ({0})
 You went {0} over in {1}|Te pasaste {0} en {1}
 Take it from {0} (it has {1} left)|Tomarlo de {0} (le quedan {1})
 Take {0} from {1} (all it has left)|Tomar {0} de {1} (todo lo que le queda)

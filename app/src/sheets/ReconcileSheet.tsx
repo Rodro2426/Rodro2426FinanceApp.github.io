@@ -74,8 +74,8 @@ export function ReconcileSheet() {
           </button>
         )}
         <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 16px', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--color-neutral-700)' }}>Plan vs income</span><b style={{ color: s.planGap < 0 ? RED : TEXT }}>{fmt(s.planGap, true)}</b></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--color-neutral-700)' }}>Real shortfall</span><b style={{ color: s.real > 0 ? RED : TEXT }}>{fmt(Math.max(0, s.real))}</b></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--color-neutral-700)' }}>Free this month (or missing, below zero)</span><b style={{ color: s.planGap < 0 ? RED : TEXT }}>{fmt(s.planGap, true)}</b></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--color-neutral-700)' }}>Missing to cover your pockets</span><b style={{ color: s.real > 0 ? RED : TEXT }}>{fmt(Math.max(0, s.real))}</b></div>
         </div>
       </div>
     </SheetFrame>
