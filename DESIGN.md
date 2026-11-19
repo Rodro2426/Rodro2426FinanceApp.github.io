@@ -142,7 +142,7 @@ components:
 > - **Red** stays only as a warning: overspent, delete/remove/log out, unread dots, errors (`--color-accent` in the app).
 > - **Page** `#f5f8f4`, a mint-white.
 > - **Type:** Plus Jakarta Sans 200–800 (self-hosted `fonts/jakarta-latin.woff2`) everywhere. It replaces SF Rounded / Nunito.
-> - **Logo:** the engraved rosette (the safe-to-spend card's guilloché) as a solid teal flower with page-coloured engraving (`pockets-mark.svg`), a light version for dark screens (`pockets-mark-dark.svg`), and white-on-teal app icons. The wordmark is **POCKETS** in capitals, 800 weight, +0.06em tracking (`text-transform: uppercase`, so the text in code stays "Pockets").
+> - **Logo (replaced 2026-11-19):** a lowercase "p" (Plus Jakarta Sans 800) with a gold coin `#f2c14e` in its hole. The app icon is the white p in soft 3D on a teal gradient (`icon.svg`, `icon-180/192/512.png`); the favicon is the flat version (`icon-full.svg`); in the app and site the p stands alone, teal on light (`pockets-mark.svg`) and mint on dark (`pockets-mark-dark.svg`). The flower is gone: the + button is a plain teal disc and the safe-to-spend card has no engraving. The wordmark is **POCKETS** in capitals, 800 weight, +0.06em tracking (`text-transform: uppercase`, so the text in code stays "Pockets").
 
 **Creative North Star: "The Pocket on the Kitchen Table"**
 

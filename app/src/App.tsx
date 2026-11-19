@@ -319,7 +319,7 @@ export default function App() {
       {desk && <TopBar tabs={TABS} />}
       <div className="main">
       <div ref={brand} className="brand-reveal" aria-hidden="true">
-        <span className="brand-flower" />
+        <img className="brand-flower" src="./pockets-mark.svg" alt="" width={58} height={58} />
         <span className="wordmark">Pockets</span>
       </div>
       <div ref={scroll} onScroll={onScroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 1 }}>
@@ -377,9 +377,8 @@ export default function App() {
             );
           })}
         </nav>
-        {/* The add button: the bill's flower with a + in the middle, on a glass disc (styles: .add-flower). */}
+        {/* The add button: a teal disc with a + (styles: .add-flower). */}
         <button data-tour="add" onClick={() => openSheet({ name: 'add' })} aria-label="Add expense" className="add-flower pr92">
-          <span className="add-flower-rose" aria-hidden="true" />
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 1.8V16.2M1.8 9H16.2" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg>
         </button>
       </div>}
