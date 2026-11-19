@@ -11,7 +11,7 @@
   --glass-edge: rgba(255,255,255,0.55);
   /* A faint outline so glass boxes keep their shape on plain backgrounds (sheets). */
   --glass-line: rgba(32,30,29,0.07);
-  --page: #f5f8f4;
+  --page: #e6f2ee;
   --brand: #1f5f5a; --brand-tint: #dcefe6;
   --action: #1f5f5a; --action-press: #174a46; --action-ink: #fff;
   --lavender: #7a68b8;
@@ -204,7 +204,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   --surface-row: color-mix(in srgb, var(--page) 52%, #282826);
   --glass-edge: rgba(255,255,255,0.08);
   --glass-line: transparent;
-  --page: #0e0e0d;
+  --page: #0b1d1b;
   --on-text: #141312;
   --money-in: oklch(0.78 0.14 150);
   --ok-bg: oklch(0.3 0.05 155); --ok-ink: oklch(0.88 0.08 155);

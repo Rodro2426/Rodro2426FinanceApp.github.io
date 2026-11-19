@@ -1,11 +1,11 @@
 // Background color: the user's own color for the app's page background, one for light mode and one for dark mode.
 export type Mode = 'light' | 'dark';
-export const DEFAULT_BG: Record<Mode, string> = { light: '#f5f8f4', dark: '#0e0e0d' };
+export const DEFAULT_BG: Record<Mode, string> = { light: '#e6f2ee', dark: '#0b1d1b' };  // Pockets mint and deep teal (2026-11-19)
 const TEXT: Record<Mode, string> = { light: '#201e1d', dark: '#f2efea' };
 
 export const PRESETS: Record<Mode, [string, string][]> = {
-  light: [['#f5f8f4', 'Pockets mint'], ['#fbf3e4', 'Sand'], ['#f1ede4', 'Linen'], ['#fff7e0', 'Butter'], ['#eef4ec', 'Sage'], ['#e8f5f1', 'Mint'], ['#eaf2f9', 'Sky'], ['#eef0fb', 'Lavender'], ['#fcefef', 'Blush'], ['#f4f4f5', 'Grey']],
-  dark: [['#0e0e0d', 'Pockets black'], ['#000000', 'True black'], ['#0b1020', 'Navy'], ['#0f1a14', 'Forest'], ['#0d1719', 'Teal'], ['#15111d', 'Plum'], ['#1a1012', 'Wine'], ['#1a1510', 'Coffee'], ['#121417', 'Slate'], ['#18181b', 'Graphite']]
+  light: [['#e6f2ee', 'Pockets mint'], ['#f5f8f4', 'Mint white'], ['#fbf3e4', 'Sand'], ['#f1ede4', 'Linen'], ['#fff7e0', 'Butter'], ['#eef4ec', 'Sage'], ['#e8f5f1', 'Mint'], ['#eaf2f9', 'Sky'], ['#eef0fb', 'Lavender'], ['#fcefef', 'Blush'], ['#f4f4f5', 'Grey']],
+  dark: [['#0b1d1b', 'Pockets teal'], ['#0e0e0d', 'Black'], ['#000000', 'True black'], ['#0b1020', 'Navy'], ['#0f1a14', 'Forest'], ['#0d1719', 'Teal'], ['#15111d', 'Plum'], ['#1a1012', 'Wine'], ['#1a1510', 'Coffee'], ['#121417', 'Slate'], ['#18181b', 'Graphite']]
 };
 
 /** "#abc", "abc", "#AABBCC" → "#aabbcc"; anything else → null. */

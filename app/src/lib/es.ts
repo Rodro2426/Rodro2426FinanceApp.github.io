@@ -549,7 +549,8 @@ Mint|Menta
 Lavender|Lavanda
 Blush|Rubor
 Grey|Gris
-Pockets black|Negro Pockets
+Pockets teal|Verde azulado Pockets
+Mint white|Blanco menta
 True black|Negro puro
 Navy|Azul marino
 Forest|Bosque
