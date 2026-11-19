@@ -19,10 +19,11 @@ import { useDesk } from '../ui/Desk';
 import { DeskFriends, FriendsHomeCard } from './Debts';
 import { monthSummary } from '../lib/plan';
 import { billAmount } from '../lib/schedule';
+import { safeLevel } from '../lib/derive';
 
 const C = 100.53; // ring circumference (r=16)
 
-/** Light tones for the "Safe to spend" card: >50% left green, 30–50% yellow, under 30% red. */
+/** Tones for the "Safe to spend" card (lib/derive.ts safeLevel): over 30% left green, 30% down to $0 yellow, past the limit red. */
 const SAFE_TONES = {
   green: { key: 'green', bg: 'var(--safe-g-bg)', label: 'var(--safe-g-label)', amount: 'var(--safe-g-amt)', bar: 'var(--safe-g-bar)' },
   yellow: { key: 'yellow', bg: 'var(--safe-y-bg)', label: 'var(--safe-y-label)', amount: 'var(--safe-y-amt)', bar: 'var(--safe-y-bar)' },
@@ -52,7 +53,7 @@ export default function Home() {
   const todayActive = days.filter(x => x.active);
   const todayBudget = todayActive.reduce((a, x) => a + x.allowance, 0), todayLeft = days.reduce((a, x) => a + x.left, 0);
   const todaySpent = days.reduce((a, x) => a + x.spentToday, 0);
-  const todayTone = toneOf(todayBudget > 0 ? todayLeft / todayBudget : todaySpent > 0 ? 0 : 1);
+  const todayTone = toneOf(todayBudget > 0 ? todayLeft / todayBudget : todaySpent > 0 ? -1 : 1);
   const photo = d.settings.profilePhoto;
   const unread = d.notifications.filter(n => !n.read && !n.dismissed).length;
   // Card colour follows how much of the week's budget is still safe to spend.
@@ -237,7 +238,7 @@ export default function Home() {
   );
 }
 
-const toneOf = (r: number) => (r > 0.5 ? SAFE_TONES.green : r >= 0.3 ? SAFE_TONES.yellow : SAFE_TONES.red);
+const toneOf = (r: number) => SAFE_TONES[safeLevel(r)];
 
 /** Side-by-side pages you swipe between, with dots below. Opens on page `initial`. */
 function Pager({ pages, label, names, initial = 0, onPage, pinned, onPin }: { pages: ReactNode[]; label: string; names: string[]; initial?: number; onPage?: (i: number) => void; pinned?: number; onPin?: (i: number) => void }) {

@@ -409,3 +409,7 @@ export const chargeAccount = (accts: Account[], acctId: string, amt: number) =>
 export const initialOf = (s: string) => tr(s.trim()).charAt(0).toUpperCase() || '·';
 export const photoBg = (p?: string | null) => (p ? `url(${p})` : 'none');
 export const plural = (n: number, one: string, many = one + 's') => (n === 1 ? `1 ${one}` : `${n} ${many}`);
+
+/** Colour of the safe-to-spend card from the share of the budget still left: more than 30% green, 30% down to
+ *  nothing left yellow, red only once you've spent past the limit. */
+export const safeLevel = (left: number): 'green' | 'yellow' | 'red' => (left > 0.3 ? 'green' : left >= -0.00001 ? 'yellow' : 'red');

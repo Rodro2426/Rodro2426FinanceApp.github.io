@@ -489,11 +489,11 @@ input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*
 /* ---------- The safe-to-spend card: the logo's p, large and faint, in the corner (in the card's own ink) ---------- */
 .safe-p { overflow: hidden; isolation: isolate; }
 .safe-p::before {
-  content: ''; position: absolute; z-index: -1; pointer-events: none; right: 18px; bottom: -52px; width: 104px; height: 150px;
+  content: ''; position: absolute; z-index: -1; pointer-events: none; right: 18px; bottom: -14px; width: 104px; height: 150px;
   background: currentColor; opacity: .1; -webkit-mask: url("/pockets-p.svg") center / contain no-repeat; mask: url("/pockets-p.svg") center / contain no-repeat;
 }
 .dh-safe.safe-p { position: relative; }
-.dh-safe.safe-p::before { right: 40px; top: auto; bottom: -64px; width: 140px; height: 202px; }
+.dh-safe.safe-p::before { right: 40px; top: auto; bottom: -20px; width: 140px; height: 202px; }
 
 /* ---------- The add button: a teal disc with a white +, in the logo's colours ---------- */
 .add-flower {
