@@ -1,10 +1,11 @@
 // Profile → Apple Pay purchases: turn the Shortcut inbox on or off, link each Wallet card to an account, copy the two
 // links and follow the steps to build the iPhone "Transaction" automation.
 import { useState } from 'react';
-import { useApp, setData, flash, getData, openSheet } from '../lib/store';
+import { useApp, setData, flash, getData, openSheet, closeSheet } from '../lib/store';
+import { fmt } from '../lib/derive';
 import { useSync } from './CloudSheet';
 import { TEXT, ink, tint } from '../lib/constants';
-import { newQuickKey, quickAccount, shortcutCats } from '../lib/quickadd';
+import { linkCard, newQuickKey, shortcutCats, waitingFor } from '../lib/quickadd';
 import { pullQuickInbox, pushQuickMenu, quickAddOff, quickUrl } from '../lib/quickaddSync';
 import { FieldLabel, GhostDanger, PrimaryBtn, Toggle } from '../ui/bits';
 import { SheetFrame } from './Sheet';
@@ -36,7 +37,6 @@ export function QuickAddSheet() {
   const [busy, setBusy] = useState(false);
   const [confirmOff, setConfirmOff] = useState(false);
   const accounts = d.accounts.filter(a => !a.notMine);
-  const payFrom = quickAccount(d);
   const cards = Object.entries(qa?.cards ?? {});
   const shown = shortcutCats(d);
   // Tapping a category pins it (the first tap starts from the list shown, so nothing jumps). At most 8: it pops up at the checkout.
@@ -50,7 +50,7 @@ export function QuickAddSheet() {
   // On only once the Worker has created the inbox (it needs the Pockets sign-in); otherwise undo and say why.
   const turnOn = async () => {
     setBusy(true);
-    setData(x => ({ settings: { ...x.settings, quickAdd: { key: newQuickKey(), acct: quickAccount(x) } } }));
+    setData(x => ({ settings: { ...x.settings, quickAdd: { key: newQuickKey() } } }));
     const ok = await pushQuickMenu(true);
     setBusy(false);
     if (ok) { flash('Apple Pay purchases are on'); return; }
@@ -66,7 +66,6 @@ export function QuickAddSheet() {
     setData(x => ({ settings: { ...x.settings, quickAdd: undefined } }));
     setConfirmOff(false); flash('Apple Pay purchases are off');
   };
-  const link = (card: string, acct: string) => setData(x => ({ settings: { ...x.settings, quickAdd: { ...x.settings.quickAdd!, cards: { ...x.settings.quickAdd?.cards, [card]: acct } } } }));
   // Copies the key (the Shortcut asks for it) and opens a fresh link each time: the very same link opened twice only
   // brought Shortcuts forward without its add screen.
   const openShortcut = async (key: string) => {
@@ -109,28 +108,21 @@ export function QuickAddSheet() {
         </>}
         {!qa && sync.uid && <PrimaryBtn onClick={turnOn} disabled={busy}>{busy ? 'Turning on…' : 'Turn on Apple Pay purchases'}</PrimaryBtn>}
         {qa && <>
-          <FieldLabel>Pay from, for a new card</FieldLabel>
-          <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
-            {accounts.map(a => (
-              <button key={a.id} onClick={() => setData(x => ({ settings: { ...x.settings, quickAdd: { ...x.settings.quickAdd!, acct: a.id } } }))} aria-pressed={payFrom === a.id}
-                style={{ flex: 'none', padding: '10px 14px', borderRadius: 18, border: `2px solid ${payFrom === a.id ? ink(a.hue) : 'var(--surface)'}`, background: payFrom === a.id ? tint(a.hue) : 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>{a.name}</button>
-            ))}
-          </div>
-          <span style={{ margin: '6px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.</span>
-
           {cards.length > 0 && <>
             <FieldLabel>Your cards</FieldLabel>
             <div style={{ ...card, gap: 12 }}>
               {cards.map(([name, acct]) => (
                 <label key={name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
-                  <select value={accounts.some(a => a.id === acct) ? acct : payFrom} onChange={e => link(name, e.target.value)} aria-label={`Account for ${name}`}
-                    style={{ flex: 'none', maxWidth: '55%', height: 38, borderRadius: 12, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 14, fontWeight: 600, padding: '0 10px' }}>
+                  <select value={accounts.some(a => a.id === acct) ? acct : ''} onChange={e => (e.target.value === '__new' ? openSheet({ name: 'addAcct', name0: name, type0: 'card', linkCard: name }) : e.target.value && setData(x => linkCard(x, name, e.target.value)))} aria-label={`Account for ${name}`}
+                    style={{ flex: 'none', maxWidth: '55%', height: 38, borderRadius: 12, border: 0, background: accounts.some(a => a.id === acct) ? 'var(--color-neutral-100)' : 'var(--warn-bg)', color: TEXT, fontSize: 14, fontWeight: 600, padding: '0 10px' }}>
+                    {!accounts.some(a => a.id === acct) && <option value="">Not linked yet</option>}
                     {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                    <option value="__new">+ New account…</option>
                   </select>
                 </label>
               ))}
-              <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Cards show up here after their first purchase. A change applies to the next purchases.</span>
+              <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Cards show up here after their first purchase. A card Pockets doesn't recognize is saved without an account until you link it here. A change applies to the next purchases.</span>
             </div>
           </>}
 
@@ -172,6 +164,54 @@ export function QuickAddSheet() {
           <span style={{ margin: '8px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Pockets also checks every time you open it. The pocket list updates on its own when you add or rename pockets.</span>
           <GhostDanger onClick={turnOff}>{confirmOff ? 'Tap again to turn off' : 'Turn off Apple Pay purchases'}</GhostDanger>
         </>}
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- "Which account is this card?" (from the notice about a new Apple Pay card) ---------------- */
+export function CardLinkSheet({ card }: { card: string }) {
+  const { data: d } = useApp();
+  const accounts = d.accounts.filter(a => !a.notMine);
+  const waiting = waitingFor(d, card), total = waiting.reduce((s, e) => s + e.amt, 0);
+  const [alsoWaiting, setAlsoWaiting] = useState(true);
+  const pick = (id: string) => {
+    const name = d.accounts.find(a => a.id === id)?.name ?? '';
+    setData(x => linkCard(x, card, id, alsoWaiting));
+    closeSheet();
+    flash(`${card} is ${name} · its next purchases go there`);
+  };
+  return (
+    <SheetFrame title="Which account is this card?">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'var(--surface)', borderRadius: 22, padding: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Apple Pay card</span>
+          <span translate="no" style={{ fontSize: 19, fontWeight: 700 }}>{card}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{waiting.length ? `Pockets didn't recognize it, so ${waiting.length === 1 ? '1 purchase was' : `${waiting.length} purchases were`} saved without an account (${fmt(total)}).` : "Pockets didn't recognize it."} Pick its account and its next purchases go there.</span>
+        </div>
+        <FieldLabel>It's one of my accounts</FieldLabel>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {accounts.map(a => (
+            <button key={a.id} onClick={() => pick(a.id)} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px 10px 10px', borderRadius: 18, border: 0, background: 'var(--surface)', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ width: 34, height: 34, borderRadius: 11, background: tint(a.hue), color: ink(a.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, flex: 'none' }}>{a.name.charAt(0).toUpperCase()}</span>
+              <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                <span translate="no" style={{ fontSize: 15, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</span>
+                <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{a.type === 'card' ? 'Credit card' : a.kind}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+        <FieldLabel>Or</FieldLabel>
+        <button onClick={() => openSheet({ name: 'addAcct', name0: card, type0: 'card', linkCard: card })} className="hv-n100" style={{ height: 50, borderRadius: 999, border: '2px dashed var(--color-neutral-400)', background: 'transparent', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>It's a new card: create it</button>
+        {waiting.length > 0 && (
+          <div style={{ marginTop: 14, background: 'var(--surface)', borderRadius: 20, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>{waiting.length === 1 ? 'Also put the purchase already saved on it' : `Also put the ${waiting.length} purchases already saved on it`}</span>
+              <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{alsoWaiting ? `The account is charged ${fmt(total)}.` : 'Off: they stay without an account; you can still open each one and pick it.'}</span>
+            </span>
+            <Toggle on={alsoWaiting} onChange={setAlsoWaiting} label="Also put the purchases already saved on it" />
+          </div>
+        )}
       </div>
     </SheetFrame>
   );

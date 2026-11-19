@@ -1627,6 +1627,19 @@ You owe|Debes
 Include investments|Incluir inversiones
 and your groups|y tus grupos
 Include investments in net worth|Incluir inversiones en el patrimonio
+A purchase was saved without an account. Tap to say which account this card is.|Se guardó una compra sin cuenta. Toca para decir de qué cuenta es esta tarjeta.
+Which account is this card?|¿De qué cuenta es esta tarjeta?
+Apple Pay card|Tarjeta de Apple Pay
+Pockets didn't recognize it.|Pockets no la reconoció.
+Pick its account and its next purchases go there.|Elige su cuenta y sus próximas compras irán ahí.
+It's one of my accounts|Es una de mis cuentas
+Or|O
+It's a new card: create it|Es una tarjeta nueva: crearla
+Also put the purchase already saved on it|Poner también ahí la compra ya guardada
+Off: they stay without an account; you can still open each one and pick it.|Apagado: se quedan sin cuenta; igual puedes abrir cada una y elegirla.
+Not linked yet|Sin vincular
++ New account…|+ Cuenta nueva…
+Cards show up here after their first purchase. A card Pockets doesn't recognize is saved without an account until you link it here. A change applies to the next purchases.|Las tarjetas aparecen aquí después de su primera compra. Una tarjeta que Pockets no reconoce se guarda sin cuenta hasta que la vincules aquí. Un cambio aplica a las próximas compras.
 Updating your colors…|Actualizando tus colores…
 Adjust balance|Ajustar saldo
 This account isn't yours, so the difference is saved in its history but doesn't count in your spending or your pockets.|Esta cuenta no es tuya, así que la diferencia queda en su historial pero no cuenta en tus gastos ni en tus bolsillos.
@@ -2136,6 +2149,13 @@ Borrowed from {0}|Préstamo de {0}
 You paid {0} back in full 🎉|Le pagaste todo a {0} 🎉
 {0} paid you back|{0} te pagó
 Paid back {0}|Pagada el {0}
+New card: {0}|Tarjeta nueva: {0}
+Pockets didn't recognize it, so 1 purchase was saved without an account ({0}).|Pockets no la reconoció, así que se guardó 1 compra sin cuenta ({0}).
+Pockets didn't recognize it, so {0} purchases were saved without an account ({1}).|Pockets no la reconoció, así que se guardaron {0} compras sin cuenta ({1}).
+Also put the {0} purchases already saved on it|Poner también ahí las {0} compras ya guardadas
+The account is charged {0}.|Se cargan {0} a la cuenta.
+{0} is {1} · its next purchases go there|{0} es {1} · sus próximas compras irán ahí
+{0} added · {1} purchases go here|{0} agregada · las compras de {1} irán aquí
 Type what {0} really owes now. Pockets has {1}.|Escribe cuánto debe {0} de verdad ahora. Pockets tiene {1}.
 Type what {0} really has now. Pockets has {1}.|Escribe cuánto tiene {0} de verdad ahora. Pockets tiene {1}.
 {0} will have {1} less left.|A {0} le quedarán {1} menos.

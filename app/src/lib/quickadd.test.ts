@@ -1,7 +1,8 @@
 import 'fake-indexeddb/auto';
+import type { Data } from './types';
 import { describe, expect, it } from 'vitest';
 import { sampleData } from './seed';
-import { cardAccount, importInbox, learnStoreName, renameStorePurchases, newQuickKey, quickAccount, quickMenu, shortcutCats, storeKey } from './quickadd';
+import { cardAccount, importInbox, learnStoreName, renameStorePurchases, newQuickKey, quickMenu, shortcutCats, storeKey } from './quickadd';
 
 const ts = new Date(2026, 10, 9, 13, 30).getTime();
 
@@ -21,8 +22,8 @@ describe('quick add inbox', () => {
 
   it('saves an item as a normal expense in the named pocket and charges the account', () => {
     const d = sampleData();
-    const pocket = d.pockets[0], acct = quickAccount(d), before = d.accounts.find(a => a.id === acct)!;
-    const { patch, added } = importInbox(d, [{ id: 'abc1', amt: 25000, pocket: pocket.name.toUpperCase(), note: 'Arepas', ts }]);
+    const pocket = d.pockets[0], acct = d.accounts[0].id, before = d.accounts.find(a => a.id === acct)!;
+    const { patch, added } = importInbox(d, [{ id: 'abc1', amt: 25000, pocket: pocket.name.toUpperCase(), note: 'Arepas', account: d.accounts[0].name, ts }]);
     expect(added).toHaveLength(1);
     const e = added[0];
     expect(e).toMatchObject({ id: 'eq-abc1', p: pocket.id, a: acct, amt: 25000, note: 'Arepas', date: '2026-11-09' });
@@ -72,7 +73,48 @@ describe('quick add inbox', () => {
     expect(cardAccount(d, card)).toBe(target.id);
     const { patch } = importInbox({ ...d, settings: { ...d.settings, quickAdd: { key: 'k' } } }, [{ id: 'w1', amt: 800, card, ts }]);
     expect(patch!.settings!.quickAdd!.cards).toEqual({ [card]: target.id });
-    expect(cardAccount(d, 'Mastercard Unknown Bank')).toBe(quickAccount(d));
+    expect(cardAccount(d, 'Mastercard Unknown Bank')).toBe('');
+  });
+
+  it('a card Pockets does not recognize: saved with no account, nothing charged, one notice asking which account', () => {
+    const d: Data = { ...sampleData(), settings: { ...sampleData().settings, quickAdd: { key: 'k' } }, notifications: [] };
+    const { patch, added } = importInbox(d, [{ id: 'u1', amt: 30000, card: 'Tarjeta Rappi', note: 'Rappi', ts }, { id: 'u2', amt: 12000, card: 'Tarjeta Rappi', note: 'Rappi', ts: ts + 1 }]);
+    expect(added.map(e => [e.a, e.card])).toEqual([['', 'Tarjeta Rappi'], ['', 'Tarjeta Rappi']]);
+    expect(patch!.accounts).toEqual(d.accounts);
+    expect(patch!.settings!.quickAdd!.cards).toEqual({ 'Tarjeta Rappi': '' });
+    const asks = patch!.notifications!.filter(n => n.kind === 'applecard');
+    expect(asks).toHaveLength(1);
+    expect(asks[0].card).toBe('Tarjeta Rappi');
+    // A later purchase with the same card while the question is still open doesn't ask again.
+    const d2 = { ...d, ...patch } as typeof d;
+    const again = importInbox(d2, [{ id: 'u3', amt: 5000, card: 'Tarjeta Rappi', ts: ts + 2 }]);
+    expect(again.patch!.notifications!.filter(n => n.kind === 'applecard')).toHaveLength(1);
+  });
+
+  it('no card name at all: no account either (nothing to guess from)', () => {
+    const d = sampleData();
+    const { added, patch } = importInbox(d, [{ id: 'n1', amt: 9000, note: 'Store', ts }]);
+    expect(added[0].a).toBe('');
+    expect(patch!.accounts).toEqual(d.accounts);
+  });
+
+  it('linking a card: the waiting purchases go on it (account charged), the notice goes away, the next ones follow', async () => {
+    const { linkCard, waitingFor } = await import('./quickadd');
+    const base: Data = { ...sampleData(), settings: { ...sampleData().settings, quickAdd: { key: 'k' } }, notifications: [] };
+    let d = { ...base, ...importInbox(base, [{ id: 'u1', amt: 30000, card: 'Tarjeta Rappi', ts }, { id: 'u2', amt: 12000, card: 'Tarjeta Rappi', ts: ts + 1 }]).patch } as typeof base;
+    const visa = d.accounts.find(a => a.type === 'card')!;
+    expect(waitingFor(d, 'Tarjeta Rappi')).toHaveLength(2);
+    d = { ...d, ...linkCard(d, 'Tarjeta Rappi', visa.id) } as typeof base;
+    expect(waitingFor(d, 'Tarjeta Rappi')).toHaveLength(0);
+    expect(d.accounts.find(a => a.id === visa.id)!.bal).toBe(visa.bal + 42000);
+    expect(d.notifications.filter(n => n.kind === 'applecard' && !n.dismissed)).toHaveLength(0);
+    const next = importInbox(d, [{ id: 'u3', amt: 5000, card: 'Tarjeta Rappi', ts: ts + 2 }]);
+    expect(next.added[0].a).toBe(visa.id);
+    // Linking for the next purchases only leaves the waiting ones as they are.
+    const only = { ...base, ...importInbox(base, [{ id: 'v1', amt: 7000, card: 'Nequi', ts }]).patch } as typeof base;
+    const linked = { ...only, ...linkCard(only, 'Nequi', visa.id, false) } as typeof base;
+    expect(waitingFor(linked, 'Nequi')).toHaveLength(1);
+    expect(linked.accounts).toEqual(only.accounts);
   });
 
   it('uses the card link the person chose over the name match', () => {

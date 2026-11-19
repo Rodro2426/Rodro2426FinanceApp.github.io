@@ -213,6 +213,7 @@ function NotificationCenter() {
   const open = (n: Notif) => {
     setData(x => ({ notifications: x.notifications.map(y => (y.id === n.id ? { ...y, read: true, bannered: true } : y)) }));
     if (n.kind === 'reminder') openSheet({ name: 'add' });
+    else if (n.card) openSheet({ name: 'cardLink', card: n.card });
     else if (n.link) openTripLink(n.link);
     else openSheet({ name: 'notifications' });
   };

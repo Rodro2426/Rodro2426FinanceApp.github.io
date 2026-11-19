@@ -53,7 +53,7 @@ import { GroupItemSheet, GroupSheet } from './sheets/GroupSheets';
 import { BackupNowButton, NOTIF_TONE, NotifIcon, NotificationsSheet, ScheduleSheet } from './sheets/ScheduleSheets';
 import { CropperHost } from './ui/Cropper';
 import { tookSwipe, useSwipeNav, type Peek } from './ui/swipe';
-import { QuickAddSheet } from './sheets/QuickAddSheet';
+import { CardLinkSheet, QuickAddSheet } from './sheets/QuickAddSheet';
 import { pullQuickInbox, pushQuickMenu } from './lib/quickaddSync';
 import { quickMenu } from './lib/quickadd';
 import { EditTxnSheet } from './sheets/EditTxn';
@@ -102,7 +102,8 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'export': return <ExportSheet acct={sheet.acct} />;
     case 'acct': return <AcctSheet id={sheet.id} />;
     case 'editAcct': return <EditAcctSheet id={sheet.id} />;
-    case 'addAcct': return <AddAcctSheet />;
+    case 'addAcct': return <AddAcctSheet name0={sheet.name0} type0={sheet.type0} linkCard={sheet.linkCard} />;
+    case 'cardLink': return <CardLinkSheet card={sheet.card} />;
     case 'debt': return <DebtSheet id={sheet.id} dir={sheet.dir} friend={sheet.friend} name={sheet.person} />;
     case 'friendNew': return <WhatHappenedSheet />;
     case 'friendAdd': return <FriendAddSheet />;
@@ -352,7 +353,7 @@ export default function App() {
       )}
 
       {banner && !ui.sheet && (
-        <div className="banner" role="alert" onClick={() => { if (banner.kind === 'reminder') { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'add' }); } else if (banner.txn) { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'txn', kind: 'expense', id: banner.txn }); } else if (banner.link) { patchNotif(banner.id, { bannered: true, dismissed: true }); openTripLink(banner.link); } else { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); } }}
+        <div className="banner" role="alert" onClick={() => { if (banner.kind === 'reminder') { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'add' }); } else if (banner.card) { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'cardLink', card: banner.card }); } else if (banner.txn) { patchNotif(banner.id, { bannered: true, dismissed: true }); openSheet({ name: 'txn', kind: 'expense', id: banner.txn }); } else if (banner.link) { patchNotif(banner.id, { bannered: true, dismissed: true }); openTripLink(banner.link); } else { patchNotif(banner.id, { bannered: true }); openSheet({ name: 'notifications' }); } }}
           style={{ position: 'absolute', left: 12, right: 12, top: 'calc(var(--top) - 10px)', zIndex: 35, background: 'var(--surface)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: 22, padding: '12px 10px 12px 14px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 10px 30px rgba(45,43,43,.18),0 0 0 1px rgba(45,43,43,.05)', cursor: 'pointer' }}>
           <div style={{ width: 38, height: 38, borderRadius: 999, background: NOTIF_TONE[banner.kind].bg, color: NOTIF_TONE[banner.kind].fg, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><NotifIcon kind={banner.kind} /></div>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>

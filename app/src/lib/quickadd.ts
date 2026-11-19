@@ -79,8 +79,9 @@ export function quickAccount(d: Data): string {
 /**
  * Turns inbox items into expenses, exactly like adding one by hand (the account is charged).
  * - Pocket: matched by name; "No pocket" or an unknown name saves it without a pocket.
- * - Account: the one sent by name; else the Wallet card's account (cardAccount). New cards are remembered so they can be
- *   linked to another account in the Apple Pay screen.
+ * - Account: the one sent by name; else the Wallet card's account (cardAccount). A card Pockets doesn't know is saved
+ *   with no account (nothing is charged) and remembered as not linked; one notice asks which account it is, and the
+ *   answer applies to its next purchases (and, if chosen, to the ones waiting). No card name at all: no account either.
  * - Category: the one sent if it exists; else the last one used at the same store; else the last one used in that
  *   pocket; else the last one used anywhere.
  * - Date: the day it was sent, in this phone's time zone.
@@ -88,14 +89,33 @@ export function quickAccount(d: Data): string {
  */
 /**
  * The account for a Wallet card: the one it was linked to; else an account whose name is in the card's name or the
- * other way round ("Visa Davivienda" → "Davivienda"); else the default account.
+ * other way round ("Visa Davivienda" → "Davivienda"); else "" (Pockets doesn't know the card yet).
  */
 export function cardAccount(d: Data, card = ''): string {
   const linked = d.settings.quickAdd?.cards?.[card.trim()];
   if (linked && d.accounts.some(a => a.id === linked)) return linked;
   const c = card.trim().toLowerCase();
   const byName = c ? d.accounts.find(a => !a.notMine && a.name.trim() && (c.includes(a.name.trim().toLowerCase()) || a.name.trim().toLowerCase().includes(c))) : undefined;
-  return byName?.id ?? quickAccount(d);
+  return byName?.id ?? '';
+}
+
+/** Purchases from a card that weren't put on an account yet (it wasn't known when they came in). */
+export const waitingFor = (d: Data, card: string) => d.expenses.filter(e => e.card === card && !d.accounts.some(a => a.id === e.a));
+
+/**
+ * Says which account a Wallet card is: its next purchases go there. With `alsoWaiting`, the purchases already saved
+ * from it without an account are put on it too (and the account is charged). Its "which account?" notice goes away.
+ */
+export function linkCard(d: Data, card: string, acct: string, alsoWaiting = true): Partial<Data> {
+  const qa = d.settings.quickAdd;
+  const waiting = alsoWaiting ? new Set(waitingFor(d, card).map(e => e.id)) : new Set<string>();
+  let accounts = d.accounts;
+  const expenses = d.expenses.map(e => { if (!waiting.has(e.id)) return e; accounts = chargeAccount(accounts, acct, e.amt); return { ...e, a: acct }; });
+  return {
+    accounts, expenses,
+    notifications: d.notifications.map(n => (n.kind === 'applecard' && n.card === card ? { ...n, read: true, dismissed: true } : n)),
+    ...(qa ? { settings: { ...d.settings, quickAdd: { ...qa, cards: { ...qa.cards, [card]: acct } } } } : {})
+  };
 }
 
 export function importInbox(d: Data, items: InboxItem[]): { patch: Partial<Data> | null; added: Expense[] } {
@@ -108,16 +128,16 @@ export function importInbox(d: Data, items: InboxItem[]): { patch: Partial<Data>
     const id = `eq-${it.id}`, amt = Math.round(Number(it.amt) * 100) / 100;
     if (known.has(id) || !(amt > 0)) continue;
     const p = d.pockets.find(x => named(x.name, it.pocket))?.id ?? '';
-    const a = d.accounts.find(x => named(x.name, it.account))?.id ?? cardAccount(d, it.card);
     const card = (it.card || '').trim();
+    const a = d.accounts.find(x => named(x.name, it.account))?.id ?? cardAccount(d, card);
     const raw = (it.note || '').trim(), learned = raw ? d.settings.quickAdd?.names?.[storeKey(raw)] : undefined;
-    if (card && !cards[card]) cards[card] = a;
+    if (card && cards[card] === undefined) cards[card] = a; // "" = seen, waiting to be linked
     const sent = d.cats.find(k => named(k.name, it.category));
     const prev = (raw ? latest.find(e => same(e.note, learned ?? raw) || (!!e.store && storeKey(e.store) === storeKey(raw))) : undefined) ?? latest.find(e => e.p === p && p) ?? latest[0];
     const [cat, sub] = sent ? [sent.name, ''] : prev ? catOf(prev) : [d.cats[0]?.name ?? 'Other', ''];
     const note = learned || raw || (sub && sub !== 'General' ? sub : cat);
-    added.push({ id, ts: it.ts, p, a, amt, note, date: iso(new Date(it.ts)), tags: [], cat, sub, ...(raw ? { store: raw } : {}) });
-    accounts = chargeAccount(accounts, a, amt);
+    added.push({ id, ts: it.ts, p, a, amt, note, date: iso(new Date(it.ts)), tags: [], cat, sub, ...(raw ? { store: raw } : {}), ...(card ? { card } : {}) });
+    if (a) accounts = chargeAccount(accounts, a, amt);
     known.add(id);
   }
   if (!added.length) return { patch: null, added };
@@ -127,6 +147,14 @@ export function importInbox(d: Data, items: InboxItem[]): { patch: Partial<Data>
     id: `nq-${e.id}`, date: iso(new Date()), ts: Date.now(), kind: 'applepay', txn: e.id, read: false, dismissed: false, bannered: false,
     title: `Apple Pay · ${fmt(e.amt)}`, body: `${e.note}. Tap to check it or fix the name.`
   }));
-  const settings = qa && Object.keys(cards).length !== Object.keys(qa.cards ?? {}).length ? { ...d.settings, quickAdd: { ...qa, cards } } : undefined;
-  return { patch: { expenses: [...added.reverse(), ...d.expenses], accounts, ...(settings ? { settings } : {}), ...(notes.length ? { notifications: [...notes, ...d.notifications] } : {}) }, added };
+  // One notice per card Pockets doesn't know yet (not one per purchase), unless one is already waiting.
+  const asked = new Set(d.notifications.filter(n => n.kind === 'applecard' && !n.dismissed).map(n => n.card));
+  const unknown = [...new Set(added.filter(e => e.card && !e.a).map(e => e.card!))].filter(c => !asked.has(c));
+  const cardNotes: Notif[] = unknown.map(c => ({
+    id: `nqc-${c}-${Date.now()}`, date: iso(new Date()), ts: Date.now(), kind: 'applecard', card: c, read: false, dismissed: false, bannered: false,
+    title: `New card: ${c}`, body: 'A purchase was saved without an account. Tap to say which account this card is.'
+  }));
+  const allNotes = [...cardNotes, ...notes];
+  const settings = qa && JSON.stringify(cards) !== JSON.stringify(qa.cards ?? {}) ? { ...d.settings, quickAdd: { ...qa, cards } } : undefined;
+  return { patch: { expenses: [...added.reverse(), ...d.expenses], accounts, ...(settings ? { settings } : {}), ...(allNotes.length ? { notifications: [...allNotes, ...d.notifications] } : {}) }, added };
 }

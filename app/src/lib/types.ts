@@ -18,7 +18,7 @@ export interface Account { /** Credit card: the day of the month the billing cyc
 /** `p` is '' for expenses that don't belong to a weekly pocket (e.g. a scheduled bill). */
 /** `orig` keeps the dollar amount and the TRM used when a USD subscription was converted. */
 export interface FxOrig { amt: number; cur: 'USD'; rate: number; official: boolean }
-export interface Expense { id: string; ts: number; p: string; a: string; amt: number; note: string; date: string; tags: string[]; cat: string; sub: string; ruleId?: string; ruleMonth?: string; orig?: FxOrig; /** One purchase split across categories: every part shares this id. */ split?: string; /** Apple Pay: the store name exactly as it arrived, so renaming the expense teaches Pockets that store's name. */ store?: string }
+export interface Expense { /** Apple Pay: the Wallet card it was paid with, as the iPhone names it. */ card?: string; id: string; ts: number; p: string; a: string; amt: number; note: string; date: string; tags: string[]; cat: string; sub: string; ruleId?: string; ruleMonth?: string; orig?: FxOrig; /** One purchase split across categories: every part shares this id. */ split?: string; /** Apple Pay: the store name exactly as it arrived, so renaming the expense teaches Pockets that store's name. */ store?: string }
 /** Money received into an account (from a scheduled income). */
 /** `inBase`: an extra income already counted in the typed monthly income, so it isn't added again. */
 export interface Income { id: string; ts: number; a: string; amt: number; note: string; date: string; ruleId?: string; ruleMonth?: string; interest?: boolean; orig?: FxOrig; inBase?: boolean; /** Income category (Salary, Freelance…). */ cat?: string }
@@ -51,11 +51,11 @@ export interface Bill {
   /** Lock-screen notifications for this event: a time ("HH:MM") the day before and on the day; null = off. Missing = 09:00 the day before and 08:00 on the day. */
   notify?: { before?: string | null; day?: string | null };
 }
-export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup' | 'trip' | 'dm' | 'reminder' | 'applepay';
+export type NotifKind = 'bill' | 'income' | 'budget' | 'card' | 'backup' | 'trip' | 'dm' | 'reminder' | 'applepay' | 'applecard';
 /** Your own reminder (lib/customReminders.ts). `time` is "HH:MM"; `days` are weekdays, 0 = Monday … 6 = Sunday. */
 export interface CustomReminder { id: string; title: string; body: string; time: string; days: number[]; on: boolean }
 /** `id` is a stable key, so the same event never notifies twice. */
-export interface Notif { id: string; date: string; ts: number; kind: NotifKind; title: string; body: string; read: boolean; dismissed: boolean; bannered: boolean; /** Trip or direct-message activity: tapping opens the chat, the expense or the conversation (dm = friend's id). */ link?: { trip?: string; chat?: boolean; item?: string; dm?: string }; /** An Apple Pay purchase to check: tapping opens that expense to edit it. */ txn?: string }
+export interface Notif { id: string; date: string; ts: number; kind: NotifKind; title: string; body: string; read: boolean; dismissed: boolean; bannered: boolean; /** Trip or direct-message activity: tapping opens the chat, the expense or the conversation (dm = friend's id). */ link?: { trip?: string; chat?: boolean; item?: string; dm?: string }; /** An Apple Pay purchase to check: tapping opens that expense to edit it. */ txn?: string; /** A Wallet card Pockets doesn't know yet: tapping asks which account it is. */ card?: string }
 export interface Goal { id: string; name: string; saved: number; target: number; months: number; hue: number }
 export interface Category { name: string; subs: string[] }
 
@@ -64,7 +64,7 @@ export interface AssetItem { id: string; name: string; value: number; debt?: boo
 /** A custom group in Accounts, like Real estate or Vehicles. */
 export interface AssetGroup { id: string; name: string; emoji: string; hue: number; inNetWorth: boolean; items: AssetItem[] }
 
-export interface Settings { /** Home: the page each swipeable card opens on (0 today, 1 week, 2 month). Missing = week. */ homeFaces?: { safe?: number; pockets?: number }; /** The first-time setup step to reopen if the app was closed in the middle of it. */ setupStep?: string; /** Apple Pay purchases from an iPhone Shortcut: the private inbox key, and which account each Wallet card is. */ quickAdd?: { key: string; acct?: string; cards?: Record<string, string>; /** Categories offered in the Shortcut's second list. */ pins?: string[]; /** false: don't add a notification to check each Apple Pay purchase (on by default). */ review?: boolean; /** Store names the person fixed: storeKey(name as it arrives) → their name. */ names?: Record<string, string> }; /** Count what people owe you in net worth (Friends & trips → Debts). */ owedInNetWorth?: boolean; name: string; currency: Currency; /** No longer used: each month counts its own weeks (Mondays). Kept so old data still loads. */ weeks?: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean; /** Leave stocks and CDTs out of net worth. */ excludeInvestments?: boolean; /** Appearance: follow the iPhone, or always light/dark. */ theme?: 'system' | 'light' | 'dark'; /** Edit layout: block order and hidden blocks per page. */ layouts?: Record<string, { order: string[]; hidden: string[] }>; /** Folded section titles (e.g. on Accounts). */ folded?: string[]; /** Background color chosen by the user, one for light and one for dark mode (hex). */ bg?: { light?: string; dark?: string }; /** Your own GIPHY key for GIF search in trip chats. */ giphyKey?: string }
+export interface Settings { /** Home: the page each swipeable card opens on (0 today, 1 week, 2 month). Missing = week. */ homeFaces?: { safe?: number; pockets?: number }; /** The first-time setup step to reopen if the app was closed in the middle of it. */ setupStep?: string; /** Apple Pay purchases from an iPhone Shortcut: the private inbox key, and which account each Wallet card is ("" = seen, not linked yet). `acct` is no longer used. */ quickAdd?: { key: string; acct?: string; cards?: Record<string, string>; /** Categories offered in the Shortcut's second list. */ pins?: string[]; /** false: don't add a notification to check each Apple Pay purchase (on by default). */ review?: boolean; /** Store names the person fixed: storeKey(name as it arrives) → their name. */ names?: Record<string, string> }; /** Count what people owe you in net worth (Friends & trips → Debts). */ owedInNetWorth?: boolean; name: string; currency: Currency; /** No longer used: each month counts its own weeks (Mondays). Kept so old data still loads. */ weeks?: 4 | 5; voiceLang: 'es-CO' | 'en-US'; profilePhoto: string | null; finnhubKey?: string; lastBackup?: string; backupDay?: number; backupReminder?: boolean; tourSeen?: boolean; /** Leave stocks and CDTs out of net worth. */ excludeInvestments?: boolean; /** Appearance: follow the iPhone, or always light/dark. */ theme?: 'system' | 'light' | 'dark'; /** Edit layout: block order and hidden blocks per page. */ layouts?: Record<string, { order: string[]; hidden: string[] }>; /** Folded section titles (e.g. on Accounts). */ folded?: string[]; /** Background color chosen by the user, one for light and one for dark mode (hex). */ bg?: { light?: string; dark?: string }; /** Your own GIPHY key for GIF search in trip chats. */ giphyKey?: string }
 
 /** One buy or sell of a stock/ETF. Prices are in the stock's own currency. */
 export interface Trade { id: string; ts: number; ticker: string; name: string; currency: 'USD' | 'COP'; side: 'buy' | 'sell'; qty: number; price: number; fee: number; date: string }
@@ -162,7 +162,8 @@ export type Sheet =
   | { name: 'export'; acct: string }
   | { name: 'acct'; id: string }
   | { name: 'editAcct'; id: string }
-  | { name: 'addAcct' }
+  | { name: 'addAcct'; name0?: string; type0?: AcctType; linkCard?: string }
+  | { name: 'cardLink'; card: string }
   | { name: 'debt'; id: string | null; dir?: 'owed' | 'owe'; friend?: { uid: string; name: string }; person?: string }
   | { name: 'friendNew' }
   | { name: 'friendAdd' }

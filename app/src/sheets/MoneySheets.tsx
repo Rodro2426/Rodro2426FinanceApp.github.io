@@ -4,6 +4,7 @@ import { CURRENCIES, CURRENCY_LIST, codeOf, infoOf } from '../lib/currency';
 import { lookOf, restartSoon, takeScrollBack } from '../lib/restart';
 import { glyph } from '../ui/PocketIcons';
 import { cardCycle, payDayOf } from '../lib/cards';
+import { linkCard } from '../lib/quickadd';
 import { tr, getLang, setLang, type Lang } from '../lib/i18n';
 import { dateLocale } from '../lib/i18n';
 import { LockSetting } from '../ui/LockSetting';
@@ -370,15 +371,17 @@ export function EditAcctSheet({ id }: { id: string }) {
   );
 }
 
-export function AddAcctSheet() {
+/** New account. From an Apple Pay card nobody knew yet: starts with the card's name, and the card is linked to it on save. */
+export function AddAcctSheet({ name0, type0, linkCard: wallet }: { name0?: string; type0?: AcctType; linkCard?: string } = {}) {
   const { data: d } = useApp();
   return (
     <>
-      <AcctForm title="New account" isNew initial={{ name: '', type: 'bank', bal: '', limit: '', due: '', photo: null, hue: HUES[d.accounts.length % HUES.length], rate: '' }}
+      <AcctForm title="New account" isNew initial={{ name: name0 ?? '', type: type0 ?? 'bank', bal: '', limit: '', due: '', photo: null, hue: HUES[d.accounts.length % HUES.length], rate: '' }}
         onSave={f => {
           const card = f.type === 'card';
           const a = { id: uid('x'), name: f.name.trim(), kind: ACCT_KIND[f.type], type: f.type, bal: roundAmt(num(f.bal)), hue: f.hue, photo: f.photo, ...(card && f.cardImg ? { cardImg: f.cardImg, cardText: f.cardText } : {}), ...(card ? { limit: num(f.limit), ...cycleFields(f) } : {}), ...(f.notMine ? { notMine: true } : {}), ...rateFields(null, f) };
           setData(x => ({ accounts: [...x.accounts, a] }));
+          if (wallet) { setData(x => linkCard(x, wallet, a.id)); setUI({ sheet: null }); flash(`${a.name} added · ${wallet} purchases go here`); return; }
           setUI({ sheet: null, tab: 'accounts' }); flash(`${a.name} added`);
         }} />
     </>
