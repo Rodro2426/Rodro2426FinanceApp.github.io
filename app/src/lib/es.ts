@@ -2055,6 +2055,8 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+This week: {0} → {1}|Esta semana: {0} → {1}
+Left in the month: {0} → {1}|Queda en el mes: {0} → {1}
 Your salary already arrives on its own on day {0}. Adding it here would count it twice; use this only for money on top of it.|Tu sueldo ya llega solo el día {0}. Si lo agregas aquí se contaría dos veces; usa esto solo para plata adicional.
 +{0} extra this month ({1}). In total {2}.|+{0} extra este mes ({1}). En total {2}.
 {0} + {1} extra|{0} + {1} extra
@@ -2064,7 +2066,7 @@ Your normal income is {0}. Only {1} changes.|Tu ingreso normal es {0}. Solo camb
 {0} less came in|Te llegaron {0} menos
 {0} more came in|Te llegaron {0} más
 Take it from {0} (it has {1} left)|Quitarlo de {0} (le quedan {1})
-{0} of {1}|{0} de {1}
+Chosen: {0} of {1}|Elegido: {0} de {1}
 Spread over the weeks left in {0}. Next month goes back to normal.|Repartido en las semanas que quedan de {0}. El próximo mes vuelve a lo normal.
 {0} is back to your normal income|{0} volvió a tu ingreso normal
 {0}: {1} · pockets updated|{0}: {1} · bolsillos actualizados

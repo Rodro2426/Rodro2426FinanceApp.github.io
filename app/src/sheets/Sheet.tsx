@@ -1,6 +1,7 @@
 import { useRef, type PointerEvent, type ReactNode } from 'react';
 import { EASE, FLICK } from '../ui/swipe';
 import { closeSheet } from '../lib/store';
+import { tr } from '../lib/i18n';
 import * as I from '../ui/icons';
 
 /** `action`: the sheet's main button (Save, Add…), shown at the top right next to the close button. */
@@ -49,7 +50,7 @@ export function SheetFrame({ title, children, topOnFocus, action }: { title: str
           <div className="grabber" style={{ width: 40, height: 5, borderRadius: 999, background: 'var(--color-neutral-300)' }} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 10, ...(action ? { position: 'sticky', top: -10, zIndex: 3, background: 'var(--page)', margin: '0 -20px 6px', padding: '10px 20px 8px' } : {}) }}>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 24, fontWeight: 700, letterSpacing: '-0.025em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: tr(title).length > 16 ? 21 : 24, lineHeight: 1.15, fontWeight: 700, letterSpacing: '-0.025em', overflowWrap: 'break-word' }}>{title}</span>
           {action && <button onClick={action.onClick} disabled={action.disabled} className="pr97" style={{ flex: 'none', height: 34, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 15, fontWeight: 700, cursor: action.disabled ? 'default' : 'pointer', opacity: action.disabled ? 0.4 : 1, transition: 'opacity .15s' }}>{action.label}</button>}
           <button onClick={closeSheet} aria-label="Close" data-back style={{ width: 34, height: 34, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 0, background: 'var(--color-neutral-200)', color: 'var(--color-text)', cursor: 'pointer', padding: 0, flex: 'none' }}>
             <I.X size={16} sw={2.5} />

@@ -211,7 +211,7 @@ function IncomeForm() {
                   <PocketDot st={st} size={32} fs={15} bg={tint(p.hue)} color={ink(p.hue)} />
                   <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
-                    <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>Left in month: {fmt(ms0.left)} → <b style={{ color: TEXT }}>{fmt(ms0.left + part)}</b></span>
+                    <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{`Left in the month: ${fmt(ms0.left)} → ${fmt(ms0.left + part)}`}</span>
                     {part > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'oklch(0.45 0.11 150)' }}>{mode === 'month' ? `+${fmt(perWeek)}/week` : `+${fmt(part)} this week`}</span>}
                   </span>
                 </button>
@@ -726,7 +726,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
       <button onClick={() => setParts(allTo(key))} disabled={!leftover} aria-label={`Move all to ${name}`} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 10, border: 0, background: 'transparent', padding: 0, margin: 0, color: TEXT, font: 'inherit', textAlign: 'left', cursor: leftover ? 'pointer' : 'default' }}>
         {st ? <PocketDot st={st} size={32} fs={15} bg={tint(hue)} color={ink(hue)} /> : <span style={{ width: 32, height: 32, borderRadius: 999, background: tint(hue), color: ink(hue), display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Target size={15} /></span>}
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.25, overflowWrap: 'break-word' }}>{name}</span>
           <span style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{sub}</span>
         </span>
       </button>
@@ -755,7 +755,7 @@ export function MoveSheet({ id, to }: { id: string; to?: string }) {
           </div>
           {destRow(NEXT, mon ? 'Next month' : half ? 'Next quincena' : 'Next week', s.hue, mon ? `${s.name} next month · only this once` : half ? `${s.name} next quincena · only this once` : `${s.name} next week · only this once`, s)}
           {(sumB.real > 0.004 || nums[COVER] > 0) && destRow(COVER, 'Cover the shortfall', 25, `Shortfall: ${fmt(Math.max(0, sumB.real))} → ${fmt(Math.max(0, sumA.real))}`)}
-          {others.map(o => destRow(o.id, o.name, o.hue, `Week: ${fmt(o.left)} → ${fmt(nums[o.id] ? weekLeftAfter(o.id) : o.left)} left`, o))}
+          {others.map(o => destRow(o.id, o.name, o.hue, `This week: ${fmt(o.left)} → ${fmt(nums[o.id] ? weekLeftAfter(o.id) : o.left)}`, o))}
           {d.goals.map(g => destRow(g.id, g.name, g.hue, `Goal: ${fmt(g.saved)} → ${fmt(g.saved + (nums[g.id] || 0))} of ${fmt(g.target)}`))}
           {others.length === 0 && d.goals.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '8px 0' }}>Create another pocket or a savings goal first.</span>}
         </div>

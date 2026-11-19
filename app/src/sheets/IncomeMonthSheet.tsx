@@ -73,7 +73,7 @@ export function IncomeMonthSheet() {
                 </div>
               </div>
             ))}
-            <span style={{ display: 'block', padding: '4px 0 6px', fontSize: 12.5, color: over || Math.abs(picked - take) > 0.004 ? RED : 'var(--color-neutral-700)' }}>{over ? 'A pocket can give up at most what it has left this month.' : `${fmt(picked)} of ${fmt(take)}`}</span>
+            <span style={{ display: 'block', padding: '4px 0 6px', fontSize: 12.5, color: over || Math.abs(picked - take) > 0.004 ? RED : 'var(--color-neutral-700)' }}>{over ? 'A pocket can give up at most what it has left this month.' : `Chosen: ${fmt(picked)} of ${fmt(take)}`}</span>
           </div>}
           {diff < 0 && take < gap && how !== 'none' && <span style={{ margin: '0 4px', fontSize: 12.5, lineHeight: 1.4, color: RED }}>{`Your pockets only have ${fmt(roomAll)} left this month, so that's all they can give up. The other ${fmt(gap - take)} comes out of what's in your accounts.`}</span>}
           {how !== 'none' && <span style={{ margin: '0 4px', fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{`Spread over the weeks left in ${month}. Next month goes back to normal.`}</span>}
