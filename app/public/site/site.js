@@ -241,7 +241,8 @@
   document.querySelectorAll('.phone').forEach(function (ph) {
     var frag = tpl.content.cloneNode(true);
     var slice = frag.querySelector('.slice');
-    for (var z = -12; z <= 12; z += 2) { var s = slice.cloneNode(); s.style.transform = 'translateZ(' + z + 'px)'; frag.insertBefore(s, slice); }
+    // No inner layers: the edge band (buildEdge) is the body. Stacked grey layers 1px behind the screen got drawn
+    // over it by some graphics cards when the floating cards were near (the hero phone).
     slice.remove();
     var shots = frag.querySelector('.shots');
     var names = ph.hasAttribute('data-multi') ? ['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7'] : [ph.dataset.shot];
