@@ -32,7 +32,6 @@
   --ground-fade: linear-gradient(var(--page) 0, var(--page) env(safe-area-inset-top, 0px), transparent calc(env(safe-area-inset-top, 0px) + 72px)) no-repeat top / 100% calc(env(safe-area-inset-top, 0px) + 72px);
   --ground: var(--ground-fade), var(--tex-hero) no-repeat center -120px / 1000px 625px, var(--tex-tile) 0 0 / 600px 140px, var(--hatch), var(--page);
   /* The safe-to-spend card is engraved like a banknote, in its own ink. */
-  --bill-green: url("/tex/card-green.svg"); --bill-yellow: url("/tex/card-yellow.svg"); --bill-red: url("/tex/card-red.svg");
   /* Motion: strong ease-out for things that respond or arrive; iOS drawer curve for sheets. */
   --ease-out: cubic-bezier(.23, 1, .32, 1);
   --ease-drawer: cubic-bezier(.32, .72, 0, 1);
@@ -240,7 +239,6 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   --tex-hero: url("/tex/billete-hero-dark.svg");
   --tex-tile: url("/tex/billete-tile-dark.svg");
   --hatch: repeating-linear-gradient(135deg, rgba(143,214,203,.035) 0 1px, transparent 1px 6px);
-  --bill-green: url("/tex/card-green-dark.svg"); --bill-yellow: url("/tex/card-yellow-dark.svg"); --bill-red: url("/tex/card-red-dark.svg");
 }
 /* Brand screens (welcome, install guide) keep their cream look in both modes. */
 .force-light {
@@ -359,10 +357,6 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 /* ---------- "Billete Pockets" ground and the engraved safe-to-spend card ---------- */
 .shell, .shell .page { background: var(--ground) !important; }
 @media (min-width: 1024px) and (min-height: 560px) { .shell.desk { background: var(--ground) !important; } }
-.bill { background-repeat: no-repeat; background-size: cover; background-position: right center; }
-.bill-green { background-image: var(--bill-green); }
-.bill-yellow { background-image: var(--bill-yellow); }
-.bill-red { background-image: var(--bill-red); }
 
 /* ---------- Money moves: the safe-to-spend number rolls to its new value ---------- */
 .roll { display: inline-flex; font-variant-numeric: tabular-nums; position: relative; }
@@ -412,7 +406,6 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   .dh-date span:first-child::first-letter { text-transform: uppercase; }
 
   /* The engraving sits lower and to the right, clear of the switch. */
-  .dh-safe.bill { background-size: auto 100%; background-position: right 24px top 64px; }
   .dh-safe { border-radius: 30px; padding: 24px 30px 30px; display: flex; flex-direction: column; gap: 6px; transition: background-color .4s ease; }
   .dh-safe-top { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 14px; }
   .dh-safe-title { font-size: 16px; font-weight: 700; }
@@ -496,26 +489,16 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*="var(--surface)"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text) 10%, transparent); }
 @media (prefers-reduced-transparency: reduce) { :root { --surface: var(--surface-solid); } [style*="var(--surface)"] { backdrop-filter: none; -webkit-backdrop-filter: none; } }
 
-/* ---------- The add button: the bill's flower with a + on a glass disc, in the logo's colours ---------- */
+/* ---------- The add button: a teal disc with a white +, in the logo's colours ---------- */
 .add-flower {
-  --flower: var(--brand);
   position: relative; width: 62px; height: 62px; flex: none; padding: 0; border: 0; border-radius: 999px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; color: var(--flower);
-  background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5);
-  box-shadow: 0 8px 20px rgba(0,0,0,.12), inset 0 0 0 1px rgba(255,255,255,.6);
+  display: flex; align-items: center; justify-content: center; color: var(--action-ink); background: var(--action);
+  box-shadow: 0 8px 20px rgba(0,0,0,.18);
 }
-:root[data-theme="dark"] .add-flower { background: rgba(40,40,38,.62); box-shadow: 0 8px 20px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.08); }
-.add-flower-rose {
-  position: absolute; inset: -2px; background: var(--flower);
-  -webkit-mask: url("/flower.svg") center / contain no-repeat; mask: url("/flower.svg") center / contain no-repeat;
-}
-@media (prefers-reduced-transparency: reduce) { .add-flower { background: var(--surface-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+:root[data-theme="dark"] .add-flower { box-shadow: 0 8px 20px rgba(0,0,0,.4); }
 
-/* The logo shown when you pull down at the top: the same flower as the add button, lines only, no + or background. */
-.brand-flower {
-  display: block; width: 58px; height: 58px; background: var(--brand);
-  -webkit-mask: url("/flower.svg") center / contain no-repeat; mask: url("/flower.svg") center / contain no-repeat;
-}
+/* The logo shown when you pull down at the top (pockets-mark.svg; the dark-mode rule swaps in the light version). */
+.brand-flower { display: block; width: 58px; height: 58px; }
 
 /* ---------------- First-time setup (screens/Setup.tsx) ---------------- */
 /* Its colours: dark by default, light with the app's light theme. The ground is the page colour, so the iPhone's top bar matches it. */
