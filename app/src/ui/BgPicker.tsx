@@ -11,7 +11,9 @@ export function BgPicker() {
   const chosen = d.settings.bg?.[mode];
   const value = chosen ?? DEFAULT_BG[mode];
   const [hex, setHex] = useState(value.toUpperCase());
-  useEffect(() => { setHex(value.toUpperCase()); }, [value]);
+  // Follow the colour when it changes elsewhere (a swatch, the palette), but not while typing: "#1F5" is already a
+  // valid short code, and rewriting the box to "#11FF55" mid-word blocked the rest of "#1F5F5A".
+  useEffect(() => { if (normHex(hex) !== value) setHex(value.toUpperCase()); }, [value]);
   const set = (c: string | undefined) => setData(x => {
     const bg = { ...(x.settings.bg ?? {}) };
     if (c && c !== DEFAULT_BG[mode]) bg[mode] = c; else delete bg[mode];
