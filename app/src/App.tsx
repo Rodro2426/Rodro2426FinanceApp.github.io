@@ -1,6 +1,7 @@
 import { PrivacySheet } from './sheets/PrivacySheet';
+import { SheetFrame } from './sheets/Sheet';
 import { IncomeMonthSheet } from './sheets/IncomeMonthSheet';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { Component, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud, syncNow } from './lib/cloud';
 import { People, TopBar, useDesk } from './ui/Desk';
@@ -72,6 +73,17 @@ function TabView({ tab }: { tab: Tab }) {
   if (tab === 'insights') return <Insights />;
   if (tab === 'social') return <SocialPage />;
   return <CalendarScreen />;
+}
+
+/** If a sheet breaks while drawing, show a calm message instead of a black screen; the rest of the app keeps working. */
+class SheetSafety extends Component<{ children: ReactNode }, { broke: boolean }> {
+  state = { broke: false };
+  static getDerivedStateFromError() { return { broke: true }; }
+  componentDidCatch(e: unknown) { console.error('Sheet failed', e); }
+  render() {
+    if (!this.state.broke) return this.props.children;
+    return <SheetFrame title="Something went wrong"><span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>This screen couldn't open. Your data is safe. Close it and try again; if it keeps happening, tell us what you tapped.</span></SheetFrame>;
+  }
 }
 
 function SheetRouter({ sheet }: { sheet: Sheet }) {
@@ -372,7 +384,7 @@ export default function App() {
       </div>}
 
 
-      {ui.sheet && <SheetRouter key={JSON.stringify(ui.sheet)} sheet={ui.sheet} />}
+      {ui.sheet && <SheetSafety key={JSON.stringify(ui.sheet)}><SheetRouter sheet={ui.sheet} /></SheetSafety>}
       {ui.welcome && <Welcome />}
       {ui.setup && <Setup />}
       {ui.guide && <GuidedTour />}

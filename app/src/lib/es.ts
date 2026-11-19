@@ -1,6 +1,8 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Something went wrong|Algo salió mal
+This screen couldn't open. Your data is safe. Close it and try again; if it keeps happening, tell us what you tapped.|Esta pantalla no se pudo abrir. Tus datos están a salvo. Ciérrala e inténtalo otra vez; si sigue pasando, cuéntanos qué tocaste.
 A pocket can give up at most what it has left this month.|Un bolsillo puede dar como mucho lo que le queda este mes.
 This month was different|Este mes fue distinto
 Payday and account|Día de pago y cuenta

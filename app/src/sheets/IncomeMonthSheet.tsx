@@ -21,11 +21,11 @@ export function IncomeMonthSheet() {
   const [mine, setMine] = useState<Record<string, string>>({});
   const amt = num(amtStr), diff = Math.round((amt - normal) * moneyScale()) / moneyScale(), gap = Math.abs(diff);
   const stats = allStats(d, c), month = monthName(c.month), Month = month.replace(/^./, x => x.toUpperCase());
-  // Less: the pocket with the most left this period gives it all, if it can.
-  const biggest = [...stats].sort((a, b) => (room[b.id] ?? 0) - (room[a.id] ?? 0))[0];
   // A cut comes only out of what each pocket still has this month (never below zero); more is shared by the plan.
   const room = Object.fromEntries(d.pockets.map(p => [p.id, Math.max(0, monthStats(d, p.id, c).left)]));
   const roomAll = Object.values(room).reduce((a, v) => a + v, 0), take = diff < 0 ? Math.min(gap, roomAll) : gap;
+  // Less: the pocket with the most left this month gives it all, if it can.
+  const biggest = [...stats].sort((a, b) => (room[b.id] ?? 0) - (room[a.id] ?? 0))[0];
   const spread = () => {
     const parts = largestRemainder(take, d.pockets.map(p => (diff < 0 ? room[p.id] : monthPlanOf(p, c))), moneyScale());
     return Object.fromEntries(d.pockets.map((p, i) => [p.id, parts[i] ?? 0]));
