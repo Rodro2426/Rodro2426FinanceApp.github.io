@@ -18,13 +18,13 @@ import { BgPicker } from '../ui/BgPicker';
 import { useApp, setData, openSheet, closeSheet, flash, setUI, getData } from '../lib/store';
 import { syncLabel, useSync } from './CloudSheet';
 import { ACCT_KIND, ACCT_TYPE_LABEL, HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { acctTxns, editedBalance, fmt, initialOf, num, pctOf, plural, roundAmt, uid } from '../lib/derive';
+import { acctTxns, editedBalance, fmt, initialOf, isCOP, num, pctOf, plural, roundAmt, uid } from '../lib/derive';
 import { allMonths, downloadCSV, exportData } from '../lib/exportData';
 import { monthLabel, shortDate, todayISO } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { findLogo, siteHost } from '../lib/logo';
 import { makeBackup, pickBackupFile, readBackup, restoreBackup } from '../lib/backup';
-import { dailyRate, earnsInterest, perDay } from '../lib/interest';
+import { dayGain, earnsInterest, perDay } from '../lib/interest';
 import type { Account, AcctType, Currency } from '../lib/types';
 import type { CSSProperties, ReactNode } from 'react';
 import { addTransfer, deleteTransfer, isTransfer } from '../lib/transfer';
@@ -332,7 +332,7 @@ function AcctForm({ title, initial, isNew, onSave, onDelete }: {
             <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-neutral-400)' }}>% E.A.</span>
           </div>
           <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>
-            {num(f.rate) > 0 ? `Like a Cajita: interest is added every day. ${fmt(num(f.bal) * dailyRate(num(f.rate)))} a day on this balance.` : 'Leave at 0 if this account earns no interest.'}
+            {num(f.rate) > 0 ? `Like a Cajita: interest is added every day. ${fmt(dayGain(num(f.bal), num(f.rate), todayISO(), isCOP()))} a day on this balance.` : 'Leave at 0 if this account earns no interest.'}
           </span>
         </>
       )}

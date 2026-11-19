@@ -19,3 +19,23 @@ describe('interest matches Nu Cajitas', () => {
     expect(once.accounts![0].bal).toBeCloseTo(d.accounts[0].bal, 6);
   });
 });
+
+describe('withholding (retención en la fuente)', () => {
+  const big = (currency?: string) => ({ ...cajita(20_000_000, '2026-11-19'), settings: { currency } }) as unknown as Data;
+  const gross = 20_000_000 * (Math.pow(1.0935, 1 / 365) - 1); // about $4.898 a day, over the $2.880 line
+
+  it('keeps 7% of the day when interest is over 0,055 UVT', () => {
+    const out = runInterest(big('COP'), '2026-11-20')!;
+    expect(out.accounts![0].bal - 20_000_000).toBeCloseTo(gross * 0.93, 6);
+  });
+
+  it('does not apply outside Colombian pesos', () => {
+    const out = runInterest(big('USD'), '2026-11-20')!;
+    expect(out.accounts![0].bal - 20_000_000).toBeCloseTo(gross, 6);
+  });
+
+  it('does not apply under the daily line', () => {
+    const out = runInterest({ ...cajita(518222.98, '2026-11-19'), settings: { currency: 'COP' } } as unknown as Data, '2026-11-20')!;
+    expect(out.accounts![0].bal).toBeCloseTo(518349.89, 0);
+  });
+});
