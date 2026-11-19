@@ -275,9 +275,9 @@ html { scrollbar-color: var(--scroll-thumb) var(--page); }
 .back .cam i:nth-child(3) { top: 36px; right: 12px; width: 22px; height: 22px; box-shadow: 0 0 0 3px #164a45; }
 .screen { position: relative; width: 100%; height: 100%; border-radius: 44px; overflow: hidden; background: var(--app-page); }
 .island { position: absolute; top: 10px; left: 50%; translate: -50% 0; width: 94px; height: 28px; border-radius: 20px; background: #000; z-index: 3; }
-.status { position: absolute; inset: 0 0 auto; height: 44px; padding: 14px 26px 0; display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; z-index: 2; color: var(--ink); background: linear-gradient(var(--app-page) 70%, transparent); }
+.status { position: absolute; inset: 0 0 auto; height: 44px; padding: 14px 26px 0; display: flex; justify-content: space-between; font-weight: 800; font-size: 13px; z-index: 2; color: var(--ink); }
 .status svg { width: 30px; height: 12px; fill: currentColor; margin-top: 2px; }
-.shots { position: absolute; inset: 30px 0 0; }
+.shots { position: absolute; inset: 0; }  /* The screenshots are taken at iPhone size with room for the clock, so they fill the screen like the real app. */
 .shots img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: 0; }
 .shots img.on { opacity: 1; }
 

@@ -216,6 +216,8 @@
     });
     handle.addEventListener('pointermove', function (e) {
       var d = t.drag; if (!d) return;
+      // The release can get lost (let go outside the window, a trackpad gesture): with no button down, stop turning.
+      if (e.pointerType === 'mouse' && e.buttons === 0) { end(); return; }
       t.ty = d.ty + (e.clientX - d.x) * 0.5;
       // On a touch screen up-and-down scrolls the page, so only sideways turns the phone.
       if (!d.touch) t.tx = Math.max(-40, Math.min(40, d.tx - (e.clientY - d.y) * 0.3));
@@ -232,6 +234,8 @@
     }
     handle.addEventListener('pointerup', end);
     handle.addEventListener('pointercancel', end);
+    handle.addEventListener('lostpointercapture', end);
+    window.addEventListener('blur', end);
   }
   var tpl = document.getElementById('phoneTpl');
   document.querySelectorAll('.phone').forEach(function (ph) {
