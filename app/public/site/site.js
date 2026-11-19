@@ -157,11 +157,87 @@
   });
 
   /* ---------- Phones ---------- */
+  // The phone's side: strips of the given depth standing round a w×h rectangle with corner radius r.
+  function buildEdge(el, w, h, r, depth) {
+    var parts = [], STEPS = 6;
+    function strip(x, y, len, deg) { parts.push([x, y, len, deg]); }
+    strip(w / 2, 0, w - 2 * r, 0); strip(w, h / 2, h - 2 * r, 90); strip(w / 2, h, w - 2 * r, 180); strip(0, h / 2, h - 2 * r, 270);
+    [[w - r, r, -90], [w - r, h - r, 0], [r, h - r, 90], [r, r, 180]].forEach(function (c) {
+      for (var k = 0; k < STEPS; k++) {
+        var a = (c[2] + (k + 0.5) * 90 / STEPS) * Math.PI / 180;
+        strip(c[0] + r * Math.cos(a), c[1] + r * Math.sin(a), 2 * r * Math.sin(Math.PI / 4 / STEPS) * 1.08, c[2] + (k + 0.5) * 90 / STEPS + 90);
+      }
+    });
+    parts.forEach(function (p) {
+      var s = document.createElement('i'); s.className = 'edge';
+      s.style.width = p[2].toFixed(2) + 'px'; s.style.height = depth + 'px';
+      s.style.transform = 'translate3d(' + (p[0] - p[2] / 2).toFixed(2) + 'px,' + (p[1] - depth / 2).toFixed(2) + 'px,0) rotateZ(' + p[3].toFixed(2) + 'deg) rotateX(90deg)';
+      el.appendChild(s);
+    });
+  }
+
+  // Grab a phone and turn it: momentum when you let go, and after a moment it turns back to face you.
+  // `handle` is what you press, `turn` the layer that rotates, `stage` the element whose 3D space it lives in.
+  var turnables = [];
+  function facesBack(t) {
+    var m = new DOMMatrix(), chain = [], e = t.turn;
+    while (e && e !== t.stage) { chain.unshift(e); e = e.parentElement; }
+    chain.forEach(function (x) { var tr = getComputedStyle(x).transform; if (tr && tr !== 'none') m = m.multiply(new DOMMatrix(tr)); });
+    return m.m33 < 0;
+  }
+  function updateFacing(t) { t.turn.classList.toggle('facing-back', facesBack(t)); }
+  function refreshFacing(ms) {
+    var until = performance.now() + ms;
+    (function loop() { turnables.forEach(updateFacing); if (performance.now() < until) requestAnimationFrame(loop); })();
+  }
+  function makeTurnable(handle, turn, stage) {
+    var t = { turn: turn, stage: stage, dy: 0, dx: 0, ty: 0, tx: 0, vy: 0, drag: null, idle: 0, raf: 0 };
+    turnables.push(t);
+    handle.classList.add('grab');
+    function frame() {
+      if (!t.drag && Math.abs(t.vy) > 0.05) { t.ty += t.vy; t.vy *= 0.94; }
+      t.dy += (t.ty - t.dy) * (t.drag ? 0.35 : 0.1);
+      t.dx += (t.tx - t.dx) * (t.drag ? 0.35 : 0.1);
+      turn.style.setProperty('--dy', t.dy.toFixed(2) + 'deg');
+      turn.style.setProperty('--dx', t.dx.toFixed(2) + 'deg');
+      updateFacing(t);
+      if (t.drag || Math.abs(t.vy) > 0.05 || Math.abs(t.ty - t.dy) + Math.abs(t.tx - t.dx) > 0.02) t.raf = requestAnimationFrame(frame);
+      else t.raf = 0;
+    }
+    function kick() { if (!t.raf) t.raf = requestAnimationFrame(frame); }
+    handle.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    handle.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      clearTimeout(t.idle);
+      t.drag = { x: e.clientX, y: e.clientY, ty: t.ty, tx: t.tx, lastX: e.clientX, lastT: e.timeStamp, touch: e.pointerType !== 'mouse' };
+      t.vy = 0;
+      try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+      handle.classList.add('dragging'); kick();
+    });
+    handle.addEventListener('pointermove', function (e) {
+      var d = t.drag; if (!d) return;
+      t.ty = d.ty + (e.clientX - d.x) * 0.5;
+      // On a touch screen up-and-down scrolls the page, so only sideways turns the phone.
+      if (!d.touch) t.tx = Math.max(-40, Math.min(40, d.tx - (e.clientY - d.y) * 0.3));
+      t.vy = (e.clientX - d.lastX) * 0.5 / Math.max(1, e.timeStamp - d.lastT) * 16;
+      d.lastX = e.clientX; d.lastT = e.timeStamp;
+    });
+    function end() {
+      if (!t.drag) return;
+      t.drag = null; handle.classList.remove('dragging');
+      t.vy = reduce.matches ? 0 : Math.max(-30, Math.min(30, t.vy));
+      kick();
+      clearTimeout(t.idle);
+      t.idle = setTimeout(function () { t.vy = 0; t.ty = 360 * Math.round(t.ty / 360); t.tx = 0; kick(); }, 2600);
+    }
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  }
   var tpl = document.getElementById('phoneTpl');
   document.querySelectorAll('.phone').forEach(function (ph) {
     var frag = tpl.content.cloneNode(true);
     var slice = frag.querySelector('.slice');
-    for (var z = -5; z <= 5; z++) { var s = slice.cloneNode(); s.style.transform = 'translateZ(' + z + 'px)'; ph.appendChild(s); }
+    for (var z = -12; z <= 12; z += 2) { var s = slice.cloneNode(); s.style.transform = 'translateZ(' + z + 'px)'; frag.insertBefore(s, slice); }
     slice.remove();
     var shots = frag.querySelector('.shots');
     var names = ph.hasAttribute('data-multi') ? ['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7'] : [ph.dataset.shot];
@@ -172,7 +248,9 @@
       if (i > 0 || ph.closest('.feat-phone')) img.loading = 'lazy';
       shots.appendChild(img);
     });
-    ph.appendChild(frag);
+    var turn = document.createElement('div'); turn.className = 'turn';
+    turn.appendChild(frag); ph.appendChild(turn);
+    buildEdge(turn, 300, 620, 54, 26);
   });
   applyLang();
 
@@ -181,71 +259,31 @@
   function onNav() { nav.classList.toggle('scrolled', scrollY > 8); }
   addEventListener('scroll', onNav, { passive: true }); onNav();
 
-  /* ---------- Hero phone: follows the pointer, and turns all the way round when you drag it ---------- */
+  /* ---------- Hero phone: leans toward the pointer (fine pointers only), and turns when you drag it ---------- */
   var heroRig = document.getElementById('heroRig');
   var hero = document.querySelector('.hero');
   var heroStage = document.getElementById('heroStage');
-  var REST_Y = -20, REST_X = 7;
-  // ry/rx: where the phone is now; ty/tx: where it's heading. vy: spin speed after you let go.
-  var pose = { ry: REST_Y, rx: REST_X, ty: REST_Y, tx: REST_X, vy: 0, drag: null, idle: 0, raf: 0 };
-  function poseFrame() {
-    if (!pose.drag && Math.abs(pose.vy) > 0.05) { pose.ty += pose.vy; pose.vy *= 0.94; }
-    pose.ry += (pose.ty - pose.ry) * (pose.drag ? 0.35 : 0.1);
-    pose.rx += (pose.tx - pose.rx) * (pose.drag ? 0.35 : 0.1);
-    heroRig.style.setProperty('--ry', pose.ry.toFixed(2) + 'deg');
-    heroRig.style.setProperty('--rx', pose.rx.toFixed(2) + 'deg');
-    // Facing away once the turn passes the side (cos < 0): show the back with the logo instead of a mirrored screen.
-    heroRig.classList.toggle('facing-back', Math.cos(pose.ry * Math.PI / 180) * Math.cos(pose.rx * Math.PI / 180) < 0);
-    if (pose.drag || Math.abs(pose.vy) > 0.05 || Math.abs(pose.ty - pose.ry) + Math.abs(pose.tx - pose.rx) > 0.02) pose.raf = requestAnimationFrame(poseFrame);
-    else pose.raf = 0;
-  }
-  function kick() { if (!pose.raf) pose.raf = requestAnimationFrame(poseFrame); }
-  // After a moment untouched, the phone turns back to face you the short way round.
-  function settleSoon() {
-    clearTimeout(pose.idle);
-    pose.idle = setTimeout(function () {
-      pose.vy = 0;
-      pose.ty = REST_Y + 360 * Math.round((pose.ty - REST_Y) / 360); pose.tx = REST_X; kick();
-    }, 2600);
+  var tilt = { x: 0, y: 0, tx: 0, ty: 0, raf: 0 };
+  function tiltFrame() {
+    tilt.x += (tilt.tx - tilt.x) * 0.08;
+    tilt.y += (tilt.ty - tilt.y) * 0.08;
+    heroRig.style.setProperty('--ry', (-20 + tilt.x * 22).toFixed(2) + 'deg');
+    heroRig.style.setProperty('--rx', (7 - tilt.y * 12).toFixed(2) + 'deg');
+    if (Math.abs(tilt.tx - tilt.x) + Math.abs(tilt.ty - tilt.y) > 0.002) tilt.raf = requestAnimationFrame(tiltFrame);
+    else tilt.raf = 0;
   }
   hero.addEventListener('pointermove', function (e) {
-    if (pose.drag || !finePointer.matches || reduce.matches) return;
-    var r = hero.getBoundingClientRect(), base = REST_Y + 360 * Math.round((pose.ty - REST_Y) / 360);
-    pose.ty = base + ((e.clientX - r.left) / r.width - 0.5) * 22;
-    pose.tx = REST_X - ((e.clientY - r.top) / r.height - 0.5) * 12;
-    kick();
+    if (!finePointer.matches || reduce.matches || heroStage.classList.contains('dragging')) return;
+    var r = hero.getBoundingClientRect();
+    tilt.tx = (e.clientX - r.left) / r.width - 0.5;
+    tilt.ty = (e.clientY - r.top) / r.height - 0.5;
+    if (!tilt.raf) tilt.raf = requestAnimationFrame(tiltFrame);
   });
   hero.addEventListener('pointerleave', function () {
-    if (pose.drag || !finePointer.matches || reduce.matches) return;
-    pose.ty = REST_Y + 360 * Math.round((pose.ty - REST_Y) / 360); pose.tx = REST_X; kick();
+    tilt.tx = 0; tilt.ty = 0;
+    if (!tilt.raf && finePointer.matches && !reduce.matches) tilt.raf = requestAnimationFrame(tiltFrame);
   });
-  heroStage.addEventListener('dragstart', function (e) { e.preventDefault(); });
-  heroStage.addEventListener('pointerdown', function (e) {
-    if (e.button !== 0) return;
-    clearTimeout(pose.idle);
-    pose.drag = { x: e.clientX, y: e.clientY, ry: pose.ty, rx: pose.tx, lastX: e.clientX, lastT: e.timeStamp, touch: e.pointerType !== 'mouse' };
-    pose.vy = 0;
-    try { heroStage.setPointerCapture(e.pointerId); } catch (_) {}
-    heroStage.classList.add('dragging'); kick();
-  });
-  heroStage.addEventListener('pointermove', function (e) {
-    var d = pose.drag; if (!d) return;
-    pose.ty = d.ry + (e.clientX - d.x) * 0.5;
-    // On a touch screen up-and-down scrolls the page, so only sideways turns the phone.
-    if (!d.touch) pose.tx = Math.max(-40, Math.min(40, d.rx - (e.clientY - d.y) * 0.3));
-    var dt = Math.max(1, e.timeStamp - d.lastT);
-    pose.vy = (e.clientX - d.lastX) * 0.5 / dt * 16;
-    d.lastX = e.clientX; d.lastT = e.timeStamp;
-  });
-  function endDrag() {
-    if (!pose.drag) return;
-    pose.drag = null; heroStage.classList.remove('dragging');
-    if (reduce.matches) pose.vy = 0;
-    pose.vy = Math.max(-30, Math.min(30, pose.vy));
-    kick(); settleSoon();
-  }
-  heroStage.addEventListener('pointerup', endDrag);
-  heroStage.addEventListener('pointercancel', endDrag);
+  makeTurnable(heroStage.querySelector('.stage3d'), heroRig.querySelector('.turn'), heroStage.querySelector('.stage3d'));
 
   /* ---------- Story: the phone turns around and comes back on the next screen ---------- */
   var spin = document.getElementById('spin');
@@ -281,11 +319,15 @@
     // The transition retargets from wherever the phone is, so fast scrolling never snaps.
     angle += 360 * dir;
     spin.style.transform = 'rotateY(' + angle + 'deg)';
+    refreshFacing(1000);
     // Swap while the back faces the viewer (about 40% into the 900ms ease-in-out turn).
     swapT = setTimeout(function () { showShot(i); }, 360);
   }
   tint.style.setProperty('--th', feats[0].dataset.hue);
   railItems[0].classList.add('on');
+  var storyStage = document.querySelector('.story-stage .stage3d');
+  makeTurnable(storyStage, storyPhone.querySelector('.turn'), storyStage);
+  document.querySelectorAll('.feat-phone').forEach(function (fp) { makeTurnable(fp, fp.querySelector('.turn'), fp); });
   if (matchMedia('(max-width: 860px)').matches) {
     // Phones: each scene's phone turns into place once, as it scrolls into view.
     var turnIn = new IntersectionObserver(function (entries) {
