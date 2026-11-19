@@ -37,7 +37,9 @@
   --gutter-r: max(20px, env(safe-area-inset-right, 0px));
   --nav-h: 64px;
   --radius: 24px;
-  --hatch: repeating-linear-gradient(135deg, rgba(31, 95, 90, 0.03) 0 1px, transparent 1px 6px);
+  --hatch: repeating-linear-gradient(135deg, rgba(31, 95, 90, 0.05) 0 1px, transparent 1px 6px);
+  /* The tint behind the hero phone: a soft glow with no edges, so it reaches the sides on any screen width. */
+  --hero-wash: radial-gradient(1200px 760px at calc(50% + 300px) 440px, rgba(185, 225, 215, 0.7), rgba(214, 238, 229, 0.45) 45%, transparent 78%);
   --tex-hero: url("tex/billete-hero.svg");
   --tex-tile: url("tex/billete-tile.svg");
 
@@ -68,7 +70,8 @@
   --ink-3: #9c9791;
   --line: #302e2d;
   --navy-deep: #0c2724;
-  --hatch: repeating-linear-gradient(135deg, rgba(143, 214, 203, 0.035) 0 1px, transparent 1px 6px);
+  --hatch: repeating-linear-gradient(135deg, rgba(143, 214, 203, 0.06) 0 1px, transparent 1px 6px);
+  --hero-wash: radial-gradient(1200px 760px at calc(50% + 300px) 440px, rgba(22, 80, 72, 0.55), rgba(15, 58, 53, 0.3) 45%, transparent 78%);
   --tex-hero: url("tex/billete-hero-dark.svg");
   --tex-tile: url("tex/billete-tile-dark.svg");
   --brand-ink: #8fd6cb;
@@ -97,10 +100,10 @@ html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + 1
 body {
   margin: 0;
   background-color: var(--page);
-  background-image: var(--tex-hero), var(--tex-tile), var(--hatch);
-  background-repeat: no-repeat, repeat, repeat;
-  background-position: center top, 0 0, 0 0;
-  background-size: 1440px 900px, 600px 140px, auto;
+  background-image: var(--tex-hero), var(--hero-wash), var(--tex-tile), var(--hatch);
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
+  background-position: center top, 0 0, 0 0, 0 0;
+  background-size: 1440px 900px, 100% 100%, 600px 140px, auto;
   color: var(--ink);
   font-family: var(--font);
   font-size: 17px;
@@ -429,7 +432,7 @@ html.js #heroRig .frag-settle { animation-delay: 740ms; }
 
   /* Phones: no sticky stage. Each scene is its own phone floating on the bill texture, lit from behind by
      the scene's pocket colour, then the words. The phone turns into place once as it scrolls in. */
-  body { background-position: calc(50vw - 772px) 340px, 0 0, 0 0; background-size: 1100px 688px, 600px 140px, auto; }
+  body { background-position: calc(50vw - 772px) 340px, 50% 0, 0 0, 0 0; background-size: 1100px 688px, 900px 1200px, 600px 140px, auto; }
   .story { padding-block: 8px 24px; }
   .story-grid { grid-template-columns: 1fr; gap: 0; }
   .story-stage { display: none; }
