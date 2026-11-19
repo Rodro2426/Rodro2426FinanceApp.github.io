@@ -8,6 +8,8 @@ import { allStats, ctxOf, fmt, roundAmt, uid } from './derive';
 import { addDays, daysInMonth, monthKey, prevMonthKey, shortDate, todayISO } from './dates';
 import { fmtUsd, isUsd, latestRate, trmFor, usesTrm } from './trm';
 import { cardCycle } from './cards';
+import { salaryShare } from './salary';
+import { getData } from './store';
 
 /**
  * Local amount for one occurrence. Dollar items use the TRM of `date`; if that
@@ -15,6 +17,7 @@ import { cardCycle } from './cards';
  */
 export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig?: FxOrig } | null {
   if (isCardPay(b)) return { amt: roundAmt(cardPayAmount(d, b, date)) };
+  if (b.salary) return { amt: salaryShare(d, b, monthKey(date)) };
   if (!isUsd(b)) return { amt: b.amt };
   if (!usesTrm()) { const rate = latestRate(d); return { amt: roundAmt(b.amt * rate), orig: { amt: b.amt, cur: 'USD', rate, official: false } }; }
   const trm = trmFor(d, date);
@@ -23,9 +26,9 @@ export function localAmount(d: Data, b: Bill, date: string): { amt: number; orig
   return { amt: Math.round(b.amt * rate), orig: { amt: b.amt, cur: 'USD', rate, official: !!trm } };
 }
 /** Text for a bill's amount: "$44.900" or "US$20,00". */
-export const billAmount = (b: Bill) => (isCardPay(b) && b.payMode !== 'fixed' ? 'Minimum payment' : isUsd(b) ? fmtUsd(b.amt) : fmt(b.amt));
+export const billAmount = (b: Bill, month = todayISO().slice(0, 7)) => (isCardPay(b) && b.payMode !== 'fixed' ? 'Minimum payment' : b.salary ? fmt(salaryShare(getData(), b, month)) : isUsd(b) ? fmtUsd(b.amt) : fmt(b.amt));
 /** Approximate local value for totals and previews. */
-export const approxLocal = (d: Data, b: Bill) => (isCardPay(b) ? cardPayAmount(d, b) : isUsd(b) ? b.amt * latestRate(d) : b.amt);
+export const approxLocal = (d: Data, b: Bill) => (isCardPay(b) ? cardPayAmount(d, b) : b.salary ? salaryShare(d, b, todayISO().slice(0, 7)) : isUsd(b) ? b.amt * latestRate(d) : b.amt);
 
 const pad = (n: number) => String(n).padStart(2, '0');
 /** Date of the item in month `m`; days past the month's end fall on its last day. */
@@ -138,12 +141,12 @@ export function runSchedule(d0: Data, today = todayISO()): Partial<Data> | null 
     if (dueDate(b, tm) === tomorrow && !handled(tm) && (!b.start || tomorrow >= b.start)) {
       const auto = isAuto(b, d);
       if (isCardPay(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'card', `${acctName(b.toCard)} payment tomorrow`, `${b.payMode === 'fixed' ? fmt(b.amt) : `The minimum payment (now ${fmt(cardPayAmount({ ...d, accounts: d.accounts.map(x => (x.id === b.acct ? { ...x, bal: Infinity } : x)) }, b, tomorrow))})`}${auto ? ` will be paid from ${acctName(b.acct)}` : ''}.`);
-      else if (isIncome(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'income', `${b.name} arrives tomorrow`, `+${billAmount(b)}${auto ? ` will be added to ${acctName(b.acct)}` : ''}.`);
-      else if (notMine(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}, paid by someone else. Nothing is taken from your accounts.`);
-      else notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b)}${isUsd(b) ? (usesTrm() ? ' (converted with that day\'s TRM)' : ' (converted at that day\'s rate)') : ''}${auto ? ` will be paid automatically from ${acctName(b.acct)}` : '. Remember to pay it'}.`);
+      else if (isIncome(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'income', `${b.name} arrives tomorrow`, `+${billAmount(b, tm)}${auto ? ` will be added to ${acctName(b.acct)}` : ''}.`);
+      else if (notMine(b)) notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b, tm)}, paid by someone else. Nothing is taken from your accounts.`);
+      else notify(`soon:${b.id}:${tomorrow}`, today, 'bill', `${b.name} is due tomorrow`, `${billAmount(b, tm)}${isUsd(b) ? (usesTrm() ? ' (converted with that day\'s TRM)' : ' (converted at that day\'s rate)') : ''}${auto ? ` will be paid automatically from ${acctName(b.acct)}` : '. Remember to pay it'}.`);
     }
     const m = monthKey(today);
-    if (!isAuto(b, d) && !isIncome(b) && dueDate(b, m) === today && !handled(m)) notify(`today:${b.id}:${today}`, today, 'bill', `${b.name} is due today`, notMine(b) ? `${billAmount(b)}, paid by someone else. Nothing is taken from your accounts.` : `${billAmount(b)}. Tick it off in Insights once it's paid.`);
+    if (!isAuto(b, d) && !isIncome(b) && dueDate(b, m) === today && !handled(m)) notify(`today:${b.id}:${today}`, today, 'bill', `${b.name} is due today`, notMine(b) ? `${billAmount(b, tm)}, paid by someone else. Nothing is taken from your accounts.` : `${billAmount(b, tm)}. Tick it off in Insights once it's paid.`);
   }
 
   // 3. Credit card payment dates.

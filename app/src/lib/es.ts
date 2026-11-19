@@ -1,6 +1,18 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+A pocket can give up at most what it has left this month.|Un bolsillo puede dar como mucho lo que le queda este mes.
+This month was different|Este mes fue distinto
+Payday and account|Día de pago y cuenta
+Which pockets give it up?|¿De qué bolsillos lo quitamos?
+What do we do with the extra?|¿Qué hacemos con lo de más?
+Share the cut among all pockets|Repartir el recorte entre todos
+Share it among all pockets|Repartirlo entre todos los bolsillos
+Let me choose|Elegir yo
+Don't change my pockets|No cambiar mis bolsillos
+Keep it saved, pockets stay the same|Guardarlo, los bolsillos quedan igual
+Back to my normal income|Volver a mi ingreso normal
+The amount comes from your monthly income in Budget.|El monto viene de tu ingreso mensual en Presupuesto.
 Credit cards|Tarjetas de crédito
 Pockets keeps track of what you owe on each card and reminds you before the pay-by day.|Pockets lleva la cuenta de lo que debes en cada tarjeta y te recuerda antes de la fecha de pago.
 Do you want to add a credit card?|¿Quieres agregar una tarjeta de crédito?
@@ -2041,6 +2053,18 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+Your pockets only have {0} left this month, so that's all they can give up. The other {1} comes out of what's in your accounts.|A tus bolsillos solo les quedan {0} este mes, así que es todo lo que pueden dar. Los otros {1} salen de lo que tienes en tus cuentas.
+How much came in for {0}?|¿Cuánto te llegó en {0}?
+Your normal income is {0}. Only {1} changes.|Tu ingreso normal es {0}. Solo cambia {1}.
+{0} less came in|Te llegaron {0} menos
+{0} more came in|Te llegaron {0} más
+Take it from {0} (it has {1} left)|Quitarlo de {0} (le quedan {1})
+{0} of {1}|{0} de {1}
+Spread over the weeks left in {0}. Next month goes back to normal.|Repartido en las semanas que quedan de {0}. El próximo mes vuelve a lo normal.
+{0} is back to your normal income|{0} volvió a tu ingreso normal
+{0}: {1} · pockets updated|{0}: {1} · bolsillos actualizados
+Arrives in {0} on day {1}|Llega a {0} el día {1}
+{0}: {1} came in (normally {2})|{0}: te llegaron {1} (normalmente {2})
 In {0} you can spend|En {0} puedes gastar
 ✓ {0}|✓ {0}
 How much is left for {0}?|¿Cuánto te queda para {0}?

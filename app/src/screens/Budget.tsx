@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { salaryBills, withIncome } from '../lib/salary';
 import { glyph } from '../ui/PocketIcons';
 import { Blocks } from '../ui/Blocks';
 import { useApp, openSheet, setData, flash } from '../lib/store';
@@ -6,7 +7,7 @@ import { extraIncomes, findMismatches, markIncluded, monthSummary } from '../lib
 import { incomeMoves } from '../lib/derive';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { allStats, ctxOf, curSymbol, fmt, isHalf, isMonthly, monthPlanOf, num, pctOf, periodsInMonth } from '../lib/derive';
-import { monthLabel } from '../lib/dates';
+import { monthLabel, monthName } from '../lib/dates';
 import { Bar, Fill } from '../ui/bits';
 import * as I from '../ui/icons';
 import { MoneyInput } from '../ui/MoneyInput';
@@ -24,7 +25,7 @@ const line = (label: string, value: string, sub?: string, color?: string) => (
 export default function Budget() {
   const { data: d } = useApp();
   const c = ctxOf(d), weeks = c.weeks, cur = curSymbol();
-  const income = num(d.incomeStr);
+  const income = num(d.incomeStr), pays = salaryBills(d), thisMonth = d.monthIncome?.[c.month];
   const all = allStats(d, c);
   const sum = monthSummary(d, c), extras = extraIncomes(d, c);
   const mm = findMismatches(d, c), issues = mm.orphan.length + mm.included.length;
@@ -55,8 +56,14 @@ export default function Budget() {
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Monthly income</span>
         <div onFocus={() => { typedAtFocus.current = d.incomeStr; }} onBlur={onIncomeBlur} style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
           <span style={{ fontSize: 34, fontWeight: 700, color: 'var(--color-neutral-500)' }}>{cur}</span>
-          <MoneyInput value={d.incomeStr} onChange={v => setData({ incomeStr: v })} ariaLabel="Monthly income"
+          <MoneyInput value={d.incomeStr} onChange={v => setData(x => withIncome(x, v))} ariaLabel="Monthly income"
             style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 34, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--color-text)', padding: 0, outline: 'none' }} />
+        </div>
+        {pays.length > 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{`Arrives in ${d.accounts.find(a => a.id === pays[0].acct)?.name ?? 'your account'} on day ${pays.map(b => b.dueDay).join(' and ')}`}</span>}
+        {thisMonth && <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{`${monthName(c.month).replace(/^./, x => x.toUpperCase())}: ${fmt(thisMonth.amt)} came in (normally ${fmt(income)})`}</span>}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
+          <button onClick={() => openSheet({ name: 'incomeMonth' })} className="hv-n200" style={{ ...chipStyle, border: 0, cursor: 'pointer', color: TEXT, background: 'var(--color-neutral-100)' }}>This month was different</button>
+          {pays.length > 0 && <button onClick={() => openSheet({ name: 'schedule', id: pays[0].id })} className="hv-n200" style={{ ...chipStyle, border: 0, cursor: 'pointer', color: TEXT, background: 'var(--color-neutral-100)' }}>Payday and account</button>}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
           <span style={chipStyle}>{weeks} weeks</span>

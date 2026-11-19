@@ -3,6 +3,7 @@ import { SITE_URL, iPhoneSafariFrontDoor, shouldShowSite } from './handoff';
 import { get, set } from 'idb-keyval';
 import type { Data, UI } from './types';
 import { sampleData } from './seed';
+import { migrateSalary } from './salary';
 
 const KEY = 'pockets-data-v1';
 
@@ -58,7 +59,7 @@ export function useApp(): State {
 
 /** Fill in fields added after a user's data was first saved, so older data keeps working. */
 export function normalize(d: Data): Data {
-  return { ...d, fx: { trm: {}, tried: {}, ...((d as Partial<Data>).fx || {}) }, incomes: d.incomes ?? [], groups: d.groups ?? [], debts: d.debts ?? [], notifications: d.notifications ?? [], investments: { ...{ cdts: [], trades: [], quotes: {}, usdRate: 4000, usdRateAt: 0 }, ...((d as Partial<Data>).investments || {}) }, bills: (d.bills ?? []).map(b => ({ ...b, paidMonths: b.paidMonths ?? [] })) };
+  return migrateSalary({ ...d, fx: { trm: {}, tried: {}, ...((d as Partial<Data>).fx || {}) }, incomes: d.incomes ?? [], groups: d.groups ?? [], debts: d.debts ?? [], notifications: d.notifications ?? [], investments: { ...{ cdts: [], trades: [], quotes: {}, usdRate: 4000, usdRateAt: 0 }, ...((d as Partial<Data>).investments || {}) }, bills: (d.bills ?? []).map(b => ({ ...b, paidMonths: b.paidMonths ?? [] })) });
 }
 
 /** Load saved data, or keep the sample data on first run. */

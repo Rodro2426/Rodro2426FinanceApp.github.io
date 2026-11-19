@@ -81,7 +81,7 @@ export function makeCard(d: Data, name: string, owed: number, limit: number, cut
  */
 export function makeIncome(total: number, pay: 'month' | 'half', day: number, acct: string, today = todayISO()): Pick<Data, 'incomeStr'> & { bills: Bill[] } {
   const amt = Math.max(0, Math.round(total));
-  const base = { kind: 'Income' as const, hue: 150, paidMonths: [], acct, auto: true, start: addDays(today, 1) };
+  const base = { kind: 'Income' as const, hue: 150, paidMonths: [], acct, auto: true, salary: true, start: addDays(today, 1) };
   const bills: Bill[] = !amt ? [] : pay === 'half'
     ? [{ ...base, id: uid('i'), name: tr('Salary') + ' · 1', amt: Math.floor(amt / 2), dueDay: 15 }, { ...base, id: uid('i'), name: tr('Salary') + ' · 2', amt: amt - Math.floor(amt / 2), dueDay: 30 }]
     : [{ ...base, id: uid('i'), name: tr('Salary'), amt, dueDay: Math.min(31, Math.max(1, Math.round(day) || 1)) }];

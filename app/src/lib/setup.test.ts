@@ -100,7 +100,8 @@ describe('first-time setup', () => {
 
   it('does not add the salary on top of the balance typed on payday itself', () => {
     const acct = makeAccount(d, 'Nequi', 100000);
-    const x = { ...emptyData(sampleData()), accounts: [acct], bills: makeIncome(1_000_000, 'month', 15, acct.id, '2026-11-15').bills };
+    const made = makeIncome(1_000_000, 'month', 15, acct.id, '2026-11-15');
+    const x = { ...emptyData(sampleData()), accounts: [acct], incomeStr: made.incomeStr, bills: made.bills };
     expect(x.bills[0].start).toBe('2026-11-16');
     expect((runSchedule(x, '2026-11-15') || {}).incomes ?? []).toEqual([]);
     // the next payday arrives normally

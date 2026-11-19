@@ -1,9 +1,10 @@
 // The month's money in one place: income, plan, the two gaps, extra income splits and fixing mismatches.
 import type { Data, Income, Move } from './types';
 import { addDays, ctxAt, makeCtx, monthKey, type Ctx } from './dates';
-import { incomeMoves, isHalf, isMonthly, monthPlanOf, monthStats, moveMonth, num, pocketStats, uid, weeksLeft } from './derive';
+import { incomeMoves, isHalf, isMonthly, monthPlanOf, monthStats, moveMonth, pocketStats, uid, weeksLeft } from './derive';
 import { largestRemainder, unitsFor } from './split';
 import { debtOutlook } from './debts';
+import { baseIncome } from './salary';
 
 const scale = (d: Data) => unitsFor(d.settings.currency);
 const sum = (xs: number[]) => xs.reduce((a, x) => a + x, 0);
@@ -30,9 +31,9 @@ export interface MonthSummary {
 }
 
 export function monthSummary(d: Data, c: Ctx): MonthSummary {
-  const base = num(d.incomeStr);
+  const base = baseIncome(d, c.month);
   const extra = sum(extraIncomes(d, c).map(t => t.amt));
-  const plan = sum(d.pockets.map(p => monthPlanOf(p, c))) + sum(incomeSplits(d, c).map(m => m.amt));
+  const plan = sum(d.pockets.map(p => monthPlanOf(p, c))) + sum(incomeSplits(d, c).map(m => m.amt)) + sum(Object.values(d.monthIncome?.[c.month]?.adj ?? {}));
   const toSpend = sum(d.pockets.map(p => pocketToSpend(d, p.id, c)));
   const debts = debtOutlook(d, c.today).net;
   const balance = sum(d.accounts.filter(a => !a.notMine).map(a => (a.type === 'card' ? -a.bal : a.bal))) + debts;

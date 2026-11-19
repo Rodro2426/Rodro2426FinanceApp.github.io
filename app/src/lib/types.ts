@@ -38,6 +38,8 @@ export type ScheduleKind = 'Income' | 'Bill' | 'Subscription' | 'CardPayment';
 export interface Bill {
   id: string; name: string; kind: ScheduleKind; amt: number; dueDay: number; hue: number; paidMonths: string[];
   acct?: string; auto?: boolean; start?: string; pocket?: string; cat?: string; sub?: string; skipMonths?: string[]; photo?: string | null;
+  /** The salary: its amount comes from the monthly income in Budget (lib/salary.ts). */
+  salary?: boolean;
   /** 'USD' = amount is in dollars and is converted with that day's TRM. */
   currency?: 'USD' | 'COP';
   /** Card payments: the card to pay (`acct` is the account it's paid from) and how much. */
@@ -111,6 +113,8 @@ export interface Debt {
 }
 
 export interface Data {
+  /** A month whose income came in different from the usual: what arrived, from which day, and how each pocket changes that month (signed). */
+  monthIncome?: Record<string, { amt: number; from: string; adj: Record<string, number> }>;
   version: 1;
   settings: Settings;
   incomeStr: string;
@@ -171,6 +175,7 @@ export type Sheet =
   | { name: 'reminder'; id: string | null }
   | { name: 'quickAdd' }
   | { name: 'privacy' }
+  | { name: 'incomeMonth' }
   | { name: 'schedule'; id: string | null; day?: number; kind?: ScheduleKind }
   | { name: 'notifications' }
   | { name: 'trade'; ticker?: string; side?: 'buy' | 'sell' }

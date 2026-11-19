@@ -112,14 +112,31 @@ export function moveInPeriod(m: Move, p: PocketLike, c: Ctx): boolean {
 const prevStart = (p: PocketLike, s: string) => (isSpan(p) ? spanOf(p, addDays(s, -1))[0] : addDays(s, -7));
 const nextStart = (p: PocketLike, s: string) => (isSpan(p) ? addDays(spanOf(p, s)[1], 1) : addDays(s, 7));
 
+/**
+ * A month that came in different changes each pocket by `adj` for that month: split evenly (exactly, in whole units)
+ * over the pocket's periods of the month from the one with the day it was set. `start` is a period's first day.
+ */
+export function monthAdjShare(d: Data, p: Data['pockets'][number], start: string): number {
+  const own = (s: string) => monthKey(isSpan(p) ? s : addDays(s, 6)); // a week counts for the month its Sunday is in
+  const e = d.monthIncome?.[own(start)], adj = e?.adj[p.id];
+  if (!e || !adj) return 0;
+  const starts: string[] = [];
+  let s = periodAt(p, e.from)[0];
+  for (let k = 0; own(s) > own(start) && k < 6; k++) s = prevStart(p, s); // set in a week that ends next month: its last week
+  for (; own(s) === own(start) && starts.length < 6; s = nextStart(p, s)) starts.push(s);
+  const i = starts.indexOf(start);
+  return i < 0 ? 0 : Math.sign(adj) * weekShares(Math.abs(adj), starts.length, unitsFor(d.settings.currency))[i];
+}
+
 /** A period's budget without any carry, and what was spent in it (moves in/out, spread income, and "next" moves arriving from the period before). */
 function periodParts(d: Data, p: Data['pockets'][number], c: Ctx) {
   const pc = pocketCtx(p, c), id = p.id;
   const amount = num(p.weeklyStr);
   const st = p.start, ws = pc.weekStart;
-  const weekly = !st ? amount
+  const base = !st ? amount
     : st.until ? (ws < st.from ? (monthKey(addDays(ws, 6)) === monthKey(addDays(st.from, 6)) ? 0 : amount) : ws <= st.until ? st.amt : amount)
     : st.from === ws ? st.amt : amount;
+  const weekly = base + monthAdjShare(d, p, ws);
   const moves = d.moves.filter(m => moveInPeriod(m, p, c));
   const before = prevStart(p, pc.weekStart);
   const arriving = d.moves.filter(m => m.next && m.to === id && moveAtStart(m, p, before)).reduce((a, m) => a + m.amt, 0);
@@ -220,7 +237,7 @@ export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
     // Weekly: the first week whose Sunday is in the month (like moveMonth and weeksIn); 15-day: the quincena starting on the 1st.
     carry = carryInto(d, p, isSpan(p) ? m01 : addDays(m01, -weekdayOf(m01)));
   }
-  const budget = monthPlanOf(p, c) + extra + carry;
+  const budget = monthPlanOf(p, c) + extra + carry + (d.monthIncome?.[c.month]?.adj[id] ?? 0);
   return { id, budget, spent, left: budget - spent, extra };
 }
 /* ---------------- Days ---------------- */

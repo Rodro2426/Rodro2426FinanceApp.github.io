@@ -78,7 +78,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
       name: `${card!.name} payment`, hue: card!.hue, kind, amt: payMode === 'fixed' ? roundAmt(v) : 0, currency: undefined, dueDay, photo: card!.photo ?? null, acct, toCard, payMode, auto,
       pocket: undefined, cat: undefined, sub: undefined, start: restart ? today : base?.start
     } : {
-      name: name.trim(), kind, amt: usd ? Math.round(v * 100) / 100 : roundAmt(v), currency: usd ? 'USD' : undefined, dueDay, photo, acct: acctOk && !notMineOn ? acct : undefined, auto: auto && acctOk && !notMineOn, notMine: notMineOn || undefined,
+      name: name.trim(), kind, amt: base?.salary ? base.amt : usd ? Math.round(v * 100) / 100 : roundAmt(v), currency: usd ? 'USD' : undefined, dueDay, photo, acct: acctOk && !notMineOn ? acct : undefined, auto: auto && acctOk && !notMineOn, notMine: notMineOn || undefined,
       pocket: income || notMineOn ? undefined : pocket || undefined, cat: income ? undefined : cat, sub: income ? undefined : base && base.cat === cat ? base.sub : subs[0] || '',
       start: restart ? today : base?.start
     };
@@ -140,6 +140,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
         </div>
         <FieldLabel m="14px 4px 6px">Name</FieldLabel>
         <input value={name} placeholder={PLACEHOLDER[kind]} onChange={e => setName(e.target.value)} style={textInput} />
+        {base?.salary ? <span style={{ margin: '14px 4px 0', fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>The amount comes from your monthly income in Budget.</span> : <>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '14px 4px 6px', gap: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>Amount</span>
           {canUsd && (
@@ -162,6 +163,7 @@ export function ScheduleSheet({ id, day, kind: kind0 }: { id: string | null; day
             {isCOP() && todayTrm ? `Today's TRM is ${fmt(todayTrm)}` : `About ${fmt(rate)} per dollar`}{v > 0 ? `, so ${fmtUsd(v)} ≈ ${fmt(v * rate)}` : ''}. {auto ? (isCOP() ? 'On the day it runs, it uses that day\'s official TRM.' : 'On the day it runs, it uses that day\'s rate.') : ''}
           </span>
         )}
+        </>}
         </>}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '14px 4px 6px' }}>

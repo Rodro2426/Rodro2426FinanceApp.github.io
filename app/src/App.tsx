@@ -1,4 +1,5 @@
 import { PrivacySheet } from './sheets/PrivacySheet';
+import { IncomeMonthSheet } from './sheets/IncomeMonthSheet';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud, syncNow } from './lib/cloud';
@@ -102,6 +103,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'reminder': return <ReminderSheet id={sheet.id} />;
     case 'quickAdd': return <QuickAddSheet />;
     case 'privacy': return <PrivacySheet />;
+    case 'incomeMonth': return <IncomeMonthSheet />;
     case 'schedule': return <ScheduleSheet id={sheet.id} day={sheet.day} kind={sheet.kind} />;
     case 'notifications': return <NotificationsSheet />;
     case 'trade': return <TradeSheet ticker={sheet.ticker} side={sheet.side} />;
