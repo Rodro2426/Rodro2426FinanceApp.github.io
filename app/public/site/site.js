@@ -264,7 +264,7 @@
   function onNav() { nav.classList.toggle('scrolled', scrollY > 8); }
   addEventListener('scroll', onNav, { passive: true }); onNav();
 
-  /* ---------- Hero phone: leans toward the pointer (fine pointers only), and turns when you drag it ---------- */
+  /* ---------- Hero phone: just the front, leaning toward the pointer (fine pointers only) ---------- */
   var heroRig = document.getElementById('heroRig');
   var hero = document.querySelector('.hero');
   var heroStage = document.getElementById('heroStage');
@@ -278,7 +278,7 @@
     else tilt.raf = 0;
   }
   hero.addEventListener('pointermove', function (e) {
-    if (!finePointer.matches || reduce.matches || heroStage.classList.contains('dragging')) return;
+    if (!finePointer.matches || reduce.matches) return;
     var r = hero.getBoundingClientRect();
     tilt.tx = (e.clientX - r.left) / r.width - 0.5;
     tilt.ty = (e.clientY - r.top) / r.height - 0.5;
@@ -288,7 +288,6 @@
     tilt.tx = 0; tilt.ty = 0;
     if (!tilt.raf && finePointer.matches && !reduce.matches) tilt.raf = requestAnimationFrame(tiltFrame);
   });
-  makeTurnable(heroStage.querySelector('.stage3d'), heroRig.querySelector('.turn'), heroStage.querySelector('.stage3d'));
 
   /* ---------- Story: the phone turns around and comes back on the next screen ---------- */
   var spin = document.getElementById('spin');

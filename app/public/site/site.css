@@ -258,6 +258,8 @@ html { scrollbar-color: var(--scroll-thumb) var(--page); }
 /* The screen's pictures sit on their own layers and ignore backface-visibility, so the script shows one side at a time. */
 .turn.facing-back .front, .turn:not(.facing-back) .back { visibility: hidden; }
 .turn .front, .turn .back { backface-visibility: visible; -webkit-backface-visibility: visible; }
+/* The hero phone is only a front that leans with the pointer: no edge or back to draw. */
+#heroRig .edge, #heroRig .back { display: none; }
 /* Phones you can grab and turn. */
 .grab { cursor: grab; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
 .grab.dragging { cursor: grabbing; }
