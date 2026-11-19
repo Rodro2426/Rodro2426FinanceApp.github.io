@@ -2055,6 +2055,9 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+Your salary already arrives on its own on day {0}. Adding it here would count it twice; use this only for money on top of it.|Tu sueldo ya llega solo el día {0}. Si lo agregas aquí se contaría dos veces; usa esto solo para plata adicional.
++{0} extra this month ({1}). In total {2}.|+{0} extra este mes ({1}). En total {2}.
+{0} + {1} extra|{0} + {1} extra
 Your pockets only have {0} left this month, so that's all they can give up. The other {1} comes out of what's in your accounts.|A tus bolsillos solo les quedan {0} este mes, así que es todo lo que pueden dar. Los otros {1} salen de lo que tienes en tus cuentas.
 How much came in for {0}?|¿Cuánto te llegó en {0}?
 Your normal income is {0}. Only {1} changes.|Tu ingreso normal es {0}. Solo cambia {1}.

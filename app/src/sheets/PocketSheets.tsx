@@ -6,6 +6,7 @@ import { HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { curCode, moneyScale, curInfo, isMonthly, periodsInMonth, DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
 import { formatNumber } from '../lib/currency';
 import { latestRate } from '../lib/trm';
+import { salaryBills } from '../lib/salary';
 import { refreshUsdRate } from '../lib/invest';
 import { addDays, daysBetween, daysInMonth, monthName, parse, relDay, shortDate } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
@@ -107,8 +108,6 @@ function IncomeForm() {
   const [mode, setMode] = useState<SplitMode>('month');
   const [dist, setDist] = useState<SplitDist>('budget');
   const [manual, setManual] = useState<Record<string, string>>({});
-  // Already part of the monthly income typed in Budget: it goes into the account but isn't added again or split.
-  const [counted, setCounted] = useState(false);
   const nWeeks = weeksLeft(c), scale = unitsFor(d.settings.currency);
   const X = roundAmt(num(amt));
   const manualNums = Object.fromEntries(d.pockets.map(p => [p.id, roundAmt(num(manual[p.id]))]));
@@ -117,7 +116,7 @@ function IncomeForm() {
   const cant = !(X > 0) || !accounts.some(x => x.id === a) || tooMuch || !incCat;
 
   const before = monthSummary(d, c);
-  const input: ExtraIncome = counted ? { amt: X, acct: a, note, toPockets: 0, mode, dist: 'budget', cat: incCat, inBase: true } : { amt: X, acct: a, note, toPockets: A, mode, dist, manual: manualNums, cat: incCat };
+  const input: ExtraIncome = { amt: X, acct: a, note, toPockets: A, mode, dist, manual: manualNums, cat: incCat };
   const preview = X > 0 && !tooMuch && accounts.some(x => x.id === a) ? { ...d, ...addExtraIncome(d, c, { ...input, id: 'preview' }) } : null;
   const after = preview ? monthSummary(preview, c) : null;
   const parts = A > 0 && !tooMuch ? splitAmong(d, A, dist, manualNums) : {};
@@ -139,7 +138,7 @@ function IncomeForm() {
     setData(x => addExtraIncome(x, ctxOf(x), input));
     closeSheet();
     const warn = after && after.real > 0.004 ? ` · Your pockets add up to ${fmt(after.real)} more than you have in your accounts` : '';
-    flash(counted ? `+${fmt(X)} to ${acctName} · already in your monthly income` : `+${fmt(X)} to ${acctName}${A > 0 ? ` · ${fmt(A)} to pockets` : ' · all saved'}${warn}`);
+    flash(`+${fmt(X)} to ${acctName}${A > 0 ? ` · ${fmt(A)} to pockets` : ' · all saved'}${warn}`);
   };
   const chipBtn = (label: string, on: boolean, f: () => void, key?: string) => (
     <button key={key ?? label} onClick={f} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: on ? TEXT : 'var(--color-neutral-100)', color: on ? 'var(--on-text)' : TEXT, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{label}</button>
@@ -158,6 +157,7 @@ function IncomeForm() {
       <input placeholder="e.g. Freelance, gift, refund" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
       <FieldLabel m="14px 4px 6px">Category {!incCat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</FieldLabel>
       <IncomeCategoryPicker value={incCat} onChange={setIncCat} />
+      {incCat === 'Salary' && salaryBills(d).length > 0 && <span role="alert" style={{ margin: '8px 4px 0', fontSize: 12.5, lineHeight: 1.4, color: RED }}>{`Your salary already arrives on its own on day ${salaryBills(d).map(b => b.dueDay).join(' and ')}. Adding it here would count it twice; use this only for money on top of it.`}</span>}
       <FieldLabel>Goes into</FieldLabel>
       <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px' }}>
         {accounts.map(x => (
@@ -169,16 +169,6 @@ function IncomeForm() {
         {accounts.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Add a bank or cash account first, in the Accounts tab.</span>}
       </div>
 
-      <div style={{ marginTop: 14, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <span style={{ fontSize: 14, fontWeight: 600 }}>Is this money extra, or already part of your monthly income?</span>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {chipBtn("It's extra", !counted, () => setCounted(false))}
-          {chipBtn('Already counted', counted, () => setCounted(true))}
-        </div>
-        {counted && <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>It goes into the account, but isn't added to your month again.</span>}
-      </div>
-
-      {!counted && <>
       <FieldLabel m="16px 4px 6px">How much goes to pockets?</FieldLabel>
       <div style={{ background: 'var(--surface)', borderRadius: 22, padding: '12px 12px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, background: 'var(--color-neutral-100)', borderRadius: 16, padding: '10px 14px', opacity: dist === 'manual' ? 0.6 : 1 }}>
@@ -238,7 +228,6 @@ function IncomeForm() {
           {d.pockets.length === 0 && <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', padding: '6px 0' }}>Create pockets in the Budget tab first.</span>}
         </div>
       )}
-      </>}
 
       <div aria-label="Preview" style={{ marginTop: 10, background: 'var(--surface)', borderRadius: 22, padding: '12px 14px', display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Before → after</span>

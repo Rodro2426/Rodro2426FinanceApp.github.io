@@ -1,10 +1,8 @@
-import { useRef, useState } from 'react';
 import { salaryBills, withIncome } from '../lib/salary';
 import { glyph } from '../ui/PocketIcons';
 import { Blocks } from '../ui/Blocks';
-import { useApp, openSheet, setData, flash } from '../lib/store';
-import { extraIncomes, findMismatches, markIncluded, monthSummary } from '../lib/plan';
-import { incomeMoves } from '../lib/derive';
+import { useApp, openSheet, setData } from '../lib/store';
+import { extraIncomes, findMismatches, monthSummary } from '../lib/plan';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { allStats, ctxOf, curSymbol, fmt, isHalf, isMonthly, monthPlanOf, num, pctOf, periodsInMonth } from '../lib/derive';
 import { monthLabel, monthName } from '../lib/dates';
@@ -28,18 +26,9 @@ export default function Budget() {
   const income = num(d.incomeStr), pays = salaryBills(d), thisMonth = d.monthIncome?.[c.month];
   const all = allStats(d, c);
   const sum = monthSummary(d, c), extras = extraIncomes(d, c);
-  const mm = findMismatches(d, c), issues = mm.orphan.length + mm.included.length;
+  const mm = findMismatches(d, c), issues = mm.orphan.length;
   const splitFromExtra = sum.plan - all.reduce((a, s, i) => a + s.weekly * periodsInMonth(d.pockets[i], weeks), 0);
   // Editing the typed income when this month already has extra income: ask whether it's already in there.
-  const typedAtFocus = useRef(d.incomeStr);
-  const [ask, setAsk] = useState<null | 'q' | 'pick'>(null);
-  const [keep, setKeep] = useState<string[]>([]);
-  const extraTotal = extras.reduce((a, t) => a + t.amt, 0);
-  const onIncomeBlur = () => { if (d.incomeStr !== typedAtFocus.current && extras.length) { setKeep([]); setAsk('q'); } };
-  const confirmIncluded = () => {
-    setData(x => markIncluded(x, extras.map(t => t.id), keep));
-    setAsk(null); flash(`Not added again · ${fmt(extraTotal)} of extra income is in your typed amount`);
-  };
   const setPocket = (id: string, patch: { name?: string; weeklyStr?: string }) => setData(x => ({ pockets: x.pockets.map(p => p.id === id ? { ...p, ...patch } : p) }));
   const removePocket = (id: string) => setData(x => ({ pockets: x.pockets.filter(p => p.id !== id), moves: x.moves.filter(m => m.from !== id && m.to !== id) }));
   const chipStyle = { fontSize: 13, fontWeight: 600, background: 'var(--color-neutral-200)', padding: '7px 12px', borderRadius: 999, whiteSpace: 'nowrap' } as const;
@@ -54,7 +43,7 @@ export default function Budget() {
         { id: 'income', name: 'Income', desc: 'Your monthly income', node: <>
       <div data-tour="income" style={{ background: 'var(--surface)', borderRadius: 28, padding: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Monthly income</span>
-        <div onFocus={() => { typedAtFocus.current = d.incomeStr; }} onBlur={onIncomeBlur} style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
           <span style={{ fontSize: 34, fontWeight: 700, color: 'var(--color-neutral-500)' }}>{cur}</span>
           <MoneyInput value={d.incomeStr} onChange={v => setData(x => withIncome(x, v))} ariaLabel="Monthly income"
             style={{ flex: 1, minWidth: 0, border: 0, background: 'transparent', fontSize: 34, fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--color-text)', padding: 0, outline: 'none' }} />
@@ -68,39 +57,8 @@ export default function Budget() {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
           <span style={chipStyle}>{weeks} weeks</span>
           <span style={chipStyle}>{fmt(income / weeks)} per week</span>
-          {sum.extra > 0 && <span style={{ ...chipStyle, background: 'oklch(0.95 0.045 155)', color: 'oklch(0.36 0.08 155)' }}>+{fmt(sum.extra)} extra this month</span>}
         </div>
-        {sum.extra > 0 && <span style={{ marginTop: 4, fontSize: 13, color: 'var(--color-neutral-700)' }}>Month income: <b style={{ color: TEXT }}>{fmt(sum.income)}</b> ({fmt(sum.base)} typed + {fmt(sum.extra)} from {extras.length === 1 ? '1 extra income' : `${extras.length} extra incomes`})</span>}
-        {ask === 'q' && (
-          <div role="alertdialog" aria-label="Already included?" style={{ marginTop: 10, background: 'oklch(0.96 0.055 92)', borderRadius: 18, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span style={{ fontSize: 14.5, fontWeight: 700, lineHeight: 1.35, color: 'oklch(0.33 0.07 70)' }}>Does this amount already include this month's extra income ({fmt(extraTotal)})?</span>
-            <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'oklch(0.4 0.08 70)' }}>{extras.map(t => `${t.note} ${fmt(t.amt)}`).join(' · ')}</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setAsk('pick')} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'oklch(0.33 0.07 70)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Yes, it's included</button>
-              <button onClick={() => { setAsk(null); flash(`Added on top: month income is ${fmt(sum.income)}`); }} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>No, add it on top</button>
-            </div>
-          </div>
-        )}
-        {ask === 'pick' && (
-          <div role="alertdialog" aria-label="Which splits to keep" style={{ marginTop: 10, background: 'oklch(0.96 0.055 92)', borderRadius: 18, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'oklch(0.33 0.07 70)' }}>Then their pocket splits would count twice. Keep any of them?</span>
-            {extras.map(t => {
-              const split = incomeMoves(d.moves, t).reduce((a, m) => a + m.amt, 0), on = keep.includes(t.id);
-              return (
-                <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderTop: `1px solid ${LINE}`, fontSize: 13.5 }}>
-                  <input type="checkbox" checked={on} onChange={() => setKeep(k => (on ? k.filter(x => x !== t.id) : [...k, t.id]))} style={{ width: 20, height: 20 }} />
-                  <span style={{ flex: 1 }}>{t.note} · {fmt(t.amt)}</span>
-                  <span style={{ color: 'var(--color-neutral-700)' }}>{split ? `${fmt(split)} in pockets` : 'not split'}</span>
-                </label>
-              );
-            })}
-            <span style={{ fontSize: 12, color: 'oklch(0.4 0.08 70)' }}>Ticked = keep its pocket split. The rest is taken back out of the pockets.</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={confirmIncluded} style={{ flex: 1, height: 42, borderRadius: 999, border: 0, background: 'oklch(0.33 0.07 70)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Confirm</button>
-              <button onClick={() => setAsk('q')} style={{ height: 42, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Back</button>
-            </div>
-          </div>
-        )}
+        {sum.extra > 0 && <span style={{ marginTop: 4, fontSize: 13, lineHeight: 1.4, color: 'oklch(0.36 0.08 155)', fontWeight: 600 }}>{`+${fmt(sum.extra)} extra this month (${extras.map(t => t.note).join(', ')}). In total ${fmt(sum.income)}.`}</span>}
       </div>
       </> },
         { id: 'pockets', name: 'Weekly pockets', desc: 'Your pockets and their budgets', node: <>
@@ -162,7 +120,7 @@ export default function Budget() {
         { id: 'plan', name: 'Month plan', desc: 'Income vs plan, and what is missing', node: <>
       <div aria-label="Month plan" style={{ background: 'var(--surface)', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <Bar pct={pctOf(sum.plan, sum.income)} track="var(--color-neutral-200)" fill={sum.planGap < 0 ? 'var(--color-accent)' : 'oklch(0.62 0.12 160)'} ease=".3s" />
-        {line('Month income', fmt(sum.income), sum.extra > 0 ? `${fmt(sum.base)} typed + ${fmt(sum.extra)} extra` : undefined)}
+        {line('Month income', fmt(sum.income), sum.extra > 0 ? `${fmt(sum.base)} + ${fmt(sum.extra)} extra` : undefined)}
         {line(`Planned for ${weeks} weeks`, fmt(sum.plan), splitFromExtra > 0 ? `includes ${fmt(splitFromExtra)} split from extra income` : undefined)}
         {line(sum.planGap < 0 ? 'Over your income by' : 'Free for bills and saving', fmt(Math.abs(sum.planGap)), undefined, sum.planGap < 0 ? RED : undefined)}
         <div style={{ height: 1, background: LINE, margin: '2px 0' }} />
@@ -173,9 +131,9 @@ export default function Budget() {
           <span>Your pockets add up to <b>{fmt(sum.real)}</b> more than you have in your accounts.</span>
           {allStats(d, c).some(p => p.left > 0.004) && <button onClick={() => openSheet({ name: 'cover' })} style={{ alignSelf: 'flex-start', height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cover it with this week's leftovers</button>}
         </div>}
-        <button onClick={() => openSheet({ name: 'reconcile' })} className="hv-n200" style={{ height: 42, borderRadius: 999, border: 0, background: issues ? 'oklch(0.96 0.055 92)' : 'var(--color-neutral-100)', color: issues ? 'oklch(0.33 0.07 70)' : TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+        {mm.orphan.length > 0 &&         <button onClick={() => openSheet({ name: 'reconcile' })} className="hv-n200" style={{ height: 42, borderRadius: 999, border: 0, background: issues ? 'oklch(0.96 0.055 92)' : 'var(--color-neutral-100)', color: issues ? 'oklch(0.33 0.07 70)' : TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
           {issues ? `Money counted twice? (${issues})` : 'Money counted twice?'}
-        </button>
+        </button>}
       </div>
       </> },
       ]} />
