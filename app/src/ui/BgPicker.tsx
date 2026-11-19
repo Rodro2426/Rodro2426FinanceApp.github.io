@@ -1,4 +1,5 @@
-// Profile > Appearance > Background color: preset swatches, the system color palette, or a typed hex code.
+// Profile > Appearance > Background color: preset swatches (applied on tap), or the system color palette or a typed
+// hex code, which wait for Save so the screen doesn't change while you're still choosing.
 import { useEffect, useState } from 'react';
 import { setData, useApp } from '../lib/store';
 import { DEFAULT_BG, PRESETS, normHex, readable, type Mode } from '../lib/bg';
@@ -11,16 +12,16 @@ export function BgPicker() {
   const chosen = d.settings.bg?.[mode];
   const value = chosen ?? DEFAULT_BG[mode];
   const [hex, setHex] = useState(value.toUpperCase());
-  // Follow the colour when it changes elsewhere (a swatch, the palette), but not while typing: "#1F5" is already a
-  // valid short code, and rewriting the box to "#11FF55" mid-word blocked the rest of "#1F5F5A".
-  useEffect(() => { if (normHex(hex) !== value) setHex(value.toUpperCase()); }, [value]);
+  useEffect(() => { setHex(value.toUpperCase()); }, [value]);  // a swatch or Reset changed it
   const set = (c: string | undefined) => setData(x => {
     const bg = { ...(x.settings.bg ?? {}) };
     if (c && c !== DEFAULT_BG[mode]) bg[mode] = c; else delete bg[mode];
     return { settings: { ...x.settings, bg: bg.light || bg.dark ? bg : undefined } };
   });
   const typed = normHex(hex);
-  const ok = readable(value, mode);
+  const pending = typed && typed !== value ? typed : null;  // a code or palette pick not saved yet
+  const save = () => { if (pending) set(pending); };
+  const ok = readable(pending ?? value, mode);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8, background: 'var(--surface)', borderRadius: 20, padding: 14 }}>
@@ -38,11 +39,15 @@ export function BgPicker() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {/* The system color palette (on iPhone it opens the iOS color picker). */}
         <label title="Pick any color" style={{ position: 'relative', width: 44, height: 44, flex: 'none', borderRadius: 999, cursor: 'pointer', background: 'conic-gradient(#f44, #fd4, #4d6, #4cf, #64f, #f4c, #f44)', boxShadow: 'inset 0 0 0 3px var(--surface)' }}>
-          <input type="color" value={value} onChange={e => set(e.target.value)} aria-label="Pick any color" style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 0, padding: 0 }} />
+          <input type="color" value={pending ?? value} onChange={e => setHex(e.target.value.toUpperCase())} aria-label="Pick any color" style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 0, padding: 0 }} />
         </label>
-        <input value={hex} onChange={e => { setHex(e.target.value); const h = normHex(e.target.value); if (h) set(h); }} aria-label="Color code" placeholder="#F7F5F3" maxLength={7} spellCheck={false} autoCapitalize="characters"
+        <input value={hex} onChange={e => setHex(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') save(); }} enterKeyHint="done" aria-label="Color code" placeholder="#F7F5F3" maxLength={7} spellCheck={false} autoCapitalize="characters"
           style={{ flex: 1, minWidth: 0, height: 44, borderRadius: 14, border: 0, background: 'var(--color-neutral-100)', color: 'var(--color-text)', padding: '0 14px', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 16, letterSpacing: '0.04em', outline: typed || !hex ? 'none' : '2px solid var(--color-accent)' }} />
-        <span aria-hidden="true" style={{ width: 44, height: 44, flex: 'none', borderRadius: 14, background: value, boxShadow: 'inset 0 0 0 1px rgba(128,128,128,.35)' }} />
+        {pending
+          ? <button onClick={save} className="pr97" style={{ height: 44, padding: '0 16px', flex: 'none', borderRadius: 14, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span aria-hidden="true" style={{ width: 18, height: 18, borderRadius: 6, background: pending, boxShadow: '0 0 0 2px var(--action-ink)' }} />Save
+            </button>
+          : <span aria-hidden="true" style={{ width: 44, height: 44, flex: 'none', borderRadius: 14, background: value, boxShadow: 'inset 0 0 0 1px rgba(128,128,128,.35)' }} />}
       </div>
       {!typed && hex && <span style={{ fontSize: 12, color: 'var(--color-accent-700)' }}>Type a color code like #EEF0FB.</span>}
       {!ok && <span role="alert" style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-accent-700)' }}>{mode === 'light' ? 'Text may be hard to read on this color in light mode. Try a lighter one.' : 'Text may be hard to read on this color in dark mode. Try a darker one.'}</span>}
