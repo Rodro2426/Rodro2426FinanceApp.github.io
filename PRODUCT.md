@@ -47,7 +47,7 @@ A budget built around the Colombian pay rhythm (quincenas, COP, TRM, CDTs, cesan
 ## Brand Commitments
 
 - Name: Pockets ("bolsillos" in Spanish copy is fine).
-- Logo (2026-11-19): a lowercase "p" in Plus Jakarta Sans ExtraBold with a mint coin in its hole. App icon: white 3D p on teal (`app/public/icon.svg`, PNGs); flat for small sizes (`icon-full.svg`); the p alone, teal on light and cream on dark (`pockets-mark.svg`, `pockets-mark-dark.svg`). The name is always POCKETS in capitals. Built by a script from the font, so it is the real letter.
+- Logo (2026-11-19): a lowercase "p" in Plus Jakarta Sans ExtraBold with a two-metal mint coin in its hole (engraved Andes peaks with the sun behind them, like a peso coin but our own picture). App icon: white 3D p on teal (`app/public/icon.svg`, PNGs); flat for small sizes (`icon-full.svg`); the p alone, teal on light and cream on dark (`pockets-mark.svg`, `pockets-mark-dark.svg`). The name is always POCKETS in capitals. Built by a script from the font, so it is the real letter.
 - Voice: simple, warm, Colombian context first. Plain words, no finance jargon beyond what Colombians use daily (quincena, TRM, CDT, E.A.).
 - The Pockets Launch Film (claude.ai artifact 2HewqdCKsNpNwWwJ1DDxVS) and the vertical TikTok ad (`marketing/pockets-tiktok.mp4`) set the marketing look the owner approved: a floating 3D phone in a soft lavender clay world.
 
