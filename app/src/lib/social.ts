@@ -96,7 +96,10 @@ export async function loadPhotos(uids: string[]) {
 export async function loadFriends() {
   const u = me(); if (!u) return;
   const snap = await getDocs(query(collection(db, 'friendships'), where('users', 'array-contains', u.uid)));
-  const friends: Friend[] = snap.docs.map(d => {
+  // Only real friendships: two different people, and the id is their two ids in order (a fake one made before the
+  // rules checked this is ignored, so it can't unlock debts or messages here).
+  const real = snap.docs.filter(d => { const us = (d.data() as { users?: unknown }).users; return Array.isArray(us) && us.length === 2 && us[0] !== us[1] && d.id === [...us].sort().join('_'); });
+  const friends: Friend[] = real.map(d => {
     const f = d.data() as { users: string[]; from: string; status: 'pending' | 'accepted'; names: Record<string, string>; emails?: Record<string, string> };
     const other = f.users.find(x => x !== u.uid) ?? '';
     return { id: d.id, uid: other, name: f.names?.[other] ?? 'Friend', email: f.emails?.[other] ?? '', status: f.status, incoming: f.from !== u.uid };

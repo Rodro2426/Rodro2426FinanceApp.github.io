@@ -18,16 +18,22 @@ Pockets then changes **your own account balance** to match. Third, signing in on
 out) can delete every shared debt from the cloud before your data has downloaded. Fix SD-1 to SD-3 before shipping to
 friends.
 
+**Status (2026-11-19):** all eight are fixed. The rules below are in `docs/firestore.rules` (published 2026-11-12); the
+app checks every shared doc (`cleanDoc` in `lib/debtShare.ts`), never lets a friend's change move your balances (`pull`),
+never deletes shared debts when something is missing locally, waits for your cloud data before syncing debts
+(`syncDebts`), uses the friend's own name, locks who-owes-whom once shared, and ignores friendship docs whose id isn't
+the two ids in order (`loadFriends`).
+
 | ID | Severity | Status | Title |
 |---|---|---|---|
-| SD-1 | Critical (blocker) | Confirmed | Fake friendships: a stranger can send you debts (and DMs) |
-| SD-2 | High (blocker) | Confirmed | A friend's edit to the amount or a payment changes your own account balance |
-| SD-3 | High (blocker) | Confirmed | Signing in on an empty phone deletes all shared debts from the cloud |
-| SD-4 | Medium (blocker) | Confirmed | No type or size checks: huge notes, thousands of payments, or bad values can crash the other person's app |
-| SD-5 | Medium | Confirmed | Sender can flip a declined debt to accepted; status isn't limited; `updatedAt` can be set in the future |
-| SD-6 | Medium | Confirmed | Changing "They owe me / I owe them" on a shared debt starts a write war that never settles |
-| SD-7 | Low | Confirmed | Your private nickname for the friend is stored in the shared doc; the note is shared without saying so |
-| SD-8 | Low | Confirmed | Either person can delete, and editing doesn't re-check the friendship |
+| SD-1 | Critical (blocker) | Fixed | Fake friendships: a stranger can send you debts (and DMs) |
+| SD-2 | High (blocker) | Fixed | A friend's edit to the amount or a payment changes your own account balance |
+| SD-3 | High (blocker) | Fixed | Signing in on an empty phone deletes all shared debts from the cloud |
+| SD-4 | Medium (blocker) | Fixed | No type or size checks: huge notes, thousands of payments, or bad values can crash the other person's app |
+| SD-5 | Medium | Fixed | Sender can flip a declined debt to accepted; status isn't limited; `updatedAt` can be set in the future |
+| SD-6 | Medium | Fixed | Changing "They owe me / I owe them" on a shared debt starts a write war that never settles |
+| SD-7 | Low | Fixed | Your private nickname for the friend is stored in the shared doc; the note is shared without saying so |
+| SD-8 | Low | Fixed | Either person can delete, and editing doesn't re-check the friendship |
 
 ### SD-1: Fake friendships (Critical)
 **Risk.** The debts rule checks `friendships/{users[0]_users[1]}`, which is right as far as it goes. The problem is
