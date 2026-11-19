@@ -181,29 +181,71 @@
   function onNav() { nav.classList.toggle('scrolled', scrollY > 8); }
   addEventListener('scroll', onNav, { passive: true }); onNav();
 
-  /* ---------- Hero phone follows the pointer (fine pointers only) ---------- */
+  /* ---------- Hero phone: follows the pointer, and turns all the way round when you drag it ---------- */
   var heroRig = document.getElementById('heroRig');
   var hero = document.querySelector('.hero');
-  var tilt = { x: 0, y: 0, tx: 0, ty: 0, raf: 0 };
-  function tiltFrame() {
-    tilt.x += (tilt.tx - tilt.x) * 0.08;
-    tilt.y += (tilt.ty - tilt.y) * 0.08;
-    heroRig.style.setProperty('--ry', (-20 + tilt.x * 22).toFixed(2) + 'deg');
-    heroRig.style.setProperty('--rx', (7 - tilt.y * 12).toFixed(2) + 'deg');
-    if (Math.abs(tilt.tx - tilt.x) + Math.abs(tilt.ty - tilt.y) > 0.002) tilt.raf = requestAnimationFrame(tiltFrame);
-    else tilt.raf = 0;
+  var heroStage = document.getElementById('heroStage');
+  var REST_Y = -20, REST_X = 7;
+  // ry/rx: where the phone is now; ty/tx: where it's heading. vy: spin speed after you let go.
+  var pose = { ry: REST_Y, rx: REST_X, ty: REST_Y, tx: REST_X, vy: 0, drag: null, idle: 0, raf: 0 };
+  function poseFrame() {
+    if (!pose.drag && Math.abs(pose.vy) > 0.05) { pose.ty += pose.vy; pose.vy *= 0.94; }
+    pose.ry += (pose.ty - pose.ry) * (pose.drag ? 0.35 : 0.1);
+    pose.rx += (pose.tx - pose.rx) * (pose.drag ? 0.35 : 0.1);
+    heroRig.style.setProperty('--ry', pose.ry.toFixed(2) + 'deg');
+    heroRig.style.setProperty('--rx', pose.rx.toFixed(2) + 'deg');
+    // Facing away once the turn passes the side (cos < 0): show the back with the logo instead of a mirrored screen.
+    heroRig.classList.toggle('facing-back', Math.cos(pose.ry * Math.PI / 180) * Math.cos(pose.rx * Math.PI / 180) < 0);
+    if (pose.drag || Math.abs(pose.vy) > 0.05 || Math.abs(pose.ty - pose.ry) + Math.abs(pose.tx - pose.rx) > 0.02) pose.raf = requestAnimationFrame(poseFrame);
+    else pose.raf = 0;
+  }
+  function kick() { if (!pose.raf) pose.raf = requestAnimationFrame(poseFrame); }
+  // After a moment untouched, the phone turns back to face you the short way round.
+  function settleSoon() {
+    clearTimeout(pose.idle);
+    pose.idle = setTimeout(function () {
+      pose.vy = 0;
+      pose.ty = REST_Y + 360 * Math.round((pose.ty - REST_Y) / 360); pose.tx = REST_X; kick();
+    }, 2600);
   }
   hero.addEventListener('pointermove', function (e) {
-    if (!finePointer.matches || reduce.matches) return;
-    var r = hero.getBoundingClientRect();
-    tilt.tx = (e.clientX - r.left) / r.width - 0.5;
-    tilt.ty = (e.clientY - r.top) / r.height - 0.5;
-    if (!tilt.raf) tilt.raf = requestAnimationFrame(tiltFrame);
+    if (pose.drag || !finePointer.matches || reduce.matches) return;
+    var r = hero.getBoundingClientRect(), base = REST_Y + 360 * Math.round((pose.ty - REST_Y) / 360);
+    pose.ty = base + ((e.clientX - r.left) / r.width - 0.5) * 22;
+    pose.tx = REST_X - ((e.clientY - r.top) / r.height - 0.5) * 12;
+    kick();
   });
   hero.addEventListener('pointerleave', function () {
-    tilt.tx = 0; tilt.ty = 0;
-    if (!tilt.raf && finePointer.matches && !reduce.matches) tilt.raf = requestAnimationFrame(tiltFrame);
+    if (pose.drag || !finePointer.matches || reduce.matches) return;
+    pose.ty = REST_Y + 360 * Math.round((pose.ty - REST_Y) / 360); pose.tx = REST_X; kick();
   });
+  heroStage.addEventListener('dragstart', function (e) { e.preventDefault(); });
+  heroStage.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0) return;
+    clearTimeout(pose.idle);
+    pose.drag = { x: e.clientX, y: e.clientY, ry: pose.ty, rx: pose.tx, lastX: e.clientX, lastT: e.timeStamp, touch: e.pointerType !== 'mouse' };
+    pose.vy = 0;
+    try { heroStage.setPointerCapture(e.pointerId); } catch (_) {}
+    heroStage.classList.add('dragging'); kick();
+  });
+  heroStage.addEventListener('pointermove', function (e) {
+    var d = pose.drag; if (!d) return;
+    pose.ty = d.ry + (e.clientX - d.x) * 0.5;
+    // On a touch screen up-and-down scrolls the page, so only sideways turns the phone.
+    if (!d.touch) pose.tx = Math.max(-40, Math.min(40, d.rx - (e.clientY - d.y) * 0.3));
+    var dt = Math.max(1, e.timeStamp - d.lastT);
+    pose.vy = (e.clientX - d.lastX) * 0.5 / dt * 16;
+    d.lastX = e.clientX; d.lastT = e.timeStamp;
+  });
+  function endDrag() {
+    if (!pose.drag) return;
+    pose.drag = null; heroStage.classList.remove('dragging');
+    if (reduce.matches) pose.vy = 0;
+    pose.vy = Math.max(-30, Math.min(30, pose.vy));
+    kick(); settleSoon();
+  }
+  heroStage.addEventListener('pointerup', endDrag);
+  heroStage.addEventListener('pointercancel', endDrag);
 
   /* ---------- Story: the phone turns around and comes back on the next screen ---------- */
   var spin = document.getElementById('spin');

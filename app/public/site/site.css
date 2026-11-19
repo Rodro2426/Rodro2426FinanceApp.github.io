@@ -248,6 +248,15 @@ html { scrollbar-color: var(--scroll-thumb) var(--page); }
 .phone { --w: 300px; --h: 620px; width: var(--w); height: var(--h); position: relative; transform-style: preserve-3d; }
 .phone > * { position: absolute; inset: 0; border-radius: 54px; }
 .slice { background: #b9b4b0; }
+/* Screens are pictures: never let a drag pull them out of the phone. */
+.phone img { -webkit-user-drag: none; user-select: none; pointer-events: none; }
+.frag { backface-visibility: hidden; }
+/* The screen's pictures sit on their own layers and ignore backface-visibility, so the script shows one side at a time. */
+#heroRig.facing-back .front, #heroRig:not(.facing-back) .back { visibility: hidden; }
+#heroRig .front, #heroRig .back { backface-visibility: visible; -webkit-backface-visibility: visible; }
+/* The hero phone turns when you drag it. */
+#heroStage .stage3d { cursor: grab; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+#heroStage.dragging .stage3d { cursor: grabbing; }
 .front { transform: translateZ(6px); backface-visibility: hidden; background: #0e0d0c; padding: 11px; box-shadow: inset 0 0 0 2px #46413d, inset 0 0 0 4px #0e0d0c; }
 .back {
   transform: rotateY(180deg) translateZ(6px); backface-visibility: hidden;
