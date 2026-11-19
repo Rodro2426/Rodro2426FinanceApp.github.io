@@ -21,7 +21,7 @@ Do you want to add a credit card?|¿Quieres agregar una tarjeta de crédito?
 Another card|Otra tarjeta
 Add and add another|Agregar y agregar otra
 Done with cards|Listo con las tarjetas
-What’s left in all your pockets this month. It turns green, yellow or red as you spend, and starts over on the 1st. After the tour, swipe it to see today or the week.|Lo que queda en todos tus bolsillos este mes. Se pone verde, amarillo o rojo a medida que gastas, y vuelve a empezar el día 1. Después del tour, deslízala para ver hoy o la semana.
+What’s left in all your pockets this month. It turns green, yellow or red as you spend, and starts over on the 1st. After the tour, swipe it to see today or the week.|Lo que queda en todos tus bolsillos este mes. Se pone verde, amarillo o rojo a medida que gastas, y vuelve a empezar el día 1. Después del recorrido, deslízala para ver hoy o la semana.
 Monthly budgets for each kind of spending. Tap one to see what you spent, or move leftovers to another pocket or a goal.|Presupuestos mensuales para cada tipo de gasto. Toca uno para ver lo que gastaste, o mueve lo que sobra a otro bolsillo o a una meta.
 Each pocket is what you can spend on one thing. It fills up again every week (or quincena).|Cada bolsillo es lo que puedes gastar en algo. Se llena otra vez cada semana (o quincena).
 Each pocket is what you can spend on one thing. It fills up again every month.|Cada bolsillo es lo que puedes gastar en algo. Se llena otra vez cada mes.
@@ -59,7 +59,7 @@ Move it to the next quincena|Pasarlo a la próxima quincena
 Move it to next month|Pasarlo al próximo mes
 Your saved amounts keep their numbers, they are not converted. For example, 1.000.000 stays 1.000.000 in the new currency. Change it?|Tus montos guardados mantienen sus números, no se convierten. Por ejemplo, 1.000.000 sigue siendo 1.000.000 en la nueva moneda. ¿Cambiarla?
 Which currency do you use?|¿Qué moneda usas?
-Amounts in Pockets use it. You can still add a purchase in dollars, and change this later in Profile.|Los montos en Pockets la usan. Igual puedes agregar una compra en dólares y cambiarla luego en Perfil.
+Amounts in Pockets use it. You can still add a purchase in dollars, and change this later in Profile.|Todos tus montos se muestran en esta moneda. Igual puedes anotar compras en dólares, y cambiarla después en Perfil.
 Changing it changes how amounts look, not the numbers you saved.|Cambiarla cambia cómo se ven los montos, no los números que guardaste.
 Currency of this expense|Moneda de este gasto
 Amount in US dollars|Monto en dólares
@@ -80,7 +80,7 @@ Your net worth over time|Tu patrimonio en el tiempo
 More options|Más opciones
 Your privacy|Tu privacidad
 I already have an account|Ya tengo una cuenta
-Split your income into pockets and always know what's safe to spend.|Divide tu ingreso en bolsillos y sabe siempre cuánto puedes gastar.
+Split your income into pockets and always know what's safe to spend.|Divide tu ingreso en bolsillos y ten siempre claro cuánto puedes gastar.
 Your data lives on your phone. We never sell or share it.|Tus datos viven en tu teléfono. Nunca los vendemos ni los compartimos.
 How we protect your privacy|Cómo protegemos tu privacidad
 Your money is personal. This is exactly what Pockets keeps, where, and who can see it.|Tu plata es personal. Esto es exactamente lo que Pockets guarda, dónde y quién puede verlo.
@@ -90,13 +90,13 @@ Without an account, nothing leaves your phone.|Sin una cuenta, nada sale de tu t
 We never sell your information, and Pockets has no ads.|Nunca vendemos tu información y Pockets no tiene anuncios.
 If you turn on cloud backup|Si activas la copia en la nube
 A copy of your data is kept in Google Firebase, linked to your account.|Una copia de tus datos se guarda en Google Firebase, vinculada a tu cuenta.
-It travels encrypted, and the app only lets your own account read it.|Viaja cifrada y la app solo deja que tu propia cuenta la lea.
+It travels encrypted, and the app only lets your own account read it.|Viaja cifrada y solo tu cuenta puede leerla.
 You can sign out at any time and keep using Pockets on this phone.|Puedes cerrar sesión cuando quieras y seguir usando Pockets en este teléfono.
 With friends|Con amigos
 Friends find you by your email, and they see your name and photo.|Tus amigos te encuentran por tu correo y ven tu nombre y tu foto.
 A trip or a debt you share is seen only by the people in it.|Un viaje o una deuda que compartes solo lo ven las personas que están en él.
 Your accounts and balances are never shared.|Tus cuentas y saldos nunca se comparten.
-To reach your lock screen, the text of each reminder waits on our notification server until it is sent.|Para llegar a tu pantalla de bloqueo, el texto de cada recordatorio espera en nuestro servidor de notificaciones hasta que se envía.
+To reach your lock screen, the text of each reminder waits on our notification server until it is sent.|Para que te llegue a la pantalla de bloqueo, el texto de cada recordatorio se guarda en nuestro servidor de notificaciones hasta que se envía.
 That text can include the name and amount of a bill.|Ese texto puede incluir el nombre y el valor de una cuenta por pagar.
 Prices and exchange rates|Precios y tasas de cambio
 Stock prices are asked for by ticker, like AAPL, and exchange rates by currency.|Los precios de acciones se piden por su símbolo, como AAPL, y las tasas de cambio por moneda.
@@ -141,7 +141,7 @@ Tap Refresh to see what others added. Tap an expense to edit it or add your shar
 Weekly|Semanal
 Monthly pockets|Bolsillos mensuales
 Monthly|Mensual
-Just one amount for the whole month, from the 1st to the last day. No weekly budget to think about.|Un solo monto para todo el mes, del 1 al último día. Sin presupuesto semanal en qué pensar.
+Just one amount for the whole month, from the 1st to the last day. No weekly budget to think about.|Un solo monto para todo el mes, del 1 al último día, sin pensar en semanas.
 Budget for the month|Presupuesto del mes
 This month is already underway|Este mes ya empezó
 For this month only, it starts with:|Solo por este mes, empieza con:
@@ -165,7 +165,7 @@ Here's how your income splits|Así se reparte tu ingreso
 Each pocket takes a slice of what you earn. Slide to give one more or less; what's left goes to savings.|Cada bolsillo se lleva una parte de lo que ganas. Desliza para darle más o menos; lo que sobra va a tus ahorros.
 Money for each kind of spending. Type what you spend on each one a month. We suggested amounts from your income.|Plata para cada tipo de gasto. Escribe cuánto gastas en cada uno al mes. Te sugerimos montos según tu ingreso.
 Left to save|Queda para ahorrar
-Looks good|Se ve bien
+Looks good|Todo cuadra
 Each month|Cada mes
 Your split|Tu reparto
 Add your monthly income to see how it splits into your pockets. You can do it later in the Budget tab.|Agrega tu ingreso mensual para ver cómo se reparte en tus bolsillos. Puedes hacerlo después en la pestaña Presupuesto.
@@ -191,7 +191,7 @@ Phone & internet|Celular e internet
 All payments|Todos los pagos
 Shared trips|Viajes compartidos
 You're on track.|Vas bien.
-Go easy this week.|Con calma esta semana.
+Go easy this week.|Ve con cuidado esta semana.
 This week is tight.|Esta semana está apretada.
 Not a spending day|No es día de gasto
 Pockets, home|Pockets, inicio
@@ -273,8 +273,8 @@ Notifications on for this phone|Notificaciones activadas en este celular
 Notifications off for this phone|Notificaciones desactivadas en este celular
 Lock-screen notifications|Notificaciones en la pantalla bloqueada
 Checking the notification server…|Revisando el servidor de notificaciones…
-Couldn't reach the notification server. Check that the Worker is deployed.|No se pudo conectar con el servidor de notificaciones. Revisa que el Worker esté publicado.
-Reminders aren't set up on the server (the KV binding SCHED is missing).|Los recordatorios no están configurados en el servidor (falta el KV binding SCHED).
+Couldn't reach the notification server. Check that the Worker is deployed.|No se pudo conectar con el servidor de notificaciones. Inténtalo más tarde.
+Reminders aren't set up on the server (the KV binding SCHED is missing).|Los recordatorios todavía no están listos en el servidor.
 No reminders saved for this phone yet. Tap "Send reminders now".|Aún no hay recordatorios guardados para este celular. Toca "Enviar recordatorios ahora".
 Sending…|Enviando…
 Couldn't reach the notification server.|No se pudo conectar con el servidor de notificaciones.
@@ -346,7 +346,7 @@ Move 1 transaction to|Mover 1 movimiento a
 Move to category|Mover a categoría
 Move to subcategory|Mover a subcategoría
 Couldn't reach the Pockets server. Check your connection and try again.|No se pudo conectar con el servidor de Pockets. Revisa tu conexión e inténtalo otra vez.
-Quick add needs your Pockets account, so only your phone can create your inbox.|Agregar rápido necesita tu cuenta de Pockets, para que solo tu teléfono pueda crear tu buzón.
+Quick add needs your Pockets account, so only your phone can create your inbox.|Agregar rápido necesita tu cuenta de Pockets, para que solo tu teléfono pueda usarlo.
 Sign in first|Inicia sesión primero
 Turning on…|Activando…
 Quick add from iPhone|Agregar rápido
@@ -519,7 +519,7 @@ Running low this week|Te queda poco esta semana
 You haven't made a backup yet.|Aún no has hecho una copia de seguridad.
 (or the last day)|(o el último día)
 That photo couldn't be made small enough to send.|No se pudo reducir esa foto lo suficiente para enviarla.
-That GIF is too big to send (about 300 KB at most). Search GIFs instead.|Ese GIF es muy pesado para enviarlo (máximo unos 300 KB). Busca GIFs mejor.
+That GIF is too big to send (about 300 KB at most). Search GIFs instead.|Ese GIF pesa mucho para enviarlo (máximo unos 300 KB). Elige uno más liviano.
 GIPHY didn't accept that key.|GIPHY no aceptó esa clave.
 Too many GIF searches this hour. Try again in a bit.|Demasiadas búsquedas de GIF esta hora. Intenta en un rato.
 GIF search is not available right now.|La búsqueda de GIFs no está disponible ahora.
@@ -597,7 +597,7 @@ It wasn't turned on (cancelled).|No se activó (cancelado).
 Couldn't turn on the lock.|No se pudo activar el bloqueo.
 Pick at least one person to split with.|Elige al menos una persona para dividir.
 Me|Yo
-Firebase refused this. Check that the new security rules were published.|Firebase lo rechazó. Revisa que las nuevas reglas de seguridad estén publicadas.
+Firebase refused this. Check that the new security rules were published.|No se pudo guardar. Inténtalo otra vez en un rato.
 Sign in first.|Primero inicia sesión.
 Friend|Amigo
 That email doesn't look right.|Ese correo no parece correcto.
@@ -679,7 +679,7 @@ Prices|Precios
 Live prices come from Finnhub. Create a free account at|Los precios en vivo vienen de Finnhub. Crea una cuenta gratis en
 , copy your API key from the dashboard and paste it here. It stays on this phone. US stocks and ETFs update during market hours; others you can price yourself.|, copia tu API key del panel y pégala aquí. Se queda en este celular. Las acciones y ETFs de EE. UU. se actualizan en horario de mercado; a las demás les puedes poner precio tú.
 Live prices are already on for everyone. You only need your own key if you want a separate limit.|Los precios en vivo ya están activados para todos. Solo necesitas tu propia clave si quieres un límite aparte.
-Finnhub API key|API key de Finnhub
+Finnhub API key|Clave de Finnhub
 Paste your key|Pega tu clave
 Save key|Guardar clave
 Dollar rate (1 USD in COP)|Precio del dólar (1 USD en COP)
@@ -782,7 +782,7 @@ Save expense|Guardar gasto
 This pocket was deleted.|Este bolsillo fue eliminado.
 Nothing spent here today.|Nada gastado aquí hoy.
 Nothing spent here yet this week.|Nada gastado aquí esta semana.
-Over today’s amount by|Pasado del valor de hoy por
+Over today’s amount by|Te pasaste hoy por
 You can spend today|Puedes gastar hoy
 for today:|para hoy:
 left this week ÷|quedan esta semana ÷
@@ -793,7 +793,7 @@ Today isn’t a spending day|Hoy no es día de gasto
 Better not spend today|Mejor no gastes hoy
 No more spending days this week. It starts over on Monday.|No quedan días de gasto esta semana. Empieza de nuevo el lunes.
 What you spend today comes out of the days still to come.|Lo que gastes hoy sale de los días que faltan.
-Over budget this week|Pasado del presupuesto esta semana
+Over budget this week|Te pasaste esta semana
 Left this week|Queda esta semana
 Moved|Movido
 a week ×|a la semana ×
@@ -833,9 +833,9 @@ Money sent to a goal leaves the pockets and is saved there.|El dinero enviado a 
 Move|Mover
 Your pockets promise more than you have|Tus bolsillos prometen más de lo que tienes
 After this:|Después de esto:
-Give up some of this week's leftovers to close it.|Cede parte de los sobrantes de esta semana para cerrarlo.
+Give up some of this week's leftovers to close it.|Usa parte de lo que sobró esta semana para cubrirlo.
 Money you didn't spend this week stays in your account instead of being promised to the pocket. Only this week changes: next Monday every pocket starts again from its own budget.|El dinero que no gastaste esta semana se queda en tu cuenta en vez de estar prometido al bolsillo. Solo cambia esta semana: el próximo lunes cada bolsillo empieza otra vez con su presupuesto.
-Just enough|Lo justo
+Just enough|Solo lo necesario
 All leftovers|Todos los sobrantes
 left this week|quedan esta semana
 No pocket has money left this week.|Ningún bolsillo tiene dinero esta semana.
@@ -864,7 +864,7 @@ days|días
 Reference rates from|Tasas de referencia de
 , taken from Superintendencia Financiera reports and CDT comparison sites. Banks change their rates every week and they depend on the amount, so confirm the rate before investing.|, tomadas de reportes de la Superintendencia Financiera y comparadores de CDTs. Los bancos cambian sus tasas cada semana y dependen del monto, así que confirma la tasa antes de invertir.
 My bank isn't here · custom CDT|Mi banco no está · CDT personalizado
-Filled in from|Llenado con
+Filled in from|Completado con
 . Rates are from|. Las tasas son de
 : change the rate if your bank offers you a different one.|: cambia la tasa si tu banco te ofrece otra.
 Bank or entity|Banco o entidad
@@ -940,7 +940,7 @@ at|a
 Part of a purchase split across|Parte de una compra dividida en
 categories. Changes here only affect this part.|categorías. Los cambios aquí solo afectan esta parte.
 Went into|Entró a
-This came from a scheduled item. Editing it only changes this one; deleting it won't charge it again.|Esto vino de un programado. Editarlo solo cambia este; eliminarlo no lo vuelve a cobrar.
+This came from a scheduled item. Editing it only changes this one; deleting it won't charge it again.|Esto vino de un pago programado. Editarlo solo cambia este; eliminarlo no lo vuelve a cobrar.
 of this income was split into|de este ingreso se repartió en
 . Deleting it takes that money back out of those pockets|. Eliminarlo saca ese dinero de esos bolsillos
 Excel downloaded ·|Excel descargado ·
@@ -974,7 +974,7 @@ On · added when you pay with your iPhone|Activado · se agregan cuando pagas co
 Add purchases when you pay|Agrega tus compras al pagar
 When you pay with your iPhone or Apple Watch, an iPhone Shortcut asks which pocket it was for and sends the amount and the store to Pockets. They are added as expenses the next time you open Pockets.|Cuando pagas con tu iPhone o Apple Watch, un atajo del iPhone te pregunta para qué bolsillo era y le envía a Pockets el monto y la tienda. Se agregan como gastos la próxima vez que abras Pockets.
 Only Apple Pay taps. Purchases with the physical card, transfers and online payments still go in by hand. Purchases in another currency are not added.|Solo pagos con Apple Pay. Las compras con la tarjeta física, las transferencias y los pagos en línea se siguen agregando a mano. Las compras en otra moneda no se agregan.
-This needs your Pockets account, so only your phone can create your private inbox.|Esto necesita tu cuenta de Pockets, así solo tu celular puede crear tu buzón privado.
+This needs your Pockets account, so only your phone can create your private inbox.|Esto necesita tu cuenta de Pockets, así solo tu celular puede usar tu enlace privado.
 Turn on Apple Pay purchases|Activar compras con Apple Pay
 Pay from, for a new card|Pagar desde, para una tarjeta nueva
 A card whose name includes an account's name ("Visa Davivienda") goes to that account on its own.|Una tarjeta cuyo nombre incluye el de una cuenta ("Visa Davivienda") va sola a esa cuenta.
@@ -1023,7 +1023,7 @@ Start over with the setup|Empezar de nuevo con la configuración
 Start over|Empezar de nuevo
 Add a bank account first to have your pay arrive on its own. The amount is still used for your pockets.|Agrega primero una cuenta para que tu pago llegue solo. El monto igual se usa para tus bolsillos.
 Add the Shortcut|Agrega el atajo
-Add your Apple Pay purchases on their own?|¿Agregamos solas tus compras con Apple Pay?
+Add your Apple Pay purchases on their own?|¿Quieres que tus compras con Apple Pay se agreguen solas?
 All set|Todo listo
 Amount and day of the month|Monto y día del mes
 Another bank or wallet|Otro banco o billetera
@@ -1083,7 +1083,7 @@ Your own bank name|Nombre de tu banco
 Your own bill name|Nombre de tu gasto fijo
 Your own pocket|Tu propio bolsillo
 Your own pocket name|Nombre de tu bolsillo
-Account created · it backs up as you go|Cuenta creada · se respalda mientras avanzas
+Account created · it backs up as you go|Cuenta creada · todo se guarda mientras avanzas
 Banco de Bogotá|Banco de Bogotá
 Ask me to check each purchase|Pedirme revisar cada compra
 A notification in Pockets for every Apple Pay purchase. Tap it to fix a strange store name or change the details. A name you fix goes to that store's other purchases too, past and next.|Una notificación en Pockets por cada compra con Apple Pay. Tócala para corregir un nombre de tienda raro o cambiar los detalles. El nombre que corrijas se pone también en las demás compras de esa tienda, las anteriores y las próximas.
@@ -1148,7 +1148,7 @@ Currency|Moneda
 Weeks per month|Semanas por mes
 Appearance|Apariencia
 System|Sistema
-System follows your iPhone's light or dark mode.|Sistema sigue el modo claro u oscuro de tu iPhone.
+System follows your iPhone's light or dark mode.|Sistema: usa el modo claro u oscuro de tu iPhone.
 Privacy|Privacidad
 Cloud backup|Copia en la nube
 Turn on cloud backup|Activar copia en la nube
@@ -1162,7 +1162,7 @@ Backup downloaded to Files|Copia descargada en Archivos
 Back up|Hacer copia
 Restore|Restaurar
 Monthly reminder|Recordatorio mensual
-A one-tap "Back up now" on the day you pick|Un "Hacer copia ahora" de un toque el día que elijas
+A one-tap "Back up now" on the day you pick|Un botón para hacer tu copia con un toque, el día que elijas
 Reminder day|Día del recordatorio
 Day|Día
 Monthly backup reminder|Recordatorio mensual de copia
@@ -1196,10 +1196,10 @@ Fund manager|Administradora
 Type of fund|Tipo de fondo
 Risk profile|Perfil de riesgo
 Pesos|Pesos
-How much did you put in?|¿Cuánto pusiste?
+How much did you put in?|¿Cuánto invertiste?
 Date invested|Fecha de inversión
-Taken from|Sacado de
-Taken from account|Sacado de la cuenta
+Taken from|Salió de
+Taken from account|Salió de la cuenta
 Not from an account|No salió de una cuenta
 For a fund you already had: your accounts don't change.|Para un fondo que ya tenías: tus cuentas no cambian.
 Balance on your latest statement (optional)|Saldo en tu último extracto (opcional)
@@ -1268,7 +1268,7 @@ No account (just record it)|Sin cuenta (solo registrarlo)
 by|en
 Save balance|Guardar saldo
 Off|Apagado
-New scheduled item|Nuevo programado
+New scheduled item|Nuevo pago o ingreso
 Card to pay|Tarjeta a pagar
 owed|adeudado
 Add a credit card first, in the Accounts tab.|Primero agrega una tarjeta de crédito, en la pestaña Cuentas.
@@ -1381,10 +1381,10 @@ Turn on if you already added it to the monthly income you typed in Budget, so it
 No extra income registered this month.|No hay ingresos extra registrados este mes.
 Plan vs income|Plan vs ingreso
 Syncing…|Sincronizando…
-Needs your choice|Necesita tu elección
+Needs your choice|Tienes que elegir
 Offline · will sync later|Sin conexión · se sincroniza después
 Couldn't sync|No se pudo sincronizar
-Changes waiting to upload|Cambios esperando para subir
+Changes waiting to upload|Cambios por subir
 Sign in|Iniciar sesión
 Create account|Crear cuenta
 What should we call you?|¿Cómo te llamamos?
@@ -1427,7 +1427,7 @@ Not paid by you|No lo pagas tú
 Received|Recibido
 Skipped|Omitido
 Not ticked off|Sin marcar
-Auto|Auto
+Auto|Automático
 Reminder|Recordatorio
 Income ·|Ingreso ·
 Nothing on this day.|Nada este día.
@@ -1469,7 +1469,7 @@ Your pockets and their budgets|Tus bolsillos y sus presupuestos
 Remove pocket|Quitar bolsillo
 Add pocket|Agregar bolsillo
 Income vs plan and real shortfall|Ingreso vs plan y faltante real
-Over your income by|Pasado de tu ingreso por
+Over your income by|Te pasas de tu ingreso por
 Free for bills and saving|Libre para cuentas y ahorro
 Left to spend in pockets|Por gastar en bolsillos
 In your accounts|En tus cuentas
@@ -1492,16 +1492,16 @@ Split your income into pockets and see what's safe to spend today, this week and
 Same data everywhere|Los mismos datos en todas partes
 Sign in on your iPhone and here: every change backs up to the cloud and shows up on both.|Inicia sesión en tu iPhone y aquí: cada cambio se guarda en la nube y aparece en ambos.
 Trips with friends|Viajes con amigos
-Share expenses, see who owes what, settle up in the fewest payments and chat.|Comparte gastos, mira quién debe qué, salda cuentas con la menor cantidad de pagos y chatea.
+Share expenses, see who owes what, settle up in the fewest payments and chat.|Compartan gastos, vean quién le debe a quién, salden cuentas con pocos pagos y chateen.
 Net worth and investments|Patrimonio e inversiones
 Accounts, cards, stocks and CDTs in one place, with reports you can filter.|Cuentas, tarjetas, acciones y CDTs en un solo lugar, con reportes que puedes filtrar.
 On your computer and your iPhone|En tu computador y tu iPhone
 About Pockets|Acerca de Pockets
-Always know what's safe to spend.|Sabe siempre cuánto puedes gastar.
-Pockets splits your income into weekly pockets, tracks every account and card, and keeps you and your friends even on shared trips.|Pockets divide tu ingreso en bolsillos semanales, sigue cada cuenta y tarjeta, y los mantiene a ti y a tus amigos a paz y salvo en viajes compartidos.
+Always know what's safe to spend.|Siempre sabrás cuánto puedes gastar.
+Pockets splits your income into weekly pockets, tracks every account and card, and keeps you and your friends even on shared trips.|Pockets divide tu ingreso en bolsillos, lleva el control de cada cuenta y tarjeta, y te mantiene a paz y salvo con tus amigos en los viajes.
 Your account|Tu cuenta
 Sign in to Pockets|Inicia sesión en Pockets
-Use the same account as on your iPhone and your data comes right back. Only you can see it.|Usa la misma cuenta que en tu iPhone y tus datos vuelven de una. Solo tú puedes verlos.
+Use the same account as on your iPhone and your data comes right back. Only you can see it.|Usa la misma cuenta que en tu iPhone y tus datos vuelven al instante. Solo tú puedes verlos.
 Start without an account|Empezar sin cuenta
 Name for starting without an account|Nombre para empezar sin cuenta
 Quick tour|Recorrido rápido
@@ -1512,7 +1512,7 @@ Try it with sample data|Probar con datos de ejemplo
 Made-up accounts and expenses|Cuentas y gastos inventados
 Restore a backup file|Restaurar un archivo de copia
 Bring back a Pockets backup|Recupera una copia de Pockets
-Split your income into weekly pockets and always know what's safe to spend.|Divide tu ingreso en bolsillos semanales y sabe siempre cuánto puedes gastar.
+Split your income into weekly pockets and always know what's safe to spend.|Divide tu ingreso en bolsillos y ten siempre claro cuánto puedes gastar.
 With an account, your data is backed up to the cloud after every change, and only you can see it.|Con una cuenta, tus datos se guardan en la nube con cada cambio, y solo tú puedes verlos.
 More ways to start, without an account|Más formas de empezar, sin cuenta
 Other ways to start|Otras formas de empezar
@@ -1667,7 +1667,7 @@ Overdue|Vencido
 To pay|Por pagar
 After the cutoff|Después del corte
 Goes on the next statement|Va en el próximo extracto
-What's due|Lo que toca pagar
+What's due|Lo que debes pagar
 Minimum|Mínimo
 Everything|Todo
 Set the minimum payment on the card first (Accounts → the card → Edit).|Primero pon el pago mínimo en la tarjeta (Cuentas → la tarjeta → Editar).
@@ -1679,8 +1679,8 @@ No other pocket has money left right now.|Ningún otro bolsillo tiene plata disp
 Choose how much to move|Elige cuánto mover
 After this: covered ✓|Después de esto: cubierto ✓
 This pocket was deleted.|Este bolsillo fue eliminado.
-What counts|Qué cuenta
-What counts in net worth|Qué cuenta en el patrimonio
+What counts|Qué se incluye
+What counts in net worth|Qué se incluye en el patrimonio
 Include what people owe you|Incluir lo que te deben
 Include what people owe you in net worth|Incluir lo que te deben en el patrimonio
 What people owe you counts in your net worth. Change it in Accounts, next to Include investments.|Lo que te deben cuenta en tu patrimonio. Cámbialo en Cuentas, junto a Incluir inversiones.
@@ -1721,7 +1721,7 @@ Funds|Fondos
 % of portfolio|% del portafolio
 Portfolio value|Valor del portafolio
 Total return|Rentabilidad total
-(typed in)|(escrito)
+(typed in)|(a mano)
 Refresh prices|Actualizar precios
 Updating…|Actualizando…
 Connect live prices with a free Finnhub key. Until then, you can type prices in yourself.|Conecta precios en vivo con una clave gratis de Finnhub. Mientras tanto, puedes escribir los precios tú mismo.
@@ -1796,9 +1796,9 @@ Add tags to your expenses to see them here.|Agrega etiquetas a tus gastos para v
 Bills and subscriptions|Cuentas y suscripciones
 All your bills this month|Todas tus cuentas este mes
 / mo|/ mes
-Not you|No tú
+Not you|Otra persona
 Mark unpaid|Marcar sin pagar
-Items marked “Not you” are paid by someone else and aren’t in the total.|Lo marcado “No tú” lo paga otra persona y no está en el total.
+Items marked “Not you” are paid by someone else and aren’t in the total.|Lo marcado como “Otra persona” lo paga alguien más y no está en el total.
 Add bill or subscription|Agregar cuenta o suscripción
 By category|Por categoría
 Filter categories|Filtrar categorías
@@ -2139,7 +2139,7 @@ Friends sent you {0} debts|Tus amigos te enviaron {0} deudas
 Shared with {0}: who owes whom can't change. Delete it and make a new one if it's the other way around.|Compartida con {0}: no se puede cambiar quién le debe a quién. Elimínala y crea una nueva si es al revés.
 1 USD = {0} (typed in)|1 USD = {0} (escrito a mano)
 You're on track, {0}.|Vas bien, {0}.
-Go easy this week, {0}.|Con calma esta semana, {0}.
+Go easy this week, {0}.|Ve con cuidado esta semana, {0}.
 This week is tight, {0}.|Esta semana está apretada, {0}.
 · pays you back by {0}|· te paga el {0}
 · you pay back by {0}|· pagas el {0}
@@ -2294,7 +2294,7 @@ Pockets: {0}|Bolsillos: {0}
 Until {0}. From {1} it gets the full {2}.|Hasta el {0}. Desde el {1} recibe los {2} completos.
 Until Sunday. From Monday it gets the full {0}.|Hasta el domingo. Desde el lunes recibe los {0} completos.
 No more spending days until {0}. It starts over on {1}.|No quedan días de gasto hasta el {0}. Empieza de nuevo el {1}.
-Over budget until {0}|Pasado del presupuesto hasta el {0}
+Over budget until {0}|Te pasaste (hasta el {0})
 Left until {0}|Queda hasta el {0}
 left until {0}|quedan hasta el {0}
 Until {0}|Hasta el {0}
@@ -2401,7 +2401,7 @@ Remove part {0}|Quitar parte {0}
 Nothing spent here in {0} yet.|Aún nada gastado aquí en {0}.
 Spent {0} so far.|Gastado {0} hasta ahora.
 Next spending day: {0}, with {1}.|Próximo día de gasto: {0}, con {1}.
-Over budget in {0}|Pasado del presupuesto en {0}
+Over budget in {0}|Te pasaste en {0}
 Left in {0}|Queda en {0}
 , {0} {1} moved this month|, {0} {1} movido este mes
 From income{0}|De ingreso{0}
@@ -2433,7 +2433,7 @@ Each payment is added to {0} automatically on its day.|Cada pago se agrega a {0}
 {0} deleted · {1} taken back out of your pockets|{0} eliminado · {1} sacado de tus bolsillos
 . With {0}, each pocket's share is reduced to match|. Con {0}, la parte de cada bolsillo se reduce para cuadrar
 Tap again to delete (and remove {0} from pockets)|Toca otra vez para eliminar (y quitar {0} de los bolsillos)
-Like a Cajita: interest is added every day. {0} a day on this balance.|Como una Cajita: los intereses se suman cada día. {0} al día con este saldo.
+Like a Cajita: interest is added every day. {0} a day on this balance.|Como una cuenta de ahorro digital: los intereses se suman cada día. {0} al día con este saldo.
 That's more than the {0} you owe.|Eso es más de los {0} que debes.
 {0} goes to {1}. You'll owe {2}.|{0} va a {1}. Quedarás debiendo {2}.
 You'll be at {0}% of your goal.|Llegarás al {0}% de tu meta.
