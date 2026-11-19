@@ -75,7 +75,7 @@ export default function Welcome() {
   }, []);
 
   const option = (icon: string, title: string, sub: string, onClick: () => void) => (
-    <button onClick={onClick} disabled={!!busy} style={{ width: '100%', textAlign: 'left', border: 0, borderRadius: 22, padding: '14px 16px', background: 'var(--surface)', color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.12)' }}>
+    <button onClick={onClick} disabled={!!busy} style={{ width: '100%', textAlign: 'left', border: 0, borderRadius: 22, padding: '14px 16px', background: 'var(--surface)', color: TEXT, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, boxShadow: 'inset 0 0 0 1px rgba(31,95,90,.12)' }}>
       <span aria-hidden="true" style={{ fontSize: 22, width: 30, display: 'flex', justifyContent: 'center', color: 'var(--brand)' }}>{glyph(icon)}</span>
       <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ fontSize: 16, fontWeight: 700 }}>{title}</span>
@@ -87,7 +87,7 @@ export default function Welcome() {
 
   const link = { border: 0, background: 'transparent', color: NAVY, fontSize: 14.5, fontWeight: 700, cursor: 'pointer', textAlign: 'center' as const, padding: '8px 0', width: '100%' };
   const promise = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,.6)', borderRadius: 22, padding: '12px 14px', boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.08)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,.6)', borderRadius: 22, padding: '12px 14px', boxShadow: 'inset 0 0 0 1px rgba(31,95,90,.08)' }}>
       <span aria-hidden="true" style={{ display: 'flex', fontSize: 22, color: NAVY }}>{glyph('pk:lock')}</span>
       <span style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{ fontSize: 14, fontWeight: 700, lineHeight: 1.35, color: NAVY }}>Your data lives on your phone. We never sell or share it.</span>
@@ -114,7 +114,7 @@ export default function Welcome() {
   ];
   if (arriving) return <ArrivalScreen text="Bringing back your data…" />;
   if (desk) return (
-    <div className="noscroll force-light" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(160deg, #fbf9f3 0%, #ebe3d2 100%)' }}>
+    <div className="noscroll force-light" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(160deg, #f5f8f4 0%, #dcefe9 100%)' }}>
       <header style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 48px 0', display: 'flex', alignItems: 'center', gap: 12 }}>
         <img src="./pockets-mark.svg" alt="" width={40} height={40} />
         <span className="wordmark" style={{ fontSize: 26, fontWeight: 800, color: NAVY }}>Pockets</span>
@@ -128,7 +128,7 @@ export default function Welcome() {
           <p style={{ margin: 0, fontSize: 19, lineHeight: 1.5, color: NAVY2, maxWidth: 540 }}>Pockets splits your income into weekly pockets, tracks every account and card, and keeps you and your friends even on shared trips.</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 14, marginTop: 10 }}>
             {features.map(([icon, title, body]) => (
-              <div key={title} style={{ background: 'rgba(255,255,255,.6)', borderRadius: 24, padding: '18px 18px 20px', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'inset 0 0 0 1px rgba(35,46,122,.08)' }}>
+              <div key={title} style={{ background: 'rgba(255,255,255,.6)', borderRadius: 24, padding: '18px 18px 20px', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'inset 0 0 0 1px rgba(31,95,90,.08)' }}>
                 <span aria-hidden="true" style={{ fontSize: 26, display: 'flex', color: NAVY }}>{glyph(icon)}</span>
                 <span style={{ fontSize: 16.5, fontWeight: 800, letterSpacing: '-0.01em', color: NAVY }}>{title}</span>
                 <span style={{ fontSize: 14, lineHeight: 1.45, color: NAVY2 }}>{body}</span>
@@ -138,7 +138,7 @@ export default function Welcome() {
         </section>
 
         <section aria-label="Your account" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ background: 'rgba(255,255,255,.75)', borderRadius: 30, padding: '22px 20px 20px', boxShadow: '0 24px 60px rgba(35,46,122,.12), inset 0 0 0 1px rgba(35,46,122,.08)' }}>
+          <div style={{ background: 'rgba(255,255,255,.75)', borderRadius: 30, padding: '22px 20px 20px', boxShadow: '0 24px 60px rgba(31,95,90,.12), inset 0 0 0 1px rgba(31,95,90,.08)' }}>
             <span style={{ display: 'block', margin: '0 6px 12px', fontSize: 22, fontWeight: 800, letterSpacing: '-0.025em', color: NAVY }}>Sign in to Pockets</span>
             {busy ? <div style={{ padding: '40px 0', textAlign: 'center', fontSize: 15, fontWeight: 600, color: NAVY }}>{busy}</div>
               : <SignInForm onDone={afterSignIn} askName dark />}
@@ -162,7 +162,7 @@ export default function Welcome() {
   );
 
   return (
-    <div className="noscroll force-light" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(180deg, #f8f5ee 0%, #ebe3d2 100%)' }}>
+    <div className="noscroll force-light" style={{ position: 'absolute', inset: 0, zIndex: 80, overflowY: 'auto', background: 'linear-gradient(180deg, #f5f8f4 0%, #dcefe9 100%)' }}>
       <section aria-label="Start" style={{ minHeight: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12, padding: 'calc(var(--top) + 18px) 22px calc(var(--tb) + 24px)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
           <img src="./pockets-mark.svg" alt="" width={64} height={64} />

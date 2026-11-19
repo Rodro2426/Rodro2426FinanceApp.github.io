@@ -240,12 +240,12 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   --tex-tile: url("/tex/billete-tile-dark.svg");
   --hatch: repeating-linear-gradient(135deg, rgba(143,214,203,.035) 0 1px, transparent 1px 6px);
 }
-/* Brand screens (welcome, install guide) keep their cream look in both modes. */
+/* Brand screens (welcome, sign-in, lock) keep their light mint look in both modes. */
 .force-light {
   color-scheme: light;
   --brand: #1f5f5a; --action: #1f5f5a; --action-press: #174a46; --action-ink: #fff;
   --surface: #fff; --surface-solid: #fff; --surface-row: #fff; --on-text: #fff; --color-text: #201e1d;
-  --color-neutral-100: #f8f4f4; --color-neutral-200: #eae7e7; --color-neutral-300: #d7d3d3; --color-neutral-500: #9b9797; --color-neutral-600: #7d7979; --color-neutral-700: #605d5d;
+  --color-neutral-100: #eef4f2; --color-neutral-200: #e0e9e6; --color-neutral-300: #cbd8d4; --color-neutral-500: #8f9b98; --color-neutral-600: #6f7b78; --color-neutral-700: #55605d;
   --color-accent-700: #ae1800;
   color: var(--color-text);
 }

@@ -1,5 +1,5 @@
 /* Pockets website. Colours from the $100.000 bill ("Cien mil"): mint-white page, white cards, near-black ink,
-   deep teal for the brand and the close, lime only on the main action, lavender as the second colour. */
+   teal for the brand, the main action and the close, mint as its partner. */
 
 @font-face {
   font-family: "Plus Jakarta Sans";
@@ -24,9 +24,9 @@
   --action-ink: #fff;
   --navy: #1f5f5a;                /* brand teal (name kept so old rules still work) */
   --navy-deep: #123c38;
-  --lilac: #d9cdea;
-  --tile: #e3f1d2;
-  --tile-ink: #2f5e3c;
+  --lilac: #8fd6cb;           /* the closing headline's second line: mint on teal (name kept) */
+  --tile: #dcefe9;
+  --tile-ink: #1f5f5a;
   --font: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -43,7 +43,7 @@
 
   /* Theme-dependent roles (light values; dark below) */
   --brand-ink: var(--navy);        /* navy words, icons, focus ring */
-  --select: #d6ecbd;
+  --select: #cfe9e3;
   --scroll-thumb: #cbc6c2;
   --shadow: 32, 30, 29;            /* rgb of every soft shadow */
   --app-page: #f5f8f4;             /* the app's own ground, behind the phone status bar */
@@ -73,9 +73,9 @@
   --tex-tile: url("tex/billete-tile-dark.svg");
   --brand-ink: #8fd6cb;
   --action: #8fd6cb; --action-press: #7cc6ba; --action-ink: #0f2b28;
-  --tile: #22341a;
-  --tile-ink: #b5e28a;
-  --select: #2f4a1c;
+  --tile: #16302c;
+  --tile-ink: #8fd6cb;
+  --select: #1c3b37;
   --scroll-thumb: #403d3b;
   --shadow: 0, 0, 0;
   --app-page: #0e0e0d;
