@@ -1,7 +1,7 @@
 // The month's money in one place: income, plan, the two gaps, extra income splits and fixing mismatches.
 import type { Data, Income, Move } from './types';
-import { ctxAt, monthKey, type Ctx } from './dates';
-import { incomeMoves, monthPlanOf, monthStats, moveMonth, num, pocketStats, uid, weeksLeft } from './derive';
+import { addDays, ctxAt, makeCtx, monthKey, type Ctx } from './dates';
+import { incomeMoves, isHalf, isMonthly, monthPlanOf, monthStats, moveMonth, num, pocketStats, uid, weeksLeft } from './derive';
 import { largestRemainder, unitsFor } from './split';
 import { debtOutlook } from './debts';
 
@@ -33,11 +33,29 @@ export function monthSummary(d: Data, c: Ctx): MonthSummary {
   const base = num(d.incomeStr);
   const extra = sum(extraIncomes(d, c).map(t => t.amt));
   const plan = sum(d.pockets.map(p => monthPlanOf(p, c))) + sum(incomeSplits(d, c).map(m => m.amt));
-  const toSpend = sum(d.pockets.map(p => Math.max(0, monthStats(d, p.id, c).left)));
+  const toSpend = sum(d.pockets.map(p => pocketToSpend(d, p.id, c)));
   const debts = debtOutlook(d, c.today).net;
   const balance = sum(d.accounts.filter(a => !a.notMine).map(a => (a.type === 'card' ? -a.bal : a.bal))) + debts;
   const income = base + extra;
   return { base, extra, income, plan, planGap: income - plan, toSpend, balance, debts, real: toSpend - balance };
+}
+
+/** The last day of each period of this month's plan that has already ended. */
+function pastPeriodEnds(p: Data['pockets'][number], c: Ctx): string[] {
+  if (isMonthly(p)) return [];
+  if (isHalf(p)) return Number(c.today.slice(8)) > 15 ? [c.month + '-15'] : [];
+  // The plan counts c.weeks weeks; the ones not still ahead (this week included) are the finished ones, newest first.
+  let ahead = 0;
+  for (let sun = c.weekEnd; monthKey(sun) === c.month; sun = addDays(sun, 7)) ahead++;
+  return Array.from({ length: Math.max(0, c.weeks - ahead) }, (_, i) => addDays(c.weekEnd, -7 * (i + 1)));
+}
+/** What a pocket still promises this month. Without carry over, a finished period's leftover is not promised any more
+ *  (it stays in your accounts) and its overspend doesn't shrink later periods, so each finished period's result is taken out. */
+export function pocketToSpend(d: Data, id: string, c: Ctx): number {
+  const p = d.pockets.find(x => x.id === id);
+  if (!p) return 0;
+  const done = p.carry ? 0 : sum(pastPeriodEnds(p, c).map(day => pocketStats(d, id, makeCtx(c.weeks, day))?.left ?? 0));
+  return Math.max(0, monthStats(d, id, c).left - done);
 }
 
 /* ---------------- Registering extra income ---------------- */
