@@ -59,7 +59,7 @@ import { quickMenu } from './lib/quickadd';
 import { EditTxnSheet } from './sheets/EditTxn';
 import { AddSheet, CoverSheet, RefillSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AdjustSheet } from './sheets/AdjustSheet';
-import { AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet } from './sheets/MoneySheets';
+import { AcctActionsSheet, AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet, TransferSheet } from './sheets/MoneySheets';
 import * as I from './ui/icons';
 
 const TABS: [Tab, string, (p: { size?: number; sw?: number }) => ReactNode][] = [
@@ -109,6 +109,8 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'friendAdd': return <FriendAddSheet />;
     case 'debtPay': return <DebtPaySheet id={sheet.id} />;
     case 'pay': return <PaySheet id={sheet.id} />;
+    case 'transfer': return <TransferSheet from={sheet.from} id={sheet.id} />;
+    case 'acctActions': return <AcctActionsSheet id={sheet.id} />;
     case 'adjust': return <AdjustSheet id={sheet.id} />;
     case 'goal': return <GoalSheet id={sheet.id} />;
     case 'newGoal': return <NewGoalSheet />;

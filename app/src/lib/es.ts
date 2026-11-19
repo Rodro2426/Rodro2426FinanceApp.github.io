@@ -1,6 +1,24 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Move money|Mover plata
+Moved between accounts|Movido entre cuentas
+Tap again to undo it|Toca otra vez para deshacerlo
+See history|Ver historial
+Transfer|Transferencia
+Money into a card pays it off.|La plata que entra a una tarjeta la paga.
+Money out of a card is a cash advance: you owe more.|La plata que sale de una tarjeta es un avance: debes más.
+It isn't income or spending, so your pockets don't change.|No es ingreso ni gasto, así que tus bolsillos no cambian.
+Moving money between your accounts isn't income or spending, so it doesn't touch your pockets.|Mover plata entre tus cuentas no es ingreso ni gasto, así que no toca tus bolsillos.
+Add a second account to move money between them.|Agrega una segunda cuenta para mover plata entre ellas.
+To or from another account|Hacia o desde otra cuenta
+To another account or a card|A otra cuenta o a una tarjeta
+From a bank or cash account|Desde una cuenta de banco o efectivo
+Paid with this card|Pagado con esta tarjeta
+Paid from this account|Pagado desde esta cuenta
+Match what your bank shows|Igualarlo a lo que muestra tu banco
+Every movement on this account|Cada movimiento de esta cuenta
+Name, colour, photo and more|Nombre, color, foto y más
 Something went wrong|Algo salió mal
 This screen couldn't open. Your data is safe. Close it and try again; if it keeps happening, tell us what you tapped.|Esta pantalla no se pudo abrir. Tus datos están a salvo. Ciérrala e inténtalo otra vez; si sigue pasando, cuéntanos qué tocaste.
 A pocket can give up at most what it has left this month.|Un bolsillo puede dar como mucho lo que le queda este mes.
@@ -2069,6 +2087,15 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+Moved {0} to {1}|Moviste {0} a {1}
+Moved to {0}|Movido a {0}
+Moved from {0}|Movido desde {0}
+Move {0}|Mover {0}
+From {0} to {1} · {2}|De {0} a {1} · {2}
+{0}: {1}. {2}: {3}.|{0}: {1}. {2}: {3}.
+you'll owe {0}|deberás {0}
+{0} left|quedan {0}
+{0} owed|{0} por pagar
 This week: {0} → {1}|Esta semana: {0} → {1}
 Left in the month: {0} → {1}|Queda en el mes: {0} → {1}
 Your salary already arrives on its own on day {0}. Adding it here would count it twice; use this only for money on top of it.|Tu sueldo ya llega solo el día {0}. Si lo agregas aquí se contaría dos veces; usa esto solo para plata adicional.

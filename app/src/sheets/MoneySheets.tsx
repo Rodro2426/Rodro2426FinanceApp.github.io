@@ -26,7 +26,8 @@ import { findLogo, siteHost } from '../lib/logo';
 import { makeBackup, pickBackupFile, readBackup, restoreBackup } from '../lib/backup';
 import { dailyRate, earnsInterest, perDay } from '../lib/interest';
 import type { Account, AcctType, Currency } from '../lib/types';
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { addTransfer, deleteTransfer, isTransfer } from '../lib/transfer';
 import { AcctBadge, Fill, Bar, BigAmount, FieldLabel, GhostDanger, PrimaryBtn, Segmented, SmallAmount, Toggle, textInput } from '../ui/bits';
 import { SheetFrame } from './Sheet';
 import { SwipeRow } from '../ui/SwipeRow';
@@ -182,6 +183,7 @@ export function AcctSheet({ id }: { id: string }) {
         </div>
         <button onClick={() => openSheet({ name: 'adjust', id })} className="hv-n200" style={{ marginTop: 8, height: 50, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><I.Swap size={16} />Adjust balance</button>
         {card && <PrimaryBtn onClick={() => openSheet({ name: 'pay', id })} mt={8} h={50} fs={15}>Pay card</PrimaryBtn>}
+        {d.accounts.length > 1 && <button onClick={() => openSheet({ name: 'transfer', from: id })} className="hv-n200" style={{ marginTop: 8, height: 50, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Move money</button>}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '18px 4px 8px' }}>
           <span style={{ fontSize: 17, fontWeight: 700 }}>History</span>
           <span style={{ fontSize: 13, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{plural(list.length, 'transaction')}</span>
@@ -199,7 +201,7 @@ export function AcctSheet({ id }: { id: string }) {
                 )}
                 {(() => {
                   const row = (
-                <div onClick={() => (t.debt ? openSheet({ name: 'debt', id: t.debt }) : t.kind !== 'payment' && openSheet({ name: 'txn', kind: t.kind, id: t.id, back: { name: 'acct', id } }))} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === shown.length - 1 ? 'transparent' : LINE}`, cursor: t.kind === 'payment' ? 'default' : 'pointer' }}>
+                <div onClick={() => { if (t.debt) openSheet({ name: 'debt', id: t.debt }); else if (t.kind !== 'payment') openSheet({ name: 'txn', kind: t.kind, id: t.id, back: { name: 'acct', id } }); else if (d.payments.some(p => p.id === t.id && isTransfer(p))) openSheet({ name: 'transfer', id: t.id }); }} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: `1px solid ${i === shown.length - 1 ? 'transparent' : LINE}`, cursor: t.kind === 'payment' ? 'default' : 'pointer' }}>
                   <div style={{ width: 36, height: 36, borderRadius: 999, backgroundColor: tint(t.hue), position: 'relative', overflow: 'hidden', color: ink(t.hue), display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flex: 'none' }}>{t.icon != null ? glyph(t.icon) : (t.pocket || t.note).charAt(0).toUpperCase()}<Fill src={t.photoBg} /></div>
                   <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                     <span style={{ fontSize: 15, fontWeight: 600 }}>{t.note}</span>
@@ -633,6 +635,116 @@ export function NewGoalSheet() {
         <span style={{ margin: '10px 4px 0', fontSize: 13, color: 'var(--color-neutral-700)' }}>
           {t > 0 ? `Save ${fmt(Math.max(0, t - s0) / m)} a month to reach it in ${m === 1 ? '1 month' : m + ' months'}.` : 'How much do you want to save?'}
         </span>
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Move money between accounts ---------------- */
+/** New move (`from` picked) or an existing one (`id`): shows it and lets you undo it. */
+export function TransferSheet({ from: from0, id }: { from?: string; id?: string }) {
+  const { data: d } = useApp();
+  const old = id ? d.payments.find(p => p.id === id) : undefined;
+  const accts = d.accounts;
+  const [from, setFrom] = useState(old?.from ?? from0 ?? accts.find(a => a.type !== 'card')?.id ?? '');
+  const [to, setTo] = useState(old?.to ?? accts.find(a => a.id !== (old?.from ?? from0) && a.type !== 'card')?.id ?? accts.find(a => a.id !== (old?.from ?? from0))?.id ?? '');
+  const [amt, setAmt] = useState(old ? String(old.amt) : '');
+  const [sure, setSure] = useState(false);
+  // Bring the picked accounts into view in their rows (a card is often off to the right).
+  const rows = useRef<HTMLDivElement>(null);
+  useEffect(() => { rows.current?.querySelectorAll<HTMLElement>('[aria-pressed="true"]').forEach(el => el.scrollIntoView({ block: 'nearest', inline: 'nearest' })); }, [from, to]);
+  const fa = accts.find(a => a.id === from), ta = accts.find(a => a.id === to), v = roundAmt(num(amt));
+  if (old) {
+    return (
+      <SheetFrame title="Moved between accounts">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ background: 'var(--surface)', borderRadius: 22, padding: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em' }}>{fmt(old.amt)}</span>
+            <span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>{`From ${fa?.name ?? 'an account'} to ${ta?.name ?? 'an account'} · ${shortDate(old.date)}`}</span>
+          </div>
+          <span style={{ margin: '0 4px', fontSize: 13, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Moving money between your accounts isn't income or spending, so it doesn't touch your pockets.</span>
+          {isTransfer(old) && <GhostDanger onClick={() => {
+            if (!sure) { setSure(true); return; }
+            setData(x => deleteTransfer(x, old.id)); closeSheet(); flash('Move undone');
+          }}>{sure ? 'Tap again to undo it' : 'Undo this move'}</GhostDanger>}
+        </div>
+      </SheetFrame>
+    );
+  }
+  const effect = (a: Account | undefined, side: -1 | 1) => (a ? side * v * (a.type === 'card' ? -1 : 1) : 0);
+  const fromAfter = fa ? fa.bal + effect(fa, -1) : 0, toAfter = ta ? ta.bal + effect(ta, 1) : 0;
+  const tooMuch = !!fa && fa.type !== 'card' && v > fa.bal + 0.004;
+  const ok = !!fa && !!ta && from !== to && v > 0 && !tooMuch;
+  const save = () => {
+    if (!ok) return;
+    setData(x => addTransfer(x, { id: uid('pay'), ts: Date.now(), from, to, amt: v, date: todayISO() }));
+    closeSheet(); flash(`Moved ${fmt(v)} to ${ta!.name}`);
+  };
+  const owe = (a: Account, b: number) => (a.type === 'card' ? `you'll owe ${fmt(b)}` : `${fmt(b)} left`);
+  const picker = (label: string, value: string, set: (v: string) => void, other: string) => (
+    <>
+      <FieldLabel m="16px 4px 8px">{label}</FieldLabel>
+      <div className="noscroll" style={{ display: 'flex', gap: 8, overflowX: 'auto', margin: '0 -20px', padding: '0 20px 2px' }}>
+        {accts.filter(a => a.id !== other).map(a => {
+          const on = a.id === value;
+          return (
+            <button key={a.id} onClick={() => set(a.id)} aria-pressed={on} style={{ flex: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 8px', borderRadius: 999, border: `2px solid ${on ? ink(a.hue) : 'transparent'}`, background: 'var(--surface)', color: TEXT, cursor: 'pointer' }}>
+              <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={30} radius={999} bg={tint(a.hue)} color={ink(a.hue)} fs={13} />
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>{a.name}</span>
+                <span style={{ fontSize: 11.5, color: 'var(--color-neutral-700)', whiteSpace: 'nowrap' }}>{a.type === 'card' ? `${fmt(a.bal)} owed` : fmt(a.bal)}</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+  return (
+    <SheetFrame title="Move money" action={{ label: 'Move', onClick: save, disabled: !ok }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {accts.length < 2 ? <span style={{ margin: '4px', fontSize: 14, color: 'var(--color-neutral-700)' }}>Add a second account to move money between them.</span> : <div ref={rows} style={{ display: 'flex', flexDirection: 'column' }}>
+          <BigAmount value={amt} onChange={setAmt} autoFocus />
+          {picker('From', from, f => { setFrom(f); if (f === to) setTo(accts.find(a => a.id !== f)?.id ?? ''); }, '')}
+          {picker('To', to, setTo, from)}
+          <div style={{ margin: '16px 4px 0', fontSize: 13, lineHeight: 1.45, color: tooMuch ? RED : 'var(--color-neutral-700)' }}>
+            {tooMuch ? `${fa!.name} only has ${fmt(fa!.bal)}.`
+              : v > 0 && fa && ta ? `${fa.name}: ${owe(fa, fromAfter)}. ${ta.name}: ${owe(ta, toAfter)}.`
+              : ta?.type === 'card' ? 'Money into a card pays it off.' : fa?.type === 'card' ? 'Money out of a card is a cash advance: you owe more.' : "It isn't income or spending, so your pockets don't change."}
+          </div>
+          <PrimaryBtn onClick={save} disabled={!ok}>{v > 0 ? `Move ${fmt(v)}` : 'Move'}</PrimaryBtn>
+        </div>}
+      </div>
+    </SheetFrame>
+  );
+}
+
+/* ---------------- Long-press menu on an account ---------------- */
+export function AcctActionsSheet({ id }: { id: string }) {
+  const { data: d } = useApp();
+  const a = d.accounts.find(x => x.id === id);
+  if (!a) return null;
+  const card = a.type === 'card';
+  const row = (icon: ReactNode, label: string, sub: string, go: () => void) => (
+    <button onClick={go} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 10px', margin: '0 -10px', border: 0, borderRadius: 16, background: 'transparent', color: TEXT, cursor: 'pointer', textAlign: 'left' }}>
+      <span aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 13, background: 'var(--surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)', flex: 'none' }}>{icon}</span>
+      <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: 15.5, fontWeight: 700 }}>{label}</span>
+        <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>{sub}</span>
+      </span>
+    </button>
+  );
+  const svg = (p: ReactNode) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">{p}</svg>;
+  return (
+    <SheetFrame title={a.name}>
+      <span style={{ margin: '-2px 0 8px', fontSize: 14, color: 'var(--color-neutral-700)' }}>{card ? `${fmt(a.bal)} owed` : fmt(a.bal)}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {row(svg(<path d="M4 8h13l-3-3M20 16H7l3 3" />), 'Move money', card ? 'To or from another account' : 'To another account or a card', () => openSheet({ name: 'transfer', from: id }))}
+        {card && row(svg(<><rect x="3" y="6" width="18" height="12" rx="2.5" /><path d="M3 10h18" /></>), 'Pay card', 'From a bank or cash account', () => openSheet({ name: 'pay', id }))}
+        {row(svg(<path d="M12 5v14M5 12h14" />), 'Add an expense', card ? 'Paid with this card' : 'Paid from this account', () => setUI(u => ({ lastAdd: { ...u.lastAdd, acct: id }, sheet: { name: 'add' } })))}
+        {row(svg(<path d="M4 12h4l3-7 3 14 3-7h3" />), 'Adjust balance', 'Match what your bank shows', () => openSheet({ name: 'adjust', id }))}
+        {row(svg(<><path d="M4 6h16M4 12h10M4 18h7" /></>), 'See history', 'Every movement on this account', () => openSheet({ name: 'acct', id }))}
+        {row(svg(<path d="M4 20h4L19 9l-4-4L4 16z" />), 'Edit', 'Name, colour, photo and more', () => openSheet({ name: 'editAcct', id }))}
       </div>
     </SheetFrame>
   );

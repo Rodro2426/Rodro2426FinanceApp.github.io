@@ -2,6 +2,7 @@ import { getLang, tr } from './i18n';
 import { codeOf, formatNumber, infoOf, unitsOf } from './currency';
 import type { Account, Data, Expense, Income, Move } from './types';
 import { debtAcctLines } from './debts';
+import { transferEffect } from './transfer';
 import { POCKET_CAT } from './constants';
 import { addDays, ctxAt, daysBetween, fmtDay, inRange, monthKey, parse, type Ctx } from './dates';
 import { getData } from './store';
@@ -380,10 +381,14 @@ export function acctTxns(d: Data, id: string): { list: Txn[]; opening: number; c
           show: out ? -p.amt : p.amt, effect: (out ? -p.amt : p.amt) * (card ? -1 : 1), after: 0
         };
       }
+      // Into a card it's a card payment; anything else is a move between your accounts (lib/transfer.ts).
+      const toCard = d.accounts.find(x => x.id === p.to)?.type === 'card' && !(card && out);
+      const name = other ? other.name : 'account';
       return {
         kind: 'payment' as const, id: p.id, icon: null, photoBg: 'none', ts: p.ts, date: p.date,
-        note: out ? `Payment to ${other ? other.name : 'card'}` : `Payment from ${other ? other.name : 'account'}`,
-        pocket: 'Card payment', hue: 150, tags: [], category: 'Card payment', show: out ? -p.amt : p.amt, effect: -p.amt, after: 0
+        note: toCard ? (out ? `Payment to ${name}` : `Payment from ${name}`) : out ? `Moved to ${name}` : `Moved from ${name}`,
+        pocket: toCard ? 'Card payment' : 'Transfer', hue: 150, tags: [], category: toCard ? 'Card payment' : 'Transfer',
+        show: out ? -p.amt : p.amt, effect: a ? transferEffect(a, p) : 0, after: 0
       };
     }),
     ...debtAcctLines(d, id).map(x => ({

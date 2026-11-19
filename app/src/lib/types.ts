@@ -169,6 +169,8 @@ export type Sheet =
   | { name: 'friendAdd' }
   | { name: 'debtPay'; id: string }
   | { name: 'pay'; id: string }
+  | { name: 'transfer'; from?: string; id?: string }
+  | { name: 'acctActions'; id: string }
   | { name: 'adjust'; id: string }
   | { name: 'goal'; id: string }
   | { name: 'newGoal' }

@@ -40,7 +40,7 @@ export function exportData(d: Data, month: string, acctId: string): ExportPayloa
   }));
   const payments = d.payments.filter(p => !p.cdt).filter(p => months.includes(p.date.slice(0, 7)) && (acctId === 'all' || p.from === acctId || p.to === acctId))
     .sort((x, y) => (x.date < y.date ? -1 : 1))
-    .map((p, i) => ({ month: p.date.slice(0, 7), date: p.date, desc: 'Payment to ' + (acc(p.to)?.name || 'card'), amount: -p.amt, from: acc(p.from)?.name || '', to: acc(p.to)?.name || '', id: 'P' + (i + 1) }));
+    .map((p, i) => ({ month: p.date.slice(0, 7), date: p.date, desc: (acc(p.to)?.type === 'card' ? 'Payment to ' : 'Moved to ') + (acc(p.to)?.name || (p.fund ? 'investment fund' : 'account')), amount: -p.amt, from: acc(p.from)?.name || '', to: acc(p.to)?.name || '', id: 'P' + (i + 1) }));
   const pockets = months.length === 1 && acctId === 'all'
     ? d.pockets.map(p => ({ name: p.name, planned: monthPlanOf(p, ctxAt(months[0] + '-15')), spent: details.filter(x => x.pocket === p.name).reduce((a, x) => a + x.amount, 0) }))
     : null;

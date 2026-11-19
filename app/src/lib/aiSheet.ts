@@ -31,7 +31,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   // Each pocket counts once per period in the month: weeks, 2 quincenas, or 1 for a monthly pocket.
   const plannedMonth = d.pockets.reduce((a, p) => a + monthPlanOf(p, ctxAt(today)), 0);
   const incs = (d.incomes || []).filter(t => months.includes(t.date.slice(0, 7)) && (acctId === 'all' || t.a === acctId));
-  const pays = d.payments.filter(p => !p.cdt && months.includes(p.date.slice(0, 7)) && (acctId === 'all' || p.from === acctId || p.to === acctId));
+  const pays = d.payments.filter(p => !p.cdt && d.accounts.find(a => a.id === p.to)?.type === 'card' && months.includes(p.date.slice(0, 7)) && (acctId === 'all' || p.from === acctId || p.to === acctId));
   const days = months.reduce((a, m) => a + (m === curMonth ? Number(today.slice(8, 10)) : daysInMonth(m)), 0);
 
   const intro = [

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useLongPress } from '../ui/longPress';
 import { glyph } from '../ui/PocketIcons';
 import { useApp, openSheet, setUI } from '../lib/store';
 import { EyeToggle } from '../ui/EyeToggle';
@@ -108,7 +109,7 @@ export default function Accounts() {
       <FoldHead title="Debit and Cash" open={!isFolded('cash')} onToggle={() => toggle('cash')} summary={`${plural(cash.length, 'account')} · ${fmt(cash.filter(x => !x.notMine).reduce((a, x) => a + x.bal, 0))}`} />
       {!isFolded('cash') && <ListCard>
         {cash.map((a, i) => (
-          <div key={a.id} onClick={() => openSheet({ name: 'acct', id: a.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', borderBottom: `1px solid ${i === cash.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
+          <HoldRow key={a.id} id={a.id} onClick={() => openSheet({ name: 'acct', id: a.id })} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 0', borderBottom: `1px solid ${i === cash.length - 1 ? 'transparent' : LINE}`, cursor: 'pointer' }}>
             <AcctBadge photo={a.photo} initial={initialOf(a.name)} size={42} radius={14} bg={tint(a.hue)} color={ink(a.hue)} fs={16} />
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
               <span style={{ fontSize: 15, fontWeight: 600 }}>{a.name}</span>
@@ -119,7 +120,7 @@ export default function Accounts() {
               {earnsInterest(a) && <span style={{ fontSize: 11.5, fontWeight: 700, color: GREEN_TEXT, whiteSpace: 'nowrap' }}>+{fmt(a.earned || 0)} · {String(a.rate).replace('.', ',')}%</span>}
             </div>
             <I.Chevron size={16} color="var(--color-neutral-400)" />
-          </div>
+          </HoldRow>
         ))}
         {cash.length === 0 && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No bank, savings or cash accounts yet.</div>}
       </ListCard>}
@@ -128,8 +129,8 @@ export default function Accounts() {
       <FoldHead title="Credit cards" open={!isFolded('cards')} onToggle={() => toggle('cards')} summary={`${plural(cards.length, 'card')} · ${fmt(cards.filter(x => !x.notMine).reduce((a, x) => a + x.bal, 0))} owed`} />
       {!isFolded('cards') && cards.map(a => {
         const { k } = cardInk(a);
-        return <CardFace key={a.id} a={{ ...a, due: cardDueLabel(d, a, todayISO()) }} onClick={() => openSheet({ name: 'acct', id: a.id })}
-          action={<button onClick={e => { e.stopPropagation(); openSheet({ name: 'pay', id: a.id }); }} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: a.cardImg ? '#141414' : k, fontSize: 14, fontWeight: 700, cursor: 'pointer', textShadow: 'none' }}>Pay</button>} />;
+        return <HoldRow key={a.id} id={a.id}><CardFace a={{ ...a, due: cardDueLabel(d, a, todayISO()) }} onClick={() => openSheet({ name: 'acct', id: a.id })}
+          action={<button onClick={e => { e.stopPropagation(); openSheet({ name: 'pay', id: a.id }); }} className="hv-w75" style={{ height: 36, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--surface)', color: a.cardImg ? '#141414' : k, fontSize: 14, fontWeight: 700, cursor: 'pointer', textShadow: 'none' }}>Pay</button>} /></HoldRow>;
       })}
       </> },
         { id: 'investments', name: 'Investments', desc: 'Stocks and CDTs', node: <>
@@ -211,4 +212,10 @@ function GroupCard({ g }: { g: AssetGroup }) {
       )}
     </>
   );
+}
+
+/** An account you can tap to open, or press and hold (right-click on a computer) for quick actions. */
+function HoldRow({ id, onClick, style, children }: { id: string; onClick?: () => void; style?: CSSProperties; children: ReactNode }) {
+  const { style: noSelect, ...press } = useLongPress(() => openSheet({ name: 'acctActions', id }));
+  return <div {...press} onClick={onClick} style={{ ...noSelect, ...style }}>{children}</div>;
 }
