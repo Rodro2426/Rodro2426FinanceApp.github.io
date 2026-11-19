@@ -9,7 +9,8 @@ import type { Data } from '../lib/types';
 import { emptyData } from '../lib/seed';
 import { pickPhoto } from '../lib/photo';
 import { findLogo, siteHost } from '../lib/logo';
-import { ctxOf, fmt, num, periodsInMonth } from '../lib/derive';
+import { ctxOf, fmt, monthPlanOf, num, periodsInMonth } from '../lib/derive';
+import { monthName } from '../lib/dates';
 import { BANKS, BILLS, bankLogo, leftFree, makeAccount, makeBills, makeCard, makeIncome, makePockets, suggestPockets, weeklyOf, type BillPick, type PocketPick } from '../lib/setup';
 import { MoneyInput } from '../ui/MoneyInput';
 import { glyph } from '../ui/PocketIcons';
@@ -130,7 +131,8 @@ export default function Setup() {
     replaceData({ ...snap, settings: { ...getData().settings, ...snap.settings, setupStep: prev } });
     go(prev);
   };
-  const finish = () => { setData(x => ({ settings: { ...x.settings, setupStep: undefined } })); setUI({ setup: false, tab: 'home' }); flash('Your Pockets is ready'); };
+  // Pockets set up by the month: Home's cards open on the month instead of the week.
+  const finish = () => { setData(x => ({ settings: { ...x.settings, setupStep: undefined, ...(x.pockets.length && x.pockets.every(p => p.period === 'month') ? { homeFaces: { safe: 2, pockets: 2 } } : {}) } })); setUI({ setup: false, tab: 'home' }); flash('Your Pockets is ready'); };
 
   const idx = steps.indexOf(step);
   const name = d.settings.name && d.settings.name !== 'there' ? d.settings.name : '';
@@ -295,33 +297,43 @@ function AccountStep({ onDone }: { onDone: () => void }) {
 
 function CardStep({ onDone }: { onDone: () => void }) {
   const [yes, setYes] = useState<boolean | null>(null);
-  const [f, setF] = useState({ name: '', limit: '', owed: '', cut: '', pay: '' });
+  const empty = { name: '', limit: '', owed: '', cut: '', pay: '' };
+  const [f, setF] = useState(empty);
+  // Cards added in this step (they're saved right away, so "Add another" can follow).
+  const [added, setAdded] = useState<string[]>([]);
   const set = (k: keyof typeof f) => (v: string) => setF(x => ({ ...x, [k]: v }));
-  const save = () => {
-    if (yes && f.name.trim()) setData(x => ({ accounts: [...x.accounts, makeCard(x, f.name, num(f.owed), num(f.limit), num(f.cut), num(f.pay))] }));
-    onDone();
+  const add = () => {
+    if (!f.name.trim()) return;
+    setData(x => ({ accounts: [...x.accounts, makeCard(x, f.name, num(f.owed), num(f.limit), num(f.cut), num(f.pay))] }));
+    setAdded(a => [...a, f.name.trim()]); setF(empty);
   };
+  const save = () => { if (yes) add(); onDone(); };
   const day = (k: 'cut' | 'pay', label: string, ph: string) => (
     <label style={{ flex: 1, minWidth: 0 }}><span style={{ display: 'block', margin: '0 2px 6px', fontSize: 13, color: SOFT }}>{label}</span>
       <input inputMode="numeric" value={f[k]} placeholder={ph} aria-label={label} onChange={e => set(k)(e.target.value.replace(/\D/g, '').slice(0, 2))} style={field} /></label>
   );
   return <>
-    <H>Credit card</H>
-    <Sub>Pockets keeps track of what you owe and reminds you before the pay-by day.</Sub>
-    <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-      <Chip on={yes === true} onClick={() => setYes(true)}>Yes, I have one</Chip>
-      <Chip on={yes === false} onClick={() => setYes(false)}>No</Chip>
-    </div>
+    <H>Credit cards</H>
+    <Sub>Pockets keeps track of what you owe on each card and reminds you before the pay-by day.</Sub>
+    {!added.length && <>
+      <Label>Do you want to add a credit card?</Label>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <Chip on={yes === true} onClick={() => setYes(true)}>Yes</Chip>
+        <Chip on={yes === false} onClick={() => setYes(false)}>No</Chip>
+      </div>
+    </>}
+    {added.length > 0 && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>{added.map((n, k) => <Chip key={k} on onClick={() => {}}>{`✓ ${n}`}</Chip>)}</div>}
     {yes && <>
-      <Label>Card name</Label>
+      <Label>{added.length ? 'Another card' : 'Card name'}</Label>
       <input value={f.name} onChange={e => set('name')(e.target.value)} placeholder="Visa Davivienda" aria-label="Card name" style={field} />
       <Label>Credit limit</Label>
       <Money value={f.limit} onChange={set('limit')} label="Credit limit" />
       <Label>What you owe today</Label>
       <Money value={f.owed} onChange={set('owed')} label="What you owe today" />
       <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>{day('cut', 'Cutoff day', '25')}{day('pay', 'Pay-by day', '10')}</div>
+      <button onClick={add} disabled={!f.name.trim()} className="pr97" style={{ width: '100%', height: 48, marginTop: 16, borderRadius: 24, border: 0, background: 'var(--su-fill)', color: INK, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: f.name.trim() ? 1 : 0.4 }}>Add and add another</button>
     </>}
-    <Main onClick={save} disabled={yes === null || (yes && !f.name.trim())}>Continue</Main>
+    <Main onClick={save} disabled={yes === null || (yes && !f.name.trim() && !added.length)}>{added.length && !f.name.trim() ? 'Done with cards' : 'Continue'}</Main>
   </>;
 }
 
@@ -498,12 +510,14 @@ export function StartOverButton() {
 
 function Done({ name, onFinish }: { name: string; onFinish: () => void }) {
   const { data: d } = useApp();
-  const week = d.pockets.reduce((a, p) => a + num(p.weeklyStr), 0);
+  // Pockets by the week: what this week holds; any other period: the whole month (a weekly sum would mix periods).
+  const weekly = d.pockets.every(p => !p.period || p.period === 'week'), c = ctxOf();
+  const total = weekly ? d.pockets.reduce((a, p) => a + num(p.weeklyStr), 0) : d.pockets.reduce((a, p) => a + monthPlanOf(p, c), 0);
   return <>
     <H>{name ? `You're all set, ${name}` : "You're all set"}</H>
-    {week > 0 ? <>
-      <Sub>This week you can spend</Sub>
-      <div style={{ marginTop: 6, fontSize: 40, fontWeight: 800, letterSpacing: '-0.03em', color: MINT }}>{fmt(week)}</div>
+    {total > 0 ? <>
+      <Sub>{weekly ? 'This week you can spend' : `In ${monthName(c.month)} you can spend`}</Sub>
+      <div style={{ marginTop: 6, fontSize: 40, fontWeight: 800, letterSpacing: '-0.03em', color: MINT }}>{fmt(total)}</div>
       <Sub>Every expense comes out of a pocket. When a pocket runs out, Pockets helps you move money from another one.</Sub>
     </> : <Sub>You can add accounts, income and pockets anytime from their tabs.</Sub>}
     <Main onClick={onFinish}>Go to Pockets</Main>

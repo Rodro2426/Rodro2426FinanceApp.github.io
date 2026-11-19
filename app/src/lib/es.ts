@@ -1,6 +1,14 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Credit cards|Tarjetas de crédito
+Pockets keeps track of what you owe on each card and reminds you before the pay-by day.|Pockets lleva la cuenta de lo que debes en cada tarjeta y te recuerda antes de la fecha de pago.
+Do you want to add a credit card?|¿Quieres agregar una tarjeta de crédito?
+Another card|Otra tarjeta
+Add and add another|Agregar y agregar otra
+Done with cards|Listo con las tarjetas
+What’s left in all your pockets this month. It turns green, yellow or red as you spend, and starts over on the 1st. After the tour, swipe it to see today or the week.|Lo que queda en todos tus bolsillos este mes. Se pone verde, amarillo o rojo a medida que gastas, y vuelve a empezar el día 1. Después del tour, deslízala para ver hoy o la semana.
+Monthly budgets for each kind of spending. Tap one to see what you spent, or move leftovers to another pocket or a goal.|Presupuestos mensuales para cada tipo de gasto. Toca uno para ver lo que gastaste, o mueve lo que sobra a otro bolsillo o a una meta.
 Each pocket is what you can spend on one thing. It fills up again every week (or quincena).|Cada bolsillo es lo que puedes gastar en algo. Se llena otra vez cada semana (o quincena).
 Each pocket is what you can spend on one thing. It fills up again every month.|Cada bolsillo es lo que puedes gastar en algo. Se llena otra vez cada mes.
 More options|Más opciones
@@ -2033,6 +2041,8 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+In {0} you can spend|En {0} puedes gastar
+✓ {0}|✓ {0}
 How much is left for {0}?|¿Cuánto te queda para {0}?
 {0} is already underway, so you probably have less this month.|{0} ya empezó, así que probablemente tienes menos este mes.
 Days left · {0}|Días que quedan · {0}

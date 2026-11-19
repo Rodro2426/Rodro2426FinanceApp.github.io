@@ -21,19 +21,29 @@ const STOPS: Stop[] = [
   { title: 'You’re ready', text: 'Replay this tour anytime from Profile.' }
 ];
 
+/** The same stops when every pocket is set up by the month. */
+const MONTHLY: Record<string, Partial<Stop>> = {
+  'Safe to spend': { text: 'What’s left in all your pockets this month. It turns green, yellow or red as you spend, and starts over on the 1st. After the tour, swipe it to see today or the week.' },
+  'Your pockets': { text: 'Monthly budgets for each kind of spending. Tap one to see what you spent, or move leftovers to another pocket or a goal.' }
+};
+
 interface Box { x: number; y: number; w: number; h: number }
 const EASE = 'cubic-bezier(0.65, 0, 0.35, 1)';
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-/** The first element for this selector that is on screen (phone and desktop have their own copies of some buttons). */
-const find = (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)].find(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; }) ?? null;
+/** The first element for this selector that is on screen: phone and desktop have their own copies of some buttons, and
+ *  Home's swipeable cards keep the pages beside the one showing, peeking in at the edge (an element counts only if
+ *  its middle is on screen). */
+const find = (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)].find(e => { const r = e.getBoundingClientRect(); const mid = r.left + r.width / 2; return r.width > 0 && r.height > 0 && mid > 0 && mid < innerWidth; }) ?? null;
 
 export default function GuidedTour() {
-  const { ui } = useApp();
+  const { ui, data: d } = useApp();
+  // Pockets set up by the month: talk about the month, not the week.
+  const monthly = d.pockets.length > 0 && d.pockets.every(p => p.period === 'month');
   const desk = useDesk();
   const [i, setI] = useState(0);
   const [box, setBox] = useState<Box | null>(null);
   const card = useRef<HTMLDivElement>(null), inner = useRef<HTMLDivElement>(null);
-  const s = STOPS[i], last = i === STOPS.length - 1, first = i === 0;
+  const s = { ...STOPS[i], ...(monthly ? MONTHLY[STOPS[i].title] : {}) }, last = i === STOPS.length - 1, first = i === 0;
   const close = () => setUI({ guide: false });
 
   // Go where the stop is, then follow the target every frame (it can move while the screen scrolls).

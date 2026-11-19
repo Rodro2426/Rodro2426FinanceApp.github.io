@@ -190,10 +190,10 @@ export default function Home() {
       <Blocks page="home" title="Home" blocks={[
         { id: 'safe', name: 'Safe to spend', desc: 'Today, week and month cards', node: <>
       <Pager label="Safe to spend" names={['today', 'this week', 'this month']} initial={safeFace} pinned={safeFace} onPin={i => pinFace('safe', i)} pages={[
-        <SafeCard key="d" tone={todayTone} title="Safe to spend today" left={todayLeft} budget={todayBudget} spent={todaySpent}
+        <SafeCard key="d" tour tone={todayTone} title="Safe to spend today" left={todayLeft} budget={todayBudget} spent={todaySpent}
           sub={todayActive.length ? `of ${fmt(todayBudget)} for ${todayActive.length === all.length ? 'all your pockets' : todayActive.length === 1 ? '1 pocket' : `${todayActive.length} pockets`} today` : 'No pocket has today as a spending day'} />,
         <SafeCard key="w" tour tone={tone} title="Safe to spend this week" left={weekLeft} budget={weekBudget} spent={weekSpent} sub={`of ${fmt(weekBudget)} · ${c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left`} />,
-        <SafeCard key="m" tone={monthTone} title={`Left to spend in ${monthName(c.month)}`} left={monthLeft} budget={monthBudget} spent={monthBudget - monthLeft} sub={`of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in the month`} />
+        <SafeCard key="m" tour tone={monthTone} title={`Left to spend in ${monthName(c.month)}`} left={monthLeft} budget={monthBudget} spent={monthBudget - monthLeft} sub={`of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in the month`} />
       ]} />
 
       </> },
@@ -215,9 +215,9 @@ export default function Home() {
         { id: 'pockets', name: 'Pockets', desc: 'What is left in each pocket', node: <>
       <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={pocketPage === 0 ? 'Today' : pocketPage === 1 ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
       {all.length > 0 && <Pager label="Pockets" names={['today', 'this week', 'this month']} initial={pocketFace} pinned={pocketFace} onPin={i => pinFace('pockets', i)} onPage={setPocketPage} pages={[
-        <PocketGrid key="d" view="day" items={all.map((p, i) => ({ p, left: days[i].left, budget: days[i].allowance, off: !days[i].active ? (days[i].spentToday > 0 ? `Spent ${fmt(days[i].spentToday)} today` : days[i].next ? `Not today · ${dayLabel(days[i].next!.date, c).slice(0, 3)} ${fmt(days[i].next!.amount)}` : 'Not today') : undefined }))} />,
+        <PocketGrid key="d" tour view="day" items={all.map((p, i) => ({ p, left: days[i].left, budget: days[i].allowance, off: !days[i].active ? (days[i].spentToday > 0 ? `Spent ${fmt(days[i].spentToday)} today` : days[i].next ? `Not today · ${dayLabel(days[i].next!.date, c).slice(0, 3)} ${fmt(days[i].next!.amount)}` : 'Not today') : undefined }))} />,
         <PocketGrid key="w" view="week" items={all.map(p => ({ p, left: p.left, budget: p.budget }))} tour />,
-        <PocketGrid key="m" view="month" items={all.map((p, i) => ({ p, left: months[i].left, budget: months[i].budget }))} />
+        <PocketGrid key="m" tour view="month" items={all.map((p, i) => ({ p, left: months[i].left, budget: months[i].budget }))} />
       ]} />}
       {all.length === 0 && <EmptyHint text="No pockets yet. Create them in the Budget tab." onClick={() => setUI({ tab: 'budget' })} />}
 
