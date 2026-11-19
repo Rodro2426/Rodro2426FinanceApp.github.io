@@ -92,7 +92,7 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + 12px); scroll-behavior: smooth; }
 /* Ground texture ("Billete Pockets"): printed like a peso bill, built only from Pockets' own pieces.
-   The hero plate (colour wash, pocket watermark, microtext ring, rosette) sits once at the top;
+   The hero plate (colour wash, pocket watermark, microtext ring) sits once at the top;
    the tile (wave lines and microtext) and a fine diagonal line screen run down the whole page. */
 body {
   margin: 0;

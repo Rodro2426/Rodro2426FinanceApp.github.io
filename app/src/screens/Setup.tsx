@@ -1,5 +1,5 @@
 // First-time setup after creating an account (or starting from scratch): one question at a time, each a glass pill
-// that opens into a card, over a dark screen with the glowing Pockets flower and a breathing mint/lavender light.
+// that opens into a card, over a dark screen with the glowing Pockets logo and a breathing mint/lavender light.
 // The motion copies the approved mock (mocks/welcome-motion/compositions/opt-a.html). Every step saves as you go.
 import { refreshUsdRate } from '../lib/invest';
 import { CURRENCIES, CURRENCY_LIST, codeOf, type CurrencyCode } from '../lib/currency';

@@ -1,5 +1,5 @@
 // "Add Pockets to your Home Screen": shown in iPhone Safari (and right away after Start free on the website, ?install=1).
-// Same look as the first-time setup (screens/Setup.tsx): the glowing flower, glass cards, mint and lavender light,
+// Same look as the first-time setup (screens/Setup.tsx): the glowing logo, glass cards, mint and lavender light,
 // light or dark with the app's theme. The account is made in the installed app, so it's only signed into once.
 
 /** True when running as the installed home-screen app (not inside Safari). */

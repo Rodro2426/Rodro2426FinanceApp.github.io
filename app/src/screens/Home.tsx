@@ -275,7 +275,7 @@ function SafeCard({ tone, title, left: leftNow, budget, spent: spentNow, sub, to
   const left = useSettled(leftNow);
   const spent = useSettled(spentNow);
   return (
-    <div data-tour={tour ? 'safe' : undefined} className={`bill bill-${tone.key}`} style={{ position: 'relative', flex: 1, backgroundColor: tone.bg, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background-color .4s ease' }}>
+    <div data-tour={tour ? 'safe' : undefined} className="safe-p" style={{ position: 'relative', flex: 1, backgroundColor: tone.bg, color: tone.label, borderRadius: 28, padding: '22px 22px 20px', display: 'flex', flexDirection: 'column', gap: 6, transition: 'background-color .4s ease' }}>
       <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
         <span style={{ fontSize: 14, color: tone.label, fontWeight: 600 }}>{title}</span>
         <EyeToggle size={34} tone={tone.label} />
@@ -323,12 +323,12 @@ function EmptyHint({ text, onClick }: { text: string; onClick: () => void }) {
   return <div onClick={onClick} style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, fontSize: 14, color: 'var(--color-neutral-700)', cursor: 'pointer' }}>{text}</div>;
 }
 
-/** The desktop safe-to-spend panel: the engraved card, wide, with a Today / Week / Month switch instead of swiping. */
+/** The desktop safe-to-spend panel: the card with the faint p, wide, with a Today / Week / Month switch instead of swiping. */
 function DeskSafe({ view, setView, tone, title, left: leftNow, budget, spent: spentNow, sub }: { view: 'day' | 'week' | 'month'; setView: (v: 'day' | 'week' | 'month') => void; tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string }) {
   const left = useSettled(leftNow);
   const spent = useSettled(spentNow);
   return (
-    <section data-tour="safe" className={`dh-safe bill bill-${tone.key}`} style={{ backgroundColor: tone.bg, color: tone.label }}>
+    <section data-tour="safe" className="dh-safe safe-p" style={{ backgroundColor: tone.bg, color: tone.label }}>
       <div className="dh-safe-top">
         <span className="dh-safe-title">{title}</span>
         <div className="dh-switch"><Segmented items={[['day', 'Today'], ['week', 'This week'], ['month', 'This month']]} value={view} onPick={setView} h={34} mt={0} /></div>

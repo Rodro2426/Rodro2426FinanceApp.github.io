@@ -455,9 +455,6 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   /* Red is for "+ Agregar" and destructive actions only: links, tags and small actions read in ink. */
   .desk .sec-link, .desk .d-ink { color: var(--color-text) !important; text-decoration: underline; text-decoration-color: var(--color-neutral-400); text-underline-offset: 3px; }
   .desk .tagline { color: var(--color-neutral-700) !important; }
-  /* The page plate without the corner rosette (it was cut off under the first section). */
-  :root { --tex-hero: url("/tex/billete-hero-desk.svg"); }
-  :root[data-theme="dark"] { --tex-hero: url("/tex/billete-hero-desk-dark.svg"); }
   /* Análisis: Categories and Reports as two rows in one card, not two same-size tiles. */
   .desk .hubs { grid-template-columns: 1fr !important; gap: 0 !important; background: var(--surface); border-radius: 24px; padding: 4px 8px; }
   .desk .hubs > * { background: transparent !important; box-shadow: none !important; border-radius: 16px !important; }
@@ -489,6 +486,15 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*="var(--surface)"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-text) 10%, transparent); }
 @media (prefers-reduced-transparency: reduce) { :root { --surface: var(--surface-solid); } [style*="var(--surface)"] { backdrop-filter: none; -webkit-backdrop-filter: none; } }
 
+/* ---------- The safe-to-spend card: the logo's p, large and faint, in the corner (in the card's own ink) ---------- */
+.safe-p { overflow: hidden; isolation: isolate; }
+.safe-p::before {
+  content: ''; position: absolute; z-index: -1; pointer-events: none; right: 18px; bottom: -52px; width: 104px; height: 150px;
+  background: currentColor; opacity: .1; -webkit-mask: url("/pockets-p.svg") center / contain no-repeat; mask: url("/pockets-p.svg") center / contain no-repeat;
+}
+.dh-safe.safe-p { position: relative; }
+.dh-safe.safe-p::before { right: 40px; top: auto; bottom: -64px; width: 140px; height: 202px; }
+
 /* ---------- The add button: a teal disc with a white +, in the logo's colours ---------- */
 .add-flower {
   position: relative; width: 62px; height: 62px; flex: none; padding: 0; border: 0; border-radius: 999px; cursor: pointer;
@@ -518,7 +524,7 @@ input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*
 /* The edge light: a conic gradient turning slowly behind the glass. */
 .setup-spin { position: absolute; left: 50%; top: 50%; width: 1500px; height: 1500px; margin: -750px 0 0 -750px; will-change: transform; background: conic-gradient(from 0deg, #8fd6cb, #7a68b8, #d9cdea, #2f8f84, #8fd6cb); animation: setup-turn 14s linear infinite; }
 @keyframes setup-turn { to { transform: rotate(360deg); } }
-.setup-logo { width: 64px; height: 64px; animation: setup-turn 90s linear infinite; }
+.setup-logo { width: 64px; height: 64px; }
 .setup-logo img { display: block; filter: drop-shadow(0 0 12px var(--su-glow)) drop-shadow(0 0 26px var(--su-glow2)); }
 .setup input::placeholder { color: var(--su-ph); }
 /* The setup's income-split sliders: the track fills with the pocket's colour up to the thumb (--c, --p set inline). */
