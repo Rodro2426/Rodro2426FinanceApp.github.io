@@ -4,7 +4,7 @@ import type { Account, Bill, Data, Pocket } from './types';
 import { ACCT_KIND, HUES } from './constants';
 import { logoUrl } from './logo';
 import { tr } from './i18n';
-import { roundAmt, uid } from './derive';
+import { isCOP, moneyScale, roundAmt, uid } from './derive';
 import { addDays, todayISO } from './dates';
 
 /** Banks people in Colombia pick most; the logo comes from the bank's website. `cash` is the wallet. */
@@ -32,8 +32,12 @@ const POCKETS: [string, string, number][] = [
   ['Personal care', 'pk:bottle', 0.04], ['Coffee', 'pk:coffee', 0.02], ['Pets', 'pk:paw', 0.04], ['Clothes', 'pk:shirt', 0.04], ['Gym', 'pk:gym', 0.03]
 ];
 
-/** An amount rounded to $5.000, so the suggestions read like amounts a person would choose. */
-export const roundBudget = (n: number) => Math.max(0, Math.round(n / 5000) * 5000);
+/** An amount rounded so the suggestions read like amounts a person would choose: to $5.000 in pesos,
+ *  otherwise to two leading digits (660 stays 660, 3.317 becomes 3.300), so a dollar or euro budget never rounds to 0. */
+export function roundBudget(n: number) {
+  const step = isCOP() ? 5000 : Math.max(1, 10 ** (Math.floor(Math.log10(Math.max(1, n))) - 1));
+  return Math.max(0, Math.round(n / step) * step);
+}
 
 /** The suggestions with a monthly amount worked out from the monthly income (0 when there's no income yet). */
 export function suggestPockets(income: number): PocketPick[] {
@@ -80,10 +84,10 @@ export function makeCard(d: Data, name: string, owed: number, limit: number, cut
  * usually already has that pay in it, so it must not be added again.
  */
 export function makeIncome(total: number, pay: 'month' | 'half', day: number, acct: string, today = todayISO()): Pick<Data, 'incomeStr'> & { bills: Bill[] } {
-  const amt = Math.max(0, Math.round(total));
+  const amt = Math.max(0, roundAmt(total)), u = moneyScale(), half = Math.floor((amt * u) / 2) / u;
   const base = { kind: 'Income' as const, hue: 150, paidMonths: [], acct, auto: true, salary: true, start: addDays(today, 1) };
   const bills: Bill[] = !amt ? [] : pay === 'half'
-    ? [{ ...base, id: uid('i'), name: tr('Salary') + ' · 1', amt: Math.floor(amt / 2), dueDay: 15 }, { ...base, id: uid('i'), name: tr('Salary') + ' · 2', amt: amt - Math.floor(amt / 2), dueDay: 30 }]
+    ? [{ ...base, id: uid('i'), name: tr('Salary') + ' · 1', amt: half, dueDay: 15 }, { ...base, id: uid('i'), name: tr('Salary') + ' · 2', amt: roundAmt(amt - half), dueDay: 30 }]
     : [{ ...base, id: uid('i'), name: tr('Salary'), amt, dueDay: Math.min(31, Math.max(1, Math.round(day) || 1)) }];
   return { incomeStr: String(amt), bills };
 }
@@ -103,7 +107,7 @@ export const weeklyOf = (monthly: number, weeks: number) => Math.max(0, roundAmt
 /** The chosen bills as monthly reminders that are ticked off by hand (paid from `acct`). */
 export function makeBills(picks: BillPick[], acct: string, today = todayISO()): Bill[] {
   return picks.filter(b => b.on && clean(b.name) && b.amt > 0).map((b, i) => ({
-    id: uid('b'), name: tr(clean(b.name)), kind: b.kind, amt: Math.round(b.amt), dueDay: Math.min(31, Math.max(1, Math.round(b.day) || 1)),
+    id: uid('b'), name: tr(clean(b.name)), kind: b.kind, amt: roundAmt(b.amt), dueDay: Math.min(31, Math.max(1, Math.round(b.day) || 1)),
     hue: hueAt(i + 2), paidMonths: [], acct: acct || undefined, auto: false, start: today, cat: b.cat, sub: b.sub
   }));
 }
