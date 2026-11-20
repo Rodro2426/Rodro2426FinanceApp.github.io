@@ -1,7 +1,7 @@
 // The month's money in one place: income, plan, the two gaps, extra income splits and fixing mismatches.
 import type { Data, Income, Move } from './types';
 import { addDays, ctxAt, makeCtx, monthKey, type Ctx } from './dates';
-import { incomeMoves, isHalf, isMonthly, monthPlanOf, monthStats, moveMonth, pocketStats, uid, weeksLeft } from './derive';
+import { incomeMoves, isHalf, isMonthly, monthPlanOf, monthStats, moveMonth, periodAt, pocketStats, uid, weeksLeft } from './derive';
 import { largestRemainder, unitsFor } from './split';
 import { debtOutlook } from './debts';
 import { baseIncome } from './salary';
@@ -51,11 +51,13 @@ function pastPeriodEnds(p: Data['pockets'][number], c: Ctx): string[] {
   return Array.from({ length: Math.max(0, c.weeks - ahead) }, (_, i) => addDays(c.weekEnd, -7 * (i + 1)));
 }
 /** What a pocket still promises this month. Without carry over, a finished period's leftover is not promised any more
- *  (it stays in your accounts) and its overspend doesn't shrink later periods, so each finished period's result is taken out. */
+ *  (it stays in your accounts) and its overspend doesn't shrink later periods, so each finished period's result is taken out.
+ *  With carry over, only periods that ended before it was turned on are taken out; later ones rolled into this period. */
 export function pocketToSpend(d: Data, id: string, c: Ctx): number {
   const p = d.pockets.find(x => x.id === id);
   if (!p) return 0;
-  const done = p.carry ? 0 : sum(pastPeriodEnds(p, c).map(day => pocketStats(d, id, makeCtx(c.weeks, day))?.left ?? 0));
+  const from = p.carry ? periodAt(p, p.carry)[0] : null;
+  const done = sum(pastPeriodEnds(p, c).filter(day => !from || day < from).map(day => pocketStats(d, id, makeCtx(c.weeks, day))?.left ?? 0));
   return Math.max(0, monthStats(d, id, c).left - done);
 }
 

@@ -344,4 +344,7 @@ describe('left to spend in pockets ignores finished weeks', () => {
     const x = d('2026-10-26');
     expect(monthSummary(x, c5).toSpend).toBe(x.pockets.reduce((a, p) => a + Math.max(0, monthStats(x, p.id, c5).left), 0));
   });
+  it('carry over turned on this week: weeks before it still don\'t count', () => {
+    expect(monthSummary(d('2026-11-16'), c5).toSpend).toBe(244000);
+  });
 });
