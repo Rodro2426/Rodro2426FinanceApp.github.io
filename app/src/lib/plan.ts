@@ -47,7 +47,9 @@ function pastPeriodEnds(p: Data['pockets'][number], c: Ctx): string[] {
   if (isHalf(p)) return Number(c.today.slice(8)) > 15 ? [c.month + '-15'] : [];
   // The plan counts c.weeks weeks; the ones not still ahead (this week included) are the finished ones, newest first.
   let ahead = 0;
-  for (let sun = c.weekEnd; monthKey(sun) === c.month; sun = addDays(sun, 7)) ahead++;
+  // A week counts for the month of its Monday; one that started last month leaves every week of this month still ahead.
+  for (let mon = c.weekStart; monthKey(mon) === c.month; mon = addDays(mon, 7)) ahead++;
+  if (monthKey(c.weekStart) < c.month) ahead = c.weeks;
   return Array.from({ length: Math.max(0, c.weeks - ahead) }, (_, i) => addDays(c.weekEnd, -7 * (i + 1)));
 }
 /** What a pocket still promises this month. Without carry over, a finished period's leftover is not promised any more

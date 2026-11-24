@@ -64,7 +64,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
 
   // Pockets against their plan for the period.
   sections.push({
-    title: 'Pockets (budgets)', note: `Each pocket starts over every week, every 15 days or every month. "Planned" is its budget × its periods in each month (a weekly pocket counts one week per Sunday). A pocket created partway through a period gets only what was set for the rest of that period.`,
+    title: 'Pockets (budgets)', note: `Each pocket starts over every week, every 15 days or every month. "Planned" is its budget × its periods in each month (a weekly pocket counts one week per Monday). A pocket created partway through a period gets only what was set for the rest of that period.`,
     header: ['Pocket', 'Starts over', 'Budget per period', 'Planned for period', 'Spent', 'Left vs plan', '% used', 'Expenses', 'Top category'],
     rows: d.pockets.map(p => {
       const es = exp.filter(e => e.p === p.id), spent = es.reduce((a, e) => a + e.amt, 0);

@@ -3,12 +3,12 @@ import { glyph, lastEmoji, POCKET_ICONS } from '../ui/PocketIcons';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useApp, setData, setUI, openSheet, closeSheet, flash } from '../lib/store';
 import { HUES, LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { curCode, moneyScale, curInfo, isMonthly, periodsInMonth, DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
+import { curCode, moneyScale, curInfo, isMonthly, periodsInMonth, DAY_LETTERS, DAY_NAMES, catOf, editMove, incomeMoves, moveInPeriod, moveMax, moveMonth, moveTime, undoMove, allStats, monthAhead, byDateDesc, chargeAccount, ctxOf, curSymbol, dayLabel, dayStats, fmt, isHalf, monthExpenses, monthPlanOf, monthStats, num, pctOf, periodAt, pocketCtx, pocketStats, weekdayOf, roundAmt, sortedExpenses, uid, weekExpenses, weeksLeft, type DayStats, myExpenses } from '../lib/derive';
 import { formatNumber } from '../lib/currency';
 import { latestRate } from '../lib/trm';
 import { salaryBills } from '../lib/salary';
 import { refreshUsdRate } from '../lib/invest';
-import { addDays, ctxAt, daysBetween, daysInMonth, monthName, parse, relDay, shortDate, todayISO } from '../lib/dates';
+import { addDays, ctxAt, daysBetween, daysInMonth, monthName, relDay, shortDate, todayISO } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
 import { COVER, NEXT, addExtraIncome, borrowNext, coverFirst, coverWith, leftovers, monthSummary, overBy, refillFrom, splitAmong, suggestCover, suggestRefill, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
@@ -416,7 +416,7 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
   const [view, setView] = useState<PocketView>(v0 ?? 'week');
   if (!s) return <SheetFrame title="Pocket"><div style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>This pocket was deleted.</div></SheetFrame>;
   const k = ink(s.hue);
-  const ds = dayStats(d, id, c, s), ms = monthStats(d, id, c);
+  const ds = dayStats(d, id, c, s), ms = monthStats(d, id, c), ma = monthAhead(d, id, c);
   const pk = d.pockets.find(x => x.id === id), mon = isMonthly(pk), half = isHalf(pk) || mon, until = `Until ${shortDate(s.to)}`;
   // A monthly pocket's period is the month itself, so it has just Today and the month (its period view).
   const vw: PocketView = mon && view === 'month' ? 'week' : view;
@@ -461,11 +461,12 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
               <span style={pill(k)}>{`Fills up again ${shortDate(addDays(s.to, 1))}`}</span>
             </div>
           </> : <>
-            {big(ms.left < 0 ? `Over budget in ${monthName(c.month)}` : `Left in ${monthName(c.month)}`, ms.left)}
-            <div style={{ marginTop: 12 }}><Bar pct={pctOf(ms.spent, ms.budget)} track="var(--glass)" fill={k} /></div>
+            {big(ma.left < 0 ? `Over budget in ${monthName(c.month)}` : `Left in ${monthName(c.month)}`, ma.left)}
+            <div style={{ marginTop: 12 }}><Bar pct={pctOf(ma.budget - ma.left, ma.budget)} track="var(--glass)" fill={k} /></div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
               <span style={pill(k)}>Planned {fmt(monthPlanOf(pk, c))}</span>
               <span style={pill(k)}>Spent {fmt(ms.spent)}</span>
+              {Math.abs(ma.saved) >= 0.5 && <span style={pill(k)}>{ma.saved > 0 ? `Left over earlier ${fmt(ma.saved)}` : `Over earlier ${fmt(-ma.saved)}`}</span>}
               {Math.abs(ms.extra) > 0.004 && <span style={pill(k)}>{`${ms.extra > 0 ? 'From other pockets' : 'Given to other pockets'} ${fmt(ms.extra, true)}`}</span>}
             </div>
             <span style={{ marginTop: 8, fontSize: 12.5, color: k }}>{half ? `${fmt(num(pk?.weeklyStr))} every 15 days × 2` : `${fmt(num(pk?.weeklyStr))} a week × ${c.weeks} weeks`}{ms.extra ? `, ${ms.extra > 0 ? 'plus' : 'minus'} ${fmt(Math.abs(ms.extra))} moved this month` : ''}.</span>
@@ -965,11 +966,11 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const spendDays = (a: string, b: string) => { let n = 0; for (let x = a; x <= b; x = addDays(x, 1)) if (days.includes(weekdayOf(x))) n++; return n; };
   const mid = isNew && c.today > ps;
   // A weekly pocket entered per month, created after the month's first week started: ask what's left for the
-  // month and share it over the month's remaining weeks (those whose Sunday is still in this month).
-  const monthEnd = `${c.month}-${String(daysInMonth(c.month)).padStart(2, '0')}`, lastWeek = addDays(monthEnd, -parse(monthEnd).getDay() - 6);
+  // month and share it over the month's remaining weeks (those whose Monday is still in this month).
+  const monthEnd = `${c.month}-${String(daysInMonth(c.month)).padStart(2, '0')}`, lastWeek = addDays(monthEnd, -weekdayOf(monthEnd));
   const weeksLeftHere = Math.max(1, daysBetween(ps, lastWeek) / 7 + 1);
-  // (A week that ends next month already belongs to next month: no question then.)
-  const midMonth = isNew && perMonth && period === 'week' && ps <= lastWeek && (c.today > ps || weeksLeftHere < weeksNow);
+  // (A week that started last month still belongs to last month: no question then.)
+  const midMonth = isNew && perMonth && period === 'week' && ps.slice(0, 7) === c.month && (c.today > ps || weeksLeftHere < weeksNow);
   const monthAmt = num(monthStr);
   const suggested = midMonth ? roundAmt(monthAmt * (daysBetween(c.today, monthEnd) + 1) / daysInMonth(c.month)) : roundAmt(w * spendDays(c.today, pe) / Math.max(1, spendDays(ps, pe)));
   const startAmt = startStr === null ? suggested : num(startStr);

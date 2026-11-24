@@ -1,6 +1,8 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+in weeks that already closed this month|en semanas que ya cerraron este mes
+in periods that already closed this month|en periodos que ya cerraron este mes
 Income, bills, spending and your streak|Ingresos, cuentas, gastos y tu racha
 Stamped|Sellado
 Nothing spent|Sin gastos
@@ -2177,6 +2179,10 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+You had {0} left over|Te sobraron {0}
+You went {0} over|Te pasaste {0}
+Left over earlier {0}|Sobró antes {0}
+Over earlier {0}|Te pasaste antes {0}
 As it was · {0}|Como estaba · {0}
 Cover {0} first ({1})|Cubrir primero {0} ({1})
 {0} goes to {1} for this week only, so it's out of the red. The other {2} stays saved.|{0} van a {1} solo por esta semana, así sale del rojo. Los otros {2} quedan guardados.
@@ -2645,6 +2651,7 @@ Review mismatches ({0})|Revisar diferencias ({0})
 Welcome back, {0}|Bienvenido de nuevo, {0}
 Left to spend in {0}|Por gastar en {0}
 of {0} · {1} left in the month|de {0} · quedan {1} en el mes
+of {0} · {1} left in {2}|de {0} · quedan {1} en {2}
 All of {0}|Todo {0}
 Not today · {0} {1}|Hoy no · {0} {1}
 Your share {0}% of {1}|Tu parte {0}% de {1}

@@ -142,7 +142,7 @@ export function budgetWeeks(d: Data, c: Ctx, n: number, pocket: string | null) {
   const ids = pocket ? [pocket] : d.pockets.map(p => p.id);
   const out: { week: string; budget: number; spent: number; left: number }[] = [];
   for (let i = n - 1; i >= 0; i--) {
-    const ws = addDays(weekStart(c.today), -7 * i), cw = ctxAt(i === 0 ? c.today : addDays(ws, 6));
+    const ws = addDays(weekStart(c.today), -7 * i), cw = ctxAt(i === 0 ? c.today : ws);
     const we = addDays(ws, 6);
     let budget = 0, spent = 0;
     for (const id of ids) {

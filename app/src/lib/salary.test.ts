@@ -45,9 +45,10 @@ describe('this month came in different', () => {
     expect(monthSummary(after, c).income).toBe(3_600_000);
     expect(monthSummary(after, c).plan).toBe(monthSummary(d, c).plan - 400_000);
     expect(monthStats(after, 'g', c).budget).toBe(monthStats(d, 'g', c).budget - 300_000);
-    // spread over the 2 weeks left in November (Nov 16 and Nov 23), whole pesos, adding up exactly
-    expect(pocketStats(after, 'g', ctxAt('2026-11-18'))!.budget).toBe(200_000 - 150_000);
-    expect(pocketStats(after, 'g', ctxAt('2026-11-25'))!.budget).toBe(200_000 - 150_000);
+    // spread over the 3 weeks left in November (Nov 16, 23 and 30), whole pesos, adding up exactly
+    expect(pocketStats(after, 'g', ctxAt('2026-11-18'))!.budget).toBe(200_000 - 100_000);
+    expect(pocketStats(after, 'g', ctxAt('2026-11-25'))!.budget).toBe(200_000 - 100_000);
+    expect(pocketStats(after, 'g', ctxAt('2026-12-01'))!.budget).toBe(200_000 - 100_000); // week Nov 30 is November's
     expect(pocketStats(after, 'g', ctxAt('2026-11-10'))!.budget).toBe(200_000); // before it was set
     expect(pocketStats(after, 'g', ctxAt('2026-12-09'))!.budget).toBe(200_000); // next month is normal again
     expect(monthSummary(after, ctxAt('2026-12-09')).income).toBe(4_000_000);

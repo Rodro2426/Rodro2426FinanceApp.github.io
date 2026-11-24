@@ -15,13 +15,13 @@ const base = (): Data => ({
 });
 
 describe('weeks counted from the calendar', () => {
-  it('counts the weeks whose Sunday is in the month', () => {
-    expect(weeksIn('2024-04')).toBe(4); // starts on a Monday; Sundays 7,14,21,28 (the Apr 29 week ends May 5)
-    expect(weeksIn('2024-05')).toBe(4); // 5,12,19,26
-    expect(weeksIn('2026-11')).toBe(5); // 1,8,15,22,29
-    expect(weeksIn('2026-03')).toBe(5); // starts on a Sunday: 1,8,15,22,29
-    expect(weeksIn('2026-02')).toBe(4); // 1,8,15,22
-    expect(weeksIn('2016-02')).toBe(4); // leap, starts Monday: 7,14,21,28
+  it('counts the weeks whose Monday is in the month', () => {
+    expect(weeksIn('2024-04')).toBe(5); // starts on a Monday; Mondays 1,8,15,22,29 (the Apr 29 week ends May 5)
+    expect(weeksIn('2024-05')).toBe(4); // 6,13,20,27
+    expect(weeksIn('2026-11')).toBe(5); // 2,9,16,23,30
+    expect(weeksIn('2026-03')).toBe(5); // starts on a Sunday: 2,9,16,23,30
+    expect(weeksIn('2026-02')).toBe(4); // starts on a Sunday: 2,9,16,23
+    expect(weeksIn('2016-02')).toBe(5); // leap, starts Monday: 1,8,15,22,29
   });
   it('week number never passes the weeks; last week has 1 left', () => {
     const c = ctxAt('2026-11-30'); // Monday of week 5
@@ -51,9 +51,9 @@ describe('weeks counted from the calendar', () => {
 });
 
 describe('month view after a month that starts on a Monday', () => {
-  it('May 2024: the Apr 29 week belongs to May (its Sunday is May 5), so plan and carry agree', () => {
-    // April's 4 weeks (Apr 1..28) unspent = 400000 carried; May plan 4 weeks = 400000; May budget = 800000.
-    expect(weeksIn('2024-04') + weeksIn('2024-05')).toBe(8);
-    expect(monthStats(base(), 'wk', ctxAt('2024-05-10')).budget).toBe(800000);
+  it('May 2024: the Apr 29 week belongs to April (its Monday), so plan and carry agree', () => {
+    // April's 5 weeks (Apr 1..29) unspent = 500000 carried into May 6; May plan 4 weeks = 400000; May budget = 900000.
+    expect(weeksIn('2024-04') + weeksIn('2024-05')).toBe(9);
+    expect(monthStats(base(), 'wk', ctxAt('2024-05-10')).budget).toBe(900000);
   });
 });

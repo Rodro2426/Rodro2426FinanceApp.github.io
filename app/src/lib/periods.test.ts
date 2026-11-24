@@ -187,14 +187,16 @@ describe('mid-month weekly start: risks', () => {
     expect(monthPlanOf(d.pockets[0], ctxAt('2026-11-24'))).toBe(80000);
     expect(pocketStats(d, 'm', ctxAt('2026-11-24'))!.budget).toBe(80000);
   });
-  it('a week that starts last month but ends this month belongs to this month (Mon Jun 29 - Sun Jul 5)', () => {
-    // July 2026: Sundays 5, 12, 19, 26 = 4 weeks. Created Wed Jul 1: 2 weeks left (Jun 29 and Jul 6... until Jul 20) -> 3 weeks
-    const d = mk({ from: '2026-06-29', amt: 100000, until: '2026-07-20' });
-    expect(monthPlanOf(d.pockets[0], ctxAt('2026-07-01'))).toBe(400000); // 4 weeks x 100.000
-    expect(pocketStats(d, 'm', ctxAt('2026-07-01'))!.budget).toBe(100000);
+  it('a week that starts last month but ends this month belongs to last month (Mon Jun 29 - Sun Jul 5)', () => {
+    // July 2026: Mondays 6, 13, 20, 27 = 4 weeks. Created Wed Jul 1 (week of Jun 29, 40.000 for it, no question asked).
+    const d = mk({ from: '2026-06-29', amt: 40000 });
+    expect(monthPlanOf(d.pockets[0], ctxAt('2026-07-01'))).toBe(800000); // July is untouched: 4 weeks x 200.000
+    expect(pocketStats(d, 'm', ctxAt('2026-07-01'))!.budget).toBe(40000);
+    expect(pocketStats(d, 'm', ctxAt('2026-07-08'))!.budget).toBe(200000);
   });
-  it('June does not take the July plan', () => {
-    const d = mk({ from: '2026-06-29', amt: 100000, until: '2026-07-20' });
-    expect(monthPlanOf(d.pockets[0], ctxAt('2026-06-15'))).toBe(200000 * weeksIn('2026-06'));
+  it('June takes the cut for that first week, July does not', () => {
+    // June 2026: Mondays 1, 8, 15, 22, 29 = 5 weeks x 200.000, minus (200.000 - 40.000) for the first week
+    const d = mk({ from: '2026-06-29', amt: 40000 });
+    expect(monthPlanOf(d.pockets[0], ctxAt('2026-06-15'))).toBe(200000 * weeksIn('2026-06') - 160000);
   });
 });

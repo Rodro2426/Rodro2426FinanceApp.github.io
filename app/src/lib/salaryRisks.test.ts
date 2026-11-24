@@ -56,24 +56,33 @@ describe('salary risks', () => {
     for (const period of [undefined, 'half', 'month'] as const) {
       const d0 = world('month', 4_000_000, period);
       const d = { ...d0, ...setMonthIncome(d0, '2026-11', 3_700_001, { g: -100_001 }, '2026-11-10') } as Data;
-      const starts = period === 'half' ? ['2026-11-01', '2026-11-16'] : period === 'month' ? ['2026-11-01'] : ['2026-10-26', '2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23'];
+      const starts = period === 'half' ? ['2026-11-01', '2026-11-16'] : period === 'month' ? ['2026-11-01'] : ['2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23', '2026-11-30'];
       const got = starts.reduce((a, s) => a + monthAdjShare(d, d.pockets[0], s), 0);
-      expect(got, String(period)).toBe(period === 'half' || period === 'month' ? -100_001 : -100_001);
+      expect(got, String(period)).toBe(-100_001);
       expect(monthStats(d, 'g', ctxAt('2026-11-18')).budget - monthStats(d0, 'g', ctxAt('2026-11-18')).budget).toBe(-100_001);
     }
   });
-  it('weekly: month set on the last Monday (its Sunday is in December) still takes the cut somewhere', () => {
+  it('weekly: month set on the last Monday (a November week) puts the whole cut in that week', () => {
     const d0 = world('month', 4_000_000);
     const d = { ...d0, ...setMonthIncome(d0, '2026-11', 3_900_000, { g: -100_000 }, '2026-11-30') } as Data;
-    const weeks = ['2026-10-26', '2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23'];
+    const weeks = ['2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23', '2026-11-30'];
     const periods = weeks.reduce((a, s) => a + monthAdjShare(d, d.pockets[0], s), 0);
     // monthStats says the month lost 100.000, so the weeks must add up to the same cut
     expect(periods).toBe(monthStats(d, 'g', ctxAt('2026-11-18')).budget - monthStats(d0, 'g', ctxAt('2026-11-18')).budget);
+    expect(periods).toBe(-100_000);
+  });
+  it('weekly: month set on Tue Dec 1 (week Nov 30 is November) still spreads the cut over December weeks', () => {
+    const d0 = world('month', 4_000_000);
+    const d = { ...d0, ...setMonthIncome(d0, '2026-12', 3_900_000, { g: -100_000 }, '2026-12-01') } as Data;
+    const weeks = ['2026-11-30', '2026-12-07', '2026-12-14', '2026-12-21', '2026-12-28'];
+    expect(weeks.reduce((a, s) => a + monthAdjShare(d, d.pockets[0], s), 0)).toBe(-100_000);
+    expect(monthAdjShare(d, d.pockets[0], '2026-11-30')).toBe(0);
+    expect(monthStats(d, 'g', ctxAt('2026-12-10')).budget - monthStats(d0, 'g', ctxAt('2026-12-10')).budget).toBe(-100_000);
   });
   it('a cut bigger than what is left of the pocket drives the week negative (no clamp)', () => {
     const d0 = world('month', 4_000_000);
     const d = { ...d0, ...setMonthIncome(d0, '2026-11', 3_000_000, { g: -1_000_000 }, '2026-11-18') } as Data;
-    expect(pocketStats(d, 'g', ctxAt('2026-11-18'))!.budget).toBe(200_000 - 500_000);
+    expect(pocketStats(d, 'g', ctxAt('2026-11-18'))!.budget).toBe(200_000 - 333_334) // -1.000.000 over 3 weeks (Nov 16, 23, 30);
   });
   it('salaryShare with a month override splits whole units', () => {
     const d0 = world('half', 4_000_000);

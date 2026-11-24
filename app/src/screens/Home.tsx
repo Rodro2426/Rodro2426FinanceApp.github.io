@@ -3,7 +3,7 @@ import { glyph } from '../ui/PocketIcons';
 import { getLang } from '../lib/i18n';
 import { EyeToggle } from '../ui/EyeToggle';
 import { LINE, RED, ink, tint } from '../lib/constants';
-import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthExpenses, monthStats, pctOf, weekShare, type PocketStats } from '../lib/derive';
+import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthAhead, monthExpenses, pctOf, weekShare, type PocketStats } from '../lib/derive';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { daysBetween, daysInMonth, relDay } from '../lib/dates';
 import type { PocketView } from '../lib/types';
@@ -59,8 +59,11 @@ export default function Home() {
   // Card colour follows how much of the week's budget is still safe to spend.
   const leftRatio = weekBudget > 0 ? weekLeft / weekBudget : 0;
   const tone = toneOf(leftRatio);
-  const months = all.map(p => monthStats(d, p.id, c));
+  // "This month" from today: what's still to spend until the month's last week (a week belongs to the month of its Monday).
+  const months = all.map(p => monthAhead(d, p.id, c));
   const monthBudget = months.reduce((a, x) => a + x.budget, 0), monthLeft = months.reduce((a, x) => a + x.left, 0);
+  const monthSaved = months.reduce((a, x) => a + x.saved, 0);
+  const savedNote = Math.abs(monthSaved) < 0.5 ? undefined : <SavedNote amt={monthSaved} weeks={all.every(p => p.period === 'week')} />;
   const monthTone = toneOf(monthBudget > 0 ? monthLeft / monthBudget : 0);
   const monthDaysLeft = daysBetween(c.today, `${c.month}-${String(daysInMonth(c.month)).padStart(2, '0')}`) + 1;
   // The page each card opens on can be pinned (Profile isn't needed: the pin sits by the dots).
@@ -105,7 +108,7 @@ export default function Home() {
       ? { tone: todayTone, title: 'Safe to spend today', left: todayLeft, budget: todayBudget, spent: todaySpent, sub: todayActive.length ? `of ${fmt(todayBudget)} for ${todayActive.length === all.length ? 'all your pockets' : todayActive.length === 1 ? '1 pocket' : `${todayActive.length} pockets`} today` : 'No pocket has today as a spending day' }
       : view === 'week'
         ? { tone, title: 'Safe to spend this week', left: weekLeft, budget: weekBudget, spent: weekSpent, sub: `of ${fmt(weekBudget)} · ${c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left` }
-        : { tone: monthTone, title: `Left to spend in ${monthName(c.month)}`, left: monthLeft, budget: monthBudget, spent: monthBudget - monthLeft, sub: `of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in ${monthName(c.month)}` };
+        : { tone: monthTone, title: `Left to spend in ${monthName(c.month)}`, left: monthLeft, budget: monthBudget, spent: monthBudget - monthLeft, sub: `of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in ${monthName(c.month)}`, extra: savedNote };
     const name = d.settings.name.trim();
     const verdict = tone === SAFE_TONES.green ? (name ? `You're on track, ${name}.` : "You're on track.")
       : tone === SAFE_TONES.yellow ? (name ? `Go easy this week, ${name}.` : 'Go easy this week.')
@@ -194,7 +197,7 @@ export default function Home() {
         <SafeCard key="d" tour tone={todayTone} title="Safe to spend today" left={todayLeft} budget={todayBudget} spent={todaySpent}
           sub={todayActive.length ? `of ${fmt(todayBudget)} for ${todayActive.length === all.length ? 'all your pockets' : todayActive.length === 1 ? '1 pocket' : `${todayActive.length} pockets`} today` : 'No pocket has today as a spending day'} />,
         <SafeCard key="w" tour tone={tone} title="Safe to spend this week" left={weekLeft} budget={weekBudget} spent={weekSpent} sub={`of ${fmt(weekBudget)} · ${c.daysLeft === 1 ? '1 day' : `${c.daysLeft} days`} left`} />,
-        <SafeCard key="m" tour tone={monthTone} title={`Left to spend in ${monthName(c.month)}`} left={monthLeft} budget={monthBudget} spent={monthBudget - monthLeft} sub={`of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in the month`} />
+        <SafeCard key="m" tour tone={monthTone} title={`Left to spend in ${monthName(c.month)}`} left={monthLeft} budget={monthBudget} spent={monthBudget - monthLeft} sub={`of ${fmt(monthBudget)} · ${monthDaysLeft === 1 ? '1 day' : `${monthDaysLeft} days`} left in the month`} extra={savedNote} />
       ]} />
 
       </> },
@@ -271,7 +274,7 @@ function Pager({ pages, label, names, initial = 0, onPage, pinned, onPin }: { pa
   );
 }
 
-function SafeCard({ tone, title, left: leftNow, budget, spent: spentNow, sub, tour }: { tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string; tour?: boolean }) {
+function SafeCard({ tone, title, left: leftNow, budget, spent: spentNow, sub, tour, extra }: { tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string; tour?: boolean; extra?: ReactNode }) {
   // Number and bar wait for the add/edit sheet to drop away, then move together (see useSettled).
   const left = useSettled(leftNow);
   const spent = useSettled(spentNow);
@@ -286,6 +289,7 @@ function SafeCard({ tone, title, left: leftNow, budget, spent: spentNow, sub, to
       <div style={{ marginTop: 10, height: 10, borderRadius: 999, background: 'var(--surface)', overflow: 'hidden' }}>
         <div className="bar-fill" style={{ height: 10, borderRadius: 999, width: '100%', clipPath: `inset(0 calc(100% - ${pctOf(spent, budget)}) 0 0 round 999px)`, background: tone.bar }} />
       </div>
+      {extra}
     </div>
   );
 }
@@ -324,8 +328,24 @@ function EmptyHint({ text, onClick }: { text: string; onClick: () => void }) {
   return <div onClick={onClick} style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, fontSize: 14, color: 'var(--color-neutral-700)', cursor: 'pointer' }}>{text}</div>;
 }
 
+/** Under "This month": what the month's finished weeks left over (or went over). That money is gone once a week closes. */
+function SavedNote({ amt, weeks }: { amt: number; weeks: boolean }) {
+  const up = amt > 0;
+  return (
+    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, background: 'var(--surface)', borderRadius: 16, padding: '10px 12px', color: 'var(--color-neutral-900)' }}>
+      <span aria-hidden="true" style={{ width: 30, height: 30, borderRadius: 999, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: up ? 'var(--stamp-tint)' : 'var(--color-accent-100)', color: up ? 'var(--stamp)' : 'var(--color-accent-800)' }}>
+        {up ? <I.Check size={16} sw={2.6} /> : <I.Alert size={16} sw={2.4} />}
+      </span>
+      <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <b style={{ fontSize: 14 }}>{up ? `You had ${fmt(amt)} left over` : `You went ${fmt(-amt)} over`}</b>
+        <small style={{ fontSize: 12, color: 'var(--color-neutral-700)' }}>{weeks ? 'in weeks that already closed this month' : 'in periods that already closed this month'}</small>
+      </span>
+    </div>
+  );
+}
+
 /** The desktop safe-to-spend panel: the card with the faint p, wide, with a Today / Week / Month switch instead of swiping. */
-function DeskSafe({ view, setView, tone, title, left: leftNow, budget, spent: spentNow, sub }: { view: 'day' | 'week' | 'month'; setView: (v: 'day' | 'week' | 'month') => void; tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string }) {
+function DeskSafe({ view, setView, tone, title, left: leftNow, budget, spent: spentNow, sub, extra }: { view: 'day' | 'week' | 'month'; setView: (v: 'day' | 'week' | 'month') => void; tone: typeof SAFE_TONES.green; title: string; left: number; budget: number; spent: number; sub: string; extra?: ReactNode }) {
   const left = useSettled(leftNow);
   const spent = useSettled(spentNow);
   return (
@@ -338,6 +358,7 @@ function DeskSafe({ view, setView, tone, title, left: leftNow, budget, spent: sp
       <div className="dh-safe-num" style={{ color: tone.amount }}><RollingMoney value={left} /></div>
       <span className="dh-safe-sub">{sub}</span>
       <div className="dh-safe-track"><div className="bar-fill" style={{ height: '100%', borderRadius: 999, width: '100%', clipPath: `inset(0 calc(100% - ${pctOf(spent, budget)}) 0 0 round 999px)`, background: tone.bar }} /></div>
+      {extra}
     </section>
   );
 }

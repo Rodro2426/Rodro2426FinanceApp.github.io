@@ -327,7 +327,7 @@ describe('extra income already counted in the monthly income', () => {
 });
 
 describe('left to spend in pockets ignores finished weeks', () => {
-  // 5-week November (Oct 26 – Nov 29), today Wednesday Nov 18, week 4: Nov 23–29 still to come.
+  // 5-week November (Mondays Nov 2 – Nov 30), today Wednesday Nov 18, week 3: Nov 23 and Nov 30 still to come.
   const c5 = makeCtx(5, '2026-11-18');
   const d = (carry?: string): Data => {
     const base = november(false);
@@ -335,9 +335,9 @@ describe('left to spend in pockets ignores finished weeks', () => {
   };
   it('counts this week\'s leftover plus the weeks still ahead, not leftovers from weeks already over', () => {
     const x = d(), s = monthSummary(x, c5);
-    const expected = x.pockets.reduce((a, p) => a + Math.max(0, pocketStats(x, p.id, c5)!.left) + Number(p.weeklyStr), 0);
-    expect(s.toSpend).toBe(expected); // 122000 this week (nothing spent) + 122000 next week
-    expect(s.toSpend).toBe(244000);
+    const expected = x.pockets.reduce((a, p) => a + Math.max(0, pocketStats(x, p.id, c5)!.left) + 2 * Number(p.weeklyStr), 0);
+    expect(s.toSpend).toBe(expected); // 122000 this week (nothing spent) + 122000 for each of the 2 weeks ahead
+    expect(s.toSpend).toBe(366000);
     expect(s.real).toBe(s.toSpend - s.balance);
   });
   it('with carry over, past leftovers are still promised (they rolled into this week)', () => {
@@ -345,6 +345,6 @@ describe('left to spend in pockets ignores finished weeks', () => {
     expect(monthSummary(x, c5).toSpend).toBe(x.pockets.reduce((a, p) => a + Math.max(0, monthStats(x, p.id, c5).left), 0));
   });
   it('carry over turned on this week: weeks before it still don\'t count', () => {
-    expect(monthSummary(d('2026-11-16'), c5).toSpend).toBe(244000);
+    expect(monthSummary(d('2026-11-16'), c5).toSpend).toBe(366000);
   });
 });

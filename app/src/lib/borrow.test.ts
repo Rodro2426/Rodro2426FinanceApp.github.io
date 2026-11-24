@@ -29,14 +29,21 @@ describe('cover from next week', () => {
     expect(pocketStats(b, 'food', ctxAt('2026-12-02'))!.budget).toBe(50000);
     expect(monthStats(b, 'food', c).budget).toBe(before);
   });
-  it('across the month: the month it was made gets it, the next month gives it back', () => {
-    // Week Nov 23–29 (Sunday in November); next week Nov 30 – Dec 6 belongs to December.
+  it('inside the month: week Nov 23 borrows from Nov 30 (a November week), December is untouched', () => {
     const d = { ...base(), expenses: [exp('a', 70000, '2026-11-24')] };
     const c = ctxAt('2026-11-24');
     const b = apply(d, borrowNext(d, c, 'food', 20000));
-    expect(monthStats(b, 'food', c).budget - monthStats(d, 'food', c).budget).toBe(20000);
+    expect(monthStats(b, 'food', c).budget - monthStats(d, 'food', c).budget).toBe(0);
     const dec = ctxAt('2026-12-10');
-    expect(monthStats(b, 'food', dec).budget - monthStats(d, 'food', dec).budget).toBe(-20000);
+    expect(monthStats(b, 'food', dec).budget - monthStats(d, 'food', dec).budget).toBe(0);
+  });
+  it('across the month: the month it was made gets it, the next month gives it back (week Dec 28 -> Jan 4)', () => {
+    const d = { ...base(), expenses: [exp('a', 70000, '2026-12-29')] };
+    const c = ctxAt('2026-12-29');
+    const b = apply(d, borrowNext(d, c, 'food', 20000));
+    expect(monthStats(b, 'food', c).budget - monthStats(d, 'food', c).budget).toBe(20000);
+    const jan = ctxAt('2027-01-12');
+    expect(monthStats(b, 'food', jan).budget - monthStats(d, 'food', jan).budget).toBe(-20000);
   });
   it('15-day pockets borrow from the next quincena', () => {
     const d = { ...base({ period: 'half', weeklyStr: '100000' }), expenses: [exp('a', 130000, '2026-11-10')] };
@@ -81,9 +88,9 @@ describe('cover from next week', () => {
     const c = ctxAt('2026-11-11');
     const b = apply(d, borrowNext(d, c, 'food', 10000));
     const n = ctxAt('2026-11-18');
-    // Week Nov 16 (40000 after paying back) + week Nov 23 (50000) = 90000; without borrowing the overspend is just forgiven (100000).
-    expect(pocketToSpend(d, 'food', n)).toBe(100000);
-    expect(pocketToSpend(b, 'food', n)).toBe(90000);
+    // Weeks Nov 16 (40000 after paying back) + Nov 23 + Nov 30 (50000 each, both November weeks) = 140000; without borrowing the overspend is just forgiven (150000).
+    expect(pocketToSpend(d, 'food', n)).toBe(150000);
+    expect(pocketToSpend(b, 'food', n)).toBe(140000);
   });
   it('edit and undo: lower or undo only, undo brings everything back', () => {
     const d = { ...base(), expenses: [exp('a', 60000, '2026-11-18')] };
