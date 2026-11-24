@@ -15,6 +15,8 @@
   --brand: #1f5f5a; --brand-tint: #dcefe6;
   --action: #1f5f5a; --action-press: #174a46; --action-ink: #fff;
   --lavender: #7a68b8;
+  /* Streak stamp (lavender) and saving badges (gold). */
+  --stamp: #6a58a8; --stamp-ink: #fff; --stamp-tint: #ece3fb; --gold: #b8892a; --gold-ink: #2e2205;
   --on-text: #fff;
   /* Money people owe you, and notes that say all is well / be careful. */
   --money-in: oklch(0.45 0.11 150);
@@ -214,6 +216,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   --color-surface: #262524;
   --color-text: #f2efea;
   --brand: #8fd6cb; --brand-tint: #16302c;
+  --stamp: #b9aae6; --stamp-ink: #1c1633; --stamp-tint: #2a2547; --gold: #f0c766; --gold-ink: #2e2205;
   --action: #8fd6cb; --action-press: #7cc6ba; --action-ink: #0f2b28;
   --color-neutral-100: #262524;
   --color-neutral-200: #302e2d;
@@ -542,3 +545,19 @@ input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*
 .guided-ring { padding: 3px; background: conic-gradient(from var(--gt-a), #8fd6cb, #7a68b8, #d9cdea, #2f8f84, #8fd6cb); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); box-sizing: border-box; animation: gt-turn 6s linear infinite; }
 @keyframes gt-turn { to { --gt-a: 360deg; } }
 @media (prefers-reduced-motion: reduce) { .guided-ring { animation: none; } }
+
+/* Streak ("Stamp of the month", ui/Streak.tsx). */
+.stamp-day { aspect-ratio: 1; min-height: 36px; border: 0; border-radius: 11px; padding: 0; font: inherit; font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: center; background: color-mix(in srgb, var(--color-text) 6%, transparent); color: var(--color-neutral-700); cursor: pointer; transition: transform .12s ease, background-color .2s; -webkit-tap-highlight-color: transparent; }
+.stamp-day:active:not(:disabled) { transform: scale(.92); }
+.stamp-day:disabled { cursor: default; }
+.stamp-day.spent { background: var(--brand); color: var(--action-ink); }
+.stamp-day.zero { background: var(--stamp-tint); color: var(--stamp); }
+.stamp-day.today { background: transparent; color: var(--brand); outline: 2px dashed var(--brand); outline-offset: -2px; }
+.stamp-day.future { background: transparent; color: var(--color-neutral-600); }
+.stamp-day:focus-visible { outline: 3px solid var(--stamp); outline-offset: 1px; }
+.hex { width: 40px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; letter-spacing: -0.02em; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+.stamp-drop { transform: rotate(-12deg); animation: stamp-drop .5s cubic-bezier(.5, 0, .3, 1.4) both, fade-out .3s ease-in 2.1s forwards; }
+@keyframes stamp-drop { 0% { transform: scale(2.2) rotate(-4deg); opacity: 0; } 70% { transform: scale(.94) rotate(-12deg); opacity: 1; } 100% { transform: scale(1) rotate(-12deg); } }
+.stamp-note { animation: banner-in-up .4s cubic-bezier(.2, 1.2, .4, 1) both, fade-out .3s ease-in 2.1s forwards; }
+@keyframes banner-in-up { from { transform: translateY(140%); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .stamp-drop, .stamp-note { animation: fade-out .3s ease-in 2.1s forwards; } .stamp-day { transition: none; } }

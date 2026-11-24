@@ -1,6 +1,55 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Streak|Racha
+Days stamped this month and achievements|Días sellados del mes y logros
+I spent nothing today|No gasté nada hoy
+Nothing spent today|Hoy no gasté nada
+Start your streak today|Empieza tu racha hoy
+1 day in a row|1 día seguido
+day up to date|día al día
+days up to date|días al día
+Day stamped. Your streak starts today.|Día sellado. Tu racha empieza hoy.
+Today is stamped: you logged 1 expense|Hoy está sellado: registraste 1 gasto
+Achievements|Logros
+Current streak|Racha actual
+Best streak|Mejor racha
+Hidden achievement|Logro oculto
+Keep using POCKETS to find it|Sigue usando POCKETS para encontrarlo
+Days stamped this month|Días sellados este mes
+Back to home|Volver al inicio
+First steps|Primeros pasos
+Control|Control
+Saving|Ahorro
+Hidden|Ocultos
+One week|Una semana
+A whole month|Un mes entero
+One hundred days|Cien días
+First pocket|Primer bolsillo
+Full plan|Plan completo
+All in place|Todo en su lugar
+Autopilot|Piloto automático
+Clean week|Semana redonda
+Spotless quincena|Quincena impecable
+First investment|Primera inversión
+1-month cushion|Colchón de 1 mes
+3-month cushion|Colchón de 3 meses
+Zero weekend|Fin de semana en cero
+December under control|Diciembre bajo control
+7 days in a row up to date|7 días seguidos al día
+30 days in a row up to date|30 días seguidos al día
+100 days in a row up to date|100 días seguidos al día
+You created your first pocket|Creaste tu primer bolsillo
+Your pockets add up to all your monthly income|Tus bolsillos suman todo tu ingreso mensual
+You added at least 2 accounts|Agregaste al menos 2 cuentas
+You scheduled your first payment or income|Programaste tu primer pago o ingreso
+A week with no pocket in the red|Una semana sin ningún bolsillo en rojo
+A quincena with no pocket in the red|Una quincena sin ningún bolsillo en rojo
+You opened your first CDT, fund or stock|Abriste tu primer CDT, fondo o acción
+Your savings cover a month of spending|Tus ahorros cubren un mes de gastos
+Your savings cover 3 months of spending|Tus ahorros cubren 3 meses de gastos
+Saturday and Sunday with nothing spent|Sábado y domingo sin gastar nada
+December with no pocket in the red|Diciembre sin ningún bolsillo en rojo
 Move money|Mover plata
 Moved between accounts|Movido entre cuentas
 Tap again to undo it|Toca otra vez para deshacerlo
@@ -2087,6 +2136,20 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+{0} days in a row|{0} días seguidos
+Day stamped. {0} days in a row.|Día sellado. {0} días seguidos.
+Today is stamped: you logged {0} expenses|Hoy está sellado: registraste {0} gastos
+{0} marked as nothing spent|{0} marcado sin gastos
+{0} unmarked|{0} desmarcado
+Achievements: {0} of {1}|Logros: {0} de {1}
+New achievement: {0}|Nuevo logro: {0}
+Earned {0}|Logrado el {0}
+of {0} earned|de {0} logrados
+{0}: expenses logged|{0}: con gastos registrados
+{0}: nothing spent|{0}: sin gastos
+{0}: coming up|{0}: próximo
+{0}: not stamped|{0}: sin sellar
+{0} progress|Progreso de {0}
 Moved {0} to {1}|Moviste {0} a {1}
 Moved to {0}|Movido a {0}
 Moved from {0}|Movido desde {0}

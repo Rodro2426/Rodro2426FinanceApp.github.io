@@ -142,6 +142,12 @@ export interface Data {
   /** Income categories you can pick (edited in the Categories hub). Missing = the built-in list, INCOME_CATS. */
   incCats?: string[];
   tags: string[];
+  /** Days marked "I spent nothing today" (they keep the streak going). */
+  zeroDays?: string[];
+  /** Achievements earned: id → the day it was first earned (lib/achievements.ts). */
+  trophies?: Record<string, string>;
+  /** The last day the streak stamp was shown, so it shows once a day on every device. */
+  stampDay?: string;
 }
 
 export type PocketView = 'day' | 'week' | 'month';
@@ -201,7 +207,7 @@ export interface UI {
   toast: string | null;
   lastAdd: { pocket: string; acct: string };
   /** A full-screen page shown over the tabs. */
-  page?: 'investments' | 'categories' | 'reports' | `report:${string}` | `trip:${string}` | `tripstats:${string}` | `tripchat:${string}` | `dm:${string}` | `person:${string}` | null;
+  page?: 'investments' | 'categories' | 'reports' | 'trophies' | `report:${string}` | `trip:${string}` | `tripstats:${string}` | `tripchat:${string}` | `dm:${string}` | `person:${string}` | null;
   /** First open on this device: choose sample data, a fresh start or a backup. */
   welcome?: boolean;
   /** Home-screen install guide: shown in iPhone Safari, or opened from Profile. */
@@ -210,4 +216,6 @@ export interface UI {
   setup?: boolean;
   /** The look-only tour over the real screen (Profile → App tutorial). */
   guide?: boolean;
+  /** The streak stamp on screen right now (days in a row), or nothing. */
+  stamp?: number | null;
 }
