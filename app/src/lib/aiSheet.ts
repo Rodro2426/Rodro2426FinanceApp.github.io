@@ -3,7 +3,7 @@
 import { codeOf, infoOf } from './currency';
 import { cardDueLabel } from './cards';
 import type { Data } from './types';
-import { catOf, monthPlanOf, num, myExpenses, isHalf, isMonthly, roundAmt } from './derive';
+import { catOf, monthPlanOf, num, myExpenses, isHalf, isMonthly, periodAt, pocketStats, roundAmt } from './derive';
 import { addDays, ctxAt, daysInMonth, fmtDay, inRange, weeksIn, monthLabel, shortDate, todayISO, weekStart } from './dates';
 
 export type Cell = string | number | { v: number; fmt: 'money' | 'pct' };
@@ -64,35 +64,33 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
 
   // Pockets against their plan for the period.
   sections.push({
-    title: 'Pockets (weekly budgets)', note: `"Planned" is the weekly budget × the weeks in each month (one per Sunday).`,
-    header: ['Pocket', 'Weekly budget', 'Planned for period', 'Spent', 'Left vs plan', '% used', 'Expenses', 'Top category'],
+    title: 'Pockets (budgets)', note: `Each pocket starts over every week, every 15 days or every month. "Planned" is its budget × its periods in each month (a weekly pocket counts one week per Sunday). A pocket created partway through a period gets only what was set for the rest of that period.`,
+    header: ['Pocket', 'Starts over', 'Budget per period', 'Planned for period', 'Spent', 'Left vs plan', '% used', 'Expenses', 'Top category'],
     rows: d.pockets.map(p => {
       const es = exp.filter(e => e.p === p.id), spent = es.reduce((a, e) => a + e.amt, 0);
       const planned = months.reduce((a, m) => a + monthPlanOf(p, ctxAt(m + '-15')), 0);
       const byCat: Record<string, number> = {};
       es.forEach(e => { const c = catOf(e)[0]; byCat[c] = (byCat[c] || 0) + e.amt; });
       const top = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
-      return [p.name, money(num(p.weeklyStr)), money(planned), money(spent), money(planned - spent), pct(planned ? spent / planned : 0), es.length, top ? top[0] : ''];
+      return [p.name, isMonthly(p) ? 'Every month' : isHalf(p) ? 'Every 15 days' : 'Every week', money(num(p.weeklyStr)), money(planned), money(spent), money(planned - spent), pct(planned ? spent / planned : 0), es.length, top ? top[0] : ''];
     })
   });
 
-  // Week-by-week, using the weeks (Mon–Sun) that overlap the period.
+  // Each pocket's own periods (week, quincena or month) that overlap the export, using the app's own numbers
+  // (start amount, moves, carry over), so the budget here is what the pocket showed for that period.
   const first = months[0] + '-01', lastM = months[months.length - 1], last = `${lastM}-${String(daysInMonth(lastM)).padStart(2, '0')}`;
-  const weekRows: Cell[][] = [];
-  for (let ws = weekStart(first); ws <= last && ws <= today; ws = addDays(ws, 7)) {
-    const we = addDays(ws, 6), label = `${shortDate(ws)} – ${shortDate(we)}`;
-    const moves = d.moves.filter(m => m.week === ws);
-    d.pockets.forEach(p => {
-      const nextIn = d.moves.filter(m => m.next && m.week === addDays(ws, -7) && m.to === p.id).reduce((a, m) => a + m.amt, 0);
-      const repaid = d.moves.filter(m => m.borrow && m.week === addDays(ws, -7) && m.from === p.id).reduce((a, m) => a + m.amt, 0);
-      const budget = num(p.weeklyStr) + nextIn - repaid + moves.filter(m => m.to === p.id && !m.next).reduce((a, m) => a + m.amt, 0) - moves.filter(m => m.from === p.id && !m.borrow).reduce((a, m) => a + m.amt, 0);
-      const spent = myExpenses(d).filter(e => e.p === p.id && inRange(e.date, ws, we) && (acctId === 'all' || e.a === acctId)).reduce((a, e) => a + e.amt, 0);
-      weekRows.push([label, p.name, money(budget), money(spent), money(budget - spent)]);
-    });
-  }
+  const periodRows: Cell[][] = [];
+  d.pockets.forEach(p => {
+    for (let [a, b] = periodAt(p, first); a <= last && a <= today; [a, b] = periodAt(p, addDays(b, 1))) {
+      const s = pocketStats(d, p.id, ctxAt(b < today ? b : today));
+      if (!s) break;
+      const spent = myExpenses(d).filter(e => e.p === p.id && inRange(e.date, a, b) && (acctId === 'all' || e.a === acctId)).reduce((x, e) => x + e.amt, 0);
+      periodRows.push([`${shortDate(a)} – ${shortDate(b)}`, p.name, money(s.budget), money(spent), money(s.budget - spent)]);
+    }
+  });
   sections.push({
-    title: 'Pocket spending by week', note: 'Each week runs Monday to Sunday and counts all of its days, even ones in the next or previous month. Budget includes money moved in or out that week.',
-    header: ['Week', 'Pocket', 'Budget', 'Spent', 'Left'], rows: weekRows
+    title: 'Pocket spending by period', note: 'One row per period of each pocket: Monday–Sunday weeks, quincenas (1–15, 16–end) or months. A week counts all of its days, even ones in the next or previous month. Budget includes money moved in or out and anything carried over.',
+    header: ['Period', 'Pocket', 'Budget', 'Spent', 'Left'], rows: periodRows
   });
 
   const group = (key: (e: (typeof exp)[number]) => string) => {
@@ -140,8 +138,8 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
     rows: [...incs].sort((a, b) => (a.date < b.date ? -1 : 1)).map(t => [t.date, t.note, acc(t.a)?.name || '', money(t.amt)])
   });
 
-  const periodWeeks = new Set(weekRows.map(r => r[0]));
-  const moves = d.moves.filter(m => periodWeeks.has(`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`));
+  // Moves made in a week that overlaps the export (up to today).
+  const moves = d.moves.filter(m => m.week <= last && m.week <= today && addDays(m.week, 6) >= weekStart(first));
   sections.push({
     title: 'Money moved between pockets and goals', header: ['Week', 'From', 'To', 'Amount'],
     rows: moves.map(m => [`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`, goalOrPocket(m.from), m.borrow ? `${goalOrPocket(m.to)} (covered from next period)` : m.next ? `${goalOrPocket(m.to)} (${isMonthly(d.pockets.find(p => p.id === m.to)) ? 'next month' : isHalf(d.pockets.find(p => p.id === m.to)) ? 'next quincena' : 'next week'})` : goalOrPocket(m.to), money(m.amt)])

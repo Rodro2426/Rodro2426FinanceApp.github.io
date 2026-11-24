@@ -36,6 +36,13 @@ next week|próxima semana
 next quincena|próxima quincena
 next month|próximo mes
 Streak|Racha
+Cover it with next month|Cubrirlo con el próximo mes
+Cover it with the next quincena|Cubrirlo con la próxima quincena
+Cover it with next week|Cubrirlo con la próxima semana
+This month started with|Este mes empezó con
+This quincena started with|Esta quincena empezó con
+This week started with|Esta semana empezó con
+It was created partway through, so this period got only part of the full amount. Change it if that's not what you have.|Lo creaste con el periodo ya empezado, así que este periodo recibió solo una parte del monto completo. Cámbialo si no es lo que tienes.
 Days stamped this month and achievements|Días sellados del mes y logros
 I spent nothing today|No gasté nada hoy
 Nothing spent today|Hoy no gasté nada
@@ -2170,6 +2177,7 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+As it was · {0}|Como estaba · {0}
 Cover {0} first ({1})|Cubrir primero {0} ({1})
 {0} goes to {1} for this week only, so it's out of the red. The other {2} stays saved.|{0} van a {1} solo por esta semana, así sale del rojo. Los otros {2} quedan guardados.
 {0} refills the pockets in the red for this week only. The other {1} stays saved.|{0} rellenan los bolsillos en rojo solo por esta semana. Los otros {1} quedan guardados.

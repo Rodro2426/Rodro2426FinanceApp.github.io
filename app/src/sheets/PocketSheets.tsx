@@ -533,7 +533,11 @@ function PocketNudge({ id }: { id: string }) {
     return box('var(--color-accent-100)', RED, `You went ${fmt(over)} over in ${s.name}`, 'Where do we take it from?', [
       ...(from ? [btn(take < over ? `Take ${fmt(take)} from ${name(from.id)} (all it has left)` : `Take it from ${name(from.id)} (it has ${fmt(from.left)} left)`,
         () => done(refillFrom(d, c, id, { [from.id]: take }), `${fmt(take)} moved from ${name(from.id)} to ${s.name}`))] : []),
-      ...(leftovers(d, c).filter(x => x.id !== id).length > 1 ? [btn('Choose from several pockets', () => openSheet({ name: 'refill', id }))] : [])
+      ...(leftovers(d, c).filter(x => x.id !== id).length > 1 ? [btn('Choose from several pockets', () => openSheet({ name: 'refill', id }))] : []),
+      // Or from the pocket's own next period ("cover from next week").
+      (() => { const pk = d.pockets.find(p => p.id === id), nextName = isMonthly(pk) ? 'next month' : isHalf(pk) ? 'next quincena' : 'next week';
+        return btn(isMonthly(pk) ? 'Cover it with next month' : isHalf(pk) ? 'Cover it with the next quincena' : 'Cover it with next week',
+          () => done(borrowNext(d, c, id, over), `${s.name} is covered with ${fmt(over)} from its ${nextName}`)); })()
     ]);
   }
   // On the last day of the week (or quincena, or month), offer what to do with what's left.
@@ -944,7 +948,8 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const [days, setDays] = useState<number[]>(base?.days?.length ? base.days : [0, 1, 2, 3, 4, 5, 6]);
   const [hue, setHue] = useState(base ? base.hue : HUES[d.pockets.length % HUES.length]);
   const [period, setPeriod] = useState<'week' | 'half' | 'month'>(base?.period ?? 'week');
-  const [startStr, setStartStr] = useState<string | null>(null);
+  // Editing a pocket that was created partway through this period: its starting amount can be changed.
+  const [startStr, setStartStr] = useState<string | null>(base?.start && !base.start.until ? String(base.start.amt) : null);
   const [resetCarry, setResetCarry] = useState(false);
   const [carry, setCarry] = useState(!!base?.carry);
   const half = period === 'half', mon = period === 'month';
@@ -968,6 +973,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
   const monthAmt = num(monthStr);
   const suggested = midMonth ? roundAmt(monthAmt * (daysBetween(c.today, monthEnd) + 1) / daysInMonth(c.month)) : roundAmt(w * spendDays(c.today, pe) / Math.max(1, spendDays(ps, pe)));
   const startAmt = startStr === null ? suggested : num(startStr);
+  const editStart = !isNew && !!base?.start && !base.start.until && base.start.from === ps && (base.period ?? 'week') === period;
   const switchPeriod = (v: 'week' | 'half' | 'month') => {
     if (v === period) return;
     // Keep the same money per month: weekly × weeks = per 15 days × 2 = the month.
@@ -986,7 +992,7 @@ export function EditPocketSheet({ id }: { id: string | null }) {
     const start = midMonth ? { from: ps, amt: Math.max(0, roundAmt(startAmt / weeksLeftHere)), until: lastWeek }
       : mid && Math.abs(startAmt - w) > 0.004 ? { from: ps, amt: Math.max(0, startAmt) } : undefined;
     if (isNew) { setData(x => ({ pockets: [...x.pockets, { id: uid('p'), ...patch, ...(start ? { start } : {}) }] })); closeSheet(); }
-    else { setData(x => ({ pockets: x.pockets.map(p => (p.id === id ? { ...p, ...patch, ...((p.period ?? 'week') !== period ? { start: undefined } : {}) } : p)) })); openSheet({ name: 'pocket', id: id! }); }
+    else { setData(x => ({ pockets: x.pockets.map(p => (p.id === id ? { ...p, ...patch, ...((p.period ?? 'week') !== period ? { start: undefined } : editStart ? { start: Math.abs(startAmt - w) > 0.004 ? { from: ps, amt: Math.max(0, startAmt) } : undefined } : {}) } : p)) })); openSheet({ name: 'pocket', id: id! }); }
     flash(isNew ? `${patch.name} created` : 'Pocket updated');
   };
   const remove = () => {
@@ -1035,6 +1041,16 @@ export function EditPocketSheet({ id }: { id: string | null }) {
             <button onClick={() => setStartStr(String(monthAmt))} aria-pressed={startStr !== null && num(startStr) === monthAmt} style={startChip(startStr !== null && num(startStr) === monthAmt, hue)}>{`Full month · ${fmt(monthAmt)}`}</button>
           </div>
           <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{weeksLeftHere > 1 ? `Shared over the ${weeksLeftHere} weeks left in ${monthName(c.month)}. From ${shortDate(addDays(lastWeek, 7))} it gets the full ${fmt(w)} a week.` : `For the rest of ${monthName(c.month)}. From ${shortDate(addDays(lastWeek, 7))} it gets the full ${fmt(w)} a week.`}</span>
+        </div>}
+        {editStart && w > 0 && <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <span style={{ fontSize: 15, fontWeight: 700 }}>{mon ? 'This month started with' : half ? 'This quincena started with' : 'This week started with'}</span>
+          <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>It was created partway through, so this period got only part of the full amount. Change it if that's not what you have.</span>
+          <SmallAmount value={startStr ?? String(base!.start!.amt)} onChange={setStartStr} />
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <button onClick={() => setStartStr(String(w))} aria-pressed={Math.abs(startAmt - w) < 0.005} style={startChip(Math.abs(startAmt - w) < 0.005, hue)}>Full amount · {fmt(w)}</button>
+            {Math.abs(base!.start!.amt - w) > 0.004 && <button onClick={() => setStartStr(String(base!.start!.amt))} aria-pressed={Math.abs(startAmt - base!.start!.amt) < 0.005} style={startChip(Math.abs(startAmt - base!.start!.amt) < 0.005, hue)}>As it was · {fmt(base!.start!.amt)}</button>}
+          </div>
+          <span style={{ fontSize: 12.5, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{`Until ${shortDate(pe)}. From ${shortDate(addDays(pe, 1))} it gets the full ${fmt(w)}.`}</span>
         </div>}
         {!midMonth && mid && w > 0 && <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span style={{ fontSize: 15, fontWeight: 700 }}>{mon ? 'This month is already underway' : half ? 'This quincena is already underway' : 'This week is already underway'}</span>
