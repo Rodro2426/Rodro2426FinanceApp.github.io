@@ -93,8 +93,19 @@ export default function CalendarScreen() {
             );
           })}
         </div>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'var(--color-neutral-600)', paddingTop: 2 }}>
-          {[[GREEN, 'Income'], [BILL, 'Bills'], ...(cardTotal || d.bills.some(b => b.kind === 'CardPayment') ? [[CARD, 'Cards']] : []), [SPEND, 'Spending'], ['color-mix(in srgb, var(--brand) 30%, transparent)', 'Stamped'], ['var(--stamp-tint)', 'Nothing spent']].map(([col, l]) => <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 7, height: 7, borderRadius: 999, background: col, boxShadow: l === 'Nothing spent' ? 'inset 0 0 0 1px var(--stamp)' : undefined }} />{l}</span>)}
+        {/* Legend in two lines: what the dots mean (money), then what the day colours mean (streak). */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 600, color: 'var(--color-neutral-600)', paddingTop: 4 }}>
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {[[GREEN, 'Income'], [BILL, 'Bills'], ...(cardTotal || d.bills.some(b => b.kind === 'CardPayment') ? [[CARD, 'Cards']] : []), [SPEND, 'Spending']].map(([col, l]) => (
+              <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 7, height: 7, borderRadius: 999, background: col }} />{l}</span>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {[['color-mix(in srgb, var(--brand) 13%, transparent)', 'var(--color-text)', 'Stamped'], ['var(--stamp-tint)', 'var(--stamp)', 'Nothing spent']].map(([bg, fg, l]) => (
+              <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: 5, background: bg, color: fg, fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1</span>{l}</span>
+            ))}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: 5, outline: '1.5px dashed var(--brand)', outlineOffset: -1.5 }} />Today</span>
+          </div>
         </div>
       </div>
 
