@@ -84,7 +84,8 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
     const moves = d.moves.filter(m => m.week === ws);
     d.pockets.forEach(p => {
       const nextIn = d.moves.filter(m => m.next && m.week === addDays(ws, -7) && m.to === p.id).reduce((a, m) => a + m.amt, 0);
-      const budget = num(p.weeklyStr) + nextIn + moves.filter(m => m.to === p.id && !m.next).reduce((a, m) => a + m.amt, 0) - moves.filter(m => m.from === p.id).reduce((a, m) => a + m.amt, 0);
+      const repaid = d.moves.filter(m => m.borrow && m.week === addDays(ws, -7) && m.from === p.id).reduce((a, m) => a + m.amt, 0);
+      const budget = num(p.weeklyStr) + nextIn - repaid + moves.filter(m => m.to === p.id && !m.next).reduce((a, m) => a + m.amt, 0) - moves.filter(m => m.from === p.id && !m.borrow).reduce((a, m) => a + m.amt, 0);
       const spent = myExpenses(d).filter(e => e.p === p.id && inRange(e.date, ws, we) && (acctId === 'all' || e.a === acctId)).reduce((a, e) => a + e.amt, 0);
       weekRows.push([label, p.name, money(budget), money(spent), money(budget - spent)]);
     });
@@ -143,7 +144,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
   const moves = d.moves.filter(m => periodWeeks.has(`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`));
   sections.push({
     title: 'Money moved between pockets and goals', header: ['Week', 'From', 'To', 'Amount'],
-    rows: moves.map(m => [`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`, goalOrPocket(m.from), m.next ? `${goalOrPocket(m.to)} (${isMonthly(d.pockets.find(p => p.id === m.to)) ? 'next month' : isHalf(d.pockets.find(p => p.id === m.to)) ? 'next quincena' : 'next week'})` : goalOrPocket(m.to), money(m.amt)])
+    rows: moves.map(m => [`${shortDate(m.week)} – ${shortDate(addDays(m.week, 6))}`, goalOrPocket(m.from), m.borrow ? `${goalOrPocket(m.to)} (covered from next period)` : m.next ? `${goalOrPocket(m.to)} (${isMonthly(d.pockets.find(p => p.id === m.to)) ? 'next month' : isHalf(d.pockets.find(p => p.id === m.to)) ? 'next quincena' : 'next week'})` : goalOrPocket(m.to), money(m.amt)])
   });
 
   sections.push({

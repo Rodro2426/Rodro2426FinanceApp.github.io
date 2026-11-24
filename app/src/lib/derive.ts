@@ -142,7 +142,9 @@ function periodParts(d: Data, p: Data['pockets'][number], c: Ctx) {
   const before = prevStart(p, pc.weekStart);
   const arriving = d.moves.filter(m => m.next && m.to === id && moveAtStart(m, p, before)).reduce((a, m) => a + m.amt, 0);
   const mIn = moves.filter(m => m.to === id && !m.next).reduce((a, m) => a + m.amt, 0) + arriving + spreadThisPeriod(d, id, pc);
-  const mOut = moves.filter(m => m.from === id).reduce((a, m) => a + m.amt, 0);
+  // Borrowed from this period by the one before it ("cover from next week").
+  const repaid = d.moves.filter(m => m.borrow && m.from === id && moveAtStart(m, p, before)).reduce((a, m) => a + m.amt, 0);
+  const mOut = moves.filter(m => m.from === id && !m.borrow).reduce((a, m) => a + m.amt, 0) + repaid;
   const spent = weekExpenses(d, pc).filter(e => e.p === id).reduce((a, e) => a + e.amt, 0);
   return { pc, weekly, mIn, mOut, spent };
 }
@@ -228,9 +230,12 @@ export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
   // A "next" move out of a 15-day pocket leaves in the quincena it was made in, which can be in the month before moveMonth.
   const halfNext = (m: Move) => !!m.next && isSpan(p);
   const leaveMonth = (m: Move) => monthKey(periodAt(p, m.day ?? addDays(m.week, 6))[0]);
-  const outNow = moves.filter(m => m.from === id && !halfNext(m)).reduce((a, m) => a + m.amt, 0);
+  const outNow = moves.filter(m => m.from === id && !halfNext(m) && !m.borrow).reduce((a, m) => a + m.amt, 0);
   const outHalfNext = d.moves.filter(m => m.from === id && halfNext(m) && leaveMonth(m) === c.month).reduce((a, m) => a + m.amt, 0);
-  const extra = moves.filter(m => m.to === id && !m.next).reduce((a, m) => a + m.amt, 0) - outNow - outHalfNext + nextIn;
+  // "Cover from next week": in the month of the period it was made, out of the month of the period after it.
+  const borrowIn = d.moves.filter(m => m.borrow && m.to === id && (isSpan(p) ? leaveMonth(m) : moveMonth(m)) === c.month).reduce((a, m) => a + m.amt, 0);
+  const borrowOut = d.moves.filter(m => m.borrow && m.from === id && arrives(m) === c.month).reduce((a, m) => a + m.amt, 0);
+  const extra = moves.filter(m => m.to === id && !m.next && !m.borrow).reduce((a, m) => a + m.amt, 0) - outNow - outHalfNext + nextIn + borrowIn - borrowOut;
   const spent = monthExpenses(d, c).filter(e => e.p === id).reduce((a, e) => a + e.amt, 0);
   let carry = 0;
   if (p?.carry) {
@@ -333,6 +338,8 @@ export function moveMax(d: Data, m: Move, c: Ctx = ctxOf(d)): number {
   const srcPocket = d.pockets.find(p => p.id === m.from);
   // A "next" move edited from its arrival side (made in an earlier period): it can only be lowered or undone.
   if (m.next && !moveInPeriod(m, srcPocket, c)) return m.amt;
+  // Borrowed from next week: it can only be lowered or undone.
+  if (m.borrow) return m.amt;
   const src = pocketStats(d, m.from, c);
   return src && moveInPeriod(m, srcPocket, c) ? Math.max(0, src.left) + m.amt : Infinity;
 }

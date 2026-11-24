@@ -181,6 +181,16 @@ export function transferLeftover(d: Data, c: Ctx, from: string, parts: Record<st
   };
 }
 
+/**
+ * Covers a pocket's overspend with its own next period ("cover from next week"): the money arrives now and the
+ * next period starts with that much less. Never more than the pocket is over. Null if there's nothing to cover.
+ */
+export function borrowNext(d: Data, c: Ctx, id: string, amt: number): Partial<Data> | null {
+  const v = Math.min(whole(d, amt), overBy(d, c, id));
+  if (!d.pockets.some(p => p.id === id) || !(v > 0)) return null;
+  return { moves: [...d.moves, { id: uid('m'), week: c.weekStart, day: c.today, from: id, to: id, amt: v, borrow: true }] };
+}
+
 /* ---------------- Covering the shortfall with leftovers ---------------- */
 /** Destination for leftover that is given up to cover the shortfall: it leaves the pockets and isn't spent. */
 export const COVER = '_cover';

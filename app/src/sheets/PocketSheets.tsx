@@ -8,12 +8,12 @@ import { formatNumber } from '../lib/currency';
 import { latestRate } from '../lib/trm';
 import { salaryBills } from '../lib/salary';
 import { refreshUsdRate } from '../lib/invest';
-import { addDays, daysBetween, daysInMonth, monthName, parse, relDay, shortDate } from '../lib/dates';
+import { addDays, ctxAt, daysBetween, daysInMonth, monthName, parse, relDay, shortDate, todayISO } from '../lib/dates';
 import { pickPhoto } from '../lib/photo';
-import { COVER, NEXT, addExtraIncome, coverFirst, coverWith, leftovers, monthSummary, overBy, refillFrom, splitAmong, suggestCover, suggestRefill, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
+import { COVER, NEXT, addExtraIncome, borrowNext, coverFirst, coverWith, leftovers, monthSummary, overBy, refillFrom, splitAmong, suggestCover, suggestRefill, transferLeftover, type ExtraIncome, type SplitDist, type SplitMode } from '../lib/plan';
 import { largestRemainder, unitsFor, weekShares } from '../lib/split';
 import type { Data, Move, PocketView } from '../lib/types';
-import { BigAmount, Fill, Toggle, Bar, ExpRow, FieldLabel, GhostDanger, PctSlider, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
+import { BigAmount, DateField, Fill, Toggle, Bar, ExpRow, FieldLabel, GhostDanger, PctSlider, PickChip, PocketDot, PrimaryBtn, Segmented, SmallAmount, expView, textInput } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { HuePicker } from '../ui/HuePicker';
 import { CategoryPicker, IncomeCategoryPicker, type CatPick } from '../ui/CategoryPicker';
@@ -98,7 +98,10 @@ export function AddSheet({ pocket, mode: mode0 }: { pocket?: string; mode?: 'exp
 /* ---------------- Register income: save it, or split some of it into pockets ---------------- */
 function IncomeForm() {
   const { data: d } = useApp();
-  const c = ctxOf(d);
+  // The income counts on the day picked (today unless changed): its pocket split lands in that week.
+  const today = todayISO();
+  const [date, setDate] = useState(today);
+  const c = ctxAt(date);
   const accounts = d.accounts.filter(a => a.type !== 'card');
   const [amt, setAmt] = useState('');
   const [a, setA] = useState((accounts.find(x => x.type === 'bank') || accounts[0])?.id ?? '');
@@ -124,6 +127,12 @@ function IncomeForm() {
   const cover = coverFirst(d, c, X);
 
   const quick = (v: number) => { setDist(dd => (dd === 'manual' ? 'budget' : dd)); setToP(String(v)); };
+  // Pockets in the red that week: the income can refill them first (only that week), in order, until it runs out.
+  const reds = d.pockets.map(p => ({ id: p.id, name: p.name, over: overBy(d, c, p.id) })).filter(x => x.over > 0);
+  const redFill = (() => { let rest = X; const m: Record<string, number> = {}; for (const r of reds) { const t = Math.min(r.over, rest); if (t > 0) { m[r.id] = t; rest = roundAmt(rest - t); } } return m; })();
+  const redTotal = Object.values(redFill).reduce((s, n) => s + n, 0);
+  const coveringReds = dist === 'manual' && mode === 'week' && redTotal > 0 && Object.entries(manualNums).every(([k, v]) => Math.abs(v - (redFill[k] || 0)) < 0.005);
+  const coverReds = () => { setManual(Object.fromEntries(Object.entries(redFill).map(([k, v]) => [k, String(v)]))); setDist('manual'); setMode('week'); };
   /** Tapping a pocket puts everything going to pockets there (the whole income if nothing was chosen yet). */
   const allTo = (id: string) => { setManual({ [id]: String(A > 0 && !tooMuch ? A : X) }); setDist('manual'); };
   /** What each pocket gets right now (typed, or from By budget / Evenly). */
@@ -135,7 +144,7 @@ function IncomeForm() {
   };
   const save = () => {
     if (cant) return;
-    setData(x => addExtraIncome(x, ctxOf(x), input));
+    setData(x => addExtraIncome(x, ctxAt(date), input));
     closeSheet();
     const warn = after && after.real > 0.004 ? ` · Your pockets add up to ${fmt(after.real)} more than you have in your accounts` : '';
     flash(`+${fmt(X)} to ${acctName}${A > 0 ? ` · ${fmt(A)} to pockets` : ' · all saved'}${warn}`);
@@ -155,6 +164,7 @@ function IncomeForm() {
       <BigAmount value={amt} onChange={setAmt} mt={12} />
       <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
       <input placeholder="e.g. Freelance, gift, refund" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
+      <DateField value={date} onChange={setDate} today={today} />
       <FieldLabel m="14px 4px 6px">Category {!incCat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</FieldLabel>
       <IncomeCategoryPicker value={incCat} onChange={setIncCat} />
       {incCat === 'Salary' && salaryBills(d).length > 0 && <span role="alert" style={{ margin: '8px 4px 0', fontSize: 12.5, lineHeight: 1.4, color: RED }}>{`Your salary already arrives on its own on day ${salaryBills(d).map(b => b.dueDay).join(' and ')}. Adding it here would count it twice; use this only for money on top of it.`}</span>}
@@ -181,10 +191,11 @@ function IncomeForm() {
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {chipBtn('None', dist !== 'manual' && A === 0, () => quick(0))}
           {chipBtn('All', dist !== 'manual' && X > 0 && A === X, () => quick(X))}
+          {redTotal > 0 && chipBtn(reds.length === 1 ? `Cover ${reds[0].name} first (${fmt(redTotal)})` : `Cover pockets in the red first (${fmt(redTotal)})`, coveringReds, coverReds, 'reds')}
           {before.real > 0.004 && chipBtn(`Cover the shortfall first (${fmt(Math.min(X, before.real))})`, dist !== 'manual' && X > 0 && A === cover, () => quick(cover), 'cover')}
         </div>
         <span style={{ fontSize: 12, lineHeight: 1.4, color: tooMuch ? RED : 'var(--color-neutral-700)' }}>
-          {tooMuch ? `That's more than the ${fmt(X)} you received.` : `${fmt(Math.max(0, X - A))} stays saved: it adds to this month's income without adding to the plan.`}
+          {tooMuch ? `That's more than the ${fmt(X)} you received.` : coveringReds ? (reds.length === 1 ? `${fmt(redTotal)} goes to ${reds[0].name} for this week only, so it's out of the red. The other ${fmt(Math.max(0, X - A))} stays saved.` : `${fmt(redTotal)} refills the pockets in the red for this week only. The other ${fmt(Math.max(0, X - A))} stays saved.`) : `${fmt(Math.max(0, X - A))} stays saved: it adds to this month's income without adding to the plan.`}
           {before.real > 0.004 && !tooMuch ? ` Your pockets already promise ${fmt(before.real)} more than your accounts have; "Cover the shortfall first" saves that much before splitting.` : ''}
         </span>
       </div>
@@ -241,7 +252,7 @@ function IncomeForm() {
           </div>
         )}
       </div>
-      <PrimaryBtn onClick={save} disabled={cant} bg="oklch(0.5 0.12 150)" hover="hv-green">Save income</PrimaryBtn>
+      <PrimaryBtn onClick={save} disabled={cant} bg="oklch(0.5 0.12 150)" hover="hv-green" haptic>Save income</PrimaryBtn>
     </div>
   );
 }
@@ -249,7 +260,10 @@ function IncomeForm() {
 /* ---------------- Add expense ---------------- */
 function ExpenseForm({ pocket }: { pocket?: string }) {
   const { data: d, ui } = useApp();
-  const c = ctxOf(d);
+  // The expense counts on the day picked (today unless changed), in the pockets' period for that day.
+  const today = todayISO();
+  const [date, setDate] = useState(today);
+  const c = ctxAt(date), otherWeek = c.weekStart !== ctxAt(today).weekStart;
   const first = [pocket, ui.lastAdd.pocket].find(id => id && d.pockets.some(p => p.id === id)) || d.pockets[0]?.id || '';
   const [amt, setAmt] = useState('');
   // In dollars: what's typed is USD; the expense is saved in the app's currency at today's rate, keeping the dollar amount.
@@ -272,7 +286,9 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
   let preview = 'Enter an amount, a category and a pocket.', previewColor = 'var(--color-neutral-700)';
   if (!p && v > 0) preview = `Not in any pocket: it won't touch your weekly budgets, but it still counts in ${monthName(c.month)}'s spending and comes out of ${payA?.name ?? 'the account'}.`;
   if (addS && v > 0) {
-    preview = after >= 0 ? `${fmt(after)} will be left in ${addS.name} this week.` : `This puts ${addS.name} ${fmt(-after)} over for the week.`;
+    preview = otherWeek
+      ? (after >= 0 ? `${fmt(after)} will be left in ${addS.name} that week.` : `This puts ${addS.name} ${fmt(-after)} over for that week.`)
+      : (after >= 0 ? `${fmt(after)} will be left in ${addS.name} this week.` : `This puts ${addS.name} ${fmt(-after)} over for the week.`);
     if (after < 0) previewColor = RED;
   }
   if (!d.accounts.length) preview = 'Add an account or card first, in the Accounts tab.';
@@ -306,7 +322,8 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
       expenses: [{ id: uid('e'), ts, p, a, amt: val, note: note.trim() || (sub && sub !== 'General' ? sub : cat), date: c.today, tags: tagSel, cat, sub, ...(usd ? { orig: { amt: Math.round(num(amt) * 100) / 100, cur: 'USD' as const, rate, official: false } } : {}) }, ...x.expenses],
       accounts: chargeAccount(x.accounts, a, val)
     }));
-    if (p) setUI({ sheet: { name: 'saved', id: p }, lastAdd: { pocket: p, acct: a } });
+    if (p && !otherWeek) setUI({ sheet: { name: 'saved', id: p }, lastAdd: { pocket: p, acct: a } });
+    else if (p) { setUI({ sheet: null, lastAdd: { pocket: p, acct: a } }); flash(`−${fmt(val)} saved on ${shortDate(date)}`); }
     else { setUI(u => ({ sheet: null, lastAdd: { ...u.lastAdd, acct: a } })); flash(`−${fmt(val)} · ${split ? `split in ${parts.length} categories` : cat + (sub ? ' › ' + sub : '')} · no pocket`); }
   };
 
@@ -333,6 +350,7 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
         )}
         <FieldLabel m="14px 4px 6px">Name of the transaction</FieldLabel>
         <input placeholder="e.g. Lunch at Crepes & Waffles" aria-label="Name of the transaction" value={note} onChange={e => setNote(e.target.value)} style={textInput} />
+        <DateField value={date} onChange={setDate} today={today} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 4px 8px', gap: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-neutral-700)' }}>{split ? 'Categories' : 'Category'} {!split && !cat && <span style={{ color: RED, fontWeight: 700 }}>· required</span>}</span>
           {!usd && <button onClick={() => (split ? (setSplit(false), setCat(parts[0]?.cat[0] ? parts[0].cat : [cat, sub])) : startSplit())} style={{ border: 0, background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 700, cursor: 'pointer', padding: 0 }}>{split ? 'Use one category' : 'Split into categories'}</button>}
@@ -384,7 +402,7 @@ function ExpenseForm({ pocket }: { pocket?: string }) {
           </div>
         </div>
         <div style={{ margin: '14px 4px 0', fontSize: 13, color: previewColor }}>{preview}</div>
-        <PrimaryBtn onClick={save} disabled={cant} fs={17}>Save expense</PrimaryBtn>
+        <PrimaryBtn onClick={save} disabled={cant} fs={17} haptic>Save expense</PrimaryBtn>
       </div>
     </>
   );
@@ -543,26 +561,26 @@ function MovesCard({ id }: { id: string }) {
   const prevEnd = addDays(periodAt(pk, c.today)[0], -1), prevC = { ...c, today: prevEnd, weekStart: periodAt(pk, prevEnd)[0] };
   const nextOut = (m: Move) => !!m.next && moveInPeriod(m, pk, c);
   const nextIn = (m: Move) => !!m.next && !nextOut(m);
-  const list = d.moves.filter(m => (m.to === id || m.from === id) && (moveMonth(m) === c.month || m.week === c.weekStart || (m.next && moveInPeriod(m, pk, prevC))))
+  const list = d.moves.filter(m => (m.to === id || m.from === id) && (moveMonth(m) === c.month || m.week === c.weekStart || ((m.next || m.borrow) && moveInPeriod(m, pk, prevC))))
     .sort((a, b) => moveTime(b) - moveTime(a) || (b.week > a.week ? 1 : -1));
   if (!list.length) return null;
   const nameOf = (x: string) => (x === COVER ? 'cover the shortfall' : d.pockets.find(p => p.id === x)?.name ?? d.goals.find(g => g.id === x)?.name ?? 'a deleted pocket');
   const incomeOf = (m: Move) => d.incomes.find(t => incomeMoves([m], t).length);
-  const label = (m: Move) => m.next ? (nextOut(m) ? (mon ? 'To next month' : half ? 'To next quincena' : 'To next week') : (mon ? 'From last month' : half ? 'From last quincena' : 'From last week')) : m.to === id
+  const label = (m: Move) => m.borrow ? (moveInPeriod(m, pk, c) ? (mon ? 'From next month' : half ? 'From next quincena' : 'From next week') : (mon ? 'Covered last month' : half ? 'Covered last quincena' : 'Covered last week')) : m.next ? (nextOut(m) ? (mon ? 'To next month' : half ? 'To next quincena' : 'To next week') : (mon ? 'From last month' : half ? 'From last quincena' : 'From last week')) : m.to === id
     ? (m.from === '_income' ? `From income${incomeOf(m) ? ` · ${incomeOf(m)!.note}` : ''}` : `From ${nameOf(m.from)}`)
     : `To ${nameOf(m.to)}${d.goals.some(g => g.id === m.to) ? ' (goal)' : ''}`;
   const when = (m: Move) => {
     const t = moveTime(m), w = `week of ${shortDate(m.week)}`;
     return [t ? relDay(isoOf(t), c.today) : '', m.month ? `spread over ${m.spread ?? 1} week${(m.spread ?? 1) > 1 ? 's' : ''}` : w].filter(Boolean).join(' · ');
   };
-  const isIn = (m: Move) => m.next ? nextIn(m) : m.to === id;
+  const isIn = (m: Move) => m.borrow ? moveInPeriod(m, pk, c) : m.next ? nextIn(m) : m.to === id;
   const net = list.reduce((a, m) => a + (isIn(m) ? m.amt : -m.amt), 0);
   const save = (m: Move) => {
     const v = roundAmt(num(amt)), max = moveMax(d, m, c);
     if (v > max + 0.004) { flash(`The most this can be is ${fmt(max)}`); return; }
     setData(x => editMove(x, m.id, v)); setOpen(null); flash(v > 0 ? `Move changed to ${fmt(v)}` : 'Move undone');
   };
-  const undo = (m: Move) => { setData(x => undoMove(x, m.id)); setOpen(null); flash(m.next ? `Undone · ${fmt(m.amt)} came back to this pocket` : `Undone · ${fmt(m.amt)} ${m.to === id ? `went back to ${m.from === '_income' ? 'your saved income' : nameOf(m.from)}` : `came back to this pocket`}`); };
+  const undo = (m: Move) => { setData(x => undoMove(x, m.id)); setOpen(null); flash(m.borrow ? `Undone · ${fmt(m.amt)} is back in the next period` : m.next ? `Undone · ${fmt(m.amt)} came back to this pocket` : `Undone · ${fmt(m.amt)} ${m.to === id ? `went back to ${m.from === '_income' ? 'your saved income' : nameOf(m.from)}` : `came back to this pocket`}`); };
   const undoAll = () => {
     if (!confirmAll) { setConfirmAll(true); return; }
     setData(x => list.reduce<Data>((acc, m) => ({ ...acc, ...undoMove(acc, m.id) }), x));
@@ -600,7 +618,7 @@ function MovesCard({ id }: { id: string }) {
                 <button onClick={() => undo(m)} style={{ height: 42, borderRadius: 999, border: 0, background: 'var(--color-accent-100)', color: 'var(--color-accent-800)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Undo this move</button>
                 <span style={{ fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
                   {m.from === '_income' ? 'Undoing it takes the money out of this pocket; the income stays in your account, just not assigned to a pocket.'
-                    : m.next ? (inn ? 'Undoing it takes the money back out of this pocket and returns it to the period it left.' : 'Undoing it brings the money back to this pocket.') : inn ? `Undoing it gives the money back to ${nameOf(m.from)}.` : `Undoing it brings the money back to this pocket${d.goals.some(g => g.id === m.to) ? ' and takes it off the goal' : ''}.`} Moves never change your account balances.
+                    : m.borrow ? (inn ? 'Undoing it takes the money back out of this pocket and gives it back to the next period.' : 'Undoing it gives this money back to this period.') : m.next ? (inn ? 'Undoing it takes the money back out of this pocket and returns it to the period it left.' : 'Undoing it brings the money back to this pocket.') : inn ? `Undoing it gives the money back to ${nameOf(m.from)}.` : `Undoing it brings the money back to this pocket${d.goals.some(g => g.id === m.to) ? ' and takes it off the goal' : ''}.`} Moves never change your account balances.
                 </span>
               </div>
             )}
@@ -855,6 +873,15 @@ export function RefillSheet({ id }: { id: string }) {
     flash(after > 0.004 ? `${fmt(total)} moved · ${me.name} is still ${fmt(after)} over` : `${me.name} is covered with ${fmt(total)} from other pockets`);
   };
   const ok = over <= 0.004 || after <= 0.004;
+  // Or cover it with this pocket's own next period: it starts with that much less.
+  const pk = d.pockets.find(p => p.id === id);
+  const nextBudget = pocketStats(d, id, ctxAt(addDays(me.to, 1)))?.budget ?? 0;
+  const nextName = isMonthly(pk) ? 'next month' : isHalf(pk) ? 'next quincena' : 'next week';
+  const borrow = () => {
+    setData(x => borrowNext(x, ctxOf(x), id, over) ?? {});
+    openSheet({ name: 'pocket', id });
+    flash(`${me.name} is covered with ${fmt(over)} from its ${nextName}`);
+  };
   return (
     <SheetFrame title="Cover it">
       <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -863,7 +890,15 @@ export function RefillSheet({ id }: { id: string }) {
           <span style={{ fontSize: 34, fontWeight: 700, letterSpacing: '-0.03em', color: ok ? 'var(--ok-ink)' : 'var(--color-accent-900)' }}>{fmt(over)}</span>
           <span style={{ fontSize: 13, color: ok ? 'var(--ok-ink)' : 'var(--color-accent-800)' }}>{total > 0 ? (after > 0.004 ? `After this: still ${fmt(after)} over` : after < -0.004 ? `After this: covered, with ${fmt(-after)} to spare` : 'After this: covered ✓') : 'Take money from pockets that still have some left.'}</span>
         </div>
-        <span style={{ margin: '12px 6px 0', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Only a transfer between pockets for this period: your accounts and your month total don't change, and next period every pocket starts again from its own budget.</span>
+        {over > 0.004 && (
+          <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: 15, fontWeight: 700 }}>{isMonthly(pk) ? `From ${me.name}'s next month` : isHalf(pk) ? `From ${me.name}'s next quincena` : `From ${me.name}'s next week`}</span>
+            <span style={{ fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>{`${me.name} will start ${shortDate(addDays(me.to, 1))} with ${fmt(nextBudget - over)} instead of ${fmt(nextBudget)}. Nothing else changes.`}</span>
+            <PrimaryBtn onClick={borrow} mt={2} h={48} fs={15}>{`Cover ${fmt(over)} with the ${nextName}`}</PrimaryBtn>
+          </div>
+        )}
+        <span style={{ margin: '14px 6px 0', fontSize: 15, fontWeight: 700 }}>Or from other pockets</span>
+        <span style={{ margin: '4px 6px 0', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Only a transfer between pockets for this period: your accounts and your month total don't change, and next period every pocket starts again from its own budget.</span>
         <div style={{ marginTop: 12, background: 'var(--surface)', borderRadius: 22, padding: '10px 12px 4px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', gap: 6, paddingBottom: 8 }}>
             <button onClick={() => fill(suggestRefill(d, c, id))} className="hv-n200" style={{ height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--color-neutral-100)', color: TEXT, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Suggested</button>

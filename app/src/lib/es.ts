@@ -1,6 +1,40 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Income, bills, spending and your streak|Ingresos, cuentas, gastos y tu racha
+Stamped|Sellado
+Nothing spent|Sin gastos
+Start your streak today|Empieza tu racha hoy
+Day stamped. Your streak starts today.|Día sellado. Tu racha empieza hoy.
+1 day in a row up to date|1 día seguido al día
+Best streak: 1 day|Mejor racha: 1 día
+Log an expense or tap "I spent nothing"|Registra un gasto o toca "No gasté nada"
+I spent nothing this day|No gasté nada este día
+Nothing spent this day|Este día no gasté nada
+Undo|Deshacer
+How that week went|Cómo te fue esa semana
+How this week is going|Cómo va esta semana
+That day|Ese día
+Whole week|Toda la semana
+1 pocket ended in the red|1 bolsillo terminó en rojo
+Every pocket ended in the green|Todos los bolsillos terminaron en verde
+Every pocket is in the green|Todos los bolsillos van en verde
+Nothing spent that day|No gastaste nada ese día
+Nothing that day|Nada ese día
+No pocket had that day as a spending day|Ningún bolsillo tenía ese día como día de gasto
+Cover pockets in the red first ({0})|Cubrir primero los bolsillos en rojo ({0})
+Or from other pockets|O desde otros bolsillos
+Undoing it takes the money back out of this pocket and gives it back to the next period.|Al deshacerlo, la plata sale de este bolsillo y vuelve al próximo periodo.
+Undoing it gives this money back to this period.|Al deshacerlo, esta plata vuelve a este periodo.
+From next week|De la próxima semana
+From next quincena|De la próxima quincena
+From next month|Del próximo mes
+Covered last week|Cubierto la semana pasada
+Covered last quincena|Cubierto la quincena pasada
+Covered last month|Cubierto el mes pasado
+next week|próxima semana
+next quincena|próxima quincena
+next month|próximo mes
 Streak|Racha
 Days stamped this month and achievements|Días sellados del mes y logros
 I spent nothing today|No gasté nada hoy
@@ -2136,6 +2170,38 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+Cover {0} first ({1})|Cubrir primero {0} ({1})
+{0} goes to {1} for this week only, so it's out of the red. The other {2} stays saved.|{0} van a {1} solo por esta semana, así sale del rojo. Los otros {2} quedan guardados.
+{0} refills the pockets in the red for this week only. The other {1} stays saved.|{0} rellenan los bolsillos en rojo solo por esta semana. Los otros {1} quedan guardados.
+From {0}'s next week|De la próxima semana de {0}
+From {0}'s next quincena|De la próxima quincena de {0}
+From {0}'s next month|Del próximo mes de {0}
+{0} will start {1} with {2} instead of {3}. Nothing else changes.|{0} empieza el {1} con {2} en vez de {3}. Nada más cambia.
+Cover {0} with the next week|Cubrir {0} con la próxima semana
+Cover {0} with the next quincena|Cubrir {0} con la próxima quincena
+Cover {0} with the next month|Cubrir {0} con el próximo mes
+{0} is covered with {1} from its next week|{0} queda cubierto con {1} de su próxima semana
+{0} is covered with {1} from its next quincena|{0} queda cubierto con {1} de su próxima quincena
+{0} is covered with {1} from its next month|{0} queda cubierto con {1} de su próximo mes
+Undone · {0} is back in the next period|Deshecho · {0} volvió al próximo periodo
+Best streak: {0} days|Mejor racha: {0} días
+{0} days in a row up to date|{0} días seguidos al día
+Achievements {0}/{1}|Logros {0}/{1}
+{0} went over by {1}|{0} se pasó por {1}
+{0} pockets went over|{0} bolsillos se pasaron
+{0} pockets ended in the red|{0} bolsillos terminaron en rojo
+You had {0} left over|Te sobraron {0}
+{0} left so far|Te quedan {0} por ahora
+You spent {0} that day|Ese día gastaste {0}
+Spent {0} of {1} in all|Gastaste {0} de {1} en total
+Spent {0} of {1} · a clean week|Gastaste {0} de {1} · una semana limpia
+Spent {0} of {1} so far|Gastaste {0} de {1} por ahora
+That day's allowance was {0}|El cupo de ese día era {0}
+Went over by {0} of {1}|Te pasaste por {0} de {1}
+{0} left over of {1}|Sobraron {0} de {1}
+{0} left of {1}|Quedan {0} de {1}
+Spent {0} of {1} for the day|Gastaste {0} de {1} del día
+Spent {0} that day|Ese día gastaste {0}
 {0} days in a row|{0} días seguidos
 Day stamped. {0} days in a row.|Día sellado. {0} días seguidos.
 Today is stamped: you logged {0} expenses|Hoy está sellado: registraste {0} gastos
@@ -2480,6 +2546,9 @@ This is the last week of {0}, so it all goes to this week.|Es la última semana 
 +{0} this week|+{0} esta semana
 Not in any pocket: it won't touch your weekly budgets, but it still counts in {0}'s spending and comes out of {1}.|En ningún bolsillo: no toca tus presupuestos semanales, pero cuenta en los gastos de {0} y sale de {1}.
 {0} will be left in {1} this week.|Quedarán {0} en {1} esta semana.
+{0} will be left in {1} that week.|Quedarán {0} en {1} esa semana.
+This puts {0} {1} over for that week.|Esto deja a {0} pasado por {1} esa semana.
+−{0} saved on {1}|−{0} guardado el {1}
 This puts {0} {1} over for the week.|Esto deja a {0} pasado por {1} en la semana.
 {0} still needs a category.|{0} todavía necesita categoría.
 The parts add up to {0} more than the total.|Las partes suman {0} más que el total.

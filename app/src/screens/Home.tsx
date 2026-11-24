@@ -20,7 +20,6 @@ import { DeskFriends, FriendsHomeCard } from './Debts';
 import { monthSummary } from '../lib/plan';
 import { billAmount } from '../lib/schedule';
 import { safeLevel } from '../lib/derive';
-import { StreakCard } from '../ui/Streak';
 
 const C = 100.53; // ring circumference (r=16)
 
@@ -141,8 +140,6 @@ export default function Home() {
           </button>
         </div>}
 
-        {!hidden.includes('streak') && <section className="dh-sec"><SectionHead title="Streak" /><div style={{ maxWidth: 440 }}><StreakCard /></div></section>}
-
         {!hidden.includes('pockets') && <section className="dh-sec">
           <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={view === 'day' ? 'Today' : view === 'week' ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
           {all.length > 0 ? <div className="dh-lines" data-tour="pocket">
@@ -201,7 +198,6 @@ export default function Home() {
       ]} />
 
       </> },
-        { id: 'streak', name: 'Streak', desc: 'Days stamped this month and achievements', node: <StreakCard /> },
         { id: 'stats', name: 'Net worth and spending', desc: 'Net worth and spent this month', node: <>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 10 }}>
         <div onClick={() => setUI({ tab: 'accounts' })} className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2 }}>

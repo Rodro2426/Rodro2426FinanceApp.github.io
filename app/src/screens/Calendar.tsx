@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { StreakStrip, ZeroDayButton } from '../ui/Streak';
+import { DaySummary } from '../ui/DaySummary';
+import { sealedDays } from '../lib/achievements';
 import { glyph } from '../ui/PocketIcons';
 import { SwipeRow } from '../ui/SwipeRow';
 import { getLang } from '../lib/i18n';
@@ -47,14 +50,17 @@ export default function CalendarScreen() {
   const selDay = Number(sel.slice(8, 10));
   const chipStyle = { fontSize: 13, fontWeight: 600, padding: '7px 12px', borderRadius: 999, whiteSpace: 'nowrap' } as const;
 
+  const sealed = sealedDays(d), zero = new Set(d.zeroDays ?? []);
   const go = (m: string) => { setMonth(m); setSel(m === c.month ? c.today : `${m}-01`); };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ padding: '4px 4px 0', display: 'flex', flexDirection: 'column' }}>
         <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Calendar</span>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Income, bills and spending by day</span>
+        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Income, bills, spending and your streak</span>
       </div>
+
+      <StreakStrip />
 
       <div style={{ background: 'var(--surface)', borderRadius: 28, padding: '16px 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -67,6 +73,8 @@ export default function CalendarScreen() {
           {cells.map((date, i) => {
             if (!date) return <span key={i} />;
             const ev = eventsOn(d, date), on = date === sel, isToday = date === c.today;
+            // Streak: a day with an expense is washed in teal, a day marked "nothing spent" in lavender.
+            const stamp = !sealed.has(date) ? null : zero.has(date) && !d.expenses.some(e => e.date === date) ? 'zero' : 'spent';
             const dots = [
               ...(ev.some(e => e.b.kind === 'Income') || incomeOn(date).length ? [GREEN] : []),
               ...(ev.some(e => (e.b.kind === 'Bill' || e.b.kind === 'Subscription') && !e.b.notMine) ? [BILL] : []),
@@ -76,7 +84,9 @@ export default function CalendarScreen() {
             return (
               <button key={date} onClick={() => setSel(date)} aria-label={fmtDay(date, { weekday: 'long', month: 'long', day: 'numeric' })}
                 style={{ height: 46, borderRadius: 14, border: 0, padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  background: on ? TEXT : isToday ? 'var(--color-accent-100)' : 'transparent', color: on ? 'var(--on-text)' : isToday ? 'var(--color-accent-700)' : date < c.today ? 'var(--color-neutral-600)' : TEXT, transition: 'background .15s' }}>
+                  background: on ? TEXT : stamp === 'zero' ? 'var(--stamp-tint)' : stamp ? 'color-mix(in srgb, var(--brand) 13%, transparent)' : 'transparent',
+                  color: on ? 'var(--on-text)' : stamp === 'zero' ? 'var(--stamp)' : isToday ? 'var(--brand)' : stamp ? TEXT : date < c.today ? 'var(--color-neutral-600)' : TEXT,
+                  outline: isToday && !on ? '2px dashed var(--brand)' : 'none', outlineOffset: -2, transition: 'background .15s' }}>
                 <span style={{ fontSize: 15, fontWeight: isToday || on ? 700 : 600, lineHeight: 1 }}>{Number(date.slice(8))}</span>
                 <span style={{ display: 'flex', gap: 3, height: 5 }}>{dots.map((col, j) => <span key={j} style={{ width: 5, height: 5, borderRadius: 999, background: on && col === SPEND ? 'rgba(255,255,255,.6)' : col }} />)}</span>
               </button>
@@ -84,7 +94,7 @@ export default function CalendarScreen() {
           })}
         </div>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', fontSize: 11, fontWeight: 600, color: 'var(--color-neutral-600)', paddingTop: 2 }}>
-          {[[GREEN, 'Income'], [BILL, 'Bills'], ...(cardTotal || d.bills.some(b => b.kind === 'CardPayment') ? [[CARD, 'Cards']] : []), [SPEND, 'Spending']].map(([col, l]) => <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 7, height: 7, borderRadius: 999, background: col }} />{l}</span>)}
+          {[[GREEN, 'Income'], [BILL, 'Bills'], ...(cardTotal || d.bills.some(b => b.kind === 'CardPayment') ? [[CARD, 'Cards']] : []), [SPEND, 'Spending'], ['color-mix(in srgb, var(--brand) 30%, transparent)', 'Stamped'], ['var(--stamp-tint)', 'Nothing spent']].map(([col, l]) => <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 7, height: 7, borderRadius: 999, background: col, boxShadow: l === 'Nothing spent' ? 'inset 0 0 0 1px var(--stamp)' : undefined }} />{l}</span>)}
         </div>
       </div>
 
@@ -133,6 +143,8 @@ export default function CalendarScreen() {
         ))}
         {!selEvents.length && !selSpent.length && !selIncome.length && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing on this day.</div>}
       </ListCard>
+      <ZeroDayButton day={sel} />
+      <DaySummary day={sel} />
 
       <SectionHead title="Every month" right={`${scheduled.length} scheduled`} muted />
       <ListCard>

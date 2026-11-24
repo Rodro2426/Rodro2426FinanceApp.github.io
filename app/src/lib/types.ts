@@ -26,7 +26,7 @@ export interface Income { id: string; ts: number; a: string; amt: number; note: 
  * Money moved into or out of a pocket for one week (`week` = its Monday).
  * With `month`, it was income split for the whole month: it's spread evenly over `spread` weeks starting at `week`.
  */
-export interface Move { id: string; week: string; /** The day it was made (pockets that reset every 15 days use it). */ day?: string; from: string; to: string; amt: number; month?: string; spread?: number; /** The income it was split from. */ income?: string; /** "Send to next week": `from` and `to` are both the pocket. It leaves the pocket in the period it was made and arrives in the pocket's following period. */ next?: boolean }
+export interface Move { id: string; week: string; /** The day it was made (pockets that reset every 15 days use it). */ day?: string; from: string; to: string; amt: number; month?: string; spread?: number; /** The income it was split from. */ income?: string; /** "Send to next week": `from` and `to` are both the pocket. It leaves the pocket in the period it was made and arrives in the pocket's following period. */ next?: boolean; /** "Cover from next week": the mirror of `next`. `from` and `to` are both the pocket; it arrives in the period it was made and leaves the pocket's following period. */ borrow?: boolean }
 /** A transfer between accounts (card payments), or into/out of a CDT when `cdt` is set (then `from`/`to` is 'cdt:<id>'). */
 export interface Payment { id: string; ts: number; from: string; to: string; amt: number; date: string; ruleId?: string; ruleMonth?: string; cdt?: string; /** Money into or out of an investment fund. */ fund?: string }
 export type ScheduleKind = 'Income' | 'Bill' | 'Subscription' | 'CardPayment';

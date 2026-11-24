@@ -36,12 +36,49 @@ export function Bar({ pct, h = 10, track = 'var(--surface)', fill, ease = '.5s' 
   );
 }
 
-export function PrimaryBtn({ children, onClick, disabled, mt = 14, h = 56, fs = 16, bg = 'var(--action)', hover = 'hv-acc600' }: { children: ReactNode; onClick: () => void; disabled?: boolean; mt?: number; h?: number; fs?: number; bg?: string; hover?: string }) {
+export function PrimaryBtn({ children, onClick, disabled, mt = 14, h = 56, fs = 16, bg = 'var(--action)', hover = 'hv-acc600', haptic }: { children: ReactNode; onClick: () => void; disabled?: boolean; mt?: number; h?: number; fs?: number; bg?: string; hover?: string; /** Your finger feels a tick on iPhone (see TapLabel). */ haptic?: boolean }) {
+  const style: React.CSSProperties = { marginTop: mt, height: h, borderRadius: 999, border: 0, background: bg, color: bg === 'var(--action)' ? 'var(--action-ink)' : '#fff', fontSize: fs, fontWeight: 700, cursor: 'pointer', opacity: disabled ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 };
+  if (haptic) return <TapLabel onClick={onClick} disabled={disabled} className={hover} style={style}>{children}</TapLabel>;
   return (
-    <button onClick={() => !disabled && onClick()} disabled={disabled} className={hover}
-      style={{ marginTop: mt, height: h, borderRadius: 999, border: 0, background: bg, color: bg === 'var(--action)' ? 'var(--action-ink)' : '#fff', fontSize: fs, fontWeight: 700, cursor: 'pointer', opacity: disabled ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+    <button onClick={() => !disabled && onClick()} disabled={disabled} className={hover} style={style}>
       {children}
     </button>
+  );
+}
+
+const HIDDEN: React.CSSProperties = { position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none', margin: 0 };
+/**
+ * A button you feel. iPhone web apps can't vibrate, but a real tap on a label that flips an
+ * `<input type="checkbox" switch>` plays the system switch haptic (iOS 18+), so the button is that label.
+ * Android gets navigator.vibrate.
+ */
+export function TapLabel({ children, onClick, disabled, className, style }: { children: ReactNode; onClick: () => void; disabled?: boolean; className?: string; style?: React.CSSProperties }) {
+  return (
+    <label role="button" tabIndex={disabled ? -1 : 0} aria-disabled={disabled || undefined} className={className} style={{ position: 'relative', userSelect: 'none', WebkitUserSelect: 'none', ...style, cursor: disabled ? 'default' : 'pointer' }}
+      onClick={e => {
+        // The label's click also clicks its input; only the first one counts.
+        if ((e.target as HTMLElement).tagName === 'INPUT') return;
+        if (disabled) { e.preventDefault(); return; }
+        try { navigator.vibrate?.(12); } catch { /* not supported */ }
+        onClick();
+      }}
+      onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && !disabled) { e.preventDefault(); onClick(); } }}>
+      <input type="checkbox" {...{ switch: '' }} tabIndex={-1} aria-hidden="true" style={HIDDEN} />
+      {children}
+    </label>
+  );
+}
+
+/** A date box (today by default); an emptied box goes back to today. */
+export function DateField({ value, onChange, today }: { value: string; onChange: (v: string) => void; today: string }) {
+  return (
+    <>
+      <FieldLabel m="14px 4px 6px">Date</FieldLabel>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input type="date" aria-label="Date" value={value} onChange={e => onChange(e.target.value || today)} style={{ ...textInput, flex: 1, minWidth: 0, fontWeight: 600, minHeight: 52, WebkitAppearance: 'none', appearance: 'none' }} />
+        {value !== today && <button type="button" onClick={() => onChange(today)} className="hv-n200" style={{ height: 44, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--brand)', fontSize: 14, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>Today</button>}
+      </div>
+    </>
   );
 }
 

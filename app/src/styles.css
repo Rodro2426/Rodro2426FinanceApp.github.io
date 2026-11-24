@@ -556,8 +556,8 @@ input[style*="var(--surface)"], textarea[style*="var(--surface)"], select[style*
 .stamp-day.future { background: transparent; color: var(--color-neutral-600); }
 .stamp-day:focus-visible { outline: 3px solid var(--stamp); outline-offset: 1px; }
 .hex { width: 40px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; letter-spacing: -0.02em; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
-.stamp-drop { transform: rotate(-12deg); animation: stamp-drop .5s cubic-bezier(.5, 0, .3, 1.4) both, fade-out .3s ease-in 2.1s forwards; }
-@keyframes stamp-drop { 0% { transform: scale(2.2) rotate(-4deg); opacity: 0; } 70% { transform: scale(.94) rotate(-12deg); opacity: 1; } 100% { transform: scale(1) rotate(-12deg); } }
+.stamp-drop { filter: drop-shadow(0 10px 24px rgba(0,0,0,.18)); animation: stamp-drop .5s cubic-bezier(.5, 0, .3, 1.4) both, fade-out .3s ease-in 2.1s forwards; }
+@keyframes stamp-drop { 0% { transform: scale(2.2) rotate(8deg); opacity: 0; } 70% { transform: scale(.94); opacity: 1; } 100% { transform: scale(1); } }
 .stamp-note { animation: banner-in-up .4s cubic-bezier(.2, 1.2, .4, 1) both, fade-out .3s ease-in 2.1s forwards; }
 @keyframes banner-in-up { from { transform: translateY(140%); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .stamp-drop, .stamp-note { animation: fade-out .3s ease-in 2.1s forwards; } .stamp-day { transition: none; } }
