@@ -501,7 +501,7 @@
   document.getElementById('authForgot').addEventListener('click', function () {
     var email = emailIn.value.trim();
     if (!email) { say('auth.needEmail'); emailIn.focus(); return; }
-    firebase().then(function (f) { return f.a.sendPasswordResetEmail(f.auth, email); })
+    firebase().then(function (f) { f.auth.languageCode = lang; return f.a.sendPasswordResetEmail(f.auth, email); })
       .then(function () { say('auth.resetSent', true); })
       .catch(function (err) { say(friendly(err)); });
   });

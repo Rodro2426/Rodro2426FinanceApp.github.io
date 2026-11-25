@@ -8,6 +8,7 @@ import {
 import { doc, getDoc, getFirestore, writeBatch } from 'firebase/firestore/lite';
 import { get, set } from 'idb-keyval';
 import type { Data } from './types';
+import { getLang } from './i18n';
 
 const app = initializeApp({
   apiKey: 'AIzaSyBSxMmcFuvYlDA4LKRnCRg-1uRnKosWdgk',
@@ -18,6 +19,7 @@ const app = initializeApp({
   appId: '1:223677884702:web:ec5dda45af414d2e3ec10f'
 });
 export const auth = getAuth(app);
+auth.languageCode = getLang(); // Firebase's emails (reset password, confirm email) in the app's language; changing it reloads the app
 export const db = getFirestore(app);
 
 /** Firestore keeps each record under 1 MiB, so the data is stored in parts of this many characters. */
