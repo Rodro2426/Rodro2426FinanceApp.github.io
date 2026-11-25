@@ -1,6 +1,7 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Skip setup, I'll do it later|Saltar la configuración, lo hago después
 in weeks that already closed this month|en semanas que ya cerraron este mes
 in periods that already closed this month|en periodos que ya cerraron este mes
 Income, bills, spending and your streak|Ingresos, cuentas, gastos y tu racha
@@ -2191,6 +2192,7 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+We sent an email to {0} with a link to choose a new password. If it isn't there in a few minutes, look in spam.|Te enviamos un correo a {0} con un enlace para elegir una contraseña nueva. Si no llega en unos minutos, revisa la carpeta de spam.
 You had {0} left over|Te sobraron {0}
 You went {0} over|Te pasaste {0}
 Left over earlier {0}|Sobró antes {0}

@@ -134,6 +134,9 @@ export default function Setup() {
   // Pockets set up by the month: Home's cards open on the month instead of the week.
   const finish = () => { setData(x => ({ settings: { ...x.settings, setupStep: undefined, ...(x.pockets.length && x.pockets.every(p => p.period === 'month') ? { homeFaces: { safe: 2, pockets: 2 } } : {}) } })); setUI({ setup: false, tab: 'home' }); flash('Your Pockets is ready'); };
 
+  // Leave setup right away: what earlier steps saved stays, the rest can be set up later in Budget and Accounts.
+  const skipAll = () => { setData(x => ({ settings: { ...x.settings, setupStep: undefined } })); setUI({ setup: false, tab: 'home' }); };
+
   const idx = steps.indexOf(step);
   const name = d.settings.name && d.settings.name !== 'there' ? d.settings.name : '';
   return (
@@ -167,6 +170,7 @@ export default function Setup() {
             {step === 'done' && <Done name={name} onFinish={finish} />}
           </div>
         </div>
+        {step !== 'done' && <button onClick={skipAll} disabled={busy} style={{ alignSelf: 'center', marginTop: 18, minHeight: 44, padding: '0 16px', border: 0, background: 'transparent', color: SOFT, fontSize: 15, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 3, cursor: 'pointer' }}>Skip setup, I'll do it later</button>}
         <div aria-hidden="true" style={{ marginTop: 'auto', paddingTop: 28, display: 'flex', justifyContent: 'center', gap: 7 }}>
           {steps.map((s, i) => <span key={s} style={{ height: 7, width: i === idx ? 22 : 7, borderRadius: 4, background: i === idx ? MINT : 'var(--su-dot)', transition: `width .5s ${SHAPE}, background .5s` }} />)}
         </div>
