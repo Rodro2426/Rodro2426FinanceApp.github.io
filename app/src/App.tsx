@@ -1,7 +1,7 @@
 import { PrivacySheet } from './sheets/PrivacySheet';
 import { SheetFrame } from './sheets/Sheet';
 import { IncomeMonthSheet } from './sheets/IncomeMonthSheet';
-import { Component, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { Component, memo, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useApp, setUI, openSheet, setData, getData, replaceData, isPersisting, onPersist } from './lib/store';
 import { markDirty, startCloud, syncNow } from './lib/cloud';
 import { People, TopBar, useDesk } from './ui/Desk';
@@ -67,14 +67,15 @@ const TABS: [Tab, string, (p: { size?: number; sw?: number }) => ReactNode][] = 
   ['home', 'Home', I.Home], ['accounts', 'Accounts', I.Card], ['budget', 'Budget', I.Wallet], ['calendar', 'Calendar', I.Calendar], ['insights', 'Insights', I.Chart], ['social', 'Friends', People]
 ];
 
-function TabView({ tab }: { tab: Tab }) {
+// memo: the screens read their own data, so a tab doesn't need to redraw just because the App did (e.g. when a swipe ends).
+const TabView = memo(function TabView({ tab }: { tab: Tab }) {
   if (tab === 'home') return <Home />;
   if (tab === 'accounts') return <Accounts />;
   if (tab === 'budget') return <Budget />;
   if (tab === 'insights') return <Insights />;
   if (tab === 'social') return <SocialPage />;
   return <CalendarScreen />;
-}
+});
 
 /** If a sheet breaks while drawing, show a calm message instead of a black screen; the rest of the app keeps working. */
 class SheetSafety extends Component<{ children: ReactNode }, { broke: boolean }> {
@@ -233,7 +234,8 @@ export default function App() {
   }, [banner?.id]);
   const patchNotif = (id: string, p: { dismissed?: boolean; bannered?: boolean }) => setData(x => ({ notifications: x.notifications.map(n => (n.id === id ? { ...n, ...p } : n)) }));
 
-  useEffect(() => { scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
+  // After a finger swipe the new tab was already on screen (and maybe scrolled by you), so it stays where it is.
+  useEffect(() => { if (!bySwipe.current) scroll.current?.scrollTo({ top: 0 }); if (ui.page) setUI({ page: null }); }, [ui.tab]);
   // Shared debts: send and receive changes when the app opens or comes back, and shortly after a shared debt changes.
   const debtKey = sync.uid ? JSON.stringify((data.debts ?? []).filter(x => x.friend).map(x => [x.id, x.dir, x.amt, x.date, x.due, x.note, x.pays.map(p => [p.id, p.amt, p.date])])) : '';
   // Opening the app (or coming back) reads them at most every 6 hours; a change you made is sent right away.
@@ -259,9 +261,11 @@ export default function App() {
   // A tapped tab glides in from its side; after a finger swipe it's already in place, so no second animation.
   const lastTab = useRef(ui.tab);
   const tabAnim = useRef('');
+  const bySwipe = useRef(false);
   if (lastTab.current !== ui.tab) {
     const order = TABS.map(t => t[0]);
-    tabAnim.current = desk || tookSwipe() ? '' : order.indexOf(ui.tab) > order.indexOf(lastTab.current) ? 'tab-in-r' : 'tab-in-l';
+    bySwipe.current = tookSwipe();
+    tabAnim.current = desk || bySwipe.current ? '' : order.indexOf(ui.tab) > order.indexOf(lastTab.current) ? 'tab-in-r' : 'tab-in-l';
     lastTab.current = ui.tab;
   }
   // Opening a page from a tab slides it in; going from one page to another only fades.
@@ -327,15 +331,16 @@ export default function App() {
         <img className="brand-flower" src="./pockets-mark.svg" alt="" width={58} height={58} />
         <span className="wordmark">Pockets</span>
       </div>
-      <div ref={scroll} onScroll={onScroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 1 }}>
-        <div key={ui.tab} className={`scroll-body ${tabAnim.current}`} style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}>
-        <TabView tab={ui.tab} />
-        </div>
-      </div>
-      {/* The tab sliding in beside the current one while you swipe (see ui/swipe.ts). */}
-      {peek && <div ref={peekRef} aria-hidden="true" className="noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', transform: `translateX(${peek.side * 100}%)` }}>
-        <div className="scroll-body" style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}><TabView tab={peek.tab} /></div>
-      </div>}
+      {/* The current tab, plus the one sliding beside it while you swipe (see ui/swipe.ts). Each is keyed by its tab and listed
+          in tab order, so when a swipe ends and the two swap roles React only changes their styles: nothing is redrawn from scratch
+          (that redraw made letting go of a swipe stutter). */}
+      {TABS.filter(([t]) => t === ui.tab || t === peek?.tab).map(([t]) => t === ui.tab
+        ? <div key={t} ref={scroll} onScroll={onScroll} className="noscroll scroller" style={{ flex: 1, minHeight: 0, position: 'relative', zIndex: 1 }}>
+            <div className={`scroll-body ${tabAnim.current}`} style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}><TabView tab={t} /></div>
+          </div>
+        : <div key={t} ref={peekRef} aria-hidden="true" className="noscroll scroller" style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', transform: `translateX(${peek!.side * 100}%)` }}>
+            <div className="scroll-body" style={{ padding: `var(--top) 18px calc(var(--tb) + 100px)`, boxSizing: 'border-box' }}><TabView tab={t} /></div>
+          </div>)}
 
       {ui.page === 'investments' && <Investments />}
       {ui.page === 'reports' && <ReportsIndex />}

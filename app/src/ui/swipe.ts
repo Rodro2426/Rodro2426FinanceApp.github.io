@@ -7,7 +7,6 @@
 // Swipes that start on something that scrolls sideways, a slider, a text box or a chart are left alone.
 // While the finger is down, elements are moved directly (no React re-render per frame), so it stays smooth.
 import { useEffect, type RefObject } from 'react';
-import { flushSync } from 'react-dom';
 import { getState, setUI } from '../lib/store';
 import type { Tab } from '../lib/types';
 
@@ -256,21 +255,18 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       }
       if (done && g.to) {
         const tabDur = Math.round(Math.max(TAB_MS[0], Math.min(TAB_MS[1], rest / Math.max(v, 0.6) * 2)));
-        // Open the new tab right now, not when the glide ends: the real screen (the one you can touch and scroll) becomes
-        // the new tab and slides in from where the preview was, and the old tab moves to the preview layer to slide out.
-        // So a touch during the glide lands on the new tab and scrolls at once, instead of on a layer that ignores touches.
-        const from = getState().ui.tab, sc = scroller.current, top = sc?.scrollTop ?? 0, p0 = Math.min(1, Math.abs(g.dx) / w);
-        swiped = true;
-        flushSync(() => { setUI({ tab: g.to! }); setPeek({ tab: from, side: g.side === 1 ? -1 : 1 }); });
-        const out = peek.current;
-        if (sc) { sc.scrollTop = 0; slide(sc, `translateX(${g.side * w + g.dx}px)`, false); }
-        if (out) { out.scrollTop = top; slide(out, `translateX(${g.dx}px) scale(${1 - TAB_SINK * p0})`, false); }
-        void sc?.offsetWidth; // start both from where the finger left them
-        slide(sc, 'translateX(0px)', true, tabDur, TAB_EASE);
-        slide(out, `translateX(${-g.side * w}px) scale(${1 - TAB_SINK})`, true, tabDur, TAB_EASE);
+        const sc = scroller.current, inc = peek.current;
+        slide(sc, `translateX(${-g.side * w}px) scale(${1 - TAB_SINK})`, true, tabDur, TAB_EASE);
+        slide(inc, 'translateX(0)', true, tabDur, TAB_EASE);
+        // The incoming tab takes touches straight away, so you can scroll it while it's still gliding in
+        // (otherwise the finger lands on a layer that ignores touches and the screen feels frozen).
+        if (inc) inc.style.pointerEvents = 'auto';
+        if (sc) sc.style.pointerEvents = 'none';
         barAt(g.bar, 1, tabDur);
-        // React draws the bar the same way, so only its normal transition is handed back.
-        later(() => { clear(scroller.current); setPeek(null); if (g.bar) g.bar.a.style.transition = g.bar.b.style.transition = g.bar.tr; busy = false; }, tabDur);
+        // The tab only becomes official once the glide is over: that redraw is heavy, and doing it on release made the
+        // start of the glide stutter. The App keeps both screens (keyed by tab), so the one under your finger stays put.
+        // React then draws the bar the same way, so only its normal transition is handed back.
+        later(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); clear(scroller.current); if (g.bar) g.bar.a.style.transition = g.bar.b.style.transition = g.bar.tr; busy = false; }, tabDur);
       } else {
         slide(scroller.current, 'translateX(0) scale(1)', true, dur);
         slide(peek.current, `translateX(${g.side * 100}%)`, true, dur);
