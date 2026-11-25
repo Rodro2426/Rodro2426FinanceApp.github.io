@@ -17,7 +17,8 @@ const TAB_COMMIT = 0.5; // tab swipe: a slow drag opens the next tab only if mor
 export const FLICK = 0.5; // px/ms: a quick flick completes even if short
 const MS = 300;         // longest slide after letting go (a fast flick finishes sooner)
 const TAB_FLICK = 0.3;  // px/ms: tabs take a gentler flick than the back swipe
-const TAB_MS = [380, 480]; // a tab change glides in a bit slower, so it reads as smooth rather than snappy
+const TAB_MS = [500, 620]; // a tab change glides in slower than the back swipe, like paging in Apple's own apps
+const TAB_EASE = 'cubic-bezier(.32,.72,0,1)'; // iOS's own curve: a gentler start and a long, soft landing
 const TAB_SINK = 0.06;  // tab swipe: how much smaller the tab you leave gets
 export const EASE ='cubic-bezier(.22,1,.36,1)'; // quick start, soft landing, like iOS
 
@@ -52,9 +53,9 @@ function backLayer(): HTMLElement | null {
   return pages.length ? pages[pages.length - 1] : null;
 }
 
-const slide = (el: HTMLElement | null, x: string, animate: boolean, ms = MS) => {
+const slide = (el: HTMLElement | null, x: string, animate: boolean, ms = MS, ease = EASE) => {
   if (!el) return;
-  el.style.transition = animate ? `transform ${ms}ms ${EASE}` : 'none';
+  el.style.transition = animate ? `transform ${ms}ms ${ease}` : 'none';
   el.style.transform = x;
 };
 /** The tab bar keeping pace with a tab swipe: the current tab's highlight fades out and the next one's fades in, in step with the page. */
@@ -246,8 +247,8 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       }
       if (done && g.to) {
         const tabDur = Math.round(Math.max(TAB_MS[0], Math.min(TAB_MS[1], rest / Math.max(v, 0.6) * 2)));
-        slide(scroller.current, `translateX(${-g.side * w}px) scale(${1 - TAB_SINK})`, true, tabDur);
-        slide(peek.current, 'translateX(0)', true, tabDur);
+        slide(scroller.current, `translateX(${-g.side * w}px) scale(${1 - TAB_SINK})`, true, tabDur, TAB_EASE);
+        slide(peek.current, 'translateX(0)', true, tabDur, TAB_EASE);
         barAt(g.bar, 1, tabDur);
         // The App resets the scroller's position in the same render that shows the new tab (no flicker).
         // React then draws the bar the same way, so only its normal transition is handed back.
