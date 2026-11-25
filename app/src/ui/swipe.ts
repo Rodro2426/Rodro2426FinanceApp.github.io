@@ -126,6 +126,10 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
     type Mode = 'undecided' | 'none' | 'back' | 'tab' | 'bar';
     let s: { x: number; y: number; t: number; edge: boolean; free: boolean; mode: Mode; dx: number; dy: number; layer: HTMLElement | null; dim: HTMLElement | null; side: 1 | -1; to: Tab | null; nav: HTMLElement | null; pill: HTMLElement | null; bar: Bar } | null = null;
     let busy = false;
+    // What's left to do when the current glide ends. A new touch runs it right away, so you never wait for an animation.
+    let pending: { timer: number; fn: () => void } | null = null;
+    const later = (fn: () => void, ms: number) => { pending = { timer: window.setTimeout(() => { pending = null; fn(); }, ms), fn }; };
+    const finishNow = () => { const p = pending; if (!p) return; pending = null; clearTimeout(p.timer); p.fn(); };
 
     const blocked = () => {
       const { ui } = getState();
@@ -163,6 +167,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
     };
 
     const down = (e: TouchEvent) => {
+      if (e.touches.length === 1) finishNow();
       if (e.touches.length !== 1 || blocked()) { s = null; return; }
       const p = e.touches[0], target = e.target as Element;
       const nav = target.closest?.('.tabbar nav') as HTMLElement | null;
@@ -225,11 +230,11 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       const rest = done ? w - Math.abs(g.dx) : Math.abs(g.dx);
       const dur = Math.round(Math.max(170, Math.min(MS, rest / Math.max(v, 0.9) * 1.6)));
       busy = true;
-      if (g.mode === 'tab' && !g.to) { slide(scroller.current, 'translateX(0)', true, 320); setTimeout(() => { clear(scroller.current); busy = false; }, 320); return; }
+      if (g.mode === 'tab' && !g.to) { slide(scroller.current, 'translateX(0)', true, 320); later(() => { clear(scroller.current); busy = false; }, 320); return; }
       if (g.mode === 'back' && g.dim && g.layer) {
         const layer = g.layer, dim = g.dim, ms = done ? 280 : 340;
         cardEnd(layer, dim, done, ms, g.dx, g.dy, w);
-        setTimeout(() => {
+        later(() => {
           if (done) { const b = backButton(); if (b) { b.dataset.going = '1'; b.click(); delete b.dataset.going; } }
           clear(layer); layer.style.animation = ''; dim.remove(); busy = false;
         }, ms);
@@ -238,10 +243,10 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       if (g.mode === 'back') {
         if (done) {
           slide(g.layer, `translateX(${w}px)`, true, dur);
-          setTimeout(() => { const b = backButton(); if (b) { b.dataset.going = '1'; b.click(); delete b.dataset.going; } clear(g.layer); busy = false; }, dur);
+          later(() => { const b = backButton(); if (b) { b.dataset.going = '1'; b.click(); delete b.dataset.going; } clear(g.layer); busy = false; }, dur);
         } else {
           slide(g.layer, 'translateX(0)', true, dur);
-          setTimeout(() => { clear(g.layer); busy = false; }, dur);
+          later(() => { clear(g.layer); busy = false; }, dur);
         }
         return;
       }
@@ -252,12 +257,12 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
         barAt(g.bar, 1, tabDur);
         // The App resets the scroller's position in the same render that shows the new tab (no flicker).
         // React then draws the bar the same way, so only its normal transition is handed back.
-        setTimeout(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); if (g.bar) g.bar.a.style.transition = g.bar.b.style.transition = g.bar.tr; busy = false; }, tabDur);
+        later(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); if (g.bar) g.bar.a.style.transition = g.bar.b.style.transition = g.bar.tr; busy = false; }, tabDur);
       } else {
         slide(scroller.current, 'translateX(0) scale(1)', true, dur);
         slide(peek.current, `translateX(${g.side * 100}%)`, true, dur);
         barAt(g.bar, 0, dur);
-        setTimeout(() => { clear(scroller.current); setPeek(null); barReset(g.bar); busy = false; }, dur);
+        later(() => { clear(scroller.current); setPeek(null); barReset(g.bar); busy = false; }, dur);
       }
     };
     const cancel = () => {
@@ -283,7 +288,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       cardStart(layer);
       void layer.offsetWidth; // start from full size, so the shrink animates
       cardEnd(layer, dim, true, 280, w * 0.2, 0, w);
-      setTimeout(() => { b.dataset.going = '1'; b.click(); delete b.dataset.going; clear(layer); layer.style.animation = ''; dim.remove(); busy = false; }, 270);
+      later(() => { b.dataset.going = '1'; b.click(); delete b.dataset.going; clear(layer); layer.style.animation = ''; dim.remove(); busy = false; }, 270);
     };
     window.addEventListener('click', backTap, true);
     window.addEventListener('touchstart', down, { passive: true });
