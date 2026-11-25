@@ -1,6 +1,22 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Starts with|Empieza con
+Left over|Sobraron
+You went over|Te pasaste
+You have left|Te quedan
+1st quincena|1ª quincena
+2nd quincena|2ª quincena
+the 2nd quincena|la 2ª quincena
+the next week|la próxima semana
+the next quincena|la próxima quincena
+the next month|el próximo mes
+Add a pocket first.|Primero agrega un bolsillo.
+That can't be done anymore|Eso ya no se puede hacer
+Undo · the money comes back to this period|Deshacer · la plata vuelve a este periodo
+Undo · this period goes back to being over|Deshacer · este periodo vuelve a quedar pasado
+Carry over is on for this pocket: what's left or overspent moves to the next period by itself. You can turn it off in Edit pocket.|Este bolsillo arrastra el saldo: lo que sobra o lo que te pasas pasa solo al siguiente periodo. Puedes apagarlo en Editar bolsillo.
+Cover it with another pocket|Cubrir con otro bolsillo
 Skip setup, I'll do it later|Saltar la configuración, lo hago después
 in weeks that already closed this month|en semanas que ya cerraron este mes
 in periods that already closed this month|en periodos que ya cerraron este mes
@@ -2192,6 +2208,28 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+{0} moved on to {1}|{0} pasaron a {1}
+{0} was taken from {1}|{0} se descontaron de {1}
+{0} carried on to {1} by itself|{0} pasaron solos a {1}
+{0} over, taken from {1} by itself|{0} de más se descontaron solos de {1}
+{0} was left and didn't move|{0} sobraron y no se movieron
+{0} over and nothing covered it|Te pasaste {0} y nada lo cubrió
+How much moves on to {0}?|¿Cuánto pasa a {0}?
+How much to take from {0}?|¿Cuánto descontar de {0}?
+Nothing moved this money. You can send it on to {0}.|Esta plata no se movió. Puedes pasarla a {0}.
+Nobody covered this. You can take it from {0}.|Nada cubrió esto. Puedes descontarlo de {0}.
+Move it to {0}|Pasarla a {0}
+Take it from {0}|Descontarlo de {0}
+You had {0} and you spent {1}|Tenías {0} y gastaste {1}
+You have {0} and you've spent {1}|Tienes {0} y llevas {1}
++ {0} from before|+ {0} que venían de antes
+− {0} from before|− {0} que faltaron antes
++ {0} that arrived|+ {0} que llegaron
+− {0} taken off|− {0} descontados
++ {0} from other pockets|+ {0} de otros bolsillos
+− {0} to other pockets|− {0} a otros bolsillos
+= {0} and you spent {1}|= {0} y gastaste {1}
+= {0} and you've spent {1}|= {0} y llevas {1}
 We sent an email to {0} with a link to choose a new password. If it isn't there in a few minutes, look in spam.|Te enviamos un correo a {0} con un enlace para elegir una contraseña nueva. Si no llega en unos minutos, revisa la carpeta de spam.
 You had {0} left over|Te sobraron {0}
 You went {0} over|Te pasaste {0}
@@ -2814,4 +2852,8 @@ All {0}|Todo {0}
 {0} pocket{1}|{0} bolsillo{1}
 {0} expense{1}|{0} gasto{1}
 of {0}|de {0}
+Week {0}|Semana {0}
+week {0}|la semana {0}
+You had {0}|Tenías {0}
+You have {0}|Tienes {0}
 `;

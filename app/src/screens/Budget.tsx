@@ -1,7 +1,7 @@
 import { salaryBills, withIncome } from '../lib/salary';
 import { glyph } from '../ui/PocketIcons';
 import { Blocks } from '../ui/Blocks';
-import { useApp, openSheet, setData } from '../lib/store';
+import { useApp, openSheet, setData, setUI } from '../lib/store';
 import { extraIncomes, findMismatches, monthSummary } from '../lib/plan';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
 import { allStats, ctxOf, curSymbol, fmt, isHalf, isMonthly, monthPlanOf, num, pctOf, periodsInMonth } from '../lib/derive';
@@ -67,6 +67,9 @@ export default function Budget() {
         <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{d.pockets.length && d.pockets.every(isMonthly) ? 'per month' : d.pockets.some(p => isHalf(p) || isMonthly(p)) ? 'per period' : 'per week'}</span>
       </div>
       <span style={{ margin: '-2px 4px 2px', fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>{d.pockets.length && d.pockets.every(isMonthly) ? 'Each pocket is what you can spend on one thing. It fills up again every month.' : 'Each pocket is what you can spend on one thing. It fills up again every week (or quincena).'}</span>
+      {d.pockets.length > 0 && <button onClick={() => setUI({ page: `pockets:${d.pockets[0].id}` })} className="hv-white" style={{ height: 50, borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-text)', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <I.Calendar size={18} />Pocket manager
+      </button>}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {all.map(s => {
           const p = d.pockets.find(x => x.id === s.id)!;

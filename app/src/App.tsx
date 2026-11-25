@@ -1,4 +1,5 @@
 import { PrivacySheet } from './sheets/PrivacySheet';
+import { PocketManager } from './screens/PocketManager';
 import { SheetFrame } from './sheets/Sheet';
 import { IncomeMonthSheet } from './sheets/IncomeMonthSheet';
 import { Component, memo, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
@@ -346,6 +347,7 @@ export default function App() {
       {ui.page === 'reports' && <ReportsIndex />}
       {ui.page === 'categories' && <CategoriesPage />}
       {ui.page === 'trophies' && <TrophiesPage />}
+      {ui.page?.startsWith('pockets:') && <PocketManager id={ui.page.slice(8)} />}
       {ui.page?.startsWith('report:') && <ReportPage id={ui.page.slice(7)} />}
       {ui.page?.startsWith('trip:') && <TripPage id={ui.page.slice(5)} />}
       {ui.page?.startsWith('tripstats:') && <TripStatsPage id={ui.page.slice(10)} />}

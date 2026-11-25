@@ -493,6 +493,9 @@ export function PocketSheet({ id, view: v0 }: { id: string; view?: PocketView })
         <button onClick={() => openSheet({ name: 'editPocket', id })} className="hv-n200" style={{ marginTop: 12, height: 44, borderRadius: 999, border: 0, background: 'transparent', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <I.Pencil size={15} />Edit pocket
         </button>
+        <button onClick={() => { closeSheet(); setUI({ page: `pockets:${id}` }); }} className="hv-n200" style={{ height: 44, borderRadius: 999, border: 0, background: 'transparent', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <I.Calendar size={15} />Pocket manager
+        </button>
         <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
           {s.left < -0.004 ? <button onClick={() => openSheet({ name: 'refill', id })} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}><I.Swap size={17} />Cover it</button>
           : <button onClick={() => openSheet({ name: 'move', id })} disabled={cantMove} className="hv-n200" style={{ flex: 1, height: 54, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: cantMove ? 0.45 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>

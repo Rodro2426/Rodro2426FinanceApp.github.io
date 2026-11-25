@@ -39,6 +39,8 @@
   --ease-drawer: cubic-bezier(.32, .72, 0, 1);
   /* Safe-to-spend card tones */
   --safe-g-bg: oklch(0.95 0.045 155); --safe-g-label: oklch(0.42 0.09 155); --safe-g-amt: oklch(0.3 0.07 155); --safe-g-bar: oklch(0.68 0.13 155);
+  /* Pocket manager: a period that went over, and the green of the period running now. */
+  --safe-r-bg: oklch(0.94 0.045 30); --safe-r-label: oklch(0.45 0.13 30); --safe-r-amt: oklch(0.4 0.15 30); --safe-r-bar: #d4301a; --safe-g-now: oklch(0.9 0.08 155);
   --safe-y-bg: oklch(0.96 0.055 92); --safe-y-label: oklch(0.46 0.09 75); --safe-y-amt: oklch(0.33 0.07 70); --safe-y-bar: oklch(0.8 0.14 82);
   color-scheme: light;
   --color-bg: #f3f2f2;
@@ -235,6 +237,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
   --color-accent-900: #ffd8cf;
   --tint-l: 0.31; --tint-c: 0.055; --ink-l: 0.87; --ink-c: 0.09; --mid-l: 0.66;
   --safe-g-bg: oklch(0.31 0.06 155); --safe-g-label: oklch(0.85 0.08 155); --safe-g-amt: oklch(0.95 0.05 155); --safe-g-bar: oklch(0.7 0.14 155);
+  --safe-r-bg: oklch(0.31 0.07 30); --safe-r-label: oklch(0.86 0.07 30); --safe-r-amt: oklch(0.93 0.06 30); --safe-r-bar: oklch(0.7 0.17 30); --safe-g-now: oklch(0.37 0.07 155);
   --safe-y-bg: oklch(0.33 0.06 85); --safe-y-label: oklch(0.88 0.08 85); --safe-y-amt: oklch(0.96 0.05 90); --safe-y-bar: oklch(0.8 0.14 82);
   --shadow-sm: 0 1px 2px rgba(0,0,0,.5);
   --shadow-md: 0 3px 10px rgba(0,0,0,.5);
