@@ -18,7 +18,8 @@ export const FLICK = 0.5; // px/ms: a quick flick completes even if short
 const MS = 300;         // longest slide after letting go (a fast flick finishes sooner)
 const TAB_FLICK = 0.3;  // px/ms: tabs take a gentler flick than the back swipe
 const TAB_MS = [380, 480]; // a tab change glides in a bit slower, so it reads as smooth rather than snappy
-export const EASE = 'cubic-bezier(.22,1,.36,1)'; // quick start, soft landing, like iOS
+const TAB_SINK = 0.06;  // tab swipe: how much smaller the tab you leave gets
+export const EASE ='cubic-bezier(.22,1,.36,1)'; // quick start, soft landing, like iOS
 
 /** True once after a finger swipe changed the tab (so the App doesn't animate it a second time). */
 let swiped = false;
@@ -77,7 +78,44 @@ function barAt(bar: Bar, p: number, ms = 0) {
 /** Back to exactly what React drew (after a swipe that sprang back). */
 const barReset = (bar: Bar) => { if (bar) { bar.a.style.cssText = bar.saved[0]; bar.b.style.cssText = bar.saved[1]; } };
 
-const clear = (el: HTMLElement | null) => { if (el) { el.style.transition = ''; el.style.transform = ''; el.style.boxShadow = ''; } };
+const clear = (el: HTMLElement | null) => {
+  if (el) { el.style.transition = ''; el.style.transform = ''; el.style.boxShadow = ''; el.style.borderRadius = ''; el.style.opacity = ''; el.style.transformOrigin = ''; el.style.willChange = ''; }
+};
+
+/* ---- Back swipe on a full page: it shrinks into a rounded card that follows the finger over a dimmed screen,
+   and on letting go it shrinks away (or springs back to full size). ---- */
+const ZOOM = 0.3;   // how much smaller the page gets when dragged all the way across
+const RADIUS = 38;  // corner roundness of the card, close to the iPhone screen's
+const DIM = 0.22;   // how dark the screen behind the card gets
+/** Turns the page into a card once, when the swipe starts. Corners and shadow never change while dragging:
+    changing them every frame makes the phone repaint the whole page, which is what made the start stutter. */
+const cardStart = (el: HTMLElement) => {
+  el.style.animation = 'none';
+  el.style.transition = 'none';
+  el.style.willChange = 'transform';
+  el.style.transformOrigin = '50% 50%';
+  el.style.borderRadius = `${RADIUS}px`;
+  el.style.boxShadow = '0 24px 70px rgba(0,0,0,.28)';
+};
+/** While dragging only the position and size change (the phone's graphics chip does that without repainting). */
+const cardAt = (el: HTMLElement, dx: number, dy: number, w: number) => {
+  el.style.transform = `translate(${dx * 0.55}px, ${dy * 0.35}px) scale(${1 - ZOOM * Math.min(1, dx / w)})`;
+};
+/** The dim layer drawn just under the page. */
+function dimUnder(el: HTMLElement): HTMLElement {
+  const d = document.createElement('div');
+  d.setAttribute('aria-hidden', 'true');
+  d.style.cssText = `position:absolute;inset:0;pointer-events:none;background:#000;opacity:0;z-index:${el.style.zIndex || getComputedStyle(el).zIndex}`;
+  el.parentElement?.insertBefore(d, el);
+  return d;
+}
+/** Letting go: shrink away and fade (go = true), or back to full size. */
+function cardEnd(el: HTMLElement, dim: HTMLElement | null, go: boolean, ms: number, dx: number, dy: number, w: number) {
+  el.style.transition = `transform ${ms}ms ${EASE}, opacity ${ms}ms ease`;
+  el.style.transform = go ? `translate(${dx * 0.55 + w * 0.08}px, ${dy * 0.35}px) scale(.55)` : 'translate(0px, 0px) scale(1)';
+  if (go) el.style.opacity = '0';
+  if (dim) { dim.style.transition = `opacity ${ms}ms ease`; dim.style.opacity = '0'; }
+}
 
 export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
   tabs: Tab[]; enabled: boolean; scroller: RefObject<HTMLDivElement | null>; peek: RefObject<HTMLDivElement | null>; setPeek: (p: Peek | null) => void;
@@ -85,7 +123,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
   useEffect(() => {
     if (!enabled) return;
     type Mode = 'undecided' | 'none' | 'back' | 'tab' | 'bar';
-    let s: { x: number; y: number; t: number; edge: boolean; free: boolean; mode: Mode; dx: number; layer: HTMLElement | null; side: 1 | -1; to: Tab | null; nav: HTMLElement | null; pill: HTMLElement | null; bar: Bar } | null = null;
+    let s: { x: number; y: number; t: number; edge: boolean; free: boolean; mode: Mode; dx: number; dy: number; layer: HTMLElement | null; dim: HTMLElement | null; side: 1 | -1; to: Tab | null; nav: HTMLElement | null; pill: HTMLElement | null; bar: Bar } | null = null;
     let busy = false;
 
     const blocked = () => {
@@ -127,7 +165,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       if (e.touches.length !== 1 || blocked()) { s = null; return; }
       const p = e.touches[0], target = e.target as Element;
       const nav = target.closest?.('.tabbar nav') as HTMLElement | null;
-      s = { x: p.clientX, y: p.clientY, t: Date.now(), edge: p.clientX <= EDGE, free: !ownsSwipe(target), mode: 'undecided', dx: 0, layer: null, side: 1, to: null, nav, pill: null, bar: null };
+      s = { x: p.clientX, y: p.clientY, t: Date.now(), edge: p.clientX <= EDGE, free: !ownsSwipe(target), mode: 'undecided', dx: 0, dy: 0, layer: null, dim: null, side: 1, to: null, nav, pill: null, bar: null };
     };
 
     const move = (e: TouchEvent) => {
@@ -138,7 +176,10 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
         if (Math.abs(dx) < Math.abs(dy) * 1.2) { s.mode = 'none'; return; }
         const { ui } = getState();
         if (s.nav) s.mode = 'bar';
-        else if (s.edge && dx > 0 && backButton()) { s.mode = 'back'; s.layer = backLayer(); }
+        else if (s.edge && dx > 0 && backButton()) {
+          s.mode = 'back'; s.layer = backLayer();
+          if (s.layer?.classList.contains('page')) { cardStart(s.layer); s.dim = dimUnder(s.layer); }
+        }
         else if (s.free && !ui.sheet && !ui.page) {
           const side: 1 | -1 = dx < 0 ? 1 : -1, i = tabs.indexOf(ui.tab), to = tabs[i + side];
           if (i >= 0 && to) { s.mode = 'tab'; s.side = side; s.to = to; s.bar = barStart(ui.tab, to); setPeek({ tab: to, side }); }
@@ -150,7 +191,12 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       e.preventDefault();
       if (s.mode === 'bar') { moveBar(p.clientX); return; }
       if (s.mode === 'back') {
-        s.dx = Math.max(0, dx);
+        s.dx = Math.max(0, dx); s.dy = dy;
+        if (s.dim && s.layer) {
+          cardAt(s.layer, s.dx, dy, s.layer.clientWidth || window.innerWidth);
+          s.dim.style.opacity = String(DIM * Math.min(1, s.dx / 60));
+          return;
+        }
         slide(s.layer, `translateX(${s.dx}px)`, false);
         if (s.layer) s.layer.style.boxShadow = '-12px 0 30px rgba(0,0,0,.18)';
         return;
@@ -158,9 +204,11 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       // tab: only toward the neighbour that was picked; a little resistance past the start
       s.dx = s.side === 1 ? Math.min(0, dx) : Math.max(0, dx);
       if (!s.to) { slide(scroller.current, `translateX(${s.dx * 0.22}px)`, false); return; }
-      slide(scroller.current, `translateX(${s.dx}px)`, false);
+      const tp = Math.min(1, Math.abs(s.dx) / (scroller.current?.clientWidth || window.innerWidth));
+      // The tab you leave sinks back a little, so the two read as layers instead of one flat strip.
+      slide(scroller.current, `translateX(${s.dx}px) scale(${1 - TAB_SINK * tp})`, false);
       slide(peek.current, `translateX(calc(${s.side * 100}% + ${s.dx}px))`, false);
-      barAt(s.bar, Math.min(1, Math.abs(s.dx) / (scroller.current?.clientWidth || window.innerWidth)));
+      barAt(s.bar, tp);
     };
 
     const up = (e: TouchEvent) => {
@@ -177,6 +225,15 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       const dur = Math.round(Math.max(170, Math.min(MS, rest / Math.max(v, 0.9) * 1.6)));
       busy = true;
       if (g.mode === 'tab' && !g.to) { slide(scroller.current, 'translateX(0)', true, 320); setTimeout(() => { clear(scroller.current); busy = false; }, 320); return; }
+      if (g.mode === 'back' && g.dim && g.layer) {
+        const layer = g.layer, dim = g.dim, ms = done ? 280 : 340;
+        cardEnd(layer, dim, done, ms, g.dx, g.dy, w);
+        setTimeout(() => {
+          if (done) { const b = backButton(); if (b) { b.dataset.going = '1'; b.click(); delete b.dataset.going; } }
+          clear(layer); layer.style.animation = ''; dim.remove(); busy = false;
+        }, ms);
+        return;
+      }
       if (g.mode === 'back') {
         if (done) {
           slide(g.layer, `translateX(${w}px)`, true, dur);
@@ -189,14 +246,14 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       }
       if (done && g.to) {
         const tabDur = Math.round(Math.max(TAB_MS[0], Math.min(TAB_MS[1], rest / Math.max(v, 0.6) * 2)));
-        slide(scroller.current, `translateX(${-g.side * w}px)`, true, tabDur);
+        slide(scroller.current, `translateX(${-g.side * w}px) scale(${1 - TAB_SINK})`, true, tabDur);
         slide(peek.current, 'translateX(0)', true, tabDur);
         barAt(g.bar, 1, tabDur);
         // The App resets the scroller's position in the same render that shows the new tab (no flicker).
         // React then draws the bar the same way, so only its normal transition is handed back.
         setTimeout(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); if (g.bar) g.bar.a.style.transition = g.bar.b.style.transition = g.bar.tr; busy = false; }, tabDur);
       } else {
-        slide(scroller.current, 'translateX(0)', true, dur);
+        slide(scroller.current, 'translateX(0) scale(1)', true, dur);
         slide(peek.current, `translateX(${g.side * 100}%)`, true, dur);
         barAt(g.bar, 0, dur);
         setTimeout(() => { clear(scroller.current); setPeek(null); barReset(g.bar); busy = false; }, dur);
@@ -206,7 +263,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       const g = s; s = null;
       if (!g) return;
       if (g.mode === 'bar') endBar(g, false);
-      if (g.mode === 'back') clear(g.layer);
+      if (g.mode === 'back') { clear(g.layer); if (g.layer) g.layer.style.animation = ''; g.dim?.remove(); }
       if (g.mode === 'tab') { clear(scroller.current); setPeek(null); barReset(g.bar); }
     };
 
@@ -219,8 +276,13 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       if (busy) return;
       busy = true;
       layer.style.animation = 'none';
-      slide(layer, `translateX(${layer.clientWidth}px)`, true, 260);
-      setTimeout(() => { b.dataset.going = '1'; b.click(); delete b.dataset.going; clear(layer); layer.style.animation = ''; busy = false; }, 250);
+      // Same shrink-away as the back swipe, as if a short swipe had been let go.
+      const w = layer.clientWidth || window.innerWidth, dim = dimUnder(layer);
+      dim.style.opacity = String(DIM);
+      cardStart(layer);
+      void layer.offsetWidth; // start from full size, so the shrink animates
+      cardEnd(layer, dim, true, 280, w * 0.2, 0, w);
+      setTimeout(() => { b.dataset.going = '1'; b.click(); delete b.dataset.going; clear(layer); layer.style.animation = ''; dim.remove(); busy = false; }, 270);
     };
     window.addEventListener('click', backTap, true);
     window.addEventListener('touchstart', down, { passive: true });
