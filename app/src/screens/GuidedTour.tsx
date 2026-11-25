@@ -17,7 +17,7 @@ const STOPS: Stop[] = [
   { title: 'Insights', text: 'Where your money goes: by category, pocket, #tag and bills, with reports.', target: '[data-tour="tab-insights"]', tab: 'insights' },
   { title: 'Every month', text: 'Your salary, bills and subscriptions repeat on their day, with reminders before they’re due.', target: '[data-tour="add-schedule"]', tab: 'calendar' },
   { title: 'Friends & trips', text: 'Debts with one person, and trips where everyone adds what they paid and Pockets settles up.', target: '[data-tour="tab-social"]', tab: 'social' },
-  { title: 'Your profile', text: 'Your name, look, backups, Apple Pay purchases, and this tour again.', target: '[data-tour="profile"]', tab: 'home' },
+  { title: 'Your profile', text: 'Your name, photo, colors and this tour again. The gear on top has the rest: backups, notifications, Apple Pay.', target: '[data-tour="profile"]', tab: 'home' },
   { title: 'You’re ready', text: 'Replay this tour anytime from Profile.' }
 ];
 

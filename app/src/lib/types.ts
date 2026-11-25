@@ -181,6 +181,7 @@ export type Sheet =
   | { name: 'goal'; id: string }
   | { name: 'newGoal' }
   | { name: 'settings' }
+  | { name: 'appSettings' }
   | { name: 'reminder'; id: string | null }
   | { name: 'quickAdd' }
   | { name: 'privacy' }

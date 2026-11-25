@@ -1,6 +1,5 @@
 import { useState, useSyncExternalStore } from 'react';
 import { dateLocale } from '../lib/i18n';
-import { logOutAndClear } from '../lib/session';
 import { flash } from '../lib/store';
 import { TEXT } from '../lib/constants';
 import { currentName, getSync, resetPassword, resolveConflict, signIn, signInGoogle, signUp, subscribeSync, syncNow, type SyncState } from '../lib/cloud';
@@ -86,8 +85,8 @@ export function CloudSheet() {
           </div>
           <ConflictChoice />
           <button onClick={async () => { setBusy(true); await syncNow(); setBusy(false); }} disabled={busy} style={{ height: 48, borderRadius: 999, border: 0, background: TEXT, color: 'var(--on-text)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>{busy ? 'Syncing…' : 'Sync now'}</button>
-          <span style={{ margin: '0 4px', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Your data stays on this phone too, so the app works without internet and uploads when you're back online. Backup files in Profile still work as an extra copy.</span>
-          <button onClick={async () => { if (!confirm('Log out? Your data stays safe in your account and this device is cleared, so you can sign in with another account.')) return; const r = await logOutAndClear(); if (r === 'unsynced' && confirm('Some changes on this device haven\'t been backed up yet. Log out anyway and lose them?')) await logOutAndClear(true); }} style={{ height: 44, borderRadius: 999, border: 0, background: 'transparent', color: 'var(--color-accent-700)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Log out</button>
+          <span style={{ margin: '0 4px', fontSize: 12.5, lineHeight: 1.45, color: 'var(--color-neutral-700)' }}>Your data stays on this phone too, so the app works without internet and uploads when you're back online. Backup files in Settings still work as an extra copy.</span>
+          <span style={{ margin: '0 4px', fontSize: 12.5, color: 'var(--color-neutral-700)' }}>To log out, go to Profile.</span>
         </div>
       )}
     </SheetFrame>

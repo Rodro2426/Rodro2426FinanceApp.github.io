@@ -5,7 +5,7 @@ import { tr } from '../lib/i18n';
 import * as I from '../ui/icons';
 
 /** `action`: the sheet's main button (Save, Add…), shown at the top right next to the close button. */
-export function SheetFrame({ title, children, topOnFocus, action }: { title: string; children: ReactNode; topOnFocus?: boolean; action?: { label: string; onClick: () => void; disabled?: boolean } }) {
+export function SheetFrame({ title, children, topOnFocus, action, tool }: { title: string; children: ReactNode; topOnFocus?: boolean; tool?: ReactNode; action?: { label: string; onClick: () => void; disabled?: boolean } }) {
   const panel = useRef<HTMLDivElement>(null);
   // Keep the top of the sheet in view while the keyboard slides up.
   const toTop = () => { if (!topOnFocus) return; [0, 120, 350].forEach(t => setTimeout(() => panel.current?.scrollTo({ top: 0 }), t)); };
@@ -52,6 +52,7 @@ export function SheetFrame({ title, children, topOnFocus, action }: { title: str
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 10, ...(action ? { position: 'sticky', top: -10, zIndex: 3, background: 'var(--page)', margin: '0 -20px 6px', padding: '10px 20px 8px' } : {}) }}>
           <span style={{ flex: 1, minWidth: 0, fontSize: tr(title).length > 16 ? 21 : 24, lineHeight: 1.15, fontWeight: 700, letterSpacing: '-0.025em', overflowWrap: 'break-word' }}>{title}</span>
           {action && <button onClick={action.onClick} disabled={action.disabled} className="pr97" style={{ flex: 'none', height: 34, padding: '0 16px', borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 15, fontWeight: 700, cursor: action.disabled ? 'default' : 'pointer', opacity: action.disabled ? 0.4 : 1, transition: 'opacity .15s' }}>{action.label}</button>}
+          {tool}
           <button onClick={closeSheet} aria-label="Close" data-back style={{ width: 34, height: 34, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 0, background: 'var(--color-neutral-200)', color: 'var(--color-text)', cursor: 'pointer', padding: 0, flex: 'none' }}>
             <I.X size={16} sw={2.5} />
           </button>

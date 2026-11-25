@@ -1101,7 +1101,7 @@ Your monthly income and how it’s split into pockets and savings goals.|Tu ingr
 Where your money goes: by category, pocket, #tag and bills, with reports.|A dónde va tu plata: por categoría, bolsillo, #etiqueta y gastos fijos, con reportes.
 Your salary, bills and subscriptions repeat on their day, with reminders before they’re due.|Tu salario, gastos fijos y suscripciones se repiten en su día, con recordatorios antes de que venzan.
 Debts with one person, and trips where everyone adds what they paid and Pockets settles up.|Deudas con una persona, y viajes donde cada uno agrega lo que pagó y Pockets hace las cuentas.
-Your name, look, backups, Apple Pay purchases, and this tour again.|Tu nombre, apariencia, copias de seguridad, compras con Apple Pay y este recorrido otra vez.
+Your name, photo, colors and this tour again. The gear on top has the rest: backups, notifications, Apple Pay.|Tu nombre, foto, colores y este recorrido otra vez. El engranaje de arriba tiene lo demás: copias, notificaciones, Apple Pay.
 Replay this tour anytime from Profile.|Repite este recorrido cuando quieras desde Perfil.
 End tour|Terminar recorrido
 App tour|Recorrido de la app
@@ -1254,6 +1254,18 @@ Log out anyway|Cerrar sesión igual
 Log out|Cerrar sesión
 Signed in as|Sesión iniciada como
 Profile|Perfil
+Settings|Ajustes
+What Pockets keeps and where|Qué guarda Pockets y dónde
+Add it to your home screen like an app|Agrégala a tu pantalla de inicio como una app
+An extra copy of everything, saved as a file in iCloud Drive or Files.|Una copia extra de todo, guardada como archivo en iCloud Drive o Archivos.
+To log out, go to Profile.|Para cerrar sesión, ve a Perfil.
+Delete account|Eliminar cuenta
+This deletes your account, your cloud copy and your friends list, and clears this phone. It can't be undone. Your email can then be used for a new account. Trips, shared debts and messages stay with your friends.|Esto elimina tu cuenta, tu copia en la nube y tu lista de amigos, y borra este celular. No se puede deshacer. Después puedes usar tu correo para una cuenta nueva. Los viajes, las deudas compartidas y los mensajes se quedan con tus amigos.
+To be sure it's you, Google will ask you to sign in once more.|Para confirmar que eres tú, Google te pedirá iniciar sesión una vez más.
+Your Pockets password|Tu contraseña de Pockets
+Delete for good|Eliminar para siempre
+Deleting…|Eliminando…
+You are not signed in.|No has iniciado sesión.
 Your name|Tu nombre
 Currency|Moneda
 Weeks per month|Semanas por mes
@@ -1519,7 +1531,7 @@ Not sure? Make a backup file first in Profile.|¿No estás seguro? Primero haz u
 Sign in and Pockets keeps a copy of your data in the cloud, updated after every change. If you lose or change your phone, sign in again and everything comes back. Only you can see your data.|Inicia sesión y Pockets guarda una copia de tus datos en la nube, actualizada con cada cambio. Si pierdes o cambias de celular, inicia sesión otra vez y todo vuelve. Solo tú puedes ver tus datos.
 Signed in · syncing your data|Sesión iniciada · sincronizando tus datos
 Sync now|Sincronizar ahora
-Your data stays on this phone too, so the app works without internet and uploads when you're back online. Backup files in Profile still work as an extra copy.|Tus datos también quedan en este celular, así que la app funciona sin internet y sube los cambios cuando vuelves a estar en línea. Los archivos de copia en Perfil siguen sirviendo como copia extra.
+Your data stays on this phone too, so the app works without internet and uploads when you're back online. Backup files in Settings still work as an extra copy.|Tus datos también quedan en este celular, así que la app funciona sin internet y sube los cambios cuando vuelves a estar en línea. Los archivos de copia en Ajustes siguen sirviendo como copia extra.
 Log out? Your data stays safe in your account and this device is cleared, so you can sign in with another account.|¿Cerrar sesión? Tus datos quedan seguros en tu cuenta y este dispositivo se borra, para que puedas entrar con otra cuenta.
 Some changes on this device haven't been backed up yet. Log out anyway and lose them?|Algunos cambios en este dispositivo aún no tienen copia. ¿Cerrar sesión igual y perderlos?
 never|nunca

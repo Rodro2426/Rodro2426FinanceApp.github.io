@@ -2,7 +2,7 @@
 // (users/{uid}). The phone keeps the full copy; the cloud is a second copy that follows every change.
 import { initializeApp } from 'firebase/app';
 import {
-  createUserWithEmailAndPassword, GoogleAuthProvider, getAuth, onAuthStateChanged, reload, sendEmailVerification, sendPasswordResetEmail,
+  createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, getAuth, onAuthStateChanged, reload, sendEmailVerification, sendPasswordResetEmail,
   signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, type User
 } from 'firebase/auth';
 import { doc, getDoc, getFirestore, writeBatch } from 'firebase/firestore/lite';
@@ -168,6 +168,22 @@ export async function flushNow(): Promise<boolean> {
   clearTimeout(timer);
   if (state.uid && state.dirty) await push();
   return !state.dirty && state.status !== 'conflict';
+}
+/** True when the account signs in only with Google (no Pockets password to type). */
+export const googleOnly = () => !!auth.currentUser && !auth.currentUser.providerData.some(p => p.providerId === 'password');
+/** Deletes the account for good. Checks the password (or Google) again first, stops syncing, runs `wipe` while still
+ *  signed in (the rules need that), then removes the sign-in so the email can make a new account. Null when done. */
+export async function deleteAccount(password: string | null, wipe: (uid: string, email: string) => Promise<void>): Promise<string | null> {
+  const u = auth.currentUser;
+  if (!u) return 'You are not signed in.';
+  try {
+    if (password === null) await reauthenticateWithPopup(u, new GoogleAuthProvider());
+    else await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email ?? '', password));
+    clearTimeout(timer); hooks = null; // nothing may upload the data again while it's being deleted
+    await wipe(u.uid, u.email ?? '');
+    await deleteUser(u);
+    return null;
+  } catch (e) { return friendly(e); }
 }
 export async function logOut() { clearTimeout(timer); if (state.dirty) await push(); await signOut(auth); }
 

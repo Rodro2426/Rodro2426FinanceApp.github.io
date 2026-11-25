@@ -60,7 +60,7 @@ import { quickMenu } from './lib/quickadd';
 import { EditTxnSheet } from './sheets/EditTxn';
 import { AddSheet, CoverSheet, RefillSheet, EditPocketSheet, MoveSheet, PocketSheet, SavedSheet, SearchSheet } from './sheets/PocketSheets';
 import { AdjustSheet } from './sheets/AdjustSheet';
-import { AcctActionsSheet, AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet, TransferSheet } from './sheets/MoneySheets';
+import { AcctActionsSheet, AcctSheet, AddAcctSheet, EditAcctSheet, ExportSheet, GoalSheet, NewGoalSheet, PaySheet, SettingsSheet, AppSettingsSheet, TransferSheet } from './sheets/MoneySheets';
 import * as I from './ui/icons';
 
 const TABS: [Tab, string, (p: { size?: number; sw?: number }) => ReactNode][] = [
@@ -116,6 +116,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'goal': return <GoalSheet id={sheet.id} />;
     case 'newGoal': return <NewGoalSheet />;
     case 'settings': return <SettingsSheet />;
+    case 'appSettings': return <AppSettingsSheet />;
     case 'reminder': return <ReminderSheet id={sheet.id} />;
     case 'quickAdd': return <QuickAddSheet />;
     case 'privacy': return <PrivacySheet />;
@@ -172,7 +173,7 @@ export default function App() {
       const h = link.replace(/^\.?\/?#?/, '');
       if (/^(dm|trip|tripchat|tripstats):/.test(h)) setUI({ sheet: null, page: h as never });
       else if (h === 'calendar' || h === 'accounts') setUI({ sheet: null, page: null, tab: h });
-      else if (h === 'backup') setUI({ sheet: { name: 'settings' } });
+      else if (h === 'backup') setUI({ sheet: { name: 'appSettings' } });
       else if (h === 'add') setUI({ sheet: { name: 'add' } });
       else return false;
       return true;

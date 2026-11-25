@@ -218,7 +218,7 @@ function RemindersBlock() {
       )}
     </ListCard>
     {list.length > 0 && !pushOn() && (
-      <button onClick={() => openSheet({ name: 'settings' })} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 10, border: 0, background: 'var(--surface)', borderRadius: 18, padding: '12px 14px', color: TEXT, textAlign: 'left', cursor: 'pointer' }}>
+      <button onClick={() => openSheet({ name: 'appSettings' })} className="hv-n100" style={{ display: 'flex', alignItems: 'center', gap: 10, border: 0, background: 'var(--surface)', borderRadius: 18, padding: '12px 14px', color: TEXT, textAlign: 'left', cursor: 'pointer' }}>
         <I.Bell size={18} />
         <span style={{ flex: 1, fontSize: 13, lineHeight: 1.4 }}>Lock-screen notifications are off, so reminders only show inside Pockets. Turn them on in Settings.</span>
         <I.Chevron size={16} color="var(--color-neutral-500)" />

@@ -9,7 +9,9 @@ import { tr, getLang, setLang, type Lang } from '../lib/i18n';
 import { dateLocale } from '../lib/i18n';
 import { LockSetting } from '../ui/LockSetting';
 import { StartOverButton } from '../screens/Setup';
-import { logOutAndClear } from '../lib/session';
+import { isInstalled } from '../screens/InstallGuide';
+import { deleteAccountAndClear, logOutAndClear } from '../lib/session';
+import { googleOnly } from '../lib/cloud';
 import { PushToggle } from '../ui/PushToggle';
 import { CardFace } from '../ui/CardFace';
 import { requestCrop } from '../ui/Cropper';
@@ -493,6 +495,45 @@ function LogOutBlock({ email }: { email: string }) {
   );
 }
 
+/** Delete the account for good. Asks for the password again (or Google), then the email is free for a new account. */
+function DeleteAccountBlock() {
+  const [open, setOpen] = useState(false);
+  const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const google = googleOnly();
+  const go = async () => { setBusy(true); setErr(null); const e = await deleteAccountAndClear(google ? null : pw); if (e) { setErr(e); setBusy(false); } };
+  if (!open) return <button onClick={() => setOpen(true)} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-accent-700)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Delete account</button>;
+  return (
+    <div role="alertdialog" aria-label="Delete account" style={{ marginTop: 12, background: 'var(--color-accent-100)', borderRadius: 20, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <span style={{ fontSize: 14, lineHeight: 1.45, color: 'var(--color-accent-900)' }}>This deletes your account, your cloud copy and your friends list, and clears this phone. It can't be undone. Your email can then be used for a new account. Trips, shared debts and messages stay with your friends.</span>
+      {google
+        ? <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-accent-900)' }}>To be sure it's you, Google will ask you to sign in once more.</span>
+        : <input type="password" autoComplete="current-password" placeholder="Your Pockets password" aria-label="Your Pockets password" value={pw} onChange={e => setPw(e.target.value)} style={{ ...textInput, background: 'var(--surface)' }} />}
+      {err && <span role="alert" style={{ fontSize: 13, color: 'var(--color-accent-700)', fontWeight: 600 }}>{err}</span>}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={go} disabled={busy || (!google && !pw)} style={{ flex: 1, height: 44, borderRadius: 999, border: 0, background: 'var(--color-accent-700)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: busy || (!google && !pw) ? 0.5 : 1 }}>{busy ? 'Deleting…' : 'Delete for good'}</button>
+        <button onClick={() => { setOpen(false); setPw(''); setErr(null); }} disabled={busy} style={{ flex: 'none', padding: '0 18px', height: 44, borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-text)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+/** One tappable row in a settings list: icon, title, a short line under it, and an arrow. */
+function NavRow({ icon, title, sub, subColor, onClick }: { icon: ReactNode; title: string; sub?: string; subColor?: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
+      <span aria-hidden="true" style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--color-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>{icon}</span>
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <span style={{ fontSize: 15, fontWeight: 700, overflowWrap: 'anywhere' }}>{title}</span>
+        {sub && <span style={{ fontSize: 12.5, color: subColor ?? 'var(--color-neutral-700)' }}>{sub}</span>}
+      </span>
+      <span aria-hidden="true" style={{ color: 'var(--color-neutral-500)', fontSize: 18 }}>›</span>
+    </button>
+  );
+}
+
+/** Profile: who you are and how the app looks. Everything else lives in Settings (the gear on top). */
 export function SettingsSheet() {
   const { data: d } = useApp();
   const st = d.settings;
@@ -506,11 +547,15 @@ export function SettingsSheet() {
     // Set a few times while the sheet slides in and its content finishes laying out.
     if (y) [0, 120, 300, 500].forEach(ms => setTimeout(() => { const p = document.querySelector('.sheet-panel'); if (p) p.scrollTop = y; }, ms));
   }, []);
-  const [restore, setRestore] = useState<Awaited<ReturnType<typeof readBackup>> | null>(null);
   const sync = useSync();
   const setS = (patch: Partial<typeof st>) => setData(x => ({ settings: { ...x.settings, ...patch } }));
+  const gear = (
+    <button onClick={() => openSheet({ name: 'appSettings' })} aria-label="Settings" title="Settings" className="hv-n300" style={{ width: 34, height: 34, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 0, background: 'var(--color-neutral-200)', color: 'var(--color-text)', cursor: 'pointer', padding: 0, flex: 'none' }}>
+      <I.Gear size={18} />
+    </button>
+  );
   return (
-    <SheetFrame title="Profile">
+    <SheetFrame title="Profile" tool={gear}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'var(--surface)', borderRadius: 22, padding: 14 }}>
           <AcctBadge photo={st.profilePhoto} initial={initialOf(st.name)} size={64} radius={999} bg="var(--color-accent-200)" color="var(--color-accent-800)" fs={24} />
@@ -521,43 +566,48 @@ export function SettingsSheet() {
         </div>
         <FieldLabel m="14px 4px 6px">Your name</FieldLabel>
         <input value={st.name} onChange={e => setS({ name: e.target.value })} style={textInput} />
-        <FieldLabel m="14px 4px 0">Currency</FieldLabel>
+        <FieldLabel m="18px 4px 0">Appearance</FieldLabel>
+        <Segmented items={[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]} value={st.theme ?? 'system'} onPick={v => setS({ theme: v as 'system' | 'light' | 'dark' })} mt={8} />
+        <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>System follows your iPhone's light or dark mode.</span>
+        <BgPicker />
+        <button onClick={() => setUI({ sheet: null, guide: true })} className="hv-n200" style={{ marginTop: 22, height: 46, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>App tutorial</button>
+        {sync.uid && <LogOutBlock email={sync.email ?? ''} />}
+      </div>
+    </SheetFrame>
+  );
+}
+
+/** Settings: money, language, notifications, privacy, backups. Opened from the gear in Profile. */
+export function AppSettingsSheet() {
+  const { data: d } = useApp();
+  const st = d.settings;
+  const [restore, setRestore] = useState<Awaited<ReturnType<typeof readBackup>> | null>(null);
+  const sync = useSync();
+  const setS = (patch: Partial<typeof st>) => setData(x => ({ settings: { ...x.settings, ...patch } }));
+  return (
+    <SheetFrame title="Settings">
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <FieldLabel m="6px 4px 0">Currency</FieldLabel>
         <select aria-label="Currency" value={codeOf(st.currency)} onChange={e => { const c = e.target.value as Currency; if (c === codeOf(st.currency)) return; if ((d.accounts.length || d.expenses.length) && !confirm(tr('Your saved amounts keep their numbers, they are not converted. For example, 1.000.000 stays 1.000.000 in the new currency. Change it?'))) return; setS({ currency: c }); refreshUsdRate(); }}
           style={{ marginTop: 6, height: 50, borderRadius: 16, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 16, fontWeight: 600, padding: '0 14px' }}>
           {CURRENCY_LIST.map(k => <option key={k} value={k}>{`${CURRENCIES[k].flag} ${k} · ${CURRENCIES[k].country}`}</option>)}
         </select>
         <span style={{ margin: '6px 4px 0', fontSize: 12, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>Changing it changes how amounts look, not the numbers you saved.</span>
-        <FieldLabel m="18px 4px 0">Appearance</FieldLabel>
-        <Segmented items={[['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]} value={st.theme ?? 'system'} onPick={v => setS({ theme: v as 'system' | 'light' | 'dark' })} mt={8} />
-        <span style={{ margin: '6px 4px 0', fontSize: 12, color: 'var(--color-neutral-700)' }}>System follows your iPhone's light or dark mode.</span>
         <FieldLabel m="18px 4px 0">Language</FieldLabel>
         <Segmented items={[['en', 'English'], ['es', 'Español']]} value={getLang()} onPick={v => { if (v !== getLang()) setLang(v as Lang); }} mt={8} />
-        <BgPicker />
         <PushToggle />
+        <FieldLabel m="18px 4px 8px">Apple Pay</FieldLabel>
+        <NavRow icon={<I.Card size={19} />} title="Apple Pay purchases" sub={st.quickAdd ? 'On · added when you pay with your iPhone' : 'Add them on their own when you pay'} onClick={() => openSheet({ name: 'quickAdd' })} />
         <FieldLabel m="18px 4px 0">Privacy</FieldLabel>
         <LockSetting />
-        <FieldLabel m="18px 4px 8px">Apple Pay</FieldLabel>
-        <button onClick={() => openSheet({ name: 'quickAdd' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
-          <span aria-hidden="true" style={{ width: 36, height: 36, borderRadius: 12, background: 'var(--color-neutral-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}><I.Card size={19} /></span>
-          <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 15, fontWeight: 700 }}>Apple Pay purchases</span>
-            <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>{d.settings.quickAdd ? 'On · added when you pay with your iPhone' : 'Add them on their own when you pay'}</span>
-          </span>
-          <span aria-hidden="true" style={{ color: 'var(--color-neutral-500)', fontSize: 18 }}>›</span>
-        </button>
+        <div style={{ marginTop: 8 }}><NavRow icon={<I.Shield size={18} />} title="Your privacy" sub="What Pockets keeps and where" onClick={() => openSheet({ name: 'privacy' })} /></div>
         <FieldLabel m="18px 4px 8px">Cloud backup</FieldLabel>
-        <button onClick={() => openSheet({ name: 'cloud' })} className="hv-n200" style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface)', borderRadius: 20, padding: '14px 16px', border: 0, cursor: 'pointer', textAlign: 'left', color: TEXT }}>
-          <span aria-hidden="true" style={{ fontSize: 22, color: 'var(--brand)', display: 'inline-flex' }}>{glyph('pk:cloud')}</span>
-          <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 15, fontWeight: 700 }}>{sync.uid ? sync.email : 'Turn on cloud backup'}</span>
-            <span style={{ fontSize: 12.5, color: sync.uid ? 'var(--color-neutral-700)' : 'var(--color-accent-700)' }}>{sync.uid ? syncLabel(sync) : 'Sign in so your data is never lost'}</span>
-          </span>
-          <span aria-hidden="true" style={{ color: 'var(--color-neutral-500)', fontSize: 18 }}>›</span>
-        </button>
+        <NavRow icon={<span style={{ fontSize: 22, color: 'var(--brand)', display: 'inline-flex' }}>{glyph('pk:cloud')}</span>} title={sync.uid ? sync.email ?? '' : 'Turn on cloud backup'}
+          sub={sync.uid ? syncLabel(sync) : 'Sign in so your data is never lost'} subColor={sync.uid ? undefined : 'var(--color-accent-700)'} onClick={() => openSheet({ name: 'cloud' })} />
         <FieldLabel m="18px 4px 0">Backup file</FieldLabel>
         <div style={{ marginTop: 6, background: 'var(--surface)', borderRadius: 22, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
           <span style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--color-neutral-700)' }}>
-            Your data lives only on this phone. Save a backup file to iCloud Drive so you can get everything back if the app is deleted.
+            {sync.uid ? 'An extra copy of everything, saved as a file in iCloud Drive or Files.' : 'Your data lives only on this phone. Save a backup file to iCloud Drive so you can get everything back if the app is deleted.'}
             {st.lastBackup ? <> Last backup: <b style={{ color: TEXT }}>{shortDate(st.lastBackup)}</b>.</> : <> <b style={{ color: 'var(--color-accent-700)' }}>No backup yet.</b></>}
           </span>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8 }}>
@@ -592,11 +642,8 @@ export function SettingsSheet() {
             </div>
           )}
         </div>
-        <button onClick={() => setUI({ sheet: null, guide: true })} className="hv-n200" style={{ marginTop: 18, height: 46, borderRadius: 999, border: 0, background: '#1d4a2e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>App tutorial</button>
-        <button onClick={() => openSheet({ name: 'privacy' })} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Your privacy</button>
-        <button onClick={() => setUI({ sheet: null, install: 'profile' })} className="hv-n200" style={{ marginTop: 12, height: 46, borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>How to install Pockets on iPhone</button>
-        <StartOverButton />
-        {sync.uid && <LogOutBlock email={sync.email ?? ''} />}
+        {!isInstalled() && <div style={{ marginTop: 18 }}><NavRow icon={<I.Download size={18} />} title="How to install Pockets on iPhone" sub="Add it to your home screen like an app" onClick={() => setUI({ sheet: null, install: 'profile' })} /></div>}
+        {sync.uid ? <DeleteAccountBlock /> : <StartOverButton />}
       </div>
     </SheetFrame>
   );
