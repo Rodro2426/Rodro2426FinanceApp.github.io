@@ -7,6 +7,7 @@
 // Swipes that start on something that scrolls sideways, a slider, a text box or a chart are left alone.
 // While the finger is down, elements are moved directly (no React re-render per frame), so it stays smooth.
 import { useEffect, type RefObject } from 'react';
+import { flushSync } from 'react-dom';
 import { getState, setUI } from '../lib/store';
 import type { Tab } from '../lib/types';
 
@@ -80,7 +81,7 @@ function barAt(bar: Bar, p: number, ms = 0) {
 const barReset = (bar: Bar) => { if (bar) { bar.a.style.cssText = bar.saved[0]; bar.b.style.cssText = bar.saved[1]; } };
 
 const clear = (el: HTMLElement | null) => {
-  if (el) { el.style.transition = ''; el.style.transform = ''; el.style.boxShadow = ''; el.style.borderRadius = ''; el.style.opacity = ''; el.style.transformOrigin = ''; el.style.willChange = ''; }
+  if (el) { el.style.transition = ''; el.style.transform = ''; el.style.boxShadow = ''; el.style.borderRadius = ''; el.style.opacity = ''; el.style.transformOrigin = ''; el.style.willChange = ''; el.style.pointerEvents = ''; }
 };
 
 /* ---- Back swipe on a full page: it shrinks into a rounded card that follows the finger over a dimmed screen,
@@ -114,7 +115,9 @@ function dimUnder(el: HTMLElement): HTMLElement {
 function cardEnd(el: HTMLElement, dim: HTMLElement | null, go: boolean, ms: number, dx: number, dy: number, w: number) {
   el.style.transition = `transform ${ms}ms ${EASE}, opacity ${ms}ms ease`;
   el.style.transform = go ? `translate(${dx * 0.55 + w * 0.08}px, ${dy * 0.35}px) scale(.55)` : 'translate(0px, 0px) scale(1)';
-  if (go) el.style.opacity = '0';
+  // A page on its way out lets touches through, so you can scroll the screen underneath right away
+  // (a touch on a page that is about to disappear would freeze until you lift your finger).
+  if (go) { el.style.opacity = '0'; el.style.pointerEvents = 'none'; }
   if (dim) { dim.style.transition = `opacity ${ms}ms ease`; dim.style.opacity = '0'; }
 }
 
@@ -243,6 +246,7 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       if (g.mode === 'back') {
         if (done) {
           slide(g.layer, `translateX(${w}px)`, true, dur);
+          if (g.layer) g.layer.style.pointerEvents = 'none'; // a touch while it leaves goes to the screen underneath
           later(() => { const b = backButton(); if (b) { b.dataset.going = '1'; b.click(); delete b.dataset.going; } clear(g.layer); busy = false; }, dur);
         } else {
           slide(g.layer, 'translateX(0)', true, dur);
@@ -252,12 +256,21 @@ export function useSwipeNav({ tabs, enabled, scroller, peek, setPeek }: {
       }
       if (done && g.to) {
         const tabDur = Math.round(Math.max(TAB_MS[0], Math.min(TAB_MS[1], rest / Math.max(v, 0.6) * 2)));
-        slide(scroller.current, `translateX(${-g.side * w}px) scale(${1 - TAB_SINK})`, true, tabDur, TAB_EASE);
-        slide(peek.current, 'translateX(0)', true, tabDur, TAB_EASE);
+        // Open the new tab right now, not when the glide ends: the real screen (the one you can touch and scroll) becomes
+        // the new tab and slides in from where the preview was, and the old tab moves to the preview layer to slide out.
+        // So a touch during the glide lands on the new tab and scrolls at once, instead of on a layer that ignores touches.
+        const from = getState().ui.tab, sc = scroller.current, top = sc?.scrollTop ?? 0, p0 = Math.min(1, Math.abs(g.dx) / w);
+        swiped = true;
+        flushSync(() => { setUI({ tab: g.to! }); setPeek({ tab: from, side: g.side === 1 ? -1 : 1 }); });
+        const out = peek.current;
+        if (sc) { sc.scrollTop = 0; slide(sc, `translateX(${g.side * w + g.dx}px)`, false); }
+        if (out) { out.scrollTop = top; slide(out, `translateX(${g.dx}px) scale(${1 - TAB_SINK * p0})`, false); }
+        void sc?.offsetWidth; // start both from where the finger left them
+        slide(sc, 'translateX(0px)', true, tabDur, TAB_EASE);
+        slide(out, `translateX(${-g.side * w}px) scale(${1 - TAB_SINK})`, true, tabDur, TAB_EASE);
         barAt(g.bar, 1, tabDur);
-        // The App resets the scroller's position in the same render that shows the new tab (no flicker).
-        // React then draws the bar the same way, so only its normal transition is handed back.
-        later(() => { swiped = true; setUI({ tab: g.to! }); setPeek(null); if (g.bar) g.bar.a.style.transition = g.bar.b.style.transition = g.bar.tr; busy = false; }, tabDur);
+        // React draws the bar the same way, so only its normal transition is handed back.
+        later(() => { clear(scroller.current); setPeek(null); if (g.bar) g.bar.a.style.transition = g.bar.b.style.transition = g.bar.tr; busy = false; }, tabDur);
       } else {
         slide(scroller.current, 'translateX(0) scale(1)', true, dur);
         slide(peek.current, `translateX(${g.side * 100}%)`, true, dur);
