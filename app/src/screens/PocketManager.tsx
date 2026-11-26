@@ -1,11 +1,11 @@
 import { useState, type CSSProperties } from 'react';
 import { useApp, setData, setUI, openSheet, flash } from '../lib/store';
 import { TEXT } from '../lib/constants';
-import { ctxOf, editMove, fmt, isHalf, isMonthly, num, pocketStats, roundAmt, undoMove } from '../lib/derive';
+import { ctxOf, editMove, fmt, myExpenses, isHalf, isMonthly, num, pocketStats, roundAmt, undoMove } from '../lib/derive';
 import { ctxAt, monthLabel, monthName, shortDate } from '../lib/dates';
 import { NEXT, borrowNext, transferLeftover } from '../lib/plan';
 import { monthFlow, type Link, type PeriodRow } from '../lib/monthFlow';
-import { PickChip } from '../ui/bits';
+import { ExpRow, PickChip, expView } from '../ui/bits';
 import { MoneyInput } from '../ui/MoneyInput';
 import { SubPage } from './Reports';
 import * as I from '../ui/icons';
@@ -22,6 +22,7 @@ export function PocketManager({ id }: { id: string }) {
   const c = ctxOf(d);
   const [month, setMonth] = useState(c.month);
   const [open, setOpen] = useState<string | null>(null);
+  const [list, setList] = useState<string | null>(null);
   const p = d.pockets.find(x => x.id === id) ?? d.pockets[0];
   const back = () => setUI({ page: null });
   if (!p) return <SubPage title="Pocket manager" back={back} backLabel="Back"><span style={{ fontSize: 14, color: 'var(--color-neutral-700)' }}>Add a pocket first.</span></SubPage>;
@@ -44,7 +45,8 @@ export function PocketManager({ id }: { id: string }) {
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {rows.map((r, i) => (
           <div key={r.from} style={{ display: 'flex', flexDirection: 'column' }}>
-            <Period r={r} title={name(i)} />
+            <Period r={r} title={name(i)} count={myExpenses(d).filter(e => e.p === p.id && e.date >= r.from && e.date <= r.to).length} open={list === r.from} toggle={() => setList(list === r.from ? null : r.from)} />
+            {list === r.from && <Spent pid={p.id} r={r} />}
             {r.links.map((l, k) => <LinkRow key={l.move?.id ?? l.kind + k} l={l} r={r} pid={p.id} to={target(i)} open={open === `${r.from}${k}`} toggle={() => setOpen(open === `${r.from}${k}` ? null : `${r.from}${k}`)} />)}
             {i < rows.length - 1 && <div style={{ height: 12 }} />}
           </div>
@@ -54,14 +56,14 @@ export function PocketManager({ id }: { id: string }) {
   );
 }
 
-function Period({ r, title }: { r: PeriodRow; title: string }) {
+function Period({ r, title, count, open, toggle }: { r: PeriodRow; title: string; count: number; open: boolean; toggle: () => void }) {
   const over = r.result < -0.004, now = r.state === 'now', future = r.state === 'future';
   const tone = over ? 'r' : 'g';
   const label = `var(--safe-${tone}-label)`, amt = `var(--safe-${tone}-amt)`;
   const had = r.budget !== r.base || r.carry !== 0;
   const pct = r.budget > 0 ? Math.min(100, (r.spent / r.budget) * 100) : r.spent > 0 ? 100 : 0;
   return (
-    <div style={{ borderRadius: 26, padding: '20px 20px 18px', display: 'flex', flexDirection: 'column', background: future ? 'transparent' : now && !over ? 'var(--safe-g-now)' : `var(--safe-${tone}-bg)`, border: future ? '2px dashed var(--color-neutral-300)' : 0, color: future ? TEXT : amt, boxShadow: now ? '0 4px 14px rgba(0,0,0,.08)' : 'none' }}>
+    <div onClick={future ? undefined : toggle} role={future ? undefined : 'button'} aria-expanded={future ? undefined : open} className={future ? undefined : 'pr97'} style={{ cursor: future ? 'default' : 'pointer', transition: 'transform .15s ease', borderRadius: 26, padding: '20px 20px 18px', display: 'flex', flexDirection: 'column', background: future ? 'transparent' : now && !over ? 'var(--safe-g-now)' : `var(--safe-${tone}-bg)`, border: future ? '2px dashed var(--color-neutral-300)' : 0, color: future ? TEXT : amt, boxShadow: now ? '0 4px 14px rgba(0,0,0,.08)' : 'none' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
         <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em' }}>{title}</span>
         <span style={{ fontSize: 13, fontWeight: 700, color: future ? 'var(--color-neutral-700)' : label, whiteSpace: 'nowrap' }}>{`${shortDate(r.from)} – ${shortDate(r.to)}`}</span>
@@ -85,7 +87,23 @@ function Period({ r, title }: { r: PeriodRow; title: string }) {
             <span>{now ? `= ${fmt(r.budget)} and you've spent ${fmt(r.spent)}` : `= ${fmt(r.budget)} and you spent ${fmt(r.spent)}`}</span>
           </> : <span>{now ? `You have ${fmt(r.budget)} and you've spent ${fmt(r.spent)}` : `You had ${fmt(r.budget)} and you spent ${fmt(r.spent)}`}</span>}
         </span>
+        <span style={{ marginTop: 12, alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, height: 32, padding: '0 12px', borderRadius: 999, background: 'var(--glass)', color: label, fontSize: 13, fontWeight: 700 }}>
+          {open ? 'Hide expenses' : !count ? 'No expenses' : count === 1 ? 'See 1 expense' : `See ${count} expenses`}
+          <I.Chevron size={14} style={{ transform: `rotate(${open ? -90 : 90}deg)`, transition: 'transform .2s ease' }} />
+        </span>
       </>}
+    </div>
+  );
+}
+
+/** The pocket's expenses on the period's days, newest first; tapping one opens it to edit. */
+function Spent({ pid, r }: { pid: string; r: PeriodRow }) {
+  const { data: d } = useApp(), c = ctxOf(d);
+  const items = myExpenses(d).filter(e => e.p === pid && e.date >= r.from && e.date <= r.to).sort((a, b) => b.date.localeCompare(a.date) || b.ts - a.ts);
+  return (
+    <div style={{ marginTop: 8, background: 'var(--surface)', borderRadius: 22, padding: '2px 16px' }}>
+      {items.map((e, i) => <ExpRow key={e.id} v={expView(d, e, c)} size={36} last={i === items.length - 1} onClick={() => openSheet({ name: 'txn', kind: 'expense', id: e.id })} />)}
+      {!items.length && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>No expenses in these days.</div>}
     </div>
   );
 }

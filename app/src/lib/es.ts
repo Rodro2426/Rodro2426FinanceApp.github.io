@@ -1,6 +1,9 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Hide expenses|Ocultar gastos
+See 1 expense|Ver 1 gasto
+No expenses in these days.|No hay gastos en estos días.
 Pocket manager|Administrador de bolsillos
 Starts with|Empieza con
 Left over|Sobraron
@@ -2209,6 +2212,7 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+See {0} expenses|Ver {0} gastos
 {0} moved on to {1}|{0} pasaron a {1}
 {0} was taken from {1}|{0} se descontaron de {1}
 {0} carried on to {1} by itself|{0} pasaron solos a {1}
