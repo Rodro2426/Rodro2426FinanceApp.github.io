@@ -155,7 +155,7 @@ export type Tab = 'home' | 'accounts' | 'budget' | 'insights' | 'calendar' | 'so
 
 export type Sheet =
   | { name: 'search'; tag?: string | null; cat?: string | null }
-  | { name: 'add'; pocket?: string; mode?: 'expense' | 'income' }
+  | { name: 'add'; pocket?: string; mode?: 'expense' | 'income'; /** Starts on this day instead of today. */ date?: string }
   | { name: 'pocket'; id: string; view?: PocketView }
   | { name: 'saved'; id: string }
   | { name: 'move'; id: string; to?: string }

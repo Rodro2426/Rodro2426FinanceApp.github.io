@@ -92,7 +92,7 @@ class SheetSafety extends Component<{ children: ReactNode }, { broke: boolean }>
 function SheetRouter({ sheet }: { sheet: Sheet }) {
   switch (sheet.name) {
     case 'search': return <SearchSheet tag={sheet.tag} cat={sheet.cat} />;
-    case 'add': return <AddSheet pocket={sheet.pocket} mode={sheet.mode} />;
+    case 'add': return <AddSheet pocket={sheet.pocket} mode={sheet.mode} date={sheet.date} />;
     case 'pocket': return <PocketSheet id={sheet.id} view={sheet.view} />;
     case 'saved': return <SavedSheet id={sheet.id} />;
     case 'move': return <MoveSheet id={sheet.id} to={sheet.to} />;

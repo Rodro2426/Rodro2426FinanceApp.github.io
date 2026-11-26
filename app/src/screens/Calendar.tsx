@@ -128,7 +128,7 @@ export default function CalendarScreen() {
         {d.bills.some(b => b.kind === 'CardPayment') && <span style={{ ...chipStyle, background: 'oklch(0.94 0.04 250)', color: 'oklch(0.38 0.1 250)' }}>Cards −{fmt(cardTotal)}</span>}
       </div>
 
-      <SectionHead title={relDay(sel, c.today) === 'Today' ? 'Today' : fmtDay(sel, { weekday: 'long', month: 'short', day: 'numeric' })} right="Add here" onRight={() => openSheet({ name: 'schedule', id: null, day: selDay })} />
+      <SectionHead title={relDay(sel, c.today) === 'Today' ? 'Today' : fmtDay(sel, { weekday: 'long', month: 'short', day: 'numeric' })} right="Add here" onRight={() => openSheet({ name: 'add', date: sel })} />
       <ListCard>
         {selEvents.map(({ b, paid, auto, past }, i) => {
           const inc = b.kind === 'Income';

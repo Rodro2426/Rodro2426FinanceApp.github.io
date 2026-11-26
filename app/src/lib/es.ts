@@ -29,7 +29,7 @@ Cover it with another pocket|Cubrir con otro bolsillo
 Skip setup, I'll do it later|Saltar la configuración, lo hago después
 in weeks that already closed this month|en semanas que ya cerraron este mes
 in periods that already closed this month|en periodos que ya cerraron este mes
-Income, bills, spending and your streak|Ingresos, cuentas, gastos y tu racha
+Income, bills, spending and your streak|Ingresos, servicios, gastos y tu racha
 Stamped|Sellado
 Nothing spent|Sin gastos
 Start your streak today|Empieza tu racha hoy
@@ -233,7 +233,7 @@ Friends find you by your email, and they see your name and photo.|Tus amigos te 
 A trip or a debt you share is seen only by the people in it.|Un viaje o una deuda que compartes solo lo ven las personas que están en él.
 Your accounts and balances are never shared.|Tus cuentas y saldos nunca se comparten.
 To reach your lock screen, the text of each reminder waits on our notification server until it is sent.|Para que te llegue a la pantalla de bloqueo, el texto de cada recordatorio se guarda en nuestro servidor de notificaciones hasta que se envía.
-That text can include the name and amount of a bill.|Ese texto puede incluir el nombre y el valor de una cuenta por pagar.
+That text can include the name and amount of a bill.|Ese texto puede incluir el nombre y el valor de un servicio por pagar.
 Prices and exchange rates|Precios y tasas de cambio
 Stock prices are asked for by ticker, like AAPL, and exchange rates by currency.|Los precios de acciones se piden por su símbolo, como AAPL, y las tasas de cambio por moneda.
 Neither request carries your name or your money data.|Ninguna de esas consultas lleva tu nombre ni tus datos de dinero.
@@ -403,8 +403,8 @@ Tap a slice|Toca una porción
 Sign in to Pockets first: notifications use your account.|Primero inicia sesión en Pockets: las notificaciones usan tu cuenta.
 On iPhone, open Pockets from its home-screen icon to turn these on.|En iPhone, abre Pockets desde su ícono en la pantalla de inicio para activarlas.
 This browser can't show notifications (iPhone needs iOS 16.4 or newer).|Este navegador no puede mostrar notificaciones (el iPhone necesita iOS 16.4 o más reciente).
-On for this phone: friends' messages and expenses, and reminders the day before bills are due.|Activadas en este celular: mensajes y gastos de amigos, y recordatorios el día antes de que venzan las cuentas.
-Get friends' messages and expenses, and bill reminders, even when Pockets is closed.|Recibe mensajes y gastos de amigos, y recordatorios de cuentas, aunque Pockets esté cerrado.
+On for this phone: friends' messages and expenses, and reminders the day before bills are due.|Activadas en este celular: mensajes y gastos de amigos, y recordatorios el día antes de que venzan los servicios.
+Get friends' messages and expenses, and bill reminders, even when Pockets is closed.|Recibe mensajes y gastos de amigos, y recordatorios de servicios, aunque Pockets esté cerrado.
 Notifications on for this phone|Notificaciones activadas en este celular
 Notifications off for this phone|Notificaciones desactivadas en este celular
 Lock-screen notifications|Notificaciones en la pantalla bloqueada
@@ -638,7 +638,7 @@ Movies|Películas
 Salary|Salario
 Subscription|Suscripción
 Events|Eventos
-Bill|Cuenta
+Bill|Servicio
 Phone plan|Plan de celular
 Utilities|Servicios públicos
 Rent|Arriendo
@@ -750,7 +750,7 @@ Too many tries. Wait a minute and try again.|Demasiados intentos. Espera un minu
 That file isn't a Pockets backup.|Ese archivo no es una copia de seguridad de Pockets.
 Deleted pocket|Bolsillo eliminado
 a deleted pocket|un bolsillo eliminado
-No pocket (scheduled bill)|Sin bolsillo (cuenta programada)
+No pocket (scheduled bill)|Sin bolsillo (servicio programado)
 New income|Nuevo ingreso
 Covered the shortfall|Faltante cubierto
 Deleted|Eliminado
@@ -1462,7 +1462,7 @@ Dismiss all|Descartar todas
 · Tap to see it|· Toca para verlo
 Dismiss|Descartar
 You're all caught up|Estás al día
-Bills due tomorrow, money that arrives or leaves automatically, budget warnings and news from your shared trips show up here.|Aquí aparecen las cuentas que vencen mañana, el dinero que entra o sale solo, avisos del presupuesto y novedades de tus viajes compartidos.
+Bills due tomorrow, money that arrives or leaves automatically, budget warnings and news from your shared trips show up here.|Aquí aparecen los servicios que vencen mañana, el dinero que entra o sale solo, avisos del presupuesto y novedades de tus viajes compartidos.
 Couldn't create the trip|No se pudo crear el viaje
 New shared trip|Nuevo viaje compartido
 Trip name|Nombre del viaje
@@ -1562,14 +1562,14 @@ Log out? Your data stays safe in your account and this device is cleared, so you
 Some changes on this device haven't been backed up yet. Log out anyway and lose them?|Algunos cambios en este dispositivo aún no tienen copia. ¿Cerrar sesión igual y perderlos?
 never|nunca
 just now|justo ahora
-Income, bills and spending by day|Ingresos, cuentas y gastos por día
+Income, bills and spending by day|Ingresos, servicios y gastos por día
 Previous month|Mes anterior
 Next month|Mes siguiente
-Bills|Cuentas
+Bills|Servicios
 Cards|Tarjetas
 Spending|Gastos
 Income +|Ingresos +
-Bills −|Cuentas −
+Bills −|Servicios −
 Cards −|Tarjetas −
 Add here|Agregar aquí
 Not paid by you|No lo pagas tú
@@ -1581,7 +1581,7 @@ Reminder|Recordatorio
 Income ·|Ingreso ·
 Nothing on this day.|Nada este día.
 Nothing scheduled yet. Add your salary, rent or subscriptions.|Aún no hay nada programado. Agrega tu salario, arriendo o suscripciones.
-Add income, bill or subscription|Agregar ingreso, cuenta o suscripción
+Add income, bill or subscription|Agregar ingreso, servicio o suscripción
 Open the Safari menu|Abre el menú de Safari
 Tap the ☰ button on the left of the address bar.|Toca el botón ☰ a la izquierda de la barra de direcciones.
 Tap Share|Toca Compartir
@@ -1619,7 +1619,7 @@ Remove pocket|Quitar bolsillo
 Add pocket|Agregar bolsillo
 Income vs plan and real shortfall|Ingreso vs plan y faltante real
 Over your income by|Te pasas de tu ingreso por
-Free for bills and saving|Libre para cuentas y ahorro
+Free for bills and saving|Libre para servicios y ahorro
 Left to spend in pockets|Por gastar en bolsillos
 In your accounts|En tus cuentas
 debit, savings and cash, minus card debt|débito, ahorros y efectivo, menos deuda de tarjetas
@@ -1688,9 +1688,9 @@ What is left in each pocket|Lo que queda en cada bolsillo
 Not today|Hoy no
 No pockets yet. Create them in the Budget tab.|Aún no hay bolsillos. Créalos en la pestaña Presupuesto.
 Coming up|Próximamente
-Bills due soon|Cuentas por vencer
-All bills|Todas las cuentas
-All bills paid for|Todas las cuentas pagadas de
+Bills due soon|Servicios por vencer
+All bills|Todos los servicios
+All bills paid for|Todos los servicios pagados de
 Latest expenses and income|Últimos gastos e ingresos
 Nothing yet. Tap + to add an expense or income.|Aún nada. Toca + para agregar un gasto o ingreso.
 No spending today|Sin gastos hoy
@@ -1925,7 +1925,7 @@ Send this GIF|Enviar este GIF
 Powered by GIPHY|Con tecnología de GIPHY
 Preparing…|Preparando…
 Remove attachment|Quitar adjunto
-Bills and other|Cuentas y otros
+Bills and other|Servicios y otros
 The filterable category table|La tabla de categorías con filtros
 Reports|Reportes
 Your saved charts|Tus gráficas guardadas
@@ -1942,13 +1942,13 @@ Weekly comparison|Comparación semanal
 Last week|Semana pasada
 Totals for each tag|Totales por etiqueta
 Add tags to your expenses to see them here.|Agrega etiquetas a tus gastos para verlas aquí.
-Bills and subscriptions|Cuentas y suscripciones
-All your bills this month|Todas tus cuentas este mes
+Bills and subscriptions|Servicios y suscripciones
+All your bills this month|Todos tus servicios este mes
 / mo|/ mes
 Not you|Otra persona
 Mark unpaid|Marcar sin pagar
 Items marked “Not you” are paid by someone else and aren’t in the total.|Lo marcado como “Otra persona” lo paga alguien más y no está en el total.
-Add bill or subscription|Agregar cuenta o suscripción
+Add bill or subscription|Agregar servicio o suscripción
 By category|Por categoría
 Filter categories|Filtrar categorías
 No expenses|Sin gastos
@@ -2029,10 +2029,10 @@ Schedule a payment|Programa un pago
 Your salary, rent, Netflix or a credit card payment can repeat every month. Tap here.|Tu salario, arriendo, Netflix o el pago de una tarjeta pueden repetirse cada mes. Toca aquí.
 Set it once|Configúralo una vez
 Choose the type, name, amount, day and account. With "automatic" on, the money moves by itself on that day. Then tap Schedule.|Elige el tipo, nombre, valor, día y cuenta. Con "automático" activado, el dinero se mueve solo ese día. Luego toca Programar.
-See where your money goes, first by category: a table you can filter by category and period. Then by pocket, by #tag, and all your bills. Tap Insights to look.|Mira a dónde va tu dinero, primero por categoría: una tabla que puedes filtrar por categoría y periodo. Luego por bolsillo, por #etiqueta, y todas tus cuentas. Toca Análisis para verlo.
+See where your money goes, first by category: a table you can filter by category and period. Then by pocket, by #tag, and all your bills. Tap Insights to look.|Mira a dónde va tu dinero, primero por categoría: una tabla que puedes filtrar por categoría y periodo. Luego por bolsillo, por #etiqueta, y todos tus servicios. Toca Análisis para verlo.
 In Accounts, this button opens your investments: stocks, CDTs (pick a popular one or make your own) and a returns simulator, like Nu’s Cajitas.|En Cuentas, este botón abre tus inversiones: acciones, CDTs (elige uno popular o crea el tuyo) y un simulador de rentabilidad, como las Cajitas de Nu.
 Download any month as Excel. It includes a "For AI" page you can send to any AI to ask about your money.|Descarga cualquier mes en Excel. Incluye una hoja "For AI" que puedes enviar a cualquier IA para preguntar sobre tu dinero.
-Bills due tomorrow, money that arrived or was paid, and budget warnings show up here and at the top of the screen.|Las cuentas que vencen mañana, el dinero que llegó o se pagó y los avisos del presupuesto aparecen aquí y arriba en la pantalla.
+Bills due tomorrow, money that arrived or was paid, and budget warnings show up here and at the top of the screen.|Los servicios que vencen mañana, el dinero que llegó o se pagó y los avisos del presupuesto aparecen aquí y arriba en la pantalla.
 Find any transaction by name, pocket, account or #tag.|Encuentra cualquier movimiento por nombre, bolsillo, cuenta o #etiqueta.
 Your profile|Tu perfil
 Your name, currency, monthly backups to iCloud, and this tour again. Back up often: your data lives only on this phone.|Tu nombre, moneda, copias mensuales en iCloud y este recorrido otra vez. Haz copias seguido: tus datos viven solo en este celular.

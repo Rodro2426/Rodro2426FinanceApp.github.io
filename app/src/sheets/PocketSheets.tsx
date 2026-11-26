@@ -85,22 +85,22 @@ export function SearchSheet({ tag, cat }: { tag?: string | null; cat?: string | 
 }
 
 /** The + button: add an expense or register income. */
-export function AddSheet({ pocket, mode: mode0 }: { pocket?: string; mode?: 'expense' | 'income' }) {
+export function AddSheet({ pocket, mode: mode0, date }: { pocket?: string; mode?: 'expense' | 'income'; date?: string }) {
   const [mode, setMode] = useState<'expense' | 'income'>(mode0 ?? 'expense');
   return (
     <SheetFrame title={mode === 'income' ? 'New income' : 'New expense'}>
       <Segmented items={[['expense', 'Expense'], ['income', 'Income']]} value={mode} onPick={setMode} mt={4} />
-      {mode === 'income' ? <IncomeForm /> : <ExpenseForm pocket={pocket} />}
+      {mode === 'income' ? <IncomeForm day={date} /> : <ExpenseForm pocket={pocket} day={date} />}
     </SheetFrame>
   );
 }
 
 /* ---------------- Register income: save it, or split some of it into pockets ---------------- */
-function IncomeForm() {
+function IncomeForm({ day }: { day?: string }) {
   const { data: d } = useApp();
   // The income counts on the day picked (today unless changed): its pocket split lands in that week.
   const today = todayISO();
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(day ?? today);
   const c = ctxAt(date);
   const accounts = d.accounts.filter(a => a.type !== 'card');
   const [amt, setAmt] = useState('');
@@ -258,11 +258,11 @@ function IncomeForm() {
 }
 
 /* ---------------- Add expense ---------------- */
-function ExpenseForm({ pocket }: { pocket?: string }) {
+function ExpenseForm({ pocket, day }: { pocket?: string; day?: string }) {
   const { data: d, ui } = useApp();
   // The expense counts on the day picked (today unless changed), in the pockets' period for that day.
   const today = todayISO();
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(day ?? today);
   const c = ctxAt(date), otherWeek = c.weekStart !== ctxAt(today).weekStart;
   const first = [pocket, ui.lastAdd.pocket].find(id => id && d.pockets.some(p => p.id === id)) || d.pockets[0]?.id || '';
   const [amt, setAmt] = useState('');
