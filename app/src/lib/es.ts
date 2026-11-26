@@ -1,6 +1,7 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Your accounts cover every pocket.|Tus cuentas cubren todos tus bolsillos.
 This month doesn't need any of it.|Este mes no necesita nada de esa plata.
 This month uses all of it.|Este mes se la gasta toda.
 Still missing|Todavía faltan
@@ -2239,6 +2240,7 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+You're {0} over what your accounts can pay.|Estás {0} pasado de lo que tus cuentas pueden pagar.
 In {0} you'll start with|En {0} vas a empezar con
 Your {0} income minus {1} that covers this month.|Tu ingreso de {0} menos {1} que cubren este mes.
 Count {0}'s income|Contar el ingreso de {0}
