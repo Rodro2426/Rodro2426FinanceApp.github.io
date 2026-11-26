@@ -1,3 +1,4 @@
+import { MoneyCheckSheet } from './sheets/MoneyCheckSheet';
 import { PrivacySheet } from './sheets/PrivacySheet';
 import { PocketManager } from './screens/PocketManager';
 import { SheetFrame } from './sheets/Sheet';
@@ -97,6 +98,7 @@ function SheetRouter({ sheet }: { sheet: Sheet }) {
     case 'saved': return <SavedSheet id={sheet.id} />;
     case 'move': return <MoveSheet id={sheet.id} to={sheet.to} />;
     case 'cover': return <CoverSheet />;
+    case 'moneyCheck': return <MoneyCheckSheet />;
     case 'refill': return <RefillSheet id={sheet.id} />;
     case 'fund': return <FundSheet id={sheet.id} />;
     case 'fundInfo': return <FundInfoSheet id={sheet.id} />;

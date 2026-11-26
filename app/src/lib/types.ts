@@ -160,6 +160,7 @@ export type Sheet =
   | { name: 'saved'; id: string }
   | { name: 'move'; id: string; to?: string }
   | { name: 'cover' }
+  | { name: 'moneyCheck' }
   | { name: 'refill'; id: string }
   | { name: 'fund'; id: string | null }
   | { name: 'fundInfo'; id: string }

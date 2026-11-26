@@ -1,6 +1,26 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+This month doesn't need any of it.|Este mes no necesita nada de esa plata.
+This month uses all of it.|Este mes se la gasta toda.
+Still missing|Todavía faltan
+Left over with this|Te sobra con esto
+Do your accounts cover your pockets?|¿Tus cuentas cubren tus bolsillos?
+Your accounts cover every pocket|Tus cuentas cubren todos tus bolsillos
+Card debt|Deuda de la tarjeta
+Friends pay you back in time|Tus amigos te pagan a tiempo
+You pay back this month|Pagas este mes
+Count what people owe you|Contar lo que te deben
+See the details|Ver el detalle
+Counted from what-ifs|Contado por los interruptores
+What if…|¿Y si…?
+Even counting what you turned on below.|Aun contando lo que prendiste abajo.
+Your pockets promise more than your accounts have.|Tus bolsillos prometen más de lo que tienen tus cuentas.
+Left over, counting what you turned on below.|Te sobra, contando lo que prendiste abajo.
+Left over after every pocket.|Te sobra después de cubrir todos los bolsillos.
+You have no monthly income set yet.|Todavía no tienes un ingreso mensual.
+Nobody owes you money that is late or has no date.|Nadie te debe plata atrasada o sin fecha.
+The switches only change this screen, to see how it would look. Your plan keeps counting the money you have today.|Los interruptores solo cambian esta pantalla, para ver cómo quedaría. Tu plan sigue contando la plata que tienes hoy.
 Show my streak stamp big|Ver mi sello de racha en grande
 Your streak|Tu racha
 Not logged|Sin anotar
@@ -2219,6 +2239,11 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+In {0} you'll start with|En {0} vas a empezar con
+Your {0} income minus {1} that covers this month.|Tu ingreso de {0} menos {1} que cubren este mes.
+Count {0}'s income|Contar el ingreso de {0}
+Adds {0}, the income you expect next month.|Suma {0}, el ingreso que esperas el mes que viene.
+Adds {0} that friends owe you with no date or after this month.|Suma {0} que tus amigos te deben sin fecha o para después de este mes.
 {0} · Best streak: {1} days|{0} · Mejor racha: {1} días
 See {0} expenses|Ver {0} gastos
 {0} moved on to {1}|{0} pasaron a {1}

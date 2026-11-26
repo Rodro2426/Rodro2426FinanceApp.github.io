@@ -127,9 +127,12 @@ export default function Budget() {
         {line(`Planned for ${weeks} weeks`, fmt(sum.plan), splitFromExtra > 0 ? `includes ${fmt(splitFromExtra)} split from extra income` : undefined)}
         {line(sum.planGap < 0 ? 'Over your income by' : 'Free for bills and saving', fmt(Math.abs(sum.planGap)), undefined, sum.planGap < 0 ? RED : undefined)}
         <div style={{ height: 1, background: LINE, margin: '2px 0' }} />
-        {line('Left to spend in pockets', fmt(sum.toSpend), 'what your pockets still promise this month')}
-        {line('In your accounts', fmt(sum.balance), 'debit, savings and cash, minus card debt')}
-        {line(sum.real > 0 ? 'Missing to cover your pockets' : 'Covered by your accounts', fmt(Math.abs(sum.real)), sum.real > 0 ? 'your pockets promise more than your accounts have' : 'your accounts cover every pocket', sum.real > 0 ? RED : 'oklch(0.45 0.11 150)')}
+        <button onClick={() => openSheet({ name: 'moneyCheck' })} className="hv-n100" style={{ margin: '0 -10px', padding: '8px 10px', borderRadius: 16, border: 0, background: 'transparent', font: 'inherit', color: 'inherit', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {line('Left to spend in pockets', fmt(sum.toSpend), 'what your pockets still promise this month')}
+          {line('In your accounts', fmt(sum.balance), 'debit, savings and cash, minus card debt')}
+          {line(sum.real > 0 ? 'Missing to cover your pockets' : 'Covered by your accounts', fmt(Math.abs(sum.real)), sum.real > 0 ? 'your pockets promise more than your accounts have' : 'your accounts cover every pocket', sum.real > 0 ? RED : 'oklch(0.45 0.11 150)')}
+          <span style={{ alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: 2, fontSize: 13, fontWeight: 700, color: 'var(--brand)' }}>See the details<I.Chevron size={14} /></span>
+        </button>
         {sum.real > 0.004 && <div role="alert" style={{ background: 'var(--color-accent-100)', borderRadius: 14, padding: '10px 12px', fontSize: 13, lineHeight: 1.4, color: 'var(--color-accent-900)', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <span>Your pockets add up to <b>{fmt(sum.real)}</b> more than you have in your accounts.</span>
           {allStats(d, c).some(p => p.left > 0.004) && <button onClick={() => openSheet({ name: 'cover' })} style={{ alignSelf: 'flex-start', height: 34, padding: '0 14px', borderRadius: 999, border: 0, background: 'var(--action)', color: 'var(--action-ink)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Cover it with this week's leftovers</button>}
