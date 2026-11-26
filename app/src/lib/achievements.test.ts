@@ -2,9 +2,11 @@ import 'fake-indexeddb/auto';
 import { describe, expect, it } from 'vitest';
 import type { Data } from './types';
 import { emptyData, sampleData } from './seed';
-import { ACHIEVEMENTS, bestStreak, cleanRange, currentStreak, newlyEarned, toggleZero } from './achievements';
+import { ACHIEVEMENTS, bestStreak, cleanRange, currentStreak, lateDays, newlyEarned, toggleZero } from './achievements';
+import { parse } from './dates';
 
-const exp = (id: string, p: string, amt: number, date: string) => ({ id, ts: 1, p, a: 'bank', amt, note: id, date, tags: [], cat: 'Other', sub: '' });
+// Saved at noon of its own day unless `ts` says otherwise.
+const exp = (id: string, p: string, amt: number, date: string, ts = parse(date).getTime()) => ({ id, ts, p, a: 'bank', amt, note: id, date, tags: [], cat: 'Other', sub: '' });
 function base(): Data {
   const e = emptyData(sampleData());
   return {
@@ -29,6 +31,16 @@ describe('streak', () => {
   it('best streak ignores future-dated expenses', () => {
     const d = { ...base(), expenses: ['01', '02', '03', '05', '06'].map((x, i) => exp('e' + i, 'food', 1, `2026-11-${x}`)).concat(exp('f', 'food', 1, '2026-12-01')) };
     expect(bestStreak(d, '2026-11-06')).toBe(3);
+  });
+  it('an expense logged on a later day is saved but does not keep the streak, and its day shows as late', () => {
+    const late = parse('2026-11-22').getTime();
+    const d = { ...base(), expenses: [exp('a', 'food', 1000, '2026-11-20'), exp('b', 'food', 1000, '2026-11-21', late), exp('c', 'food', 1000, '2026-11-22')] };
+    expect(currentStreak(d, '2026-11-22')).toBe(1);
+    expect([...lateDays(d)]).toEqual(['2026-11-21']);
+    // One expense logged on time is enough for the day
+    const d2 = { ...d, expenses: [...d.expenses, exp('d', 'food', 1, '2026-11-21')] };
+    expect(currentStreak(d2, '2026-11-22')).toBe(3);
+    expect(lateDays(d2).size).toBe(0);
   });
   it('toggleZero marks and unmarks a day', () => {
     const d = base();

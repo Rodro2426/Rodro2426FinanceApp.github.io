@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StreakStrip, ZeroDayButton } from '../ui/Streak';
 import { DaySummary } from '../ui/DaySummary';
-import { sealedDays } from '../lib/achievements';
+import { lateDays, sealedDays } from '../lib/achievements';
 import { glyph } from '../ui/PocketIcons';
 import { SwipeRow } from '../ui/SwipeRow';
 import { getLang } from '../lib/i18n';
@@ -50,7 +50,7 @@ export default function CalendarScreen() {
   const selDay = Number(sel.slice(8, 10));
   const chipStyle = { fontSize: 13, fontWeight: 600, padding: '7px 12px', borderRadius: 999, whiteSpace: 'nowrap' } as const;
 
-  const sealed = sealedDays(d), zero = new Set(d.zeroDays ?? []);
+  const sealed = sealedDays(d), late = lateDays(d), zero = new Set(d.zeroDays ?? []);
   const go = (m: string) => { setMonth(m); setSel(m === c.month ? c.today : `${m}-01`); };
 
   return (
@@ -74,7 +74,8 @@ export default function CalendarScreen() {
             if (!date) return <span key={i} />;
             const ev = eventsOn(d, date), on = date === sel, isToday = date === c.today;
             // Streak: a day with an expense is washed in teal, a day marked "nothing spent" in lavender.
-            const stamp = !sealed.has(date) ? null : zero.has(date) && !d.expenses.some(e => e.date === date) ? 'zero' : 'spent';
+            // A day whose expenses were all logged on a later day is red: it doesn't count for the streak.
+            const stamp = late.has(date) ? 'late' : !sealed.has(date) ? null : zero.has(date) && !d.expenses.some(e => e.date === date) ? 'zero' : 'spent';
             const dots = [
               ...(ev.some(e => e.b.kind === 'Income') || incomeOn(date).length ? [GREEN] : []),
               ...(ev.some(e => (e.b.kind === 'Bill' || e.b.kind === 'Subscription') && !e.b.notMine) ? [BILL] : []),
@@ -84,8 +85,8 @@ export default function CalendarScreen() {
             return (
               <button key={date} onClick={() => setSel(date)} aria-label={fmtDay(date, { weekday: 'long', month: 'long', day: 'numeric' })}
                 style={{ height: 46, borderRadius: 14, border: 0, padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  background: on ? TEXT : stamp === 'zero' ? 'var(--stamp-tint)' : stamp ? 'color-mix(in srgb, var(--brand) 13%, transparent)' : 'transparent',
-                  color: on ? 'var(--on-text)' : stamp === 'zero' ? 'var(--stamp)' : isToday ? 'var(--brand)' : stamp ? TEXT : date < c.today ? 'var(--color-neutral-600)' : TEXT,
+                  background: on ? TEXT : stamp === 'late' ? 'var(--safe-r-bg)' : stamp === 'zero' ? 'var(--stamp-tint)' : stamp ? 'color-mix(in srgb, var(--brand) 13%, transparent)' : 'transparent',
+                  color: on ? 'var(--on-text)' : stamp === 'late' ? 'var(--safe-r-amt)' : stamp === 'zero' ? 'var(--stamp)' : isToday ? 'var(--brand)' : stamp ? TEXT : date < c.today ? 'var(--color-neutral-600)' : TEXT,
                   outline: isToday && !on ? '2px dashed var(--brand)' : 'none', outlineOffset: -2, transition: 'background .15s' }}>
                 <span style={{ fontSize: 15, fontWeight: isToday || on ? 700 : 600, lineHeight: 1 }}>{Number(date.slice(8))}</span>
                 <span style={{ display: 'flex', gap: 3, height: 5 }}>{dots.map((col, j) => <span key={j} style={{ width: 5, height: 5, borderRadius: 999, background: on && col === SPEND ? 'rgba(255,255,255,.6)' : col }} />)}</span>
@@ -101,7 +102,7 @@ export default function CalendarScreen() {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {[['color-mix(in srgb, var(--brand) 13%, transparent)', 'var(--color-text)', 'Stamped'], ['var(--stamp-tint)', 'var(--stamp)', 'Nothing spent']].map(([bg, fg, l]) => (
+            {[['color-mix(in srgb, var(--brand) 13%, transparent)', 'var(--color-text)', 'Stamped'], ['var(--stamp-tint)', 'var(--stamp)', 'Nothing spent'], ['var(--safe-r-bg)', 'var(--safe-r-amt)', 'Logged late']].map(([bg, fg, l]) => (
               <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: 5, background: bg, color: fg, fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1</span>{l}</span>
             ))}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: 5, outline: '1.5px dashed var(--brand)', outlineOffset: -1.5 }} />Today</span>
@@ -154,6 +155,7 @@ export default function CalendarScreen() {
         ))}
         {!selEvents.length && !selSpent.length && !selIncome.length && <div style={{ padding: '14px 0', fontSize: 14, color: 'var(--color-neutral-700)' }}>Nothing on this day.</div>}
       </ListCard>
+      {late.has(sel) && <span style={{ fontSize: 13, lineHeight: 1.45, color: 'var(--safe-r-label)', fontWeight: 600 }}>This day was logged later, so it doesn't count for your streak.</span>}
       <ZeroDayButton day={sel} />
       <DaySummary day={sel} />
 

@@ -124,12 +124,14 @@ export function StreakStrip() {
   );
 }
 
-/** Calendar, under the day's list: mark a day with no expenses as "nothing spent" (today or a past day). */
+/** Calendar, under the day's list: mark today as "nothing spent" when it has no expenses. */
 export function ZeroDayButton({ day }: { day: string }) {
   const { data: d } = useApp();
   const t = todayISO();
   if (day > t || spendDays(d).has(day)) return null;
   const on = (d.zeroDays ?? []).includes(day);
+  // Only today can be stamped: a past day missed is missed (one marked before can still be undone).
+  if (day !== t && !on) return null;
   const mark = () => {
     // Stamping today for the first time already plays the bigger haptic (startStreakWatch).
     if (!on && day !== t) flash(`${shortDate(day)} marked as nothing spent`);

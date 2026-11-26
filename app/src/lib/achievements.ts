@@ -1,17 +1,24 @@
 // Streak and achievements. Everything is worked out from the data; only the days marked "I spent nothing" and the
 // date each achievement was first earned are saved (Data.zeroDays, Data.trophies).
 import type { Data } from './types';
-import { addDays, ctxAt, daysInMonth, monthKey, prevMonthKey, weekStart } from './dates';
+import { addDays, ctxAt, daysInMonth, iso, monthKey, prevMonthKey, weekStart } from './dates';
 import { myAccounts, myExpenses, periodAt, pocketStats, weekdayOf } from './derive';
 import { monthSummary } from './plan';
 
 /** Days with at least one expense dated that day. */
 export const spendDays = (d: Data) => new Set(d.expenses.map(e => e.date));
-/** A day counts for the streak when it has an expense or was marked "I spent nothing today". */
+/** Logged on its own day: the day it was saved is the day it's dated. Expenses added later don't keep the streak. */
+const onTime = (e: Data['expenses'][number]) => iso(new Date(e.ts)) === e.date;
+/** A day counts for the streak when an expense was logged that same day, or it was marked "I spent nothing today". */
 export function sealedDays(d: Data): Set<string> {
-  const s = spendDays(d);
+  const s = new Set(d.expenses.filter(onTime).map(e => e.date));
   (d.zeroDays ?? []).forEach(x => s.add(x));
   return s;
+}
+/** Days that have expenses, but all of them were logged on a later day: they're shown in red and break the streak. */
+export function lateDays(d: Data): Set<string> {
+  const ok = sealedDays(d);
+  return new Set(d.expenses.filter(e => !ok.has(e.date)).map(e => e.date));
 }
 
 /** Days in a row up to today. Today not sealed yet doesn't break it: the run up to yesterday still counts until the day ends. */

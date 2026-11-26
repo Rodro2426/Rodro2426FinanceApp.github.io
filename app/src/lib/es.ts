@@ -1,6 +1,8 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Logged late|Anotado tarde
+This day was logged later, so it doesn't count for your streak.|Este día se anotó después, así que no cuenta para tu racha.
 Hide expenses|Ocultar gastos
 See 1 expense|Ver 1 gasto
 No expenses in these days.|No hay gastos en estos días.
