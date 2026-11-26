@@ -265,9 +265,12 @@ function Pager({ pages, label, names, initial = 0, onPage, pinned, onPin }: { pa
   const go = (n: number) => box.current?.scrollTo({ left: n * step(), behavior: 'smooth' });
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* The height lives on a clipping wrapper, never on the scroller: resizing a snap scroller mid-swipe leaves iOS stuck between pages. */}
+      <div style={{ height: h, overflow: 'hidden', transition: 'height .25s cubic-bezier(.32,.72,0,1)' }}>
       <div ref={box} onScroll={onScroll} className="noscroll" aria-roledescription="carousel" aria-label={label}
-        style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden', scrollSnapType: 'x mandatory', overscrollBehaviorX: 'contain', alignItems: 'flex-start', height: h, transition: 'height .25s cubic-bezier(.32,.72,0,1)' }}>
+        style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', overscrollBehaviorX: 'contain', alignItems: 'flex-start' }}>
         {pages.map((pg, k) => <div key={k} aria-hidden={k !== i} style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', scrollSnapStop: 'always', display: 'flex', flexDirection: 'column' }}>{pg}</div>)}
+      </div>
       </div>
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, minHeight: 7 }}>
         {pages.map((_, k) => <button key={k} aria-label={`${label}: ${names[k]}`} aria-current={k === i} onClick={() => go(k)}
