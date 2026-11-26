@@ -29,6 +29,9 @@ export default function CalendarScreen() {
   const c = ctxOf(d);
   const [month, setMonth] = useState(c.month);
   const [sel, setSel] = useState(c.today);
+  // Clean view: no streak colours, dots or legend. Remembered on this device only.
+  const [clean, setClean] = useState(() => { try { return localStorage.getItem('pockets-cal-clean') === '1'; } catch { return false; } });
+  const flip = () => { const v = !clean; setClean(v); try { localStorage.setItem('pockets-cal-clean', v ? '1' : '0'); } catch { /* private mode */ } };
 
   const n = daysInMonth(month);
   const lead = (parse(month + '-01').getDay() + 6) % 7; // Monday first
@@ -51,13 +54,20 @@ export default function CalendarScreen() {
   const chipStyle = { fontSize: 13, fontWeight: 600, padding: '7px 12px', borderRadius: 999, whiteSpace: 'nowrap' } as const;
 
   const sealed = sealedDays(d), late = lateDays(d), zero = new Set(d.zeroDays ?? []);
+  // Days missed are red from the first day ever logged up to yesterday.
+  const firstDay = [...sealed, ...late].sort()[0] ?? c.today;
   const go = (m: string) => { setMonth(m); setSel(m === c.month ? c.today : `${m}-01`); };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <div style={{ padding: '4px 4px 0', display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Calendar</span>
-        <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Income, bills, spending and your streak</span>
+      <div style={{ padding: '4px 4px 0', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em' }}>Calendar</span>
+          <span style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>Income, bills, spending and your streak</span>
+        </div>
+        <button onClick={flip} aria-pressed={clean} className="hv-n200" style={{ marginTop: 6, flex: 'none', height: 32, padding: '0 12px', borderRadius: 999, border: 0, background: 'var(--surface)', color: TEXT, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 3, background: clean ? 'transparent' : 'var(--stamp)', border: clean ? '1.5px solid var(--color-neutral-500)' : 0 }} />{clean ? 'Show colors' : 'Hide colors'}
+        </button>
       </div>
 
       <StreakStrip />
@@ -75,8 +85,10 @@ export default function CalendarScreen() {
             const ev = eventsOn(d, date), on = date === sel, isToday = date === c.today;
             // Streak: a day with an expense is washed in teal, a day marked "nothing spent" in lavender.
             // A day whose expenses were all logged on a later day is red: it doesn't count for the streak.
-            const stamp = late.has(date) ? 'late' : !sealed.has(date) ? null : zero.has(date) && !d.expenses.some(e => e.date === date) ? 'zero' : 'spent';
-            const dots = [
+            const stamp = clean ? null : late.has(date) ? 'late' : !sealed.has(date) ? (date >= firstDay && date < c.today ? 'missed' : null) : zero.has(date) && !d.expenses.some(e => e.date === date) ? 'zero' : 'spent';
+            // Logged that day: lavender. Nothing spent: teal wash. Logged later: yellow. Not logged: red.
+            const [sBg, sFg] = stamp === 'spent' ? ['var(--stamp-tint)', 'var(--stamp)'] : stamp === 'zero' ? ['color-mix(in srgb, var(--brand) 13%, transparent)', TEXT] : stamp === 'late' ? ['var(--safe-y-bg)', 'var(--safe-y-amt)'] : stamp === 'missed' ? ['var(--safe-r-bg)', 'var(--safe-r-amt)'] : ['transparent', ''];
+            const dots = clean ? [] : [
               ...(ev.some(e => e.b.kind === 'Income') || incomeOn(date).length ? [GREEN] : []),
               ...(ev.some(e => (e.b.kind === 'Bill' || e.b.kind === 'Subscription') && !e.b.notMine) ? [BILL] : []),
               ...(ev.some(e => e.b.kind === 'CardPayment') ? [CARD] : []),
@@ -85,8 +97,8 @@ export default function CalendarScreen() {
             return (
               <button key={date} onClick={() => setSel(date)} aria-label={fmtDay(date, { weekday: 'long', month: 'long', day: 'numeric' })}
                 style={{ height: 46, borderRadius: 14, border: 0, padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
-                  background: on ? TEXT : stamp === 'late' ? 'var(--safe-r-bg)' : stamp === 'zero' ? 'var(--stamp-tint)' : stamp ? 'color-mix(in srgb, var(--brand) 13%, transparent)' : 'transparent',
-                  color: on ? 'var(--on-text)' : stamp === 'late' ? 'var(--safe-r-amt)' : stamp === 'zero' ? 'var(--stamp)' : isToday ? 'var(--brand)' : stamp ? TEXT : date < c.today ? 'var(--color-neutral-600)' : TEXT,
+                  background: on ? TEXT : sBg,
+                  color: on ? 'var(--on-text)' : sFg || (isToday ? 'var(--brand)' : date < c.today ? 'var(--color-neutral-600)' : TEXT),
                   outline: isToday && !on ? '2px dashed var(--brand)' : 'none', outlineOffset: -2, transition: 'background .15s' }}>
                 <span style={{ fontSize: 15, fontWeight: isToday || on ? 700 : 600, lineHeight: 1 }}>{Number(date.slice(8))}</span>
                 <span style={{ display: 'flex', gap: 3, height: 5 }}>{dots.map((col, j) => <span key={j} style={{ width: 5, height: 5, borderRadius: 999, background: on && col === SPEND ? 'rgba(255,255,255,.6)' : col }} />)}</span>
@@ -95,14 +107,14 @@ export default function CalendarScreen() {
           })}
         </div>
         {/* Legend in two lines: what the dots mean (money), then what the day colours mean (streak). */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 600, color: 'var(--color-neutral-600)', paddingTop: 4 }}>
+        <div style={{ display: clean ? 'none' : 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 600, color: 'var(--color-neutral-600)', paddingTop: 4 }}>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
             {[[GREEN, 'Income'], [BILL, 'Bills'], ...(cardTotal || d.bills.some(b => b.kind === 'CardPayment') ? [[CARD, 'Cards']] : []), [SPEND, 'Spending']].map(([col, l]) => (
               <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 7, height: 7, borderRadius: 999, background: col }} />{l}</span>
             ))}
           </div>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center' }}>
-            {[['color-mix(in srgb, var(--brand) 13%, transparent)', 'var(--color-text)', 'Stamped'], ['var(--stamp-tint)', 'var(--stamp)', 'Nothing spent'], ['var(--safe-r-bg)', 'var(--safe-r-amt)', 'Logged late']].map(([bg, fg, l]) => (
+            {[['var(--stamp-tint)', 'var(--stamp)', 'Stamped'], ['color-mix(in srgb, var(--brand) 13%, transparent)', 'var(--color-text)', 'Nothing spent'], ['var(--safe-y-bg)', 'var(--safe-y-amt)', 'Logged late'], ['var(--safe-r-bg)', 'var(--safe-r-amt)', 'Not logged']].map(([bg, fg, l]) => (
               <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: 5, background: bg, color: fg, fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>1</span>{l}</span>
             ))}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span aria-hidden="true" style={{ width: 16, height: 16, borderRadius: 5, outline: '1.5px dashed var(--brand)', outlineOffset: -1.5 }} />Today</span>
