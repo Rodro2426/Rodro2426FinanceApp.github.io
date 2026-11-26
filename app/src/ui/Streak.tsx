@@ -1,7 +1,7 @@
 // "Stamp of the month": the streak strip and "nothing spent" button on the Calendar tab, the stamp that drops when today is stamped, and the Achievements page.
 import { flash, getData, getState, onPersist, setData, setUI, useApp } from '../lib/store';
 import { ACHIEVEMENTS, bestStreak, currentStreak, newlyEarned, sealedDays, spendDays, toggleZero, type Group } from '../lib/achievements';
-import { shortDate, todayISO } from '../lib/dates';
+import { fmtDay, shortDate, todayISO } from '../lib/dates';
 import { getLang, tr } from '../lib/i18n';
 import { useId } from 'react';
 import { SubPage } from '../screens/Reports';
@@ -107,20 +107,44 @@ export function StreakStamp({ n }: { n: number }) {
   );
 }
 
-/** Calendar: the streak strip above the month (stamp, days in a row, best, link to Achievements). */
+/** The big stamp on its own screen, made to look good in a screenshot for social media. Tap ✕ to close. */
+export function StreakShare() {
+  const { data: d } = useApp();
+  const t = todayISO(), n = currentStreak(d, t), best = bestStreak(d, t);
+  const close = () => setUI({ page: null });
+  return (
+    <div role="dialog" aria-label="Your streak" style={{ position: 'absolute', inset: 0, zIndex: 90, background: 'radial-gradient(120% 80% at 50% 38%, var(--stamp-tint) 0%, var(--page) 70%)', color: 'var(--color-text)', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'calc(var(--top) + 8px) 24px calc(var(--tb) + 28px)', boxSizing: 'border-box' }}>
+      <button type="button" onClick={close} aria-label="Close" style={{ alignSelf: 'flex-end', width: 44, height: 44, borderRadius: 999, border: 0, background: 'var(--surface)', color: 'var(--color-text)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><I.X size={18} sw={2.4} /></button>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 22, textAlign: 'center' }}>
+        <div className="stamp-hold" style={{ width: 'min(78vw, 320px)', aspectRatio: '1' }}><Seal n={n} /></div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>{n > 0 ? (n === 1 ? '1 day in a row up to date' : `${n} days in a row up to date`) : 'Start your streak today'}</span>
+          <span style={{ fontSize: 15, color: 'var(--color-neutral-700)' }}>{best > n ? `${fmtDay(t, { day: 'numeric', month: 'long', year: 'numeric' })} · Best streak: ${best} days` : fmtDay(t, { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+        </div>
+      </div>
+      <div aria-hidden="true" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 800, letterSpacing: '0.14em', color: 'var(--brand)' }}>
+        <img src="./pockets-mark.svg" alt="" width={28} height={28} />POCKETS
+      </div>
+    </div>
+  );
+}
+
+/** Calendar: the streak strip above the month (stamp, days in a row, best, link to Achievements). Tapping the stamp opens it big. */
 export function StreakStrip() {
   const { data: d } = useApp();
   const t = todayISO(), n = currentStreak(d, t), best = bestStreak(d, t);
   const earned = Object.keys(d.trophies ?? {}).length;
   return (
-    <button type="button" onClick={() => setUI({ page: 'trophies' })} className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, border: 0, font: 'inherit', color: 'var(--color-text)', textAlign: 'left', cursor: 'pointer', width: '100%' }}>
-      <span aria-hidden="true" style={{ width: 52, height: 52, flex: 'none' }}><Seal n={n} small /></span>
+    <div className="hv-n100" style={{ background: 'var(--surface)', borderRadius: 24, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, color: 'var(--color-text)', width: '100%', boxSizing: 'border-box' }}>
+      <button type="button" onClick={() => setUI({ page: 'streak' })} aria-label="Show my streak stamp big" className="pr97" style={{ width: 52, height: 52, flex: 'none', padding: 0, border: 0, background: 'transparent', cursor: 'pointer' }}><Seal n={n} small /></button>
+      <button type="button" onClick={() => setUI({ page: 'trophies' })} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 12, border: 0, background: 'transparent', font: 'inherit', color: 'inherit', textAlign: 'left', cursor: 'pointer', padding: 0 }}>
       <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
         <span style={{ fontSize: 15, fontWeight: 700 }}>{n > 0 ? (n === 1 ? '1 day in a row up to date' : `${n} days in a row up to date`) : 'Start your streak today'}</span>
         <span style={{ fontSize: 12.5, color: 'var(--color-neutral-700)' }}>{best > 0 ? (best === 1 ? 'Best streak: 1 day' : `Best streak: ${best} days`) : 'Log an expense or tap "I spent nothing"'}</span>
       </span>
       <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--brand)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 2 }}>{`Achievements ${earned}/${ACHIEVEMENTS.length}`}<I.Chevron size={14} /></span>
-    </button>
+      </button>
+    </div>
   );
 }
 

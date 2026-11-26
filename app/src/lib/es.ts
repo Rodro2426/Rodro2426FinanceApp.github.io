@@ -1,6 +1,8 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Show my streak stamp big|Ver mi sello de racha en grande
+Your streak|Tu racha
 Not logged|Sin anotar
 Hide colors|Ocultar colores
 Show colors|Mostrar colores
@@ -2217,6 +2219,7 @@ Friends are people with a Pockets account. Sign in to add them by email.|Los ami
 `;
 
 export const ES_PATTERNS = `
+{0} · Best streak: {1} days|{0} · Mejor racha: {1} días
 See {0} expenses|Ver {0} gastos
 {0} moved on to {1}|{0} pasaron a {1}
 {0} was taken from {1}|{0} se descontaron de {1}

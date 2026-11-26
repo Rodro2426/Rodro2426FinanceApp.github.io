@@ -42,7 +42,7 @@ import GuidedTour from './screens/GuidedTour';
 import Investments from './screens/Investments';
 import ReportPage, { ReportsIndex } from './screens/Reports';
 import CategoriesPage from './screens/Categories';
-import { StreakStamp, TrophiesPage, startStreakWatch } from './ui/Streak';
+import { StreakShare, StreakStamp, TrophiesPage, startStreakWatch } from './ui/Streak';
 import SocialPage, { FriendAddSheet, PersonPage, TripPage, WhatHappenedSheet } from './screens/Social';
 import { DmPage, TripChatPage, TripStatsPage } from './screens/TripExtras';
 import { TripItemSheet, TripNewSheet, TripPeopleSheet } from './sheets/TripSheets';
@@ -358,6 +358,7 @@ export default function App() {
 
       {!ui.sheet && <div className="conflict-slot" style={{ position: 'absolute', left: 14, right: 14, top: 'calc(var(--top) - 6px)', zIndex: 32 }}><ConflictChoice /></div>}
 
+      {ui.page === 'streak' && <StreakShare />}
       {ui.stamp != null && <StreakStamp n={ui.stamp} />}
       {ui.toast && ui.stamp == null && (
         <div role="status" style={{ position: 'absolute', left: 18, right: 18, bottom: 'calc(var(--tb) + 82px)', zIndex: 30, background: 'var(--color-text)', color: 'var(--on-text)', padding: '14px 18px', borderRadius: 999, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 10, boxShadow: 'var(--shadow-lg)' }}>
