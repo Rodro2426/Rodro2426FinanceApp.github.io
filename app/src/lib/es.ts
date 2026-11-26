@@ -1,6 +1,7 @@
 // Spanish for every English text in Pockets, one per line: English|Spanish.
 // Texts with changing parts ({0}, {1}…) are in ES_PATTERNS. Brand, bank and store names stay as they are.
 export const ES_WORDS = `
+Pocket manager|Administrador de bolsillos
 Starts with|Empieza con
 Left over|Sobraron
 You went over|Te pasaste

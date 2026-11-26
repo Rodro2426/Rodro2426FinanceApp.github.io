@@ -249,6 +249,15 @@ function Pager({ pages, label, names, initial = 0, onPage, pinned, onPin }: { pa
   const box = useRef<HTMLDivElement>(null);
   const step = () => (box.current ? box.current.clientWidth + 10 : 1);
   useLayoutEffect(() => { box.current?.scrollTo({ left: initial * step() }); }, []);
+  // The row is as tall as the page showing, so a short card doesn't keep the tallest one's empty space.
+  const [h, setH] = useState<number>();
+  useLayoutEffect(() => {
+    const pg = box.current?.children[i] as HTMLElement | undefined;
+    if (!pg) return;
+    const ro = new ResizeObserver(() => setH(pg.offsetHeight));
+    ro.observe(pg);
+    return () => ro.disconnect();
+  }, [i]);
   const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const n = Math.round(e.currentTarget.scrollLeft / step());
     if (n !== i) { setI(n); onPage?.(n); }
@@ -257,7 +266,7 @@ function Pager({ pages, label, names, initial = 0, onPage, pinned, onPin }: { pa
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div ref={box} onScroll={onScroll} className="noscroll" aria-roledescription="carousel" aria-label={label}
-        style={{ display: 'flex', gap: 10, overflowX: 'auto', scrollSnapType: 'x mandatory', overscrollBehaviorX: 'contain', alignItems: 'stretch' }}>
+        style={{ display: 'flex', gap: 10, overflowX: 'auto', overflowY: 'hidden', scrollSnapType: 'x mandatory', overscrollBehaviorX: 'contain', alignItems: 'flex-start', height: h, transition: 'height .25s cubic-bezier(.32,.72,0,1)' }}>
         {pages.map((pg, k) => <div key={k} aria-hidden={k !== i} style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', scrollSnapStop: 'always', display: 'flex', flexDirection: 'column' }}>{pg}</div>)}
       </div>
       <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, minHeight: 7 }}>
