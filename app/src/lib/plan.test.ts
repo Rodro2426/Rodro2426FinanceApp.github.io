@@ -3,11 +3,16 @@ import { describe, expect, it } from 'vitest';
 import type { Data } from './types';
 import { makeCtx } from './dates';
 import { emptyData, sampleData } from './seed';
-import { monthStats, pocketStats } from './derive';
+import { monthStats, pocketStats, weekBase } from './derive';
 import { largestRemainder, weekShares } from './split';
 import { overBy, refillFrom, suggestRefill, addExtraIncome, COVER, coverFirst, coverWith, deleteIncome, editIncomeAmount, findMismatches, markIncluded, monthSummary, splitAmong, suggestCover, transferLeftover, undoMoves, type ExtraIncome } from './plan';
 
-/** November 2026, week 1 (Nov 2–8), today Wednesday Nov 4: 4 weeks in the month, 4 left. */
+/**
+ * November 2026, today Wednesday Nov 4, week Nov 2–8 (piece 2 of 6: Nov 1 and Nov 30 are 1-day weeks).
+ * Weekly amounts add up to 122.000 (Lunch 32.000, Wagon 25.000, Salidas 65.000); the month plans 30/7 weeks of them:
+ * Lunch 4.571 + 4 × 32.000 + 4.571 = 137.142, Wagon 3.571 + 100.000 + 3.571 = 107.142, Salidas 9.286 + 260.000 + 9.286 = 278.572; total 522.856.
+ * 5 pieces are left (this one and 4 more); Nov 1 is already over (its 17.428 is not promised any more).
+ */
 const c = makeCtx(4, '2026-11-04');
 const apply = (d: Data, p: Partial<Data>): Data => ({ ...d, ...p });
 
@@ -57,16 +62,17 @@ describe('case 0: clean-up', () => {
     const d = november(), m = findMismatches(d, c);
     expect(m.orphan.map(x => x.amt).sort((a, b) => a - b)).toEqual([5413, 16000, 26000, 60000]);
     expect(m.orphan.reduce((a, x) => a + x.amt, 0)).toBe(107413);
-    expect(monthSummary(d, c).plan).toBe(488000 + 107413);
+    expect(monthSummary(d, c).plan).toBe(522856 + 107413);
   });
   it('after undoing them, every number matches', () => {
     const d = cleaned(), s = monthSummary(d, c);
-    expect(['lunch', 'wagon', 'salidas'].map(id => monthStats(d, id, c).left)).toEqual([112000, 93500, 259000]);
-    expect(s.toSpend).toBe(464500);
+    expect(['lunch', 'wagon', 'salidas'].map(id => monthStats(d, id, c).left)).toEqual([121142, 100642, 277572]); // plan − spent
+    expect(s.toSpend).toBe(522856 - 23500 - 17428); // minus what was spent, minus the finished Nov 1 week
+    expect(s.toSpend).toBe(481928);
     expect(s.income).toBe(361058);
-    expect(s.plan).toBe(488000);
-    expect(s.planGap).toBe(-126942);
-    expect(s.real).toBe(103442);
+    expect(s.plan).toBe(522856);
+    expect(s.planGap).toBe(-161798);
+    expect(s.real).toBe(120870); // 481.928 − 361.058
     expect(findMismatches(d, c).orphan).toHaveLength(0);
   });
 });
@@ -74,25 +80,26 @@ describe('case 0: clean-up', () => {
 describe('cases 1–4: Sami, $96.000', () => {
   it('1. all saved', () => {
     const d = apply(cleaned(), addExtraIncome(cleaned(), c, sami(0))), s = monthSummary(d, c);
-    expect([s.income, s.plan, s.planGap, s.real]).toEqual([457058, 488000, -30942, 7442]);
+    expect([s.income, s.plan, s.planGap, s.real]).toEqual([457058, 522856, -65798, 24870]);
   });
   it('2. all to pockets, by budget, rest of month', () => {
     const d = apply(cleaned(), addExtraIncome(cleaned(), c, sami(96000))), s = monthSummary(d, c);
     expect(splitOf(d, 'insami0001')).toEqual({ lunch: 25180, wagon: 19672, salidas: 51148 });
-    expect(['lunch', 'wagon', 'salidas'].map(id => weekly(d, id))).toEqual([6295, 4918, 12787]);
-    expect([s.income, s.plan, s.planGap, s.real]).toEqual([457058, 584000, -126942, 103442]);
+    // Shared over the 5 weeks left by their days: 7, 7, 7, 7 and 1 (Mon Nov 30), so this week gets 7/29 of each part.
+    expect(['lunch', 'wagon', 'salidas'].map(id => weekly(d, id))).toEqual([6078, 4749, 12346]);
+    expect([s.income, s.plan, s.planGap, s.real]).toEqual([457058, 618856, -161798, 120870]);
     expect(s.real > 0).toBe(true); // shows the warning
   });
   it('3. $33.000 to pockets by budget, $63.000 saved', () => {
     const d = apply(cleaned(), addExtraIncome(cleaned(), c, sami(33000))), s = monthSummary(d, c);
     expect(splitOf(d, 'insami0001')).toEqual({ lunch: 8656, wagon: 6762, salidas: 17582 });
-    expect([s.plan, s.planGap]).toEqual([521000, -63942]);
+    expect([s.plan, s.planGap]).toEqual([555856, -98798]);
   });
   it('4. cover the shortfall first: everything is saved', () => {
     expect(coverFirst(cleaned(), c, 96000)).toBe(0);
     // With a smaller shortfall, only the rest goes to pockets.
     const d = apply(cleaned(), { incomeStr: '361058', accounts: cleaned().accounts.map(a => (a.id === 'bank' ? { ...a, bal: 450000 } : a)) });
-    expect(coverFirst(d, c, 96000)).toBe(96000 - 14500);
+    expect(coverFirst(d, c, 96000)).toBe(96000 - 31928); // real shortfall: 481.928 − 450.000
   });
 });
 
@@ -143,7 +150,7 @@ describe('invariants', () => {
     const yes = apply(d1, markIncluded(d1, ['insami0001']));
     const s = monthSummary(yes, c);
     expect(s.income).toBe(361058);
-    expect(s.plan).toBe(488000);
+    expect(s.plan).toBe(522856);
     const keep = apply(d1, markIncluded(d1, ['insami0001'], ['insami0001']));
     expect(findMismatches(keep, c).included.reduce((a, m) => a + m.amt, 0)).toBe(33000);
   });
@@ -190,11 +197,11 @@ describe('moving a pocket\'s leftover', () => {
 });
 
 describe('covering the shortfall with leftovers', () => {
-  // Pockets still promise $464.500 this month; the bank has less.
+  // Pockets still promise $481.928 this month; the bank has less.
   const short = (bal: number): Data => { const d = cleaned(); return { ...d, accounts: d.accounts.map(a => (a.id === 'bank' ? { ...a, bal } : a)) }; };
   it('the leftover given up comes off the shortfall, peso for peso, and nothing else changes', () => {
-    const d0 = short(420000), before = monthSummary(d0, c);
-    expect(before.real).toBe(44500);
+    const d0 = short(437428), before = monthSummary(d0, c);
+    expect(before.real).toBe(44500); // 481.928 − 437.428
     const parts = suggestCover(d0, c);
     expect(parts).toEqual({ salidas: 44500 }); // biggest leftover first, only what's needed
     const d1 = apply(d0, coverWith(d0, c, parts)!), after = monthSummary(d1, c);
@@ -327,17 +334,17 @@ describe('extra income already counted in the monthly income', () => {
 });
 
 describe('left to spend in pockets ignores finished weeks', () => {
-  // 5-week November (Mondays Nov 2 – Nov 30), today Wednesday Nov 18, week 3: Nov 23 and Nov 30 still to come.
+  // November 2026 has 6 week pieces; today Wednesday Nov 18, week Nov 16–22 (piece 4): Nov 23 and the 1-day Nov 30 are still to come.
   const c5 = makeCtx(5, '2026-11-18');
   const d = (carry?: string): Data => {
     const base = november(false);
-    return { ...base, settings: { ...base.settings, weeks: 5 }, pockets: base.pockets.map(p => ({ ...p, carry })) };
+    return { ...base, pockets: base.pockets.map(p => ({ ...p, carry })) };
   };
   it('counts this week\'s leftover plus the weeks still ahead, not leftovers from weeks already over', () => {
     const x = d(), s = monthSummary(x, c5);
-    const expected = x.pockets.reduce((a, p) => a + Math.max(0, pocketStats(x, p.id, c5)!.left) + 2 * Number(p.weeklyStr), 0);
-    expect(s.toSpend).toBe(expected); // 122000 this week (nothing spent) + 122000 for each of the 2 weeks ahead
-    expect(s.toSpend).toBe(366000);
+    const expected = x.pockets.reduce((a, p) => a + Math.max(0, pocketStats(x, p.id, c5)!.left) + Number(p.weeklyStr) + weekBase(p, '2026-11-30'), 0);
+    expect(s.toSpend).toBe(expected); // 122000 this week (nothing spent) + 122000 for Nov 23 + 17.428 for Mon Nov 30 (1/7 of each weekly amount)
+    expect(s.toSpend).toBe(261428);
     expect(s.real).toBe(s.toSpend - s.balance);
   });
   it('with carry over, past leftovers are still promised (they rolled into this week)', () => {
@@ -345,6 +352,6 @@ describe('left to spend in pockets ignores finished weeks', () => {
     expect(monthSummary(x, c5).toSpend).toBe(x.pockets.reduce((a, p) => a + Math.max(0, monthStats(x, p.id, c5).left), 0));
   });
   it('carry over turned on this week: weeks before it still don\'t count', () => {
-    expect(monthSummary(d('2026-11-16'), c5).toSpend).toBe(366000);
+    expect(monthSummary(d('2026-11-16'), c5).toSpend).toBe(261428);
   });
 });

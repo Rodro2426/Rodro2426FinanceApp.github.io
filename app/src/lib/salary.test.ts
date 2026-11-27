@@ -45,10 +45,12 @@ describe('this month came in different', () => {
     expect(monthSummary(after, c).income).toBe(3_600_000);
     expect(monthSummary(after, c).plan).toBe(monthSummary(d, c).plan - 400_000);
     expect(monthStats(after, 'g', c).budget).toBe(monthStats(d, 'g', c).budget - 300_000);
-    // spread over the 3 weeks left in November (Nov 16, 23 and 30), whole pesos, adding up exactly
-    expect(pocketStats(after, 'g', ctxAt('2026-11-18'))!.budget).toBe(200_000 - 100_000);
-    expect(pocketStats(after, 'g', ctxAt('2026-11-25'))!.budget).toBe(200_000 - 100_000);
-    expect(pocketStats(after, 'g', ctxAt('2026-12-01'))!.budget).toBe(200_000 - 100_000); // week Nov 30 is November's
+    // spread over the 3 weeks left in November (Nov 16–22, Nov 23–29 and the 1-day Nov 30) by their days (7, 7, 1 of 15):
+    // 140.000 + 140.000 + 20.000 = 300.000, whole pesos, adding up exactly
+    expect(pocketStats(after, 'g', ctxAt('2026-11-18'))!.budget).toBe(200_000 - 140_000);
+    expect(pocketStats(after, 'g', ctxAt('2026-11-25'))!.budget).toBe(200_000 - 140_000);
+    expect(pocketStats(after, 'g', ctxAt('2026-11-30'))!.budget).toBe(28_571 - 20_000); // Mon Nov 30 is a 1-day week: 1/7 of 200.000, minus its share
+    expect(pocketStats(after, 'g', ctxAt('2026-12-01'))!.budget).toBe(200_000 - 28_571); // Dec 1–6 is December's: normal (the rest of the week)
     expect(pocketStats(after, 'g', ctxAt('2026-11-10'))!.budget).toBe(200_000); // before it was set
     expect(pocketStats(after, 'g', ctxAt('2026-12-09'))!.budget).toBe(200_000); // next month is normal again
     expect(monthSummary(after, ctxAt('2026-12-09')).income).toBe(4_000_000);

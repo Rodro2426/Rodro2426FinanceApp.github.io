@@ -7,7 +7,7 @@ import { allStats, byDateDesc, ctxOf, dayLabel, dayStats, fmt, monthAhead, month
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { daysBetween, daysInMonth, relDay } from '../lib/dates';
 import type { PocketView } from '../lib/types';
-import { fmtDay, monthName, shortDate } from '../lib/dates';
+import { fmtDay, monthName, shortDate, weekDays } from '../lib/dates';
 import { billRows } from '../lib/bills';
 import { BillBadge, Fill, ExpRow, ListCard, SectionHead, Segmented, expView } from '../ui/bits';
 import * as I from '../ui/icons';
@@ -120,7 +120,7 @@ export default function Home() {
       <div className="dh">
         <header className="dh-head">
           <h1 className="dh-verdict">{verdict}</h1>
-          <p className="dh-date"><span>{fmtDay(c.today, { weekday: 'long', month: 'long', day: 'numeric' })}</span><span aria-hidden="true">·</span><span>{`Week ${c.weekNo} of ${c.weeks}`}</span></p>
+          <p className="dh-date"><span>{fmtDay(c.today, { weekday: 'long', month: 'long', day: 'numeric' })}</span><span aria-hidden="true">·</span><span>{`Week ${c.weekNo} (${weekDays(c.weekStart, c.weekEnd)})`}</span></p>
         </header>
 
         {!hidden.includes('safe') && <DeskSafe view={view} setView={setView} {...safe} />}
@@ -144,7 +144,7 @@ export default function Home() {
         </div>}
 
         {!hidden.includes('pockets') && <section className="dh-sec">
-          <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={view === 'day' ? 'Today' : view === 'week' ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
+          <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={view === 'day' ? 'Today' : view === 'week' ? `Week ${c.weekNo} (${weekDays(c.weekStart, c.weekEnd)})` : `All of ${monthName(c.month)}`} muted />
           {all.length > 0 ? <div className="dh-lines" data-tour="pocket">
             {lines.map(({ p, left, budget, off }) => {
               const pct = budget > 0 ? Math.max(0, Math.min(100, (left / budget) * 100)) : 0;
@@ -217,7 +217,7 @@ export default function Home() {
 
       </> },
         { id: 'pockets', name: 'Pockets', desc: 'What is left in each pocket', node: <>
-      <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={pocketPage === 0 ? 'Today' : pocketPage === 1 ? `Week ${c.weekNo} of ${c.weeks}` : `All of ${monthName(c.month)}`} muted />
+      <SectionHead title={getLang() === 'es' ? 'Bolsillos' : 'Pockets'} right={pocketPage === 0 ? 'Today' : pocketPage === 1 ? `Week ${c.weekNo} (${weekDays(c.weekStart, c.weekEnd)})` : `All of ${monthName(c.month)}`} muted />
       {all.length > 0 && <Pager label="Pockets" names={['today', 'this week', 'this month']} initial={pocketFace} pinned={pocketFace} onPin={i => pinFace('pockets', i)} onPage={setPocketPage} pages={[
         <PocketGrid key="d" tour view="day" items={all.map((p, i) => ({ p, left: days[i].left, budget: days[i].allowance, off: !days[i].active ? (days[i].spentToday > 0 ? `Spent ${fmt(days[i].spentToday)} today` : days[i].next ? `Not today · ${dayLabel(days[i].next!.date, c).slice(0, 3)} ${fmt(days[i].next!.amount)}` : 'Not today') : undefined }))} />,
         <PocketGrid key="w" view="week" items={all.map(p => ({ p, left: p.left, budget: p.budget }))} tour />,

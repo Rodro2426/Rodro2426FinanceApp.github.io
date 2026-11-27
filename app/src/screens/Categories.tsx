@@ -6,7 +6,7 @@ import { SwipeRow } from '../ui/SwipeRow';
 import { useApp, openSheet, setData, setUI, flash } from '../lib/store';
 import { HUES, LINE, RED, TEXT, ink, mid, tint } from '../lib/constants';
 import { byDateDesc, catOf, ctxOf, fmt, monthExpenses, pctOf, plural, myExpenses } from '../lib/derive';
-import { addDays, inRange, monthKey, monthName, prevMonthKey, shortDate } from '../lib/dates';
+import { inRange, monthKey, monthName, prevMonthKey, shortDate } from '../lib/dates';
 import { expenseCatClash, incomeCatClash, moveExpenses, moveIncomes, renameExpenseCat, renameIncomeCat, renameSub } from '../lib/categories';
 import { allIncomeCats, incCatOf, incomeCatList } from '../lib/reports';
 import { Bar, ExpRow, Segmented, expView, textInput } from '../ui/bits';
@@ -299,7 +299,7 @@ export function CategoryTable({ kind = 'expense' }: { kind?: 'expense' | 'income
   const c = ctxOf(d);
   const [period, setPeriod] = useState<Period>('month');
   const [sel, setSel] = useState<string[]>([]);
-  const inPeriod = (date: string) => period === 'week' ? inRange(date, c.weekStart, addDays(c.weekStart, 6))
+  const inPeriod = (date: string) => period === 'week' ? inRange(date, c.weekStart, c.weekEnd)
     : period === 'month' ? monthKey(date) === c.month : period === 'last' ? monthKey(date) === prevMonthKey(c.month) : true;
   const exps = inc ? [] : myExpenses(d).filter(e => inPeriod(e.date));
   const incs = inc ? d.incomes.filter(t => inPeriod(t.date)) : [];

@@ -26,6 +26,13 @@ Bugs already hit, approaches that failed, and fragile areas. Read this before to
 - **The keyboard resizes the visual viewport.** `main.tsx` sets `--app-h` and the `kb` class, and the tab bar hides while typing. Don't use `100vh`.
 - **Desktop CSS** uses `:not(.page)` to keep sheet scroll bodies working; there was a specificity fight with `.page` scroll bodies.
 
+## Weeks (cut on the 1st)
+
+- `c.weekStart` is not always a Monday: in the first week of a month it's the 1st. Use `c.weekEnd`, never `addDays(c.weekStart, 6)`, and `weekPart(day)` instead of `weekStart(day)` for a pocket's week. `weekStart()` is still the calendar Monday (Reports' week bars use calendar weeks and add both pieces).
+- `c.weeks` is how many week pieces the month has (4 to 6, Nov 2026 has 6 with two 1-day weeks); `periodsInMonth(p, month)` is the plan's weeks as a fraction (30 days ≈ 4.29). Don't multiply a weekly amount by `c.weeks`.
+- `makeCtx(weeks, day)` ignores `weeks`; it's kept so old calls and tests still work. Use `ctxAt(day)`.
+- Old pockets created mid-month have `start.until` on the Monday of the last week under the old rule; a 1-day week after it gets the full rate's share. Only affects past months.
+
 ## Store / data
 
 - **Every DEV hook must be guarded** with `import.meta.env.DEV && typeof window !== 'undefined'`. Without the window check, vitest crashed with "window is not defined".

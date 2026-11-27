@@ -4,7 +4,7 @@ import { Blocks } from '../ui/Blocks';
 import { useApp, openSheet, setData, setUI } from '../lib/store';
 import { extraIncomes, findMismatches, monthSummary } from '../lib/plan';
 import { LINE, RED, TEXT, ink, tint } from '../lib/constants';
-import { allStats, ctxOf, curSymbol, fmt, isHalf, isMonthly, monthPlanOf, num, pctOf, periodsInMonth } from '../lib/derive';
+import { allStats, ctxOf, curSymbol, fmt, isHalf, isMonthly, monthPlanOf, num, pctOf, periodsInMonth, weeksText } from '../lib/derive';
 import { monthLabel, monthName } from '../lib/dates';
 import { Bar, Fill } from '../ui/bits';
 import * as I from '../ui/icons';
@@ -22,12 +22,13 @@ const line = (label: string, value: string, sub?: string, color?: string) => (
 
 export default function Budget() {
   const { data: d } = useApp();
-  const c = ctxOf(d), weeks = c.weeks, cur = curSymbol();
+  // The month's weeks: its days ÷ 7 (30 days ≈ 4.29), the same count the plan uses.
+  const c = ctxOf(d), weeks = periodsInMonth({}, c.month), cur = curSymbol();
   const income = num(d.incomeStr), pays = salaryBills(d), thisMonth = d.monthIncome?.[c.month];
   const all = allStats(d, c);
   const sum = monthSummary(d, c), extras = extraIncomes(d, c);
   const mm = findMismatches(d, c), issues = mm.orphan.length;
-  const splitFromExtra = sum.plan - all.reduce((a, s, i) => a + s.weekly * periodsInMonth(d.pockets[i], weeks), 0);
+  const splitFromExtra = sum.plan - d.pockets.reduce((a, p) => a + monthPlanOf(p, c), 0) - Object.values(thisMonth?.adj ?? {}).reduce((a, x) => a + x, 0);
   // Editing the typed income when this month already has extra income: ask whether it's already in there.
   const setPocket = (id: string, patch: { name?: string; weeklyStr?: string }) => setData(x => ({ pockets: x.pockets.map(p => p.id === id ? { ...p, ...patch } : p) }));
   const removePocket = (id: string) => setData(x => ({ pockets: x.pockets.filter(p => p.id !== id), moves: x.moves.filter(m => m.from !== id && m.to !== id) }));
@@ -55,7 +56,7 @@ export default function Budget() {
           {pays.length > 0 && <button onClick={() => openSheet({ name: 'schedule', id: pays[0].id })} className="hv-n200" style={{ ...chipStyle, border: 0, cursor: 'pointer', color: TEXT, background: 'var(--color-neutral-100)' }}>Payday and account</button>}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 6 }}>
-          <span style={chipStyle}>{weeks} weeks</span>
+          <span style={chipStyle}>{`${weeksText(weeks)} weeks`}</span>
           <span style={chipStyle}>{fmt(income / weeks)} per week</span>
         </div>
         {sum.extra > 0 && <span style={{ marginTop: 4, fontSize: 13, lineHeight: 1.4, color: 'oklch(0.36 0.08 155)', fontWeight: 600 }}>{`+${fmt(sum.extra)} extra this month (${extras.map(t => t.note).join(', ')}). In total ${fmt(sum.income)}.`}</span>}
@@ -124,7 +125,7 @@ export default function Budget() {
       <div aria-label="Month plan" style={{ background: 'var(--surface)', borderRadius: 24, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <Bar pct={pctOf(sum.plan, sum.income)} track="var(--color-neutral-200)" fill={sum.planGap < 0 ? 'var(--color-accent)' : 'oklch(0.62 0.12 160)'} ease=".3s" />
         {line('Month income', fmt(sum.income), sum.extra > 0 ? `${fmt(sum.base)} + ${fmt(sum.extra)} extra` : undefined)}
-        {line(`Planned for ${weeks} weeks`, fmt(sum.plan), splitFromExtra > 0 ? `includes ${fmt(splitFromExtra)} split from extra income` : undefined)}
+        {line(`Planned for ${weeksText(weeks)} weeks`, fmt(sum.plan), splitFromExtra > 0 ? `includes ${fmt(splitFromExtra)} split from extra income` : undefined)}
         {line(sum.planGap < 0 ? 'Over your income by' : 'Free for bills and saving', fmt(Math.abs(sum.planGap)), undefined, sum.planGap < 0 ? RED : undefined)}
         <div style={{ height: 1, background: LINE, margin: '2px 0' }} />
         {/* Just the verdict here; the numbers are one tap away (MoneyCheckSheet). */}

@@ -4,10 +4,10 @@ import type { Account, Data, Expense, Income, Move } from './types';
 import { debtAcctLines } from './debts';
 import { transferEffect } from './transfer';
 import { POCKET_CAT } from './constants';
-import { addDays, ctxAt, daysBetween, fmtDay, inRange, iso as isoOf, monthKey, parse, type Ctx } from './dates';
+import { addDays, ctxAt, daysBetween, fmtDay, inRange, iso as isoOf, lastOfMonth, monthKey, parse, weekPart, weekParts, weekStart, type Ctx } from './dates';
 import { getData } from './store';
 import { STARS, moneyHidden } from './privacy';
-import { unitsFor, weekShares } from './split';
+import { largestRemainder, unitsFor } from './split';
 
 export const num = (s: unknown) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return isFinite(n) ? n : 0; };
 /** The app's currency: its code and how its amounts look. */
@@ -60,7 +60,7 @@ export interface PocketStats {
 }
 
 /* ---------------- Periods: a week, or half a month ---------------- */
-type PocketLike = { period?: 'week' | 'half' | 'month'; weeklyStr?: string; start?: { from: string; amt: number; until?: string } } | undefined;
+type PocketLike = { period?: 'week' | 'half' | 'month'; weeklyStr?: string; days?: number[]; start?: { from: string; amt: number; until?: string } } | undefined;
 export const isHalf = (p: PocketLike) => p?.period === 'half';
 /** A pocket that only has a monthly budget: it starts over on the 1st. */
 export const isMonthly = (p: PocketLike) => p?.period === 'month';
@@ -84,50 +84,81 @@ export function pocketCtx(p: PocketLike, c: Ctx): Ctx {
   const [a, b] = spanOf(p, c.today);
   return { ...c, weekStart: a, weekEnd: b, daysLeft: daysBetween(c.today, b) };
 }
-/** First and last day of the period that contains `iso`. */
-export const periodAt = (p: PocketLike, iso: string): [string, string] => (isSpan(p) ? spanOf(p, iso) : [weekStartOf(iso), addDays(weekStartOf(iso), 6)]);
-const weekStartOf = (iso: string) => addDays(iso, -((parse(iso).getDay() + 6) % 7));
-/** Periods in a month: 1 for a monthly pocket, 2 quincenas, or the plan's weeks. */
-export const periodsInMonth = (p: PocketLike, weeks: number) => (isMonthly(p) ? 1 : isHalf(p) ? 2 : weeks);
-/** The budget a pocket plans for a whole month (a smaller first period counts too). */
+/** First and last day of the period that contains `iso` (a week is cut where the month ends: see weekPart). */
+export const periodAt = (p: PocketLike, iso: string): [string, string] => (isSpan(p) ? spanOf(p, iso) : weekPart(iso));
+/** How much of a full week the days from `a` to `b` (inside one Mon–Sun week) are: the pocket's spending days among them ÷ the week's. */
+export function weekFraction(p: PocketLike, a: string, b: string): number {
+  const on = daysOf(p), mon = weekStart(a);
+  let k = 0;
+  for (let x = a; x <= b; x = addDays(x, 1)) if (on.includes(weekdayOf(x))) k++;
+  return mon === a && daysBetween(a, b) === 6 ? 1 : k / on.length;
+}
+/** Weeks' worth of budget a weekly pocket gets from `a` to `b` (whole week pieces): 30 days with every day on ≈ 4.29. */
+export function weeksWorth(p: PocketLike, a: string, b: string): number {
+  let w = 0;
+  for (let s = a; s <= b; s = addDays(weekPart(s)[1], 1)) { const [x, y] = weekPart(s); w += weekFraction(p, x, y > b ? b : y); }
+  return w;
+}
+/** "4,29": a number of weeks, with up to 2 decimals. */
+export const weeksText = (n: number) => (Number.isInteger(n) ? String(n) : n.toLocaleString(getLang() === 'es' ? 'es-CO' : 'en-US', { maximumFractionDigits: 2 }));
+/** Periods in a month: 1 for a monthly pocket, 2 quincenas, or the weeks' worth of its days (30 days ≈ 4.29 weeks). */
+export const periodsInMonth = (p: PocketLike, month: string) => (isMonthly(p) ? 1 : isHalf(p) ? 2 : weeksWorth(p, month + '-01', lastOfMonth(month + '-01')));
+/**
+ * A weekly pocket's own budget for the week piece starting on `ws`. A whole week gets its weekly amount; a week cut by
+ * the end of a month gets its days' share, and its two pieces add up to exactly the weekly amount (each month pays its days).
+ */
+export function weekBase(p: PocketLike, ws: string): number {
+  const amount = num(p?.weeklyStr), st = p?.start;
+  // Created partway through this period: the amount for the days that were left, as typed.
+  if (st && !st.until && st.from === ws) return st.amt;
+  const rate = !st?.until ? amount : ws < st.from ? (monthKey(ws) === monthKey(st.from) ? 0 : amount) : ws <= st.until ? st.amt : amount;
+  const [a, b] = weekPart(ws), mon = weekStart(a);
+  if (mon === a && daysBetween(a, b) === 6) return rate;
+  // The piece that starts on Monday is rounded; the other piece gets the rest, so the week still adds up exactly.
+  const first = roundAmt(rate * weekFraction(p, mon, lastOfMonth(mon)));
+  return mon === a ? first : rate - first;
+}
+/** The budget a pocket plans for a whole month: its weeks (or quincenas) added up; a smaller first period counts too. */
 export function monthPlanOf(p: PocketLike, c: Ctx): number {
   const amt = num(p?.weeklyStr);
   const st = p?.start;
-  // Created mid-month: the month plans only what was left (`amt` for each remaining week).
-  const startMonth = st && monthKey(st.from);
-  if (st?.until && startMonth === c.month) return st.amt * (daysBetween(st.from, st.until) / 7 + 1);
-  const cut = st && startMonth === c.month ? amt - st.amt : 0;
-  return amt * periodsInMonth(p, c.weeks) - cut;
+  if (!isSpan(p)) return weekParts(c.month).reduce((t, [a]) => t + weekBase(p, a), 0);
+  const cut = st && monthKey(st.from) === c.month ? amt - st.amt : 0;
+  return amt * periodsInMonth(p, c.month) - cut;
 }
-/** Whether a move was made in the period that starts on `start` (a week's Monday, or a quincena's first day). */
+/** Whether a move was made in the period that starts on `start` (a week's first day, or a quincena's). */
 function moveAtStart(m: Move, p: PocketLike, start: string): boolean {
   if (m.month) return false;
-  if (!isSpan(p)) return m.week === start;
-  const [a, b] = spanOf(p, start);
-  return inRange(m.day ?? addDays(m.week, 6), a, b);
+  const [a, b] = periodAt(p, start);
+  // Moves keep the day they were made; old ones only the week's Monday (a weekly one) or nothing more (end of its week).
+  return inRange(m.day ?? (isSpan(p) ? addDays(m.week, 6) : m.week), a, b);
 }
 /** Whether a pocket-to-pocket move counts in this pocket's current period. */
 export function moveInPeriod(m: Move, p: PocketLike, c: Ctx): boolean {
   return moveAtStart(m, p, isSpan(p) ? spanOf(p, c.today)[0] : c.weekStart);
 }
-const prevStart = (p: PocketLike, s: string) => (isSpan(p) ? spanOf(p, addDays(s, -1))[0] : addDays(s, -7));
-const nextStart = (p: PocketLike, s: string) => (isSpan(p) ? addDays(spanOf(p, s)[1], 1) : addDays(s, 7));
+const prevStart = (p: PocketLike, s: string) => periodAt(p, addDays(s, -1))[0];
+const nextStart = (p: PocketLike, s: string) => addDays(periodAt(p, s)[1], 1);
+/** Days in the period starting on `s`. */
+const periodDays = (p: PocketLike, s: string) => { const [a, b] = periodAt(p, s); return daysBetween(a, b) + 1; };
 
 /**
  * A month that came in different changes each pocket by `adj` for that month: split evenly (exactly, in whole units)
  * over the pocket's periods of the month from the one with the day it was set. `start` is a period's first day.
  */
 export function monthAdjShare(d: Data, p: Data['pockets'][number], start: string): number {
-  const own = (s: string) => monthKey(s); // a week counts for the month its Monday is in
+  const own = (s: string) => monthKey(s); // every period is inside one month
   const e = d.monthIncome?.[own(start)], adj = e?.adj[p.id];
   if (!e || !adj) return 0;
   const starts: string[] = [];
   let s = periodAt(p, e.from)[0];
   for (let k = 0; own(s) > own(start) && k < 6; k++) s = prevStart(p, s);
-  for (let k = 0; own(s) < own(start) && k < 6; k++) s = nextStart(p, s); // set in a week of the month before (Tue Dec 1: week Nov 30): from the month's first period
-  for (; own(s) === own(start) && starts.length < 6; s = nextStart(p, s)) starts.push(s);
+  for (let k = 0; own(s) < own(start) && k < 6; k++) s = nextStart(p, s);
+  for (; own(s) === own(start) && starts.length < 7; s = nextStart(p, s)) starts.push(s);
   const i = starts.indexOf(start);
-  return i < 0 ? 0 : Math.sign(adj) * weekShares(Math.abs(adj), starts.length, unitsFor(d.settings.currency))[i];
+  // Weeks share it by their days (a 1-day week gets a day's worth); quincenas evenly.
+  const shares = largestRemainder(Math.abs(adj), starts.map(s => (isSpan(p) ? 1 : periodDays(p, s))), unitsFor(d.settings.currency));
+  return i < 0 ? 0 : Math.sign(adj) * shares[i];
 }
 
 /** A period's budget without any carry, and what was spent in it (moves in/out, spread income, and "next" moves arriving from the period before). */
@@ -135,9 +166,7 @@ function periodParts(d: Data, p: Data['pockets'][number], c: Ctx) {
   const pc = pocketCtx(p, c), id = p.id;
   const amount = num(p.weeklyStr);
   const st = p.start, ws = pc.weekStart;
-  const base = !st ? amount
-    : st.until ? (ws < st.from ? (monthKey(ws) === monthKey(st.from) ? 0 : amount) : ws <= st.until ? st.amt : amount)
-    : st.from === ws ? st.amt : amount;
+  const base = !isSpan(p) ? weekBase(p, ws) : st && st.from === ws ? st.amt : amount;
   const weekly = base + monthAdjShare(d, p, ws);
   const moves = d.moves.filter(m => moveInPeriod(m, p, c));
   const before = prevStart(p, pc.weekStart);
@@ -193,7 +222,7 @@ export function weekShare(d: Data, id: string, c: Ctx = ctxOf(d), s: PocketStats
   const p = d.pockets.find(x => x.id === id);
   if (!p || !s) return { budget: 0, spent: 0, left: 0 };
   if (!isSpan(p)) return { budget: s.budget, spent: s.spent, left: s.left };
-  const [qa, qb] = spanOf(p, c.today), weekEnd = addDays(c.weekStart, 6);
+  const [qa, qb] = spanOf(p, c.today), weekEnd = c.weekEnd;
   const from = c.weekStart > qa ? c.weekStart : qa, to = weekEnd < qb ? weekEnd : qb;
   const ds = dayStats(d, id, c, s);
   const n = ds.week.filter(x => x.date > c.today && x.date <= to && x.active).length;
@@ -205,20 +234,23 @@ export function weekShare(d: Data, id: string, c: Ctx = ctxOf(d), s: PocketStats
 }
 
 /**
- * This period's share of income split for the month: each monthly move is spread evenly over its weeks.
- * A 15-day pocket gets the weeks whose Monday falls in its quincena, so the month total stays the same.
+ * This period's share of income split for the month: each monthly move is spread over its `spread` weeks by their
+ * days (a 1-day week gets a day's worth). A 15-day pocket gets the weeks that start in its quincena, so the month total stays the same.
  */
 function spreadThisPeriod(d: Data, id: string, pc: Ctx) {
   return d.moves.filter(m => m.month && m.to === id).reduce((a, m) => {
-    const n = Math.max(1, m.spread ?? 1), shares = weekShares(m.amt, n, unitsFor(d.settings.currency));
-    // The first share belongs to the day the income was split (so "this week" money lands in the current quincena).
-    const at = (i: number) => (i === 0 && m.day ? m.day : addDays(m.week, i * 7));
+    const n = Math.max(1, m.spread ?? 1);
+    // The weeks it's spread over, from the one with the day the income was split (so "this week" money lands in the current quincena).
+    const weeks: [string, string][] = [];
+    for (let s = m.day ?? m.week; weeks.length < n; s = addDays(weeks[weeks.length - 1][1], 1)) weeks.push(weekPart(s));
+    const shares = n === 1 ? [m.amt] : largestRemainder(m.amt, weeks.map(([x, y]) => daysBetween(x, y) + 1), unitsFor(d.settings.currency));
+    const at = (i: number) => (i === 0 && m.day ? m.day : weeks[i][0]);
     return a + shares.reduce((t, x, i) => (inRange(at(i), pc.weekStart, pc.weekEnd) ? t + x : t), 0);
   }, 0);
 }
 
-/** The week a move belongs to counts for the month its Monday is in (a month's last week can end next month). */
-export const moveMonth = (m: { week: string; month?: string }) => m.month ?? monthKey(m.week);
+/** The month a move counts for: the month of the day it was made (older moves: of their week's Monday). */
+export const moveMonth = (m: { week: string; day?: string; month?: string }) => m.month ?? monthKey(m.day ?? m.week);
 
 export interface MonthStats { id: string; budget: number; spent: number; left: number; extra: number }
 /** A pocket for the whole month: its budget × periods, plus money moved in this month, minus what was spent. */
@@ -226,7 +258,7 @@ export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
   const p = d.pockets.find(x => x.id === id);
   const moves = d.moves.filter(m => moveMonth(m) === c.month);
   // A "next" move leaves in its own month and arrives in the month the following period belongs to.
-  const arrives = (m: Move) => monthKey(isSpan(p) ? nextStart(p, periodAt(p, m.day ?? addDays(m.week, 6))[0]) : addDays(m.week, 7));
+  const arrives = (m: Move) => monthKey(nextStart(p, periodAt(p, m.day ?? (isSpan(p) ? addDays(m.week, 6) : m.week))[0]));
   const nextIn = d.moves.filter(m => m.next && m.to === id && arrives(m) === c.month).reduce((a, m) => a + m.amt, 0);
   // A "next" move out of a 15-day pocket leaves in the quincena it was made in, which can be in the month before moveMonth.
   const halfNext = (m: Move) => !!m.next && isSpan(p);
@@ -239,11 +271,8 @@ export function monthStats(d: Data, id: string, c: Ctx = ctxOf(d)): MonthStats {
   const extra = moves.filter(m => m.to === id && !m.next && !m.borrow).reduce((a, m) => a + m.amt, 0) - outNow - outHalfNext + nextIn + borrowIn - borrowOut;
   const spent = monthExpenses(d, c).filter(e => e.p === id).reduce((a, e) => a + e.amt, 0);
   let carry = 0;
-  if (p?.carry) {
-    const m01 = c.month + '-01';
-    // Weekly: the first week whose Monday is in the month (like moveMonth and weeksIn); 15-day: the quincena starting on the 1st.
-    carry = carryInto(d, p, isSpan(p) ? m01 : weekStartOf(addDays(m01, 6)));
-  }
+  // Every pocket's first period of the month starts on the 1st.
+  if (p?.carry) carry = carryInto(d, p, c.month + '-01');
   const budget = monthPlanOf(p, c) + extra + carry + (d.monthIncome?.[c.month]?.adj[id] ?? 0);
   return { id, budget, spent, left: budget - spent, extra };
 }
@@ -257,14 +286,14 @@ export function monthAhead(d: Data, id: string, c: Ctx = ctxOf(d)) {
   if (!p || !s) return { budget: 0, spent: 0, left: 0, saved: 0 };
   let budget = s.budget, left = s.left, saved = 0;
   // Future periods: carry into them is this period's balance, already counted in `left`.
-  for (let q = nextStart(p, s.from), k = 0; monthKey(q) === c.month && k < 6; q = nextStart(p, q), k++) {
+  for (let q = nextStart(p, s.from), k = 0; monthKey(q) === c.month && k < 7; q = nextStart(p, q), k++) {
     const f = pocketStats(d, id, ctxAt(q))!;
     budget += f.budget - f.carry; left += f.left - f.carry;
   }
   // shortcut: a pocket's creation day is read from its id (uid = prefix + Date.now in base 36); older ids are skipped.
   const born = Number.parseInt(p.id.slice(1, 9), 36), bornDay = born > 1.6e12 && born < 4e12 ? isoOf(new Date(born)) : '';
   const from = p.start?.from && p.start.from > bornDay ? p.start.from : bornDay;
-  if (!p.carry) for (let q = prevStart(p, s.from), k = 0; monthKey(q) === c.month && k < 6; q = prevStart(p, q), k++) {
+  if (!p.carry) for (let q = prevStart(p, s.from), k = 0; monthKey(q) === c.month && k < 7; q = prevStart(p, q), k++) {
     const end = periodAt(p, q)[1];
     if (end < from) break;
     saved += pocketStats(d, id, ctxAt(end))!.left;

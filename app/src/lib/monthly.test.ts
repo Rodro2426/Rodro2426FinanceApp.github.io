@@ -35,9 +35,9 @@ describe('monthly pockets: periods', () => {
     expect(spanOf({ period: 'half' }, '2026-11-20')).toEqual(['2026-11-16', '2026-11-30']);
   });
   it('1 period a month; weekly and quincena unchanged', () => {
-    expect(periodsInMonth({ period: 'month' }, 4)).toBe(1);
-    expect(periodsInMonth({ period: 'half' }, 4)).toBe(2);
-    expect(periodsInMonth({}, 5)).toBe(5);
+    expect(periodsInMonth({ period: 'month' }, '2026-11')).toBe(1);
+    expect(periodsInMonth({ period: 'half' }, '2026-11')).toBe(2);
+    expect(periodsInMonth({}, '2026-11')).toBeCloseTo(30 / 7);
     expect(periodAt({ period: 'month' }, '2026-11-12')).toEqual(['2026-11-01', '2026-11-30']);
     expect(periodAt({}, '2026-11-12')).toEqual(['2026-11-09', '2026-11-15']);
     const pc = pocketCtx({ period: 'month' }, c12);

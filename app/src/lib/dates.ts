@@ -32,18 +32,34 @@ export interface Ctx {
   today: string; month: string; weekStart: string; weekEnd: string; lastWeekStart: string; lastWeekEnd: string;
   weekNo: number; weeks: number; daysLeft: number;
 }
-/** Weeks in a month for the plan: one per week whose Monday falls in it (4 or 5), the same rule that decides
- *  which month a week's moves and carry-over belong to. */
-export const weeksIn = (month: string) => { const firstMon = weekStart(addDays(month + '-01', 6)); return Math.floor(daysBetween(firstMon, `${month}-${String(daysInMonth(month)).padStart(2, '0')}`) / 7) + 1; };
-/** The calendar for a day, with that month's real number of weeks. */
-export const ctxAt = (today = todayISO()) => makeCtx(weeksIn(today.slice(0, 7)), today);
-export function makeCtx(weeks: number, today = todayISO()): Ctx {
-  const ws = weekStart(today), we = addDays(ws, 6);
-  // Week N = count of Mondays in this month up to this week's Monday (week 1 if it started last month).
-  const firstMon = weekStart(addDays(today.slice(0, 8) + '01', 6));
-  const weekNo = ws < firstMon ? 1 : Math.min(weeks, Math.floor(daysBetween(firstMon, ws) / 7) + 1);
+/** Last day of the month a day is in. */
+export const lastOfMonth = (s: string) => `${s.slice(0, 7)}-${pad(daysInMonth(s.slice(0, 7)))}`;
+/**
+ * The week a day is in, as the app counts it: Monday to Sunday, but cut where a month ends, so every week belongs to
+ * exactly one month (Mon Nov 30 is a 1-day week of November; Tue Dec 1–Sun Dec 6 is December's week 1).
+ */
+export function weekPart(s: string): [string, string] {
+  const mon = weekStart(s), sun = addDays(mon, 6), first = s.slice(0, 8) + '01', last = lastOfMonth(s);
+  return [mon < first ? first : mon, sun > last ? last : sun];
+}
+/** A month's weeks, first to last day of each (4 to 6 of them; the first and last can be short). */
+export function weekParts(month: string): [string, string][] {
+  const out: [string, string][] = [];
+  for (let s = month + '-01'; monthKey(s) === month; s = addDays(out[out.length - 1][1], 1)) out.push(weekPart(s));
+  return out;
+}
+/** How many weeks a month has (see weekParts). */
+export const weeksIn = (month: string) => weekParts(month).length;
+/** "23–29", or "30" for a 1-day week: the days of a week, for labels. */
+export const weekDays = (a: string, b: string) => (a === b ? String(Number(a.slice(8))) : `${Number(a.slice(8))}–${Number(b.slice(8))}`);
+/** The calendar for a day. */
+export const ctxAt = (today = todayISO()) => makeCtx(0, today);
+/** The calendar for a day (`_weeks` is ignored: the month decides how many weeks it has). */
+export function makeCtx(_weeks: number, today = todayISO()): Ctx {
+  const [ws, we] = weekPart(today), parts = weekParts(monthKey(today));
+  const [lws, lwe] = weekPart(addDays(ws, -1));
   return {
-    today, month: monthKey(today), weekStart: ws, weekEnd: we, lastWeekStart: addDays(ws, -7), lastWeekEnd: addDays(ws, -1),
-    weekNo, weeks, daysLeft: daysBetween(today, we)
+    today, month: monthKey(today), weekStart: ws, weekEnd: we, lastWeekStart: lws, lastWeekEnd: lwe,
+    weekNo: parts.findIndex(x => x[0] === ws) + 1, weeks: parts.length, daysLeft: daysBetween(today, we)
   };
 }

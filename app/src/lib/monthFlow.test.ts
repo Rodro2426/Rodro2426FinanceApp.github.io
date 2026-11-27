@@ -23,25 +23,29 @@ function data(carry?: string): Data {
 }
 
 describe('monthFlow', () => {
-  it('shows each week, what moved on by hand and what was left untouched', () => {
+  it('shows each week piece, what moved on by hand and what was left untouched', () => {
     const r = monthFlow(data(), 'mer', '2026-11', '2026-11-25');
-    expect(r.map(x => x.from)).toEqual(['2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23', '2026-11-30']);
-    expect(r.map(x => x.state)).toEqual(['past', 'past', 'past', 'now', 'future']);
-    expect(r.map(x => x.budget)).toEqual([150000, 180000, 120000, 170000, 150000]);
-    expect(r.map(x => x.result)).toEqual([30000, -30000, 25000, 82000, 150000]);
-    expect(r[0].links.map(l => [l.kind, l.amt])).toEqual([['next', 30000]]);
-    expect(r[1]).toMatchObject({ fromPrev: 30000, repaid: 0, otherIn: 0 });
-    expect(r[1].links.map(l => [l.kind, l.amt])).toEqual([['borrow', 30000]]);
-    expect(r[2]).toMatchObject({ repaid: 30000, otherOut: 0 });
-    expect(r[2].links.map(l => [l.kind, l.amt])).toEqual([['idle', 25000]]);
-    expect(r[3]).toMatchObject({ otherIn: 20000, links: [] });
+    // November is cut into 6 pieces: the Sunday Nov 1 and the Monday Nov 30 are 1-day weeks (1/7 of 150.000 = 21.429 each).
+    expect(r.map(x => x.from)).toEqual(['2026-11-01', '2026-11-02', '2026-11-09', '2026-11-16', '2026-11-23', '2026-11-30']);
+    expect(r.map(x => x.to)).toEqual(['2026-11-01', '2026-11-08', '2026-11-15', '2026-11-22', '2026-11-29', '2026-11-30']);
+    expect(r.map(x => x.state)).toEqual(['past', 'past', 'past', 'past', 'now', 'future']);
+    expect(r.map(x => x.budget)).toEqual([21429, 150000, 180000, 120000, 170000, 21429]);
+    expect(r.map(x => x.result)).toEqual([21429, 30000, -30000, 25000, 82000, 21429]);
+    expect(r[0].links.map(l => [l.kind, l.amt])).toEqual([['idle', 21429]]);
+    expect(r[1].links.map(l => [l.kind, l.amt])).toEqual([['next', 30000]]);
+    expect(r[2]).toMatchObject({ fromPrev: 30000, repaid: 0, otherIn: 0 });
+    expect(r[2].links.map(l => [l.kind, l.amt])).toEqual([['borrow', 30000]]);
+    expect(r[3]).toMatchObject({ repaid: 30000, otherOut: 0 });
+    expect(r[3].links.map(l => [l.kind, l.amt])).toEqual([['idle', 25000]]);
+    expect(r[4]).toMatchObject({ otherIn: 20000, links: [] });
   });
   it('with carry over on, leftovers and overspends move on by themselves', () => {
     const r = monthFlow(data('2026-11-02'), 'mer', '2026-11', '2026-11-25');
-    expect(r[0].links).toEqual([{ kind: 'auto', amt: 30000 }]);
-    expect(r[1]).toMatchObject({ carry: 30000, budget: 180000, result: -30000 });
-    expect(r[1].links).toEqual([{ kind: 'auto', amt: -30000 }]);
-    expect(r[2]).toMatchObject({ carry: -30000, budget: 120000, result: 25000 });
+    expect(r[0].links).toEqual([{ kind: 'idle', amt: 21429 }]); // Nov 1 is before carry over was turned on
+    expect(r[1].links).toEqual([{ kind: 'auto', amt: 30000 }]);
+    expect(r[2]).toMatchObject({ carry: 30000, budget: 180000, result: -30000 });
+    expect(r[2].links).toEqual([{ kind: 'auto', amt: -30000 }]);
+    expect(r[3]).toMatchObject({ carry: -30000, budget: 120000, result: 25000 });
   });
   it('a quincena pocket has two periods', () => {
     const d = data(); d.pockets[0] = { ...d.pockets[0], period: 'half' }; d.moves = [];
@@ -54,13 +58,13 @@ describe('monthFlow', () => {
     // week of Nov 9: 150000 - 210000 = -60000 over; cover 40000 from the next week
     const b = borrowNext(d, ctxAt('2026-11-15'), 'mer', 40000)!;
     const r = monthFlow({ ...d, ...b }, 'mer', '2026-11', '2026-11-25');
-    expect(r[1].links).toMatchObject([{ kind: 'borrow', amt: 40000 }, { kind: 'uncovered', amt: 20000 }]);
-    expect(r[2]).toMatchObject({ repaid: 40000, budget: 110000 });
+    expect(r[2].links).toMatchObject([{ kind: 'borrow', amt: 40000 }, { kind: 'uncovered', amt: 20000 }]);
+    expect(r[3]).toMatchObject({ repaid: 40000, budget: 110000 });
     // week of Nov 2: 30000 left, send it on
     const n = transferLeftover(d, ctxAt('2026-11-08'), 'mer', { [NEXT]: 30000 })!;
     const r2 = monthFlow({ ...d, ...n }, 'mer', '2026-11', '2026-11-25');
-    expect(r2[0].links).toMatchObject([{ kind: 'next', amt: 30000 }]);
-    expect(r2[1]).toMatchObject({ fromPrev: 30000, budget: 180000 });
+    expect(r2[1].links).toMatchObject([{ kind: 'next', amt: 30000 }]);
+    expect(r2[2]).toMatchObject({ fromPrev: 30000, budget: 180000 });
     // quincena 1-15: nothing left (over), 16-30: 120000+... next move from the 2nd quincena into December
     const h = data(); h.pockets[0] = { ...h.pockets[0], period: 'half' }; h.moves = []; h.expenses = [exp('z', 'mer', 100000, '2026-11-20')];
     const t = transferLeftover(h, ctxAt('2026-11-30'), 'mer', { [NEXT]: 50000 })!;

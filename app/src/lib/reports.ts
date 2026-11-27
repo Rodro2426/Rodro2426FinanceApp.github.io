@@ -1,7 +1,7 @@
 // Data for the Insights reports: categories, accounts and budgets, over a period or over time.
 import type { Data, Income } from './types';
 import { debtsWorthAt } from './debts';
-import { addDays, ctxAt, daysInMonth, inRange, monthKey, prevMonthKey, todayISO, weekStart, type Ctx } from './dates';
+import { addDays, ctxAt, daysInMonth, inRange, monthKey, prevMonthKey, todayISO, weekPart, weekStart, type Ctx } from './dates';
 import { acctTxns, catOf, ctxOf, daysOf, isSpan, spanOf, monthStats, pocketStats, myExpenses, weekdayOf, weekShare } from './derive';
 import { cdtView, cdtsOf } from './cdt';
 import { holdings } from './invest';
@@ -23,7 +23,7 @@ export type Period = 'week' | 'month' | 'last' | '3m' | 'year' | 'all';
 export const PERIODS: [Period, string][] = [['week', 'Week'], ['month', 'Month'], ['last', 'Last month'], ['3m', '3 months'], ['year', 'This year'], ['all', 'All']];
 export function inPeriod(p: Period, date: string, c: Ctx): boolean {
   switch (p) {
-    case 'week': return date >= c.weekStart && date <= addDays(c.weekStart, 6);
+    case 'week': return date >= c.weekStart && date <= c.weekEnd;
     case 'month': return monthKey(date) === c.month;
     case 'last': return monthKey(date) === prevMonthKey(c.month);
     case '3m': return monthKey(date) >= prevMonthKey(prevMonthKey(c.month)) && date <= c.today;
@@ -148,7 +148,15 @@ export function budgetWeeks(d: Data, c: Ctx, n: number, pocket: string | null) {
     for (const id of ids) {
       const p = d.pockets.find(x => x.id === id), s = pocketStats(d, id, cw);
       if (!p || !s) continue;
-      if (!isSpan(p)) { budget += s.budget; spent += s.spent; continue; }
+      if (!isSpan(p)) {
+        // A calendar week cut by the end of a month is two of the pocket's weeks: add both (up to today).
+        for (let q = ws; q <= we && q <= c.today; q = addDays(weekPart(q)[1], 1)) {
+          const w = q === s.from ? s : pocketStats(d, id, ctxAt(weekPart(q)[1] < c.today ? weekPart(q)[1] : c.today))!;
+          // The second piece's carry is the first piece's leftover, already counted there.
+          budget += w.budget - (q === ws ? 0 : w.carry); spent += w.spent;
+        }
+        continue;
+      }
       if (i === 0) { const w = weekShare(d, id, cw, s); budget += w.budget; spent += w.spent; continue; }
       const on = new Set(daysOf(p));
       const active = (a: string, b: string) => { let n = 0; for (let x = a; x <= b; x = addDays(x, 1)) if (on.has(weekdayOf(x))) n++; return n; };

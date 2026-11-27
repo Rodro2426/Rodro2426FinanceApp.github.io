@@ -4,6 +4,8 @@ Last updated: 2026-11-08. Everything in "Done" is deployed to GitHub Pages.
 
 ## Done
 
+- **Weeks cut on the 1st (2026-11-27):** a week that crosses into a new month is split in two, each month pays only its own days, and month plans are exact (≈ weekly × days ÷ 7). Labels read "Week 5 (23–29)". See decisions.md.
+
 - **Rebrand "Cien mil" (Nov 2026):** colours from the $100.000 bill (teal brand, lime action button, lavender second colour, red kept for warnings), Plus Jakarta Sans everywhere, the rosette logo and new app icons, and the wordmark in capitals (POCKETS). Applied to the app, the website, its textures and its app pictures. Spec in `DESIGN.md` (Overview note).
 
 - **Custom reminders and notification center (2026-11-12):** Calendar → Reminders lets you create your own reminders (title, message, time, weekdays; one tap for "Add today's expenses" every night at 9:00). They go to the lock screen with the other reminders (two weeks ahead, re-sent when the app opens) and into the in-app notification center when their time comes; tapping opens New expense (`lib/customReminders.ts`, `sheets/ReminderSheet.tsx`, link `#add`). Calendar → Notification center shows the latest four with a See all.

@@ -19,6 +19,11 @@ Key choices, with the reason behind each one. Newest topics are near the end of 
 
 ## Money logic
 
+- **Weeks are cut on the 1st (2026-11-27).** A weekly pocket's week is Monday to Sunday, but a week that crosses into a new month is split into two weeks, one in each month (`weekPart`/`weekParts` in `dates.ts`). Mon Nov 30 2026 is November's week 6 (1 day); Tue Dec 1–Sun Dec 6 is December's week 1. Before, the whole week belonged to the month of its Monday, so a month had 4 or 5 weeks and November paid 6 days that the December salary covers.
+  - Each piece gets its share of the weekly amount by the pocket's spending days (`weekFraction`); the Monday piece is rounded and the other gets the rest, so the two always add up to exactly the weekly amount (`weekBase` in `derive.ts`).
+  - A month's plan is the sum of its weeks: about weekly × days ÷ 7 (November 4.29 weeks, December 4.43, February 4). The Budget screen shows that number. Quincena and monthly pockets didn't change.
+  - Labels say the days instead of "of N": "Week 5 (23–29)", "Week 6 (30)".
+  - Moves count in the month of the day they were made (`m.day`; old moves fall back to `m.week`). Income spread over the weeks left, and "this month came in different" adjustments, are shared by days, so a 1-day week gets a day's worth.
 - **Pocket budgets are amounts per period.** The field is still called `weeklyStr` for backward compatibility. With `period: 'half'`, the amount is per quincena.
 - **Quincenas are calendar halves (1–15, 16–end), not rolling 15 days.** That matches how Colombians are paid. A pocket can be weekly or every 15 days, and the owner chose per pocket rather than app-wide.
 - **A 15-day pocket's share of a week:** this week counts only the days in the current quincena (today's amount plus each remaining spending day's share, up to Sunday or the quincena end). The next quincena's money isn't counted until it starts, because the owner hasn't been paid yet. A quincena overspend shows fully. Past weeks in Reports split each quincena's budget by spending days, and the current week's row is the same number as Home.
@@ -26,7 +31,7 @@ Key choices, with the reason behind each one. Newest topics are near the end of 
 - **"Left to spend in pockets" only counts what is still ahead** (`pocketToSpend` in `plan.ts`): this period's leftover plus the periods still to come. A finished period's leftover is not promised any more (it is already in the accounts, so counting it again inflated the shortfall), and its overspend does not shrink later periods. With carry over on, past results already rolled into this period, so nothing is taken out. The Home "this month" card still uses `monthStats` (the whole month).
 - **Moves (money between pockets and goals) never change account balances.**
   - Pocket → pocket only affects the current period; next period every pocket starts again from its own budget.
-  - Weekly pockets match moves by `week` (its Monday). 15-day pockets match by `day`, the date the move was made; old moves fall back to the Sunday of their week.
+  - Moves match their period by `day`, the date the move was made. Old moves without it fall back to `week` (weekly pockets) or the Sunday of their week (15-day pockets).
 - **Income split for the month** is spread over the remaining weeks. A 15-day pocket gets the weekly shares whose Sunday falls in its quincena, except the first share, which is anchored to the split day so "this week" money lands in the current quincena. This keeps month totals exact.
 - **Mid-period start** is stored on the pocket as `start: { from, amt }`. It is a one-off override for that first period. `monthPlanOf` subtracts the difference only in that month.
 - **Splitting one purchase across categories creates one expense per category**, sharing a `split` group id. Category reports then stay simple, and the account is charged once for the total.

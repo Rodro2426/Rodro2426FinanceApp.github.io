@@ -1,6 +1,6 @@
 import type { Data, Move } from './types';
 import { addDays, ctxAt, iso, monthKey } from './dates';
-import { isSpan, moveInPeriod, periodAt, pocketStats } from './derive';
+import { moveInPeriod, periodAt, pocketStats } from './derive';
 
 /** How money crossed from one period to the next. */
 export interface Link {
@@ -32,17 +32,17 @@ export interface PeriodRow {
 
 const sum = (ms: Move[]) => ms.reduce((a, m) => a + m.amt, 0);
 
-/** A pocket's month, period by period (each week whose Monday is in the month, each quincena, or the month). */
+/** A pocket's month, period by period (each week, cut on the 1st and the last day so it stays in the month; each quincena; or the month). */
 export function monthFlow(d: Data, id: string, month: string, today: string): PeriodRow[] {
   const p = d.pockets.find(x => x.id === id);
   if (!p) return [];
   const starts: string[] = [];
-  let s = isSpan(p) ? month + '-01' : periodAt(p, addDays(month + '-01', 6))[0];
+  let s = month + '-01';
   // Periods that ended before the pocket existed are left out (same rule as monthAhead): nothing could be left in them.
   // shortcut: the creation day is read from the id (uid = prefix + Date.now in base 36); older ids are skipped.
   const born = Number.parseInt(p.id.slice(1, 9), 36), bornDay = born > 1.6e12 && born < 4e12 ? iso(new Date(born)) : '';
   const since = p.start?.from && p.start.from > bornDay ? p.start.from : bornDay;
-  for (let k = 0; monthKey(s) === month && k < 6; k++) { if (periodAt(p, s)[1] >= since) starts.push(s); s = addDays(periodAt(p, s)[1], 1); }
+  for (let k = 0; monthKey(s) === month && k < 7; k++) { if (periodAt(p, s)[1] >= since) starts.push(s); s = addDays(periodAt(p, s)[1], 1); }
   if (!starts.length) return [];
   const mine = d.moves.filter(m => m.from === id && m.to === id);
   const madeIn = (end: string) => { const c = ctxAt(end); return mine.filter(m => moveInPeriod(m, p, c)); };

@@ -372,12 +372,12 @@ function IncomeStep({ onDone }: { onDone: () => void }) {
 
 function PocketsStep({ onDone }: { onDone: () => void }) {
   const { data: d } = useApp();
-  const income = num(d.incomeStr), weeks = ctxOf().weeks;
+  const income = num(d.incomeStr), weeks = ctxOf().month;
   const [picks, setPicks] = useState<PocketPick[]>(() => suggestPockets(income));
   const [onlyMonth, setOnlyMonth] = useState(false);
   const free = leftFree(income, picks, d.bills.filter(b => b.kind !== 'Income').map(b => ({ on: true, amt: b.amt })));
   const upd = (key: string, patch: Partial<PocketPick>) => setPicks(p => p.map(x => (x.key === key ? { ...x, ...patch } : x)));
-  const save = () => { const ps = makePockets(picks, weeks, onlyMonth); if (ps.length) setData(x => ({ pockets: [...x.pockets, ...ps] })); onDone(); };
+  const save = () => { const ps = makePockets(picks, periodsInMonth({}, weeks), onlyMonth); if (ps.length) setData(x => ({ pockets: [...x.pockets, ...ps] })); onDone(); };
   return <>
     <H>Your pockets</H>
     <Sub>Money for each kind of spending. Type what you spend on each one a month. We suggested amounts from your income.</Sub>
@@ -409,7 +409,7 @@ function PocketsStep({ onDone }: { onDone: () => void }) {
 /** The income as one bar: a slice per pocket, the fixed bills, and what's left to save. Sliders change each pocket's month. */
 function SplitStep({ onDone }: { onDone: () => void }) {
   const { data: d } = useApp();
-  const income = num(d.incomeStr), weeks = ctxOf().weeks;
+  const income = num(d.incomeStr), weeks = ctxOf().month;
   const bills = d.bills.filter(b => b.kind !== 'Income').reduce((a, b) => a + b.amt, 0);
   const [month, setMonth] = useState<Record<string, number>>(() => Object.fromEntries(d.pockets.map(p => [p.id, num(p.weeklyStr) * periodsInMonth(p, weeks)])));
   if (!income || !d.pockets.length) return <>

@@ -19,7 +19,7 @@ const W = (carry?: string): Pocket => ({ id: 'w', name: 'Lunch', weeklyStr: '100
 const bud = (d: Data, day: string, id = 'w') => pocketStats(d, id, makeCtx(4, day))!;
 
 describe('carry over: weekly pocket', () => {
-  // Weeks: Nov 2–8, Nov 9–15, Nov 16–22, Nov 23–29, Nov 30–Dec 6.
+  // Week pieces of November: Nov 1, 2–8, 9–15, 16–22, 23–29, Nov 30 (cut where the month ends); December starts with Dec 1–6.
   it('unspent money moves into the next week', () => {
     const d = data([W('2026-11-02')], [exp('a', 'w', 50000, '2026-11-03')]);
     expect(bud(d, '2026-11-04').carry).toBe(0);
@@ -38,7 +38,8 @@ describe('carry over: weekly pocket', () => {
   });
   it('crosses a month boundary', () => {
     const d = data([W('2026-11-23')], [exp('a', 'w', 40000, '2026-11-24')]);
-    expect(bud(d, '2026-12-01').budget).toBe(160000); // week Nov 30–Dec 6
+    // Nov 30 (1/7 = 14.286, unspent) + the 60.000 left of Nov 23–29 carry into Dec 1–6 (85.714): 160.000, nothing lost at the cut.
+    expect(bud(d, '2026-12-01').budget).toBe(160000);
   });
   it('off: nothing changes', () => {
     const d = data([W()], [exp('a', 'w', 50000, '2026-11-03')]);
@@ -51,10 +52,12 @@ describe('carry over: weekly pocket', () => {
   });
   it('month budget gets the carry into its first week', () => {
     const d = data([W('2026-11-02')], [exp('a', 'w', 50000, '2026-11-03')]);
-    // December: first Monday is Dec 7 (the week Nov 30–Dec 6 is November's). It carries Nov 2 week 50.000 + Nov 9, 16, 23, 30 unspent (4 × 100.000) = 450.000
+    // December carries into Dec 1: the Nov 2 week's 50.000 + Nov 9, 16, 23 unspent (300.000) + Nov 30 (a 1-day week, 14.286) = 364.286.
+    // December's own plan: 85.714 (Dec 1–6) + 3 whole weeks + 57.143 (Dec 28–31) = 442.857.
     const dec = monthStats(d, 'w', makeCtx(4, '2026-12-10'));
-    expect(dec.budget).toBe(400000 + 450000);
-    expect(monthStats(d, 'w', makeCtx(4, '2026-11-12')).budget).toBe(400000); // Nov: first week starts Nov 2, no carry
+    expect(dec.budget).toBe(442857 + 364286);
+    // Nov: 14.286 (Nov 1) + 4 whole weeks + 14.286 (Nov 30); carry starts Nov 2, so none comes in.
+    expect(monthStats(d, 'w', makeCtx(4, '2026-11-12')).budget).toBe(428572);
   });
 });
 
@@ -92,14 +95,19 @@ describe('send to next week', () => {
   it('month stats: cancels inside a month, moves to the next month when crossing', () => {
     const d0 = data([W()]);
     const inMonth = { ...d0, ...transferLeftover(d0, makeCtx(4, '2026-11-11'), 'w', { [NEXT]: 40000 })! };
-    expect(monthStats(inMonth, 'w', makeCtx(4, '2026-11-11')).budget).toBe(400000);
-    // Week Nov 23–29 -> Nov 30–Dec 6 is still November (Monday rule): nothing changes.
+    expect(monthStats(inMonth, 'w', makeCtx(4, '2026-11-11')).budget).toBe(428572);
+    // Week Nov 23–29 -> Mon Nov 30 (a 1-day November week): nothing changes in November.
     const still = { ...d0, ...transferLeftover(d0, makeCtx(4, '2026-11-25'), 'w', { [NEXT]: 40000 })! };
-    expect(monthStats(still, 'w', makeCtx(4, '2026-11-11')).budget).toBe(400000);
-    // Week Nov 30–Dec 6 (November) -> Dec 7 week (December).
-    const cross = { ...d0, ...transferLeftover(d0, makeCtx(4, '2026-12-02'), 'w', { [NEXT]: 40000 })! };
-    expect(monthStats(cross, 'w', makeCtx(4, '2026-11-11')).budget).toBe(360000);
-    expect(monthStats(cross, 'w', makeCtx(4, '2026-12-10')).budget).toBe(440000);
+    expect(monthStats(still, 'w', makeCtx(4, '2026-11-11')).budget).toBe(428572);
+    // Mon Nov 30 (November, 1 day: 14.286) -> Tue Dec 1 (December): it leaves November and arrives in December.
+    const cross = { ...d0, ...transferLeftover(d0, makeCtx(4, '2026-11-30'), 'w', { [NEXT]: 10000 })! };
+    expect(monthStats(cross, 'w', makeCtx(4, '2026-11-11')).budget).toBe(418572);
+    expect(monthStats(cross, 'w', makeCtx(4, '2026-12-10')).budget).toBe(452857);
+    expect(bud(cross, '2026-12-01').budget).toBe(85714 + 10000);
+    // Dec 2 (December) -> Dec 7 (December): December keeps its 442.857.
+    const inDec = { ...d0, ...transferLeftover(d0, makeCtx(4, '2026-12-02'), 'w', { [NEXT]: 40000 })! };
+    expect(monthStats(inDec, 'w', makeCtx(4, '2026-11-11')).budget).toBe(428572);
+    expect(monthStats(inDec, 'w', makeCtx(4, '2026-12-10')).budget).toBe(442857);
   });
 });
 
@@ -121,14 +129,14 @@ describe('carry over: edge cases', () => {
   it('carry is counted once in the month: a month with carry on from before shows left = plan − spent + entry carry', () => {
     const d = data([W('2026-11-02')], [exp('a', 'w', 50000, '2026-11-03'), exp('b', 'w', 20000, '2026-11-10')]);
     const m = monthStats(d, 'w', makeCtx(4, '2026-11-12'));
-    expect(m.budget).toBe(400000);
-    expect(m.left).toBe(330000);
+    expect(m.budget).toBe(428572); // 14.286 + 4 × 100.000 + 14.286, no carry in
+    expect(m.left).toBe(358572);
   });
   it('overspend carries into the next month as a negative', () => {
-    const d = data([W('2026-11-02')], [exp('a', 'w', 600000, '2026-12-01')]);
-    // weeks Nov 2, 9, 16, 23 unspent (+400); week Nov 30 (a November week) 100 + 400 − 600 = −100 → carry into Dec 7 = −100
-    expect(bud(d, '2026-12-08').carry).toBe(-100000);
-    expect(monthStats(d, 'w', makeCtx(4, '2026-12-10')).budget).toBe(400000 - 100000);
+    const d = data([W('2026-11-02')], [exp('a', 'w', 600000, '2026-11-25')]);
+    // weeks Nov 2, 9, 16 unspent (+300); Nov 23–29: 100 + 300 − 600 = −200; Nov 30 (1 day, +14.286) → carry into Dec 1 = −185.714
+    expect(bud(d, '2026-12-02').carry).toBe(-185714);
+    expect(monthStats(d, 'w', makeCtx(4, '2026-12-10')).budget).toBe(442857 - 185714);
   });
   it('data replaced on change: new object, new numbers (memo not stale)', () => {
     const d = data([W('2026-11-02')]);

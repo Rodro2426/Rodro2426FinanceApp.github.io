@@ -3,8 +3,8 @@
 import { codeOf, infoOf } from './currency';
 import { cardDueLabel } from './cards';
 import type { Data } from './types';
-import { catOf, monthPlanOf, num, myExpenses, isHalf, isMonthly, periodAt, pocketStats, roundAmt } from './derive';
-import { addDays, ctxAt, daysInMonth, fmtDay, inRange, weeksIn, monthLabel, shortDate, todayISO, weekStart } from './dates';
+import { catOf, monthPlanOf, num, myExpenses, isHalf, isMonthly, periodAt, pocketStats, roundAmt, periodsInMonth } from './derive';
+import { addDays, ctxAt, daysInMonth, fmtDay, inRange, monthLabel, shortDate, todayISO, weekStart } from './dates';
 
 export type Cell = string | number | { v: number; fmt: 'money' | 'pct' };
 export interface AiSection { title: string; note?: string; header: string[]; rows: Cell[][] }
@@ -15,7 +15,8 @@ const pct = (v: number): Cell => ({ v, fmt: 'pct' });
 
 export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet {
   const today = todayISO(), curMonth = today.slice(0, 7);
-  const weeks = weeksIn(curMonth);
+  // A month's weeks are its days ÷ 7 (weeks are cut on the 1st, so each month pays only its own days).
+  const weeks = Math.round(periodsInMonth({}, curMonth) * 100) / 100;
   const acc = (id: string) => d.accounts.find(a => a.id === id);
   const pocketName = (id: string) => (id ? d.pockets.find(p => p.id === id)?.name || 'Deleted pocket' : 'No pocket (scheduled bill)');
   const goalOrPocket = (id: string) => (id === '_income' ? 'New income' : id === '_cover' ? 'Covered the shortfall' : d.pockets.find(p => p.id === id)?.name || d.goals.find(g => g.id === id)?.name || 'Deleted');
@@ -51,7 +52,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
       ['Monthly income', money(income)],
       ['Weeks per month in the plan', weeks],
       ['Total of pocket budgets, each for its own period (week, 15 days or month)', money(weeklyTotal)],
-      [`Planned spending per month (each pocket × its periods in the month; a week counts ${weeks} times)`, money(plannedMonth)],
+      ['Planned spending this month (each pocket\'s weeks, quincenas or month added up; a week that crosses into the next month is split, each month paying its own days)', money(plannedMonth)],
       ['Income not assigned to pockets', money(income - plannedMonth)],
       ['Income received in the period', money(incs.reduce((a, t) => a + t.amt, 0))],
       ['Total spent in the period', money(total)],
@@ -89,7 +90,7 @@ export function buildAiSheet(d: Data, months: string[], acctId: string): AiSheet
     }
   });
   sections.push({
-    title: 'Pocket spending by period', note: 'One row per period of each pocket: Monday–Sunday weeks, quincenas (1–15, 16–end) or months. A week counts all of its days, even ones in the next or previous month. Budget includes money moved in or out and anything carried over.',
+    title: 'Pocket spending by period', note: 'One row per period of each pocket: Monday–Sunday weeks, quincenas (1–15, 16–end) or months. A week that crosses into the next month is cut on the 1st: each piece is its own period with a share of the weekly budget by its days. Budget includes money moved in or out and anything carried over.',
     header: ['Period', 'Pocket', 'Budget', 'Spent', 'Left'], rows: periodRows
   });
 

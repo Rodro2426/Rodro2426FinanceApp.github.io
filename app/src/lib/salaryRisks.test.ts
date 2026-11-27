@@ -71,18 +71,19 @@ describe('salary risks', () => {
     expect(periods).toBe(monthStats(d, 'g', ctxAt('2026-11-18')).budget - monthStats(d0, 'g', ctxAt('2026-11-18')).budget);
     expect(periods).toBe(-100_000);
   });
-  it('weekly: month set on Tue Dec 1 (week Nov 30 is November) still spreads the cut over December weeks', () => {
+  it('weekly: month set on Tue Dec 1 (week 1 of December, Dec 1–6) spreads the cut over all the weeks of December by their days', () => {
     const d0 = world('month', 4_000_000);
     const d = { ...d0, ...setMonthIncome(d0, '2026-12', 3_900_000, { g: -100_000 }, '2026-12-01') } as Data;
-    const weeks = ['2026-11-30', '2026-12-07', '2026-12-14', '2026-12-21', '2026-12-28'];
+    const weeks = ['2026-12-01', '2026-12-07', '2026-12-14', '2026-12-21', '2026-12-28']; // 6, 7, 7, 7 and 4 days
     expect(weeks.reduce((a, s) => a + monthAdjShare(d, d.pockets[0], s), 0)).toBe(-100_000);
-    expect(monthAdjShare(d, d.pockets[0], '2026-11-30')).toBe(0);
+    expect(monthAdjShare(d, d.pockets[0], '2026-12-01')).toBe(-19_355); // 6/31 of the cut
+    expect(monthAdjShare(d, d.pockets[0], '2026-11-30')).toBe(0); // the Nov 30 piece is November's
     expect(monthStats(d, 'g', ctxAt('2026-12-10')).budget - monthStats(d0, 'g', ctxAt('2026-12-10')).budget).toBe(-100_000);
   });
   it('a cut bigger than what is left of the pocket drives the week negative (no clamp)', () => {
     const d0 = world('month', 4_000_000);
     const d = { ...d0, ...setMonthIncome(d0, '2026-11', 3_000_000, { g: -1_000_000 }, '2026-11-18') } as Data;
-    expect(pocketStats(d, 'g', ctxAt('2026-11-18'))!.budget).toBe(200_000 - 333_334) // -1.000.000 over 3 weeks (Nov 16, 23, 30);
+    expect(pocketStats(d, 'g', ctxAt('2026-11-18'))!.budget).toBe(200_000 - 466_667); // -1.000.000 over Nov 16–22, 23–29 and the 1-day Nov 30, by days (7, 7, 1 of 15)
   });
   it('salaryShare with a month override splits whole units', () => {
     const d0 = world('half', 4_000_000);

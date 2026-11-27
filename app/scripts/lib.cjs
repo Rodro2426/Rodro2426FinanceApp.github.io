@@ -16,7 +16,8 @@ function args(defaults) {
 }
 
 /** Opens Pockets with the sample data loaded, at phone or desktop size, in light or dark, English or Spanish. */
-async function openApp({ url = 'http://localhost:5199/', size = 'phone', theme = 'light', lang = 'en' } = {}) {
+// `date` ('2026-11-30') pretends today is that day (noon), to look at month and week edges.
+async function openApp({ url = 'http://localhost:5199/', size = 'phone', theme = 'light', lang = 'en', date = '' } = {}) {
   const browser = await chromium.launch();
   const desk = size === 'desktop';
   const ctx = await browser.newContext(desk
@@ -24,6 +25,7 @@ async function openApp({ url = 'http://localhost:5199/', size = 'phone', theme =
     : { viewport: { width: 393, height: 852 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: theme });
   await ctx.addInitScript(l => { try { localStorage.setItem('pockets-lang', l); } catch { /* ignore */ } }, lang);
   const page = await ctx.newPage();
+  if (date) await page.clock.setFixedTime(new Date(date + 'T12:00:00'));
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.route(BLOCK, r => r.abort());

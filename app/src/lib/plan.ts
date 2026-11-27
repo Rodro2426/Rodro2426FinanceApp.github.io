@@ -1,6 +1,6 @@
 // The month's money in one place: income, plan, the two gaps, extra income splits and fixing mismatches.
 import type { Data, Income, Move } from './types';
-import { addDays, ctxAt, makeCtx, monthKey, type Ctx } from './dates';
+import { ctxAt, monthKey, weekParts, type Ctx } from './dates';
 import { incomeMoves, isHalf, isMonthly, monthPlanOf, monthStats, moveMonth, periodAt, pocketStats, uid, weeksLeft } from './derive';
 import { largestRemainder, unitsFor } from './split';
 import { debtOutlook } from './debts';
@@ -45,12 +45,8 @@ export function monthSummary(d: Data, c: Ctx): MonthSummary {
 function pastPeriodEnds(p: Data['pockets'][number], c: Ctx): string[] {
   if (isMonthly(p)) return [];
   if (isHalf(p)) return Number(c.today.slice(8)) > 15 ? [c.month + '-15'] : [];
-  // The plan counts c.weeks weeks; the ones not still ahead (this week included) are the finished ones, newest first.
-  let ahead = 0;
-  // A week counts for the month of its Monday; one that started last month leaves every week of this month still ahead.
-  for (let mon = c.weekStart; monthKey(mon) === c.month; mon = addDays(mon, 7)) ahead++;
-  if (monthKey(c.weekStart) < c.month) ahead = c.weeks;
-  return Array.from({ length: Math.max(0, c.weeks - ahead) }, (_, i) => addDays(c.weekEnd, -7 * (i + 1)));
+  // This month's weeks that ended before this one.
+  return weekParts(c.month).filter(([, b]) => b < c.weekStart).map(([, b]) => b);
 }
 /** What a pocket still promises this month. Without carry over, a finished period's leftover is not promised any more
  *  (it stays in your accounts) and its overspend doesn't shrink later periods, so each finished period's result is taken out.
@@ -59,7 +55,7 @@ export function pocketToSpend(d: Data, id: string, c: Ctx): number {
   const p = d.pockets.find(x => x.id === id);
   if (!p) return 0;
   const from = p.carry ? periodAt(p, p.carry)[0] : null;
-  const done = sum(pastPeriodEnds(p, c).filter(day => !from || day < from).map(day => pocketStats(d, id, makeCtx(c.weeks, day))?.left ?? 0));
+  const done = sum(pastPeriodEnds(p, c).filter(day => !from || day < from).map(day => pocketStats(d, id, ctxAt(day))?.left ?? 0));
   return Math.max(0, monthStats(d, id, c).left - done);
 }
 
@@ -68,10 +64,10 @@ export type SplitMode = 'week' | 'month';
 export type SplitDist = 'budget' | 'even' | 'manual';
 
 /** How `A` is shared between pockets: whole units that add up to exactly `A`. */
-export function splitAmong(d: Data, A: number, dist: SplitDist, manual: Record<string, number> = {}): Record<string, number> {
+export function splitAmong(d: Data, A: number, dist: SplitDist, manual: Record<string, number> = {}, c: Ctx = ctxAt()): Record<string, number> {
   const ps = d.pockets;
   if (dist === 'manual') return Object.fromEntries(ps.map(p => [p.id, whole(d, manual[p.id] || 0)]));
-  const parts = largestRemainder(A, ps.map(p => (dist === 'budget' ? monthPlanOf(p, ctxAt()) : 1)), scale(d));
+  const parts = largestRemainder(A, ps.map(p => (dist === 'budget' ? monthPlanOf(p, c) : 1)), scale(d));
   return Object.fromEntries(ps.map((p, i) => [p.id, parts[i]]));
 }
 
@@ -90,7 +86,7 @@ export interface ExtraIncome { amt: number; acct: string; note: string; toPocket
 export function addExtraIncome(d: Data, c: Ctx, x: ExtraIncome): Partial<Data> {
   const X = whole(d, x.amt), A = x.inBase ? 0 : Math.min(X, Math.max(0, whole(d, x.toPockets)));
   const id = x.id ?? uid('in');
-  const parts = A > 0 ? splitAmong(d, A, x.dist, x.manual) : {};
+  const parts = A > 0 ? splitAmong(d, A, x.dist, x.manual, c) : {};
   const spread = x.mode === 'month' ? weeksLeft(c) : 1;
   const moves: Move[] = Object.entries(parts).filter(([, v]) => v > 0)
     .map(([to, amt]) => ({ id: uid('m'), week: c.weekStart, day: c.today, from: '_income', to, amt, income: id, month: c.month, spread }));

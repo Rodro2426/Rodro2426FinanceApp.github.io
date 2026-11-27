@@ -907,6 +907,7 @@ To pockets|A bolsillos
 This week|Esta semana
 this week|esta semana
 this month|este mes
+All of it goes to this week. On the 1st the pockets start over.|Todo va a esta semana. El 1 los bolsillos empiezan de nuevo.
 All of it goes to this week. On Monday the pockets start over.|Todo va a esta semana. El lunes los bolsillos empiezan de nuevo.
 By budget|Según presupuesto
 Evenly|Por igual
@@ -2648,6 +2649,7 @@ That's more than the {0} you received.|Eso es más de los {0} que recibiste.
 Your pockets already promise {0} more than your accounts have; "Cover the shortfall first" saves that much before splitting.|Tus bolsillos ya prometen {0} más de lo que tienen tus cuentas; "Cubrir primero el faltante" guarda eso antes de repartir.
 Rest of {0}|Resto de {0}
 Shared equally over the {0} weeks left in {1}, this one included.|Repartido por igual en las {0} semanas que quedan de {1}, incluida esta.
+Shared over the {0} weeks left in {1} by their days, this one included.|Repartido en las {0} semanas que quedan de {1} según sus días, incluida esta.
 This is the last week of {0}, so it all goes to this week.|Es la última semana de {0}, así que todo va a esta semana.
 +{0} this week|+{0} esta semana
 Not in any pocket: it won't touch your weekly budgets, but it still counts in {0}'s spending and comes out of {1}.|En ningún bolsillo: no toca tus presupuestos semanales, pero cuenta en los gastos de {0} y sale de {1}.
@@ -2868,6 +2870,7 @@ of {0} for {1} today|de {0} para {1} hoy
 {0} pockets|{0} bolsillos
 of {0} · {1} left|de {0} · quedan {1}
 Week {0} of {1}|Semana {0} de {1}
+Week {0} ({1})|Semana {0} ({1})
 {0} spending|Gastos de {0}
 {0} expenses|{0} gastos
 🤝 {0} paid {1} {2}|🤝 {0} le pagó {2} a {1}

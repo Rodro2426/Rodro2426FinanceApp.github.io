@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { emptyData, sampleData } from './seed';
 import { makeCtx } from './dates';
 import { monthSummary } from './plan';
+import { monthPlanOf, periodsInMonth } from './derive';
 import { dueDate, runSchedule } from './schedule';
 import { bankLogo, leftFree, makeAccount, makeBills, makeCard, makeIncome, makePockets, roundBudget, suggestPockets, BILLS } from './setup';
 
@@ -74,7 +75,8 @@ describe('first-time setup', () => {
     const c = makeCtx(4, '2026-11-20');
     const acct = makeAccount(d, 'Nequi', 100000);
     const inc = makeIncome(4_000_000, 'half', 0, acct.id, '2026-11-20');
-    const ps = makePockets(suggestPockets(4_000_000), 4);
+    // November 2026 has 30/7 weeks: a pocket's monthly amount is typed once and spread over them.
+    const ps = makePockets(suggestPockets(4_000_000), periodsInMonth({}, '2026-11'));
     const x = { ...emptyData(sampleData()), accounts: [acct], incomeStr: inc.incomeStr, bills: inc.bills, pockets: ps };
     // 20 Nov: both paydays (15, 30) are not due yet, so no income was added today.
     const run = runSchedule(x, '2026-11-20');
@@ -86,9 +88,13 @@ describe('first-time setup', () => {
     const s = monthSummary(later, c);
     expect(s.extra).toBe(0);
     expect(s.income).toBe(4_000_000);
-    // Hand-worked: pockets (220000+100000+80000+60000) * 4 = 1.840.000 planned.
-    expect(s.planGap).toBe(4_000_000 - 1_840_000);
-    expect(leftFree(4_000_000, suggestPockets(4_000_000), [{ on: true, amt: 500000 }])).toBe(s.planGap - 500000);
+    // Hand-worked: the pockets' monthly amounts (880.000 + 400.000 + 320.000 + 240.000 = 1.840.000) are what November plans,
+    // give or take the pesos lost rounding each weekly amount (and the pieces of Nov 1 and Nov 30).
+    expect(s.plan).toBe(ps.reduce((a, p) => a + monthPlanOf(p, c), 0));
+    expect(Math.abs(s.plan - 1_840_000)).toBeLessThan(10);
+    expect(s.planGap).toBe(4_000_000 - s.plan);
+    // leftFree works from the typed monthly amounts, the plan from the rounded weekly pieces: a few pesos apart at most.
+    expect(Math.abs(leftFree(4_000_000, suggestPockets(4_000_000), [{ on: true, amt: 500000 }]) - (s.planGap - 500000))).toBeLessThan(10);
   });
 
   it('pays day 30 on the last day of February, and not on the 30th of a 31-day month early', () => {

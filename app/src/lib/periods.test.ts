@@ -48,7 +48,8 @@ describe('pockets that start over every 15 days', () => {
     const c = makeCtx(4, '2026-11-12'), d = data();
     expect(monthPlanOf(d.pockets[1], c)).toBe(600000);
     expect(monthStats(d, 'q', c).budget).toBe(600000);
-    expect(monthSummary(d, c).plan).toBe(100000 * 4 + 600000);
+    // Nov 2026 has 30 days = 4 whole weeks + the Sunday Nov 1 and the Monday Nov 30 (1-day weeks): 100.000 × 30/7 = 14.286 + 400.000 + 14.286.
+    expect(monthSummary(d, c).plan).toBe(428572 + 600000);
   });
 
   it('shares the quincena between its days', () => {
@@ -81,8 +82,9 @@ describe('pockets that start over every 15 days', () => {
     const c = makeCtx(4, '2026-11-12');
     expect(pocketStats(d, 'n', c)!.budget).toBe(80000);
     expect(pocketStats(d, 'n', makeCtx(4, '2026-11-16'))!.budget).toBe(140000);
-    expect(monthPlanOf(d.pockets[2], c)).toBe(140000 * 4 - 60000);
-    expect(monthPlanOf(d.pockets[2], makeCtx(4, '2026-12-03'))).toBe(140000 * 4);
+    // 140.000 × 30/7 = 600.000 for November, minus the 60.000 the first week did not get.
+    expect(monthPlanOf(d.pockets[2], c)).toBe(600000 - 60000);
+    expect(monthPlanOf(d.pockets[2], makeCtx(4, '2026-12-03'))).toBe(620000); // 140.000 × 31/7
   });
 });
 
@@ -127,25 +129,28 @@ describe('weekShare: a pocket\'s part of the current week', () => {
 });
 
 describe('weeks in a month come from the calendar', () => {
-  it('counts the weeks whose Sunday is in the month', () => {
-    expect(weeksIn('2026-11')).toBe(5); // Sundays Nov 1, 8, 15, 22, 29
-    expect(weeksIn('2026-12')).toBe(4); // Dec 6, 13, 20, 27
-    expect(weeksIn('2026-08')).toBe(5); // Aug 2, 9, 16, 23, 30
-    expect(weeksIn('2027-02')).toBe(4); // Feb 7, 14, 21, 28
+  it('cuts weeks where the month ends: every week piece belongs to one month', () => {
+    expect(weeksIn('2026-11')).toBe(6); // Nov 1 (Sun), 2–8, 9–15, 16–22, 23–29, Nov 30 (Mon)
+    expect(weeksIn('2026-12')).toBe(5); // Dec 1–6, 7–13, 14–20, 21–27, 28–31
+    expect(weeksIn('2026-08')).toBe(6); // Aug 1–2, 3–9, 10–16, 17–23, 24–30, Aug 31
+    expect(weeksIn('2027-02')).toBe(4); // Feb 2027 starts on a Monday and has 28 days: exactly 4 whole weeks
   });
-  it('gives the last week of a 5-Monday month its own number', () => {
-    expect(ctxAt('2026-11-30').weekNo).toBe(5);
-    expect(ctxAt('2026-11-30').weeks).toBe(5);
+  it('gives the 1-day last week of November its own number', () => {
+    expect(ctxAt('2026-11-30').weekNo).toBe(6);
+    expect(ctxAt('2026-11-30').weeks).toBe(6);
+    expect([ctxAt('2026-11-30').weekStart, ctxAt('2026-11-30').weekEnd]).toEqual(['2026-11-30', '2026-11-30']);
+    expect([ctxAt('2026-11-01').weekStart, ctxAt('2026-11-01').weekEnd, ctxAt('2026-11-01').weekNo]).toEqual(['2026-11-01', '2026-11-01', 1]);
     expect(ctxAt('2026-12-01').weekNo).toBe(1); // Dec 1 is a Tuesday, still week 1
   });
 });
 
 describe('weekly pocket entered per month, created mid-month', () => {
-  // Nov 2026 has 5 weeks (Sundays 1, 8, 15, 22, 29). Created Wed Nov 18 with 1.000.000 a month (200.000 a week),
-  // and 300.000 left for November: shared over the weeks of Nov 16 and Nov 23 (150.000 each).
+  // Nov 2026 has 6 week pieces (Nov 1, 2–8, 9–15, 16–22, 23–29, Nov 30). Created Wed Nov 18 with 1.000.000 a month (200.000 a week),
+  // and 300.000 left for November: shared over the weeks of Nov 16, Nov 23 and the Monday Nov 30 (2 + 1/7 weeks): 140.000 a week,
+  // so 140.000 + 140.000 + 20.000 (a 1-day week) = 300.000.
   const mk = (): Data => ({
     ...emptyData(sampleData()), settings: { ...emptyData(sampleData()).settings, currency: 'COP' },
-    pockets: [{ id: 'm', name: 'Market', weeklyStr: '200000', hue: 150, perMonth: true, start: { from: '2026-11-16', amt: 150000, until: '2026-11-23' } }],
+    pockets: [{ id: 'm', name: 'Market', weeklyStr: '200000', hue: 150, perMonth: true, start: { from: '2026-11-16', amt: 140000, until: '2026-11-30' } }],
     expenses: [], incomes: [], moves: [], goals: []
   });
   it('this month plans only what was left', () => {
@@ -153,13 +158,16 @@ describe('weekly pocket entered per month, created mid-month', () => {
     expect(monthStats(mk(), 'm', ctxAt('2026-11-18')).budget).toBe(300000);
   });
   it('each remaining week gets its share, and weeks before it existed get nothing', () => {
-    expect(pocketStats(mk(), 'm', ctxAt('2026-11-18'))!.budget).toBe(150000);
-    expect(pocketStats(mk(), 'm', ctxAt('2026-11-27'))!.budget).toBe(150000);
+    expect(pocketStats(mk(), 'm', ctxAt('2026-11-18'))!.budget).toBe(140000);
+    expect(pocketStats(mk(), 'm', ctxAt('2026-11-27'))!.budget).toBe(140000);
+    expect(pocketStats(mk(), 'm', ctxAt('2026-11-30'))!.budget).toBe(20000); // the 1-day week: 1/7 of 140.000
     expect(pocketStats(mk(), 'm', ctxAt('2026-11-10'))!.budget).toBe(0);
   });
   it('next month starts from scratch with the full amount', () => {
-    expect(pocketStats(mk(), 'm', ctxAt('2026-12-02'))!.budget).toBe(200000); // week Nov 30 – Dec 6 belongs to December
-    expect(monthPlanOf(mk().pockets[0], ctxAt('2026-12-10'))).toBe(800000);
+    // Mon Nov 30 got 1/7 of the week (28.571), so Tue Dec 1 – Sun Dec 6 gets the rest: 200.000 − 28.571.
+    expect(pocketStats(mk(), 'm', ctxAt('2026-12-02'))!.budget).toBe(171429);
+    // December: 171.429 + 3 whole weeks (600.000) + Dec 28–31, 4/7 of a week (114.286).
+    expect(monthPlanOf(mk().pockets[0], ctxAt('2026-12-10'))).toBe(885715);
   });
 });
 
@@ -174,29 +182,31 @@ describe('mid-month weekly start: risks', () => {
     d.expenses = [exp('s', 'm', 100000, '2026-11-17')];
     expect(pocketStats(d, 'm', ctxAt('2026-11-24'))!.carry).toBe(50000);
     expect(pocketStats(d, 'm', ctxAt('2026-11-24'))!.budget).toBe(200000);
-    // Week of Nov 30 belongs to December: full 200.000 plus the 50.000 + 150.000 left from before.
+    // The Nov 30 piece carries what was left from before: 50.000 + 150.000.
     expect(pocketStats(d, 'm', ctxAt('2026-11-30'))!.carry).toBe(200000);
   });
   it('rounding: the plan shows the rounded shares, not the amount typed', () => {
-    // 100.000 left over 3 weeks: 33.333 x 3 = 99.999 (1 peso lost)
-    const d = mk({ from: '2026-11-09', amt: 33333, until: '2026-11-23' });
+    // 100.000 left over Nov 9 – Nov 30 (3 weeks + a 1-day week = 22/7 weeks): 31.818 a week; 31.818 x 3 + 4.545 = 99.999 (1 peso lost)
+    const d = mk({ from: '2026-11-09', amt: 31818, until: '2026-11-30' });
     expect(monthPlanOf(d.pockets[0], ctxAt('2026-11-18'))).toBe(99999);
   });
-  it('created on the Monday of the last week: one week gets the whole amount', () => {
-    const d = mk({ from: '2026-11-23', amt: 80000, until: '2026-11-23' });
-    expect(monthPlanOf(d.pockets[0], ctxAt('2026-11-24'))).toBe(80000);
-    expect(pocketStats(d, 'm', ctxAt('2026-11-24'))!.budget).toBe(80000);
+  it('created on the Monday of the last (1-day) week: that week only gets its day', () => {
+    const d = mk({ from: '2026-11-30', amt: 70000, until: '2026-11-30' });
+    // 70.000 a week, but the week is only Monday Nov 30: 1/7.
+    expect(monthPlanOf(d.pockets[0], ctxAt('2026-11-30'))).toBe(10000);
+    expect(pocketStats(d, 'm', ctxAt('2026-11-30'))!.budget).toBe(10000);
   });
-  it('a week that starts last month but ends this month belongs to last month (Mon Jun 29 - Sun Jul 5)', () => {
-    // July 2026: Mondays 6, 13, 20, 27 = 4 weeks. Created Wed Jul 1 (week of Jun 29, 40.000 for it, no question asked).
-    const d = mk({ from: '2026-06-29', amt: 40000 });
-    expect(monthPlanOf(d.pockets[0], ctxAt('2026-07-01'))).toBe(800000); // July is untouched: 4 weeks x 200.000
+  it('a week that crosses into the next month is cut: Jun 29–30 is June, Jul 1–5 is July', () => {
+    // July 2026: Jul 1–5, 6–12, 13–19, 20–26, Jul 27–31 (5 days). Created Wed Jul 1 with 40.000 for its first week piece.
+    const d = mk({ from: '2026-07-01', amt: 40000 });
+    expect(monthPlanOf(d.pockets[0], ctxAt('2026-07-01'))).toBe(40000 + 600000 + 142857); // last piece: 200.000 × 5/7
     expect(pocketStats(d, 'm', ctxAt('2026-07-01'))!.budget).toBe(40000);
     expect(pocketStats(d, 'm', ctxAt('2026-07-08'))!.budget).toBe(200000);
   });
-  it('June takes the cut for that first week, July does not', () => {
-    // June 2026: Mondays 1, 8, 15, 22, 29 = 5 weeks x 200.000, minus (200.000 - 40.000) for the first week
-    const d = mk({ from: '2026-06-29', amt: 40000 });
-    expect(monthPlanOf(d.pockets[0], ctxAt('2026-06-15'))).toBe(200000 * weeksIn('2026-06') - 160000);
+  it('June is not touched by a pocket created on Jul 1; Jun 29–30 is its own 2-day week', () => {
+    const d = mk({ from: '2026-07-01', amt: 40000 });
+    // June 2026: Jun 1, 8, 15, 22 whole weeks (800.000) + Jun 29–30, 2/7 of 200.000 = 57.143.
+    expect(monthPlanOf(d.pockets[0], ctxAt('2026-06-15'))).toBe(800000 + 57143);
+    expect(pocketStats(d, 'm', ctxAt('2026-06-30'))!.budget).toBe(57143);
   });
 });
